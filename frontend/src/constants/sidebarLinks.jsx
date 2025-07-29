@@ -3,7 +3,7 @@ import { Building2, Package, Upload, Users, Repeat2, IndianRupee, FileText } fro
 
 export const sidebarLinks = [
   { label: "Vendor Master", path: "/vendor", icon: <Building2 /> },
-  //{ label: "Vendor Rates", path: "/vendor-rates", icon: <IndianRupee /> },
+  { label: "Vendor Rates", path: "/vendor-rates", icon: <IndianRupee /> },
   { label: "Product Master", path: "/product", icon: <Package /> },
   { label: "Inward Entry", path: "/inward", icon: <Upload /> },
   { label: "Outward Entry", path: "/outward", icon: <Repeat2 /> },

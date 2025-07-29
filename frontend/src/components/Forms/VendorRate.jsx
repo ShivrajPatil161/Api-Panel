@@ -2,7 +2,7 @@ import React from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
-const VendorRateMasterForm = () => {
+const VendorRateForm = () => {
   const initialValues = {
     vendor: '',
     product: '',
@@ -98,4 +98,4 @@ const VendorRateMasterForm = () => {
   );
 };
 
-export default VendorRateMasterForm;
+export default VendorRateForm;
