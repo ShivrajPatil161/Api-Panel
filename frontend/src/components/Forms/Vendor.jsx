@@ -1,6 +1,7 @@
 import React from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import VendorTable from '../Tables/VendorTable';
 
 const VendorForm = () => {
   const initialValues = {
@@ -29,10 +30,11 @@ const VendorForm = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4 shadow-md rounded-xl bg-white">
+    <div>
+      <div className="max-w-xl mx-auto p-4 shadow-md rounded-xl bg-white">
       <h2 className="text-xl font-bold mb-4">Vendor Master Form</h2>
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-        <Form className="space-y-4">
+        <Form className="grid grid-cols-2 gap-5 space-y-4">
           <div>
             <label className="block mb-1">Vendor Name</label>
             <Field name="vendorName" type="text" className="w-full border rounded p-2" />
@@ -84,6 +86,9 @@ const VendorForm = () => {
           </button>
         </Form>
       </Formik>
+     
+    </div>
+     <VendorTable />
     </div>
   );
 };
