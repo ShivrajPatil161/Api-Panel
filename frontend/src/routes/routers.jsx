@@ -11,6 +11,7 @@ import ProductAssign from "../components/Forms/ProductAssign"
 import ProductPricing from "../components/Forms/ProductPricing"
 import FileUpload from "../components/Forms/FileUpload"
 import ChargeCalculation from "../components/Forms/ChargeCalculation"
+import VendorRateMasterForm from "../components/Forms/VendorRate"
 
 
 export  const router = createBrowserRouter([
@@ -20,7 +21,7 @@ export  const router = createBrowserRouter([
     children: [
     { index: true, element: <Dashboard /> }, // ✅ index route for "/"
       { path: "vendor", element: <Vendor /> },
-      //{ path: "vendor-rates", element: <VendorRatesForm /> },
+      { path: "vendor-rates", element: <VendorRateMasterForm /> },
       { path: "product", element: <Product /> },
       { path: "inward", element: <Inward /> },
       { path: "outward", element: <Outward /> },
