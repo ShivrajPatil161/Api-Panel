@@ -6,7 +6,7 @@ import Product from "../components/Forms/Product"
 import Inward from "../components/Forms/Inward"
 import Outward from "../components/Forms/Outward"
 import Return from "../components/Forms/Return"
-import CustomerOnboradingForm from "../components/Forms/CustomerOnborading"
+import CustomerOnborading from "../components/Forms/CustomerOnborading"
 import ProductAssign from "../components/Forms/ProductAssign"
 import ProductPricing from "../components/Forms/ProductPricing"
 import FileUpload from "../components/Forms/FileUpload"
@@ -34,7 +34,7 @@ export  const router = createBrowserRouter([
       { path: "inward", element: <InwardForm /> },
       { path: "outward", element: <OutwardForm /> },
       { path: "return", element: <ReturnForm /> },
-      { path: "customer", element: <CustomerOnboradingForm   /> },
+      { path: "customer", element: <CustomerOnborading /> },
       { path: "assignment", element: <ProductAssignmentForm /> },
       { path: "pricing", element: <ProductPricingForm /> },
       { path: "upload", element: <FileUploadForm /> },
