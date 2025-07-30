@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import SidebarLayout from './components/SideBarLayout';
 import VendorMasterForm from './components/Forms/Vendor';
 import Dashboard from './components/Dashborad';
-import ProductForm from './components/Forms/Product';
 import VendorRateForm from './components/Forms/VendorRate';
 import InwardForm from './components/Forms/Inward';
 import OutwardForm from './components/Forms/Outward';
@@ -12,6 +11,8 @@ import ProductAssignmentForm from './components/Forms/ProductAssign';
 import ProductPricingForm from './components/Forms/ProductPricing';
 import FileUploadForm from './components/Forms/FileUpload';
 import ChargeCalculationForm from './components/Forms/ChargeCalculation';
+import ProductMasterForm from './components/Forms/Product';
+import VendorRatesForm from './components/Forms/VendorRate';
 
 const App =() => {
   return (
@@ -20,8 +21,8 @@ const App =() => {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/vendor-master" element={<VendorMasterForm />} />
-          <Route path="/vendor-rates" element={<VendorRateForm />} />
-          <Route path="/product" element={<ProductForm />} />
+          <Route path="/vendor-rates" element={<VendorRatesForm />} />
+          <Route path="/product" element={<ProductMasterForm />} />
           <Route path="/inward" element={<InwardForm />} />
           <Route path="/outward" element={<OutwardForm />} />
           <Route path="/return" element={<ReturnForm />} />
