@@ -1,111 +1,522 @@
-import React from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Package, Layers, Settings, FileText, ToggleLeft, ToggleRight, Plus, X } from 'lucide-react';
 
-const ProductForm = () => {
-  const initialValues = {
-    productName: '',
-    productType: '',
-    mid: '',
-    sid: '',
-    tid: '',
-    vpaid: '',
-    mobileNumber: '',
-    modelNumber: '',
-    brand: '',
-    isActive: false
-  };
+// Validation schema
+const productSchema = z.object({
+  productName: z.string().min(2, 'Product name must be at least 2 characters'),
+  productCode: z.string().min(3, 'Product code must be at least 3 characters'),
+  vendorId: z.string().min(1, 'Please select a vendor'),
+  category: z.enum(['POS', 'QR_SCANNER', 'CARD_READER', 'PRINTER', 'ACCESSORIES'], {
+    errorMap: () => ({ message: 'Please select a category' })
+  }),
+  model: z.string().min(2, 'Model is required'),
+  brand: z.string().min(2, 'Brand is required'),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
+  specifications: z.array(z.object({
+    key: z.string().min(1, 'Specification key is required'),
+    value: z.string().min(1, 'Specification value is required')
+  })).min(1, 'At least one specification is required'),
+  warrantyPeriod: z.number().min(0, 'Warranty period must be 0 or more months'),
+  warrantyType: z.enum(['manufacturer', 'vendor', 'none']),
+  dimensions: z.object({
+    length: z.number().min(0, 'Length must be positive').optional(),
+    width: z.number().min(0, 'Width must be positive').optional(),
+    height: z.number().min(0, 'Height must be positive').optional(),
+    weight: z.number().min(0, 'Weight must be positive').optional()
+  }),
+  hsn: z.string().regex(/^[0-9]{4,8}$/, 'HSN must be 4-8 digits'),
+  status: z.enum(['active', 'inactive']),
+  minOrderQuantity: z.number().min(1, 'Minimum order quantity must be at least 1'),
+  maxOrderQuantity: z.number().min(1, 'Maximum order quantity must be at least 1'),
+  remarks: z.string().optional()
+});
 
-  const validationSchema = Yup.object({
-    productName: Yup.string().required('Product name is required'),
-    productType: Yup.string().required('Product type is required'),
-    mid: Yup.string(),
-    sid: Yup.string(),
-    tid: Yup.string(),
-    vpaid: Yup.string(),
-    mobileNumber: Yup.string()
-      .matches(/^[0-9]{10}$/, 'Enter a valid 10-digit mobile number')
-      .required('Mobile number is required'),
-    modelNumber: Yup.string().required('Model number is required'),
-    brand: Yup.string().required('Brand is required'),
-    isActive: Yup.boolean()
+const ProductMasterForm = ({ onSubmit, initialData = null, isEdit = false }) => {
+  const [vendors, setVendors] = useState([
+    { id: '1', name: 'HDFC Bank', code: 'HDFC' },
+    { id: '2', name: 'ICICI Bank', code: 'ICICI' },
+    { id: '3', name: 'SBI Bank', code: 'SBI' },
+    { id: '4', name: 'Axis Bank', code: 'AXIS' }
+  ]);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(productSchema),
+    defaultValues: initialData || {
+      productName: '',
+      productCode: '',
+      vendorId: '',
+      category: 'POS',
+      model: '',
+      brand: '',
+      description: '',
+      specifications: [{ key: '', value: '' }],
+      warrantyPeriod: 12,
+      warrantyType: 'manufacturer',
+      dimensions: {
+        length: '',
+        width: '',
+        height: '',
+        weight: ''
+      },
+      hsn: '',
+      status: 'active',
+      minOrderQuantity: 1,
+      maxOrderQuantity: 100,
+      remarks: ''
+    }
   });
 
-  const onSubmit = (values, { resetForm }) => {
-    console.log('Product Master Form Data:', values);
-    resetForm();
+  const watchStatus = watch('status');
+  const watchSpecs = watch('specifications');
+
+  const handleFormSubmit = (data) => {
+    console.log('Product Form Data:', data);
+    onSubmit?.(data);
   };
 
+  const toggleStatus = () => {
+    setValue('status', watchStatus === 'active' ? 'inactive' : 'active');
+  };
+
+  const addSpecification = () => {
+    const currentSpecs = watchSpecs || [];
+    setValue('specifications', [...currentSpecs, { key: '', value: '' }]);
+  };
+
+  const removeSpecification = (index) => {
+    const currentSpecs = watchSpecs || [];
+    if (currentSpecs.length > 1) {
+      setValue('specifications', currentSpecs.filter((_, i) => i !== index));
+    }
+  };
+
+  const categories = [
+    { value: 'POS', label: 'POS Machine' },
+    { value: 'QR_SCANNER', label: 'QR Scanner' },
+    { value: 'CARD_READER', label: 'Card Reader' },
+    { value: 'PRINTER', label: 'Printer' },
+    { value: 'ACCESSORIES', label: 'Accessories' }
+  ];
+
+  const warrantyTypes = [
+    { value: 'manufacturer', label: 'Manufacturer Warranty' },
+    { value: 'vendor', label: 'Vendor Warranty' },
+    { value: 'none', label: 'No Warranty' }
+  ];
+
   return (
-    <div className="max-w-xl mx-auto p-4 shadow-md rounded-xl bg-white">
-      <h2 className="text-xl font-bold mb-4">Product Master Form</h2>
-      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-        <Form className="space-y-4">
-          <div>
-            <label className="block mb-1">Product Name</label>
-            <Field name="productName" type="text" className="w-full border rounded p-2" />
-            <ErrorMessage name="productName" component="div" className="text-red-600 text-sm" />
-          </div>
-
-          <div>
-            <label className="block mb-1">Product Type</label>
-            <Field name="productType" as="select" className="w-full border rounded p-2">
-              <option value="">Select Type</option>
-              <option value="Swap Machine">Swap Machine</option>
-              <option value="QR Code">QR Code</option>
-              <option value="QR with Soundbox">QR with Soundbox</option>
-            </Field>
-            <ErrorMessage name="productType" component="div" className="text-red-600 text-sm" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1">MID</label>
-              <Field name="mid" type="text" className="w-full border rounded p-2" />
-            </div>
-            <div>
-              <label className="block mb-1">SID</label>
-              <Field name="sid" type="text" className="w-full border rounded p-2" />
-            </div>
-            <div>
-              <label className="block mb-1">TID</label>
-              <Field name="tid" type="text" className="w-full border rounded p-2" />
-            </div>
-            <div>
-              <label className="block mb-1">VPA ID</label>
-              <Field name="vpaid" type="text" className="w-full border rounded p-2" />
-            </div>
-            <div>
-              <label className="block mb-1">Mobile Number</label>
-              <Field name="mobileNumber" type="text" className="w-full border rounded p-2" />
-              <ErrorMessage name="mobileNumber" component="div" className="text-red-600 text-sm" />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-lg">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6 rounded-t-lg">
+            <div className="flex items-center space-x-3">
+              <Package className="h-8 w-8" />
+              <div>
+                <h1 className="text-2xl font-bold">
+                  {isEdit ? 'Edit Product' : 'Add New Product'}
+                </h1>
+                <p className="text-green-100">
+                  {isEdit ? 'Update product information' : 'Register a new product in the catalog'}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block mb-1">Model Number</label>
-            <Field name="modelNumber" type="text" className="w-full border rounded p-2" />
-            <ErrorMessage name="modelNumber" component="div" className="text-red-600 text-sm" />
-          </div>
+          <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-8">
+            {/* Basic Information */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <Package className="h-5 w-5 mr-2 text-green-600" />
+                Basic Information
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product Name *
+                  </label>
+                  <input
+                    {...register('productName')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter product name"
+                  />
+                  {errors.productName && (
+                    <p className="text-red-500 text-sm mt-1">{errors.productName.message}</p>
+                  )}
+                </div>
 
-          <div>
-            <label className="block mb-1">Brand</label>
-            <Field name="brand" type="text" className="w-full border rounded p-2" />
-            <ErrorMessage name="brand" component="div" className="text-red-600 text-sm" />
-          </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product Code *
+                  </label>
+                  <input
+                    {...register('productCode')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter unique product code"
+                    style={{ textTransform: 'uppercase' }}
+                  />
+                  {errors.productCode && (
+                    <p className="text-red-500 text-sm mt-1">{errors.productCode.message}</p>
+                  )}
+                </div>
 
-          <div className="flex items-center space-x-2">
-            <Field name="isActive" type="checkbox" className="mr-2" />
-            <label htmlFor="isActive">Active</label>
-          </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vendor *
+                  </label>
+                  <select
+                    {...register('vendorId')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="">Select Vendor</option>
+                    {vendors.map((vendor) => (
+                      <option key={vendor.id} value={vendor.id}>
+                        {vendor.name} ({vendor.code})
+                      </option>
+                    ))}
+                  </select>
+                  {errors.vendorId && (
+                    <p className="text-red-500 text-sm mt-1">{errors.vendorId.message}</p>
+                  )}
+                </div>
 
-          <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Submit
-          </button>
-        </Form>
-      </Formik>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category *
+                  </label>
+                  <select
+                    {...register('category')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    {categories.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.category && (
+                    <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Brand *
+                  </label>
+                  <input
+                    {...register('brand')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter brand name"
+                  />
+                  {errors.brand && (
+                    <p className="text-red-500 text-sm mt-1">{errors.brand.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Model *
+                  </label>
+                  <input
+                    {...register('model')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter model number"
+                  />
+                  {errors.model && (
+                    <p className="text-red-500 text-sm mt-1">{errors.model.message}</p>
+                  )}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description *
+                  </label>
+                  <textarea
+                    {...register('description')}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter detailed product description"
+                  />
+                  {errors.description && (
+                    <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={toggleStatus}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                        watchStatus === 'active'
+                          ? 'bg-green-100 text-green-700 border border-green-300'
+                          : 'bg-red-100 text-red-700 border border-red-300'
+                      }`}
+                    >
+                      {watchStatus === 'active' ? (
+                        <ToggleRight className="h-5 w-5" />
+                      ) : (
+                        <ToggleLeft className="h-5 w-5" />
+                      )}
+                      <span className="font-medium">
+                        {watchStatus === 'active' ? 'Active' : 'Inactive'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Specifications */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <Settings className="h-5 w-5 mr-2 text-green-600" />
+                Technical Specifications
+              </h2>
+              <div className="space-y-4">
+                {watchSpecs?.map((spec, index) => (
+                  <div key={index} className="flex space-x-4 items-start">
+                    <div className="flex-1">
+                      <input
+                        {...register(`specifications.${index}.key`)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Specification name (e.g., Display Size)"
+                      />
+                      {errors.specifications?.[index]?.key && (
+                        <p className="text-red-500 text-sm mt-1">{errors.specifications[index].key.message}</p>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        {...register(`specifications.${index}.value`)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Specification value (e.g., 15.6 inches)"
+                      />
+                      {errors.specifications?.[index]?.value && (
+                        <p className="text-red-500 text-sm mt-1">{errors.specifications[index].value.message}</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeSpecification(index)}
+                      disabled={watchSpecs?.length <= 1}
+                      className="p-2 text-red-600 hover:bg-red-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addSpecification}
+                  className="flex items-center space-x-2 px-4 py-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Specification</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Physical Details */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <Layers className="h-5 w-5 mr-2 text-green-600" />
+                Physical Details
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Length (cm)
+                  </label>
+                  <input
+                    {...register('dimensions.length', { valueAsNumber: true })}
+                    type="number"
+                    step="0.1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="0.0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Width (cm)
+                  </label>
+                  <input
+                    {...register('dimensions.width', { valueAsNumber: true })}
+                    type="number"
+                    step="0.1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="0.0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Height (cm)
+                  </label>
+                  <input
+                    {...register('dimensions.height', { valueAsNumber: true })}
+                    type="number"
+                    step="0.1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="0.0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Weight (kg)
+                  </label>
+                  <input
+                    {...register('dimensions.weight', { valueAsNumber: true })}
+                    type="number"
+                    step="0.1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="0.0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Warranty & Legal */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-green-600" />
+                Warranty & Legal Information
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Warranty Period (Months) *
+                  </label>
+                  <input
+                    {...register('warrantyPeriod', { valueAsNumber: true })}
+                    type="number"
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="12"
+                  />
+                  {errors.warrantyPeriod && (
+                    <p className="text-red-500 text-sm mt-1">{errors.warrantyPeriod.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Warranty Type *
+                  </label>
+                  <select
+                    {...register('warrantyType')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    {warrantyTypes.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    HSN Code *
+                  </label>
+                  <input
+                    {...register('hsn')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter HSN code"
+                    maxLength={8}
+                  />
+                  {errors.hsn && (
+                    <p className="text-red-500 text-sm mt-1">{errors.hsn.message}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Order Quantities */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                Order Quantities
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Minimum Order Quantity *
+                  </label>
+                  <input
+                    {...register('minOrderQuantity', { valueAsNumber: true })}
+                    type="number"
+                    min="1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="1"
+                  />
+                  {errors.minOrderQuantity && (
+                    <p className="text-red-500 text-sm mt-1">{errors.minOrderQuantity.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Maximum Order Quantity *
+                  </label>
+                  <input
+                    {...register('maxOrderQuantity', { valueAsNumber: true })}
+                    type="number"
+                    min="1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="100"
+                  />
+                  {errors.maxOrderQuantity && (
+                    <p className="text-red-500 text-sm mt-1">{errors.maxOrderQuantity.message}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Remarks */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Remarks
+              </label>
+              <textarea
+                {...register('remarks')}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="Enter any additional remarks or notes"
+              />
+            </div>
+
+            {/* Submit Buttons */}
+            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+              <button
+                type="button"
+                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting ? 'Saving...' : isEdit ? 'Update Product' : 'Create Product'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default ProductForm;
+export default ProductMasterForm;
