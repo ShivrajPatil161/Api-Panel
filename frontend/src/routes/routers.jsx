@@ -20,6 +20,7 @@ import ProductAssignmentForm from "../components/Forms/ProductAssign"
 import FileUploadForm from "../components/Forms/FileUpload"
 import ProductPricingForm from "../components/Forms/ProductPricing"
 import ChargeCalculationForm from "../components/Forms/ChargeCalculation"
+import Login from "../components/Login"
 
 
 export  const router = createBrowserRouter([
@@ -38,7 +39,9 @@ export  const router = createBrowserRouter([
       { path: "assignment", element: <ProductAssignmentForm /> },
       { path: "pricing", element: <ProductPricingForm /> },
       { path: "upload", element: <FileUploadForm /> },
-      { path: "charges", element: <ChargeCalculationForm /> }
+      { path: "charges", element: <ChargeCalculationForm /> },
+      { path: "login", element: <Login /> }
+
     ]
   }
 ])
