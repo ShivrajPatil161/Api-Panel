@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 
 export default function Login() {
-  const [userType, setUserType] = useState('franchise');
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -17,6 +18,9 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    localStorage.setItem('authToken', "dasdcad")
+    navigate("/dashboard")
     
     if (!formData.email || !formData.password) {
       alert('Please fill in all fields');
@@ -27,7 +31,7 @@ export default function Login() {
     
     // Simulate login process
     setTimeout(() => {
-      alert(`Welcome! Logging in as ${userType.charAt(0).toUpperCase() + userType.slice(1)} user: ${formData.email}`);
+      alert(`Welcome! Logging in as  user: ${formData.email}`);
       setIsLoading(false);
       setFormData({ email: '', password: '' });
     }, 1500);
@@ -41,50 +45,23 @@ export default function Login() {
   };
 
   const handleSignup = () => {
-    alert(`Redirecting to ${userType} registration page...`);
+    alert(`Redirecting to  registration page...`);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 flex items-center justify-center p-5">
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-500 to-gray-950 flex items-center justify-center p-5">
       <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-md animate-fadeInUp">
         {/* Header */}
-        <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 text-white px-8 py-10 text-center">
+        <div className="bg-gradient-to-br from-blue-500 via-black to-indigo-600 text-white px-8 py-10 text-center">
           <h1 className="text-3xl font-semibold mb-2">Welcome Back</h1>
           <p className="text-blue-100 text-base">
-            {userType === 'franchise' 
-              ? 'Access your franchise dashboard' 
-              : 'Access your merchant portal'
-            }
+            
           </p>
         </div>
 
         {/* Form */}
         <div className="p-8">
-          {/* User Type Selector */}
-          <div className="flex gap-3 mb-8">
-            <button
-              type="button"
-              onClick={() => setUserType('franchise')}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300 border-2 ${
-                userType === 'franchise'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white border-blue-500'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-              }`}
-            >
-              🏢 Franchise
-            </button>
-            <button
-              type="button"
-              onClick={() => setUserType('merchant')}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300 border-2 ${
-                userType === 'merchant'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white border-blue-500'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-              }`}
-            >
-              🏪 Merchant
-            </button>
-          </div>
+          
 
           <div className="space-y-6">
             {/* Email Field */}
@@ -125,7 +102,7 @@ export default function Login() {
             <button
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold text-base rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/30 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full py-4 bg-gradient-to-r from-blue-500 to-green-500 text-white font-semibold text-base rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/30 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
@@ -156,22 +133,7 @@ export default function Login() {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fadeInUp {
-          animation: fadeInUp 0.6s ease-out;
-        }
-      `}</style>
+    
     </div>
   );
 }
