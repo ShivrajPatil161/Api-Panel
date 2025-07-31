@@ -2,7 +2,7 @@ import React from "react"
 
 const Dashboard = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ml-7" >
       <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
 
       {/* Top Stats */}

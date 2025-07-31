@@ -121,7 +121,7 @@ const VendorRatesForm = ({ onSubmit, initialData = null, isEdit = false }) => {
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-lg">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-lg">
+          <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white p-6 rounded-t-lg">
             <div className="flex items-center space-x-3">
               <DollarSign className="h-8 w-8" />
               <div>
@@ -542,7 +542,7 @@ const VendorRatesForm = ({ onSubmit, initialData = null, isEdit = false }) => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? 'Saving...' : isEdit ? 'Update Rates' : 'Create Rates'}
               </button>
