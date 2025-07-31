@@ -75,7 +75,7 @@ const VendorMasterForm = ({ onSubmit, initialData = null, isEdit = false }) => {
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-lg">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
+          <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white p-6 rounded-t-lg">
             <div className="flex items-center space-x-3">
               <Building2 className="h-8 w-8" />
               <div>
