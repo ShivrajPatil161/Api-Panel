@@ -135,7 +135,7 @@ const FileUploadForm = () => {
     <div className="max-w-2xl mx-auto p-8">
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+        <div className="bg-gradient-to-r from-gray-700 to-gray-500 px-6 py-4">
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">
             <Upload className="w-5 h-5" />
             Document Upload Center
@@ -259,7 +259,7 @@ const FileUploadForm = () => {
             <button
               type="submit"
               disabled={isUploading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
             >
               {isUploading ? (
                 <>

@@ -80,7 +80,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
       <div className="bg-gray-100 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg sticky top-0">
+        <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white p-6 rounded-t-lg sticky top-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Building2 className="h-8 w-8" />

@@ -67,7 +67,6 @@ const Sidebar = () => {
       iconColor: '',
       children: [
         { title: 'Product List', path: '/dashboard/inventory', icon: Package },
-        { title: 'Add Product', path: '/dashboard/inventory/add', icon: Package },
         { title: 'Product Pricing', path: '/dashboard/inventory/pricing', icon: Calculator },
          { title: 'Inward Entry', path: '/dashboard/inventory/inward', icon: ArrowDown },
         { title: 'Outward Entry', path: '/dashboard/inventory/outward', icon: ArrowUp },

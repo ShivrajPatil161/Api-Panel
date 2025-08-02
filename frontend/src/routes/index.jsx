@@ -1,50 +1,3 @@
-// import { createBrowserRouter } from "react-router"
-// import App from "../App"
-// import Dashboard from "../components/Dashborad"
-// import Vendor from "../components/Forms/Vendor"
-// import Product from "../components/Forms/Product"
-// import Inward from "../components/Forms/Inward"
-// import Outward from "../components/Forms/Outward"
-// import Return from "../components/Forms/Return"
-// import CustomerOnborading from "../components/Forms/CustomerOnborading"
-// import ProductAssign from "../components/Forms/ProductAssign"
-// import ProductPricing from "../components/Forms/ProductPricing"
-// import FileUpload from "../components/Forms/FileUpload"
-// import ChargeCalculation from "../components/Forms/ChargeCalculation"
-// import VendorRateForm from "../components/Forms/VendorRate"
-// import ProductForm from "../components/Forms/Product"
-// import InwardForm from "../components/Forms/Inward"
-// import OutwardForm from "../components/Forms/Outward"
-// import ReturnForm from "../components/Forms/Return"
-// import ProductAssignmentForm from "../components/Forms/ProductAssign"
-// import FileUploadForm from "../components/Forms/FileUpload"
-// import ProductPricingForm from "../components/Forms/ProductPricing"
-// import ChargeCalculationForm from "../components/Forms/ChargeCalculation"
-// import Login from "../components/Auth/Login"
-
-
-// export  const router = createBrowserRouter([
-//   {
-//     path: "/",
-//     element: <App />,
-//     children: [
-//     { index: true, element: <Dashboard /> }, // ✅ index route for "/"
-//       { path: "vendor", element: <Vendor /> },
-//       { path: "vendor-rates", element: <VendorRateForm /> },
-//       { path: "product", element: <ProductForm /> },
-//       { path: "inward", element: <InwardForm /> },
-//       { path: "outward", element: <OutwardForm /> },
-//       { path: "return", element: <ReturnForm /> },
-//       { path: "customer", element: <CustomerOnborading /> },
-//       { path: "assignment", element: <ProductAssignmentForm /> },
-//       { path: "pricing", element: <ProductPricingForm /> },
-//       { path: "upload", element: <FileUploadForm /> },
-//       { path: "charges", element: <ChargeCalculationForm /> },
-//       { path: "login", element: <Login /> }
-
-//     ]
-//   }
-// ])
 
 import { createBrowserRouter, Navigate } from 'react-router'
 import App from '../App.jsx'
@@ -57,10 +10,7 @@ import Login from '../components/Auth/Login.jsx'
 // import Login from '../pages/auth/Login.jsx'
 // import Signup from '../pages/auth/Signup.jsx'
 import Dashboard from '../components/Dashborad.jsx'
-import InwardForm from '../components/Forms/Inward.jsx'
-import OutwardForm from '../components/Forms/Outward.jsx'
 import VendorRatesForm from '../components/Forms/VendorRate.jsx'
-import ProductPricingForm from '../components/Forms/ProductPricing.jsx'
 import CustomerOnboarding from '../components/Forms/CustomerOnborading.jsx'
 import ProductAssignmentForm from '../components/Forms/ProductAssign.jsx'
 import FileUploadForm from '../components/Forms/FileUpload.jsx'
@@ -68,8 +18,11 @@ import ChargeCalculationForm from '../components/Forms/ChargeCalculation.jsx'
 import VendorListPage from '../components/Tables/VendorTable.jsx'
 import VendorMasterForm from '../components/Forms/Vendor.jsx'
 import ProductMasterForm from '../components/Forms/Product.jsx'
-import ReturnForm from '../components/Forms/Return.jsx'
 import ProductPricingPage from '../components/Forms/ProductPricing.jsx'
+import Inward from '../components/Forms/Inward.jsx'
+import Outward from '../components/Forms/Outward.jsx'
+import Returns from '../components/Forms/Return.jsx'
+import ProductList from '../components/Tables/ProductList.jsx'
 
 // Dashboard
 // import Dashboard from '../pages/Dashboard.jsx'
@@ -164,14 +117,14 @@ export const router = createBrowserRouter([
               // }
             ]
           },
-          // Products routes
+          // Inventory routes
           {
             path: "inventory",
             children: [
-              // {
-              //   index: true,
-              //   element: <ProductList />
-              // },
+              {
+                index: true,
+                element: <ProductList />
+              },
               {
                 path: "add",
                 element: <ProductMasterForm />
@@ -182,15 +135,15 @@ export const router = createBrowserRouter([
               },
               {
                 path: "inward",
-                element: <InwardForm />
+                element: <Inward />
               },
               {
                 path: "outward",
-                element: <OutwardForm />
+                element: <Outward />
               },
               {
                 path: "returns",
-                element: <ReturnForm />
+                element: <Returns />
               }
             ]
           },

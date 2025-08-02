@@ -1,346 +1,598 @@
-// import React from "react";
-// import { Formik, Form, Field, ErrorMessage } from "formik";
-// import * as Yup from "yup";
 
-// // Role types can be used to distinguish franchise and merchant
-// const roleOptions = ["Franchise", "Merchant"];
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 
-// const CustomerOnboardingForm = () => {
-//   const initialValues = {
-//     customerName: "",
-//     role: "",
-//     email: "",
-//     phone: "",
-//     address: "",
-//     contactPerson: "",
-//     gstNumber: "",
-//     isActive: false
-//   };
+// Reusable Form Components
+const FormInput = ({ label, name, register, errors, required = false, type = "text", ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      {...register(name, { required: required && `${label} is required` })}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {...props}
+    />
+    {errors[name] && (
+      <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
+    )}
+  </div>
+)
 
-//   const validationSchema = Yup.object({
-//     customerName: Yup.string().required("Customer name is required"),
-//     role: Yup.string().required("Role is required"),
-//     email: Yup.string().email("Invalid email").required("Email is required"),
-//     phone: Yup.string()
-//       .matches(/^[0-9]{10}$/, "Enter a valid 10-digit phone number")
-//       .required("Phone is required"),
-//     address: Yup.string().required("Address is required"),
-//     contactPerson: Yup.string().required("Contact person is required"),
-//     gstNumber: Yup.string()
-//       .matches(/^(\d{2}[A-Z]{5}\d{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1})$/, "Invalid GSTIN")
-//       .required("GST number is required"),
-//     isActive: Yup.boolean()
-//   });
+const FormSelect = ({ label, name, register, errors, required = false, options, placeholder, ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <select
+      {...register(name, { required: required && `${label} is required` })}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {...props}
+    >
+      <option value="">{placeholder || `Select ${label}`}</option>
+      {options.map(option => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+    {errors[name] && (
+      <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
+    )}
+  </div>
+)
 
-//   const onSubmit = (values, { resetForm }) => {
-//     console.log("Customer Onboarding Submitted:", values);
-//     resetForm();
-//   };
+const FormTextarea = ({ label, name, register, errors, required = false, ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <textarea
+      {...register(name, { required: required && `${label} is required` })}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {...props}
+    />
+    {errors[name] && (
+      <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
+    )}
+  </div>
+)
 
-//   return (
-//     <div className="max-w-xl mx-auto p-4 shadow-md rounded-xl bg-white">
-//       <h2 className="text-xl font-bold mb-4">Customer Onboarding Form</h2>
-//       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-//         <Form className="space-y-4">
-//           <div>
-//             <label className="block mb-1">Customer Name</label>
-//             <Field name="customerName" type="text" className="w-full border rounded p-2" />
-//             <ErrorMessage name="customerName" component="div" className="text-red-600 text-sm" />
-//           </div>
+// Document Upload Component
+const DocumentUpload = ({ label, name, register, errors, required = false, acceptedTypes = ".pdf,.jpg,.jpeg,.png" }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type="file"
+      accept={acceptedTypes}
+      {...register(name, { required: required && `${label} is required` })}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+    />
+    <p className="mt-1 text-xs text-gray-500">Accepted formats: PDF, JPG, PNG (Max 5MB)</p>
+    {errors[name] && (
+      <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
+    )}
+  </div>
+)
 
-//           <div>
-//             <label className="block mb-1">Role</label>
-//             <Field name="role" as="select" className="w-full border rounded p-2">
-//               <option value="">Select Role</option>
-//               {roleOptions.map((r, i) => (
-//                 <option key={i} value={r}>{r}</option>
-//               ))}
-//             </Field>
-//             <ErrorMessage name="role" component="div" className="text-red-600 text-sm" />
-//           </div>
+// Basic Details Component
+const BasicDetailsForm = ({ register, errors, customerType }) => {
+  const businessTypes = [
+    { value: 'retail', label: 'Retail Store' },
+    { value: 'restaurant', label: 'Restaurant/Food' },
+    { value: 'services', label: 'Services' },
+    { value: 'grocery', label: 'Grocery/Supermarket' },
+    { value: 'pharmacy', label: 'Pharmacy' },
+    { value: 'other', label: 'Other' }
+  ]
 
-//           <div>
-//             <label className="block mb-1">Email</label>
-//             <Field name="email" type="email" className="w-full border rounded p-2" />
-//             <ErrorMessage name="email" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">Phone</label>
-//             <Field name="phone" type="text" className="w-full border rounded p-2" />
-//             <ErrorMessage name="phone" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">Address</label>
-//             <Field name="address" as="textarea" className="w-full border rounded p-2" />
-//             <ErrorMessage name="address" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">Contact Person</label>
-//             <Field name="contactPerson" type="text" className="w-full border rounded p-2" />
-//             <ErrorMessage name="contactPerson" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">GST Number</label>
-//             <Field name="gstNumber" type="text" className="w-full border rounded p-2 uppercase" />
-//             <ErrorMessage name="gstNumber" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div className="flex items-center">
-//             <Field name="isActive" type="checkbox" className="mr-2" />
-//             <label htmlFor="isActive">Active</label>
-//           </div>
-
-//           <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-//             Submit
-//           </button>
-//         </Form>
-//       </Formik>
-//     </div>
-//   );
-// };
-
-// export default CustomerOnboardingForm;
-
-import React from "react"
-import { Formik, Form, Field, FieldArray } from "formik"
-import * as Yup from "yup"
-
-// Mock franchise list
-const franchiseOptions = [
-  { id: "f1", name: "Franchise Alpha" },
-  { id: "f2", name: "Franchise Beta" },
-  { id: "f3", name: "Franchise Gamma" }
-]
-
-// Validation Schema
-const CustomerSchema = Yup.object().shape({
-  customerType: Yup.string().required("Customer type is required"),
-
-  // Franchise validations
-  franchiseName: Yup.string().when("customerType", {
-    is: "franchise",
-    then: Yup.string().required("Franchise name is required")
-  }),
-  franchiseCode: Yup.string().when("customerType", {
-    is: "franchise",
-    then: Yup.string().required("Franchise code is required")
-  }),
-  franchiseEmail: Yup.string().when("customerType", {
-    is: "franchise",
-    then: Yup.string().email().required("Franchise email is required")
-  }),
-
-  // Merchant(s) under franchise
-  merchants: Yup.array().of(
-    Yup.object().shape({
-      name: Yup.string().required("Merchant name is required"),
-      code: Yup.string().required("Merchant code is required"),
-      email: Yup.string().email().required("Merchant email is required")
-    })
-  ),
-
-  // Standalone merchant validations
-  merchantName: Yup.string().when("customerType", {
-    is: "merchant",
-    then: Yup.string().required("Merchant name is required")
-  }),
-  merchantCode: Yup.string().when("customerType", {
-    is: "merchant",
-    then: Yup.string().required("Merchant code is required")
-  }),
-  merchantEmail: Yup.string().when("customerType", {
-    is: "merchant",
-    then: Yup.string().email().required("Merchant email is required")
-  }),
-  franchiseId: Yup.string().when("customerType", {
-    is: "merchant",
-    then: Yup.string().required("Please select a franchise")
-  })
-})
-
-const CustomerOnboarding = () => {
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">Customer Onboarding</h2>
+    <div className="bg-gray-50 p-6 rounded-lg">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        {customerType === 'franchise' ? 'Franchise' : 'Merchant'} Basic Details
+      </h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormInput
+          label={customerType === 'franchise' ? 'Franchise Name' : 'Business Name'}
+          name="businessName"
+          register={register}
+          errors={errors}
+          required
+          placeholder="Enter business name"
+        />
+        
+        <FormInput
+          label="Legal Entity Name"
+          name="legalName"
+          register={register}
+          errors={errors}
+          required
+          placeholder="As per registration documents"
+        />
+        
+        <FormSelect
+          label="Business Type"
+          name="businessType"
+          register={register}
+          errors={errors}
+          required
+          options={businessTypes}
+        />
+        
+        <FormInput
+          label="GST Number"
+          name="gstNumber"
+          register={register}
+          errors={errors}
+          required
+          placeholder="Enter GST number"
+        />
+        
+        <FormInput
+          label="PAN Number"
+          name="panNumber"
+          register={register}
+          errors={errors}
+          required
+          placeholder="Enter PAN number"
+        />
+        
+        <FormInput
+          label="Registration Number"
+          name="registrationNumber"
+          register={register}
+          errors={errors}
+          placeholder="Company/Shop registration number"
+        />
+      </div>
 
-      <Formik
-        initialValues={{
-          customerType: "",
-          franchiseName: "",
-          franchiseCode: "",
-          franchiseEmail: "",
-          merchants: [],
-          merchantName: "",
-          merchantCode: "",
-          merchantEmail: "",
-          franchiseId: ""
-        }}
-        validationSchema={CustomerSchema}
-        onSubmit={(values) => {
-          console.log("Form Submitted:", values)
-          alert("Form submitted successfully! (Check console)")
-        }}
-      >
-        {({ values, errors, touched }) => (
-          <Form className="space-y-4">
-            {/* Type Selector */}
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <Field type="radio" name="customerType" value="franchise" />
-                Franchise
-              </label>
-              <label className="flex items-center gap-2">
-                <Field type="radio" name="customerType" value="merchant" />
-                Merchant
-              </label>
-            </div>
-            {errors.customerType && touched.customerType && (
-              <div className="text-red-500 text-sm">{errors.customerType}</div>
-            )}
+      <div className="mt-4">
+        <FormTextarea
+          label="Business Address"
+          name="businessAddress"
+          register={register}
+          errors={errors}
+          required
+          rows={3}
+          placeholder="Complete business address"
+        />
+      </div>
+    </div>
+  )
+}
 
-            {/* Franchise Onboarding */}
-            {values.customerType === "franchise" && (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm">Franchise Name</label>
-                    <Field name="franchiseName" className="input" />
-                    <div className="text-red-500 text-sm">
-                      {errors.franchiseName && touched.franchiseName && errors.franchiseName}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm">Franchise Code</label>
-                    <Field name="franchiseCode" className="input" />
-                    <div className="text-red-500 text-sm">
-                      {errors.franchiseCode && touched.franchiseCode && errors.franchiseCode}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm">Franchise Email</label>
-                    <Field name="franchiseEmail" type="email" className="input" />
-                    <div className="text-red-500 text-sm">
-                      {errors.franchiseEmail && touched.franchiseEmail && errors.franchiseEmail}
-                    </div>
-                  </div>
-                </div>
+// Contact Details Component
+const ContactDetailsForm = ({ register, errors }) => (
+  <div className="bg-gray-50 p-6 rounded-lg">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Details</h3>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormInput
+        label="Primary Contact Name"
+        name="primaryContactName"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Contact person name"
+      />
+      
+      <FormInput
+        label="Primary Contact Mobile"
+        name="primaryContactMobile"
+        register={register}
+        errors={errors}
+        required
+        type="tel"
+        placeholder="Primary mobile number"
+      />
+      
+      <FormInput
+        label="Primary Contact Email"
+        name="primaryContactEmail"
+        register={register}
+        errors={errors}
+        required
+        type="email"
+        placeholder="Primary email address"
+      />
+      
+      <FormInput
+        label="Alternate Mobile"
+        name="alternateContactMobile"
+        register={register}
+        errors={errors}
+        type="tel"
+        placeholder="Alternate mobile number"
+      />
+      
+      <FormInput
+        label="Landline Number"
+        name="landlineNumber"
+        register={register}
+        errors={errors}
+        type="tel"
+        placeholder="Landline with STD code"
+      />
+      
+      <FormInput
+        label="WhatsApp Number"
+        name="whatsappNumber"
+        register={register}
+        errors={errors}
+        type="tel"
+        placeholder="WhatsApp number"
+      />
+    </div>
+  </div>
+)
 
-                {/* Add Merchants */}
-                <FieldArray name="merchants">
-                  {({ push, remove }) => (
-                    <div>
-                      <div className="flex justify-between items-center mt-6 mb-2">
-                        <h3 className="font-semibold text-lg">Merchants under Franchise</h3>
-                        <button
-                          type="button"
-                          className="bg-blue-600 text-white px-3 py-1 rounded"
-                          onClick={() => push({ name: "", code: "", email: "" })}
-                        >
-                          + Add Merchant
-                        </button>
-                      </div>
+// Document Upload Component
+const DocumentsForm = ({ register, errors, customerType }) => (
+  <div className="bg-gray-50 p-6 rounded-lg">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Document Upload</h3>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <DocumentUpload
+        label="PAN Card"
+        name="panCardDocument"
+        register={register}
+        errors={errors}
+        required
+      />
+      
+      <DocumentUpload
+        label="GST Certificate"
+        name="gstCertificate"
+        register={register}
+        errors={errors}
+        required
+      />
+      
+      <DocumentUpload
+        label="Address Proof"
+        name="addressProof"
+        register={register}
+        errors={errors}
+        required
+      />
+      
+      <DocumentUpload
+        label="Bank Account Proof"
+        name="bankProof"
+        register={register}
+        errors={errors}
+        required
+      />
+      
+      {customerType === 'franchise' && (
+        <>
+          <DocumentUpload
+            label="Franchise Agreement"
+            name="franchiseAgreement"
+            register={register}
+            errors={errors}
+          />
+          
+          <DocumentUpload
+            label="Trade License"
+            name="tradeLicense"
+            register={register}
+            errors={errors}
+          />
+        </>
+      )}
+    </div>
+  </div>
+)
 
-                      {values.merchants.length > 0 &&
-                        values.merchants.map((merchant, index) => (
-                          <div
-                            key={index}
-                            className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end mb-2"
-                          >
-                            <div>
-                              <label className="text-sm">Name</label>
-                              <Field name={`merchants.${index}.name`} className="input" />
-                              <div className="text-red-500 text-sm">
-                                {errors.merchants?.[index]?.name}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm">Code</label>
-                              <Field name={`merchants.${index}.code`} className="input" />
-                              <div className="text-red-500 text-sm">
-                                {errors.merchants?.[index]?.code}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm">Email</label>
-                              <Field name={`merchants.${index}.email`} className="input" />
-                              <div className="text-red-500 text-sm">
-                                {errors.merchants?.[index]?.email}
-                              </div>
-                            </div>
-                            <div>
-                              <button
-                                type="button"
-                                className="text-red-600 text-sm underline"
-                                onClick={() => remove(index)}
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </FieldArray>
-              </>
-            )}
+// Bank Details Component
+const BankDetailsForm = ({ register, errors }) => (
+  <div className="bg-gray-50 p-6 rounded-lg">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Bank Account Details</h3>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormInput
+        label="Bank Name"
+        name="bankName"
+        register={register}
+        errors={errors}
+        //required
+        placeholder="Enter bank name"
+      />
+      
+      <FormInput
+        label="Account Holder Name"
+        name="accountHolderName"
+        register={register}
+        errors={errors}
+        //required
+        placeholder="As per bank records"
+      />
+      
+      <FormInput
+        label="Account Number"
+        name="accountNumber"
+        register={register}
+        errors={errors}
+        //required
+        placeholder="Bank account number"
+      />
+      
+      <FormInput
+        label="IFSC Code"
+        name="ifscCode"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Bank IFSC code"
+      />
+      
+      <FormInput
+        label="Branch Name"
+        name="branchName"
+        register={register}
+        errors={errors}
+        //required
+        placeholder="Bank branch name"
+      />
+      
+      <FormSelect
+        label="Account Type"
+        name="accountType"
+        register={register}
+        errors={errors}
+        required
+        options={[
+          { value: 'current', label: 'Current Account' },
+          { value: 'savings', label: 'Savings Account' }
+        ]}
+      />
+    </div>
+  </div>
+)
 
-            {/* Merchant Onboarding */}
-            {values.customerType === "merchant" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm">Merchant Name</label>
-                  <Field name="merchantName" className="input" />
-                  <div className="text-red-500 text-sm">
-                    {errors.merchantName && touched.merchantName && errors.merchantName}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm">Merchant Code</label>
-                  <Field name="merchantCode" className="input" />
-                  <div className="text-red-500 text-sm">
-                    {errors.merchantCode && touched.merchantCode && errors.merchantCode}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm">Merchant Email</label>
-                  <Field name="merchantEmail" className="input" />
-                  <div className="text-red-500 text-sm">
-                    {errors.merchantEmail && touched.merchantEmail && errors.merchantEmail}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm">Assign to Franchise</label>
-                  <Field name="franchiseId" as="select" className="input">
-                    <option value="">Select Franchise</option>
-                    {franchiseOptions.map((f) => (
-                      <option key={f.id} value={f.id}>
-                        {f.name}
-                      </option>
-                    ))}
-                  </Field>
-                  <div className="text-red-500 text-sm">
-                    {errors.franchiseId && touched.franchiseId && errors.franchiseId}
-                  </div>
-                </div>
+// Franchise Selection Component
+const FranchiseSelectionForm = ({ register, errors }) => {
+  const [hasFranchise, setHasFranchise] = useState('')
+  
+  // Mock franchise data - replace with API call
+  const availableFranchises = [
+    { value: 'franchise_001', label: 'TechPay Solutions' },
+    { value: 'franchise_002', label: 'Digital Commerce Hub' },
+    { value: 'franchise_003', label: 'PayTech Partners' }
+  ]
+
+  return (
+    <div className="bg-gray-50 p-6 rounded-lg">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Franchise Association</h3>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Do you belong to a franchise?
+          </label>
+          <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="yes"
+                {...register('hasFranchise', { required: 'Please select an option' })}
+                onChange={(e) => setHasFranchise(e.target.value)}
+                className="mr-2"
+              />
+              <span>Yes, I belong to a franchise</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="no"
+                {...register('hasFranchise', { required: 'Please select an option' })}
+                onChange={(e) => setHasFranchise(e.target.value)}
+                className="mr-2"
+              />
+              <span>No, I'm an independent merchant</span>
+            </label>
+          </div>
+          {errors.hasFranchise && (
+            <p className="mt-1 text-sm text-red-600">{errors.hasFranchise.message}</p>
+          )}
+        </div>
+
+        {hasFranchise === 'yes' && (
+          <FormSelect
+            label="Select Your Franchise"
+            name="franchiseId"
+            register={register}
+            errors={errors}
+            //required
+            options={availableFranchises}
+            placeholder="Choose your franchise"
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Main Onboarding Component
+const CustomerOnboarding = () => {
+  const [customerType, setCustomerType] = useState('')
+  const [currentStep, setCurrentStep] = useState(1)
+  const [formData, setFormData] = useState({})
+  
+  const { register, handleSubmit, formState: { errors }, reset } = useForm()
+
+  const getStepsForCustomerType = () => {
+    const baseSteps = ['Customer Type']
+    
+    if (customerType === 'franchise') {
+      return [...baseSteps, 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
+    } else if (customerType === 'merchant') {
+      return [...baseSteps, 'Franchise Info', 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
+    } else if (customerType === 'franchise_merchant') {
+      return [...baseSteps, 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
+    }
+    
+    return baseSteps
+  }
+
+  const steps = getStepsForCustomerType()
+
+  const handleCustomerTypeSelect = (type) => {
+    setCustomerType(type)
+    setCurrentStep(2)
+  }
+
+  const handleStepSubmit = (data) => {
+    setFormData(prev => ({ ...prev, ...data }))
+    
+    if (currentStep < steps.length) {
+      setCurrentStep(currentStep + 1)
+    } else {
+      // Final submission
+      const finalData = { ...formData, ...data, customerType }
+      console.log('Customer Onboarding Data:', finalData)
+      alert('Customer onboarding completed successfully!')
+      
+      // Reset form
+      reset()
+      setFormData({})
+      setCurrentStep(1)
+      setCustomerType('')
+    }
+  }
+
+  const goToPreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Customer Onboarding</h1>
+      
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center">
+          {steps.map((step, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                index + 1 <= currentStep 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-600'
+              }`}>
+                {index + 1}
               </div>
+              <span className="text-xs mt-1 text-gray-600">{step}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex mt-2">
+          <div 
+            className="h-1 bg-blue-600 transition-all duration-300"
+            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+          />
+          <div 
+            className="flex-1 h-1 bg-gray-200"
+          />
+        </div>
+      </div>
+
+      {/* Step Content */}
+      <div className="space-y-6">
+        {currentStep === 1 && (
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-6">Select Customer Type</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <button
+                onClick={() => handleCustomerTypeSelect('franchise')}
+                className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+              >
+                <div className="text-4xl mb-2">🏢</div>
+                <h3 className="font-semibold">Franchise</h3>
+                <p className="text-sm text-gray-600">Register as a franchise owner</p>
+              </button>
+              
+              <button
+                onClick={() => handleCustomerTypeSelect('merchant')}
+                className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+              >
+                <div className="text-4xl mb-2">🏪</div>
+                <h3 className="font-semibold">Merchant</h3>
+                <p className="text-sm text-gray-600">merchant onboarding</p>
+              </button>
+              
+              {/* <button
+                onClick={() => handleCustomerTypeSelect('franchise_merchant')}
+                className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+              >
+                <div className="text-4xl mb-2">🤝</div>
+                <h3 className="font-semibold">Add Merchant</h3>
+                <p className="text-sm text-gray-600">Franchise adding new merchant</p>
+              </button> */}
+            </div>
+          </div>
+        )}
+
+        {currentStep > 1 && (
+          <div onSubmit={handleSubmit(handleStepSubmit)}>
+            {/* Franchise Info Step - only for independent merchants */}
+            {currentStep === 2 && customerType === 'merchant' && (
+              <FranchiseSelectionForm register={register} errors={errors} />
+            )}
+            
+            {/* Basic Details Step */}
+            {((currentStep === 2 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
+              (currentStep === 3 && customerType === 'merchant')) && (
+              <BasicDetailsForm register={register} errors={errors} customerType={customerType === 'franchise_merchant' ? 'merchant' : customerType} />
+            )}
+            
+            {/* Contact Details Step */}
+            {((currentStep === 3 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
+              (currentStep === 4 && customerType === 'merchant')) && (
+              <ContactDetailsForm register={register} errors={errors} />
+            )}
+            
+            {/* Bank Details Step */}
+            {((currentStep === 4 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
+              (currentStep === 5 && customerType === 'merchant')) && (
+              <BankDetailsForm register={register} errors={errors} />
+            )}
+            
+            {/* Documents Step */}
+            {((currentStep === 5 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
+              (currentStep === 6 && customerType === 'merchant')) && (
+              <DocumentsForm register={register} errors={errors} customerType={customerType === 'franchise_merchant' ? 'merchant' : customerType} />
             )}
 
-            {/* Submit Button */}
-            <div className="pt-4">
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8">
               <button
-                type="submit"
-                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                type="button"
+                onClick={goToPreviousStep}
+                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                Submit
+                Previous
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleSubmit(handleStepSubmit)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {currentStep === steps.length ? (
+                  customerType === 'franchise_merchant' ? 'Add Merchant' : 'Complete Onboarding'
+                ) : 'Next Step'}
               </button>
             </div>
-          </Form>
+          </div>
         )}
-      </Formik>
+      </div>
     </div>
   )
 }
