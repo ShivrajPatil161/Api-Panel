@@ -1,403 +1,553 @@
-import React, { useState } from "react";
-import { Package, DollarSign, Percent, Calendar, FileText, Hash, AlertCircle, CheckCircle2, Calculator } from "lucide-react";
+// import React from "react";
+// import { Formik, Form, Field, ErrorMessage } from "formik";
+// import * as Yup from "yup";
 
-const ProductPricingForm = () => {
-  const [formData, setFormData] = useState({
-    pricingCode: '',
-    product: '',
-    basePrice: '',
-    gstPercentage: '',
-    effectiveFrom: '',
-    description: ''
-  });
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+// // Sample product options – replace with dynamic list from DB/API
+// const products = ["Swap Machine", "QR Code", "QR + Soundbox"];
 
-  // Enhanced product options with details
-  const products = [
-    { 
-      id: "swap_machine", 
-      name: "Swap Machine", 
-      category: "Hardware",
-      description: "Digital payment swap machine"
-    },
-    { 
-      id: "qr_code", 
-      name: "QR Code", 
-      category: "Digital",
-      description: "QR code payment solution"
-    },
-    { 
-      id: "qr_soundbox", 
-      name: "QR + Soundbox", 
-      category: "Combo",
-      description: "QR code with audio confirmation"
-    },
-    { 
-      id: "pos_terminal", 
-      name: "POS Terminal", 
-      category: "Hardware",
-      description: "Point of sale terminal device"
-    },
-    { 
-      id: "mobile_app", 
-      name: "Mobile App License", 
-      category: "Software",
-      description: "Mobile application license"
-    }
-  ];
+// const ProductPricingForm = () => {
+//   const initialValues = {
+//     pricingCode: '',
+//     product: '',
+//     basePrice: '',
+//     gstPercentage: '',
+//     effectiveFrom: '',
+//     description: ''
+//   };
 
-  const validateForm = () => {
-    const newErrors = {};
+//   const validationSchema = Yup.object({
+//     pricingCode: Yup.string().required("Pricing Code is required"),
+//     product: Yup.string().required("Product is required"),
+//     basePrice: Yup.number().required("Base price is required").min(0, "Must be a positive number"),
+//     gstPercentage: Yup.number().required("GST % is required").min(0).max(100),
+//     effectiveFrom: Yup.date().required("Effective date is required"),
+//     description: Yup.string()
+//   });
 
-    if (!formData.pricingCode.trim()) {
-      newErrors.pricingCode = "Pricing code is required";
-    } else if (!/^[A-Z0-9-_]+$/i.test(formData.pricingCode)) {
-      newErrors.pricingCode = "Pricing code should contain only letters, numbers, hyphens, and underscores";
-    }
+//   const onSubmit = (values, { resetForm }) => {
+//     console.log("Product Pricing Master Submitted:", values);
+//     resetForm();
+//   };
 
-    if (!formData.product) {
-      newErrors.product = "Please select a product";
-    }
+//   return (
+//     <div className="max-w-xl mx-auto p-4 bg-white shadow-md rounded-xl">
+//       <h2 className="text-xl font-bold mb-4">Product Pricing Master Form</h2>
+//       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={onSubmit}>
+//         <Form className="space-y-4">
+//           {/* Pricing Code */}
+//           <div>
+//             <label className="block mb-1">Pricing Code</label>
+//             <Field name="pricingCode" type="text" className="w-full border rounded p-2" />
+//             <ErrorMessage name="pricingCode" component="div" className="text-red-600 text-sm" />
+//           </div>
 
-    if (!formData.basePrice) {
-      newErrors.basePrice = "Base price is required";
-    } else if (parseFloat(formData.basePrice) < 0) {
-      newErrors.basePrice = "Base price must be a positive number";
-    }
+//           {/* Product */}
+//           <div>
+//             <label className="block mb-1">Product</label>
+//             <Field name="product" as="select" className="w-full border rounded p-2">
+//               <option value="">Select Product</option>
+//               {products.map((p, i) => (
+//                 <option key={i} value={p}>{p}</option>
+//               ))}
+//             </Field>
+//             <ErrorMessage name="product" component="div" className="text-red-600 text-sm" />
+//           </div>
 
-    if (!formData.gstPercentage) {
-      newErrors.gstPercentage = "GST percentage is required";
-    } else if (parseFloat(formData.gstPercentage) < 0 || parseFloat(formData.gstPercentage) > 100) {
-      newErrors.gstPercentage = "GST percentage must be between 0 and 100";
-    }
+//           {/* Base Price */}
+//           <div>
+//             <label className="block mb-1">Base Price (₹)</label>
+//             <Field name="basePrice" type="number" className="w-full border rounded p-2" />
+//             <ErrorMessage name="basePrice" component="div" className="text-red-600 text-sm" />
+//           </div>
 
-    if (!formData.effectiveFrom) {
-      newErrors.effectiveFrom = "Effective date is required";
-    } else if (new Date(formData.effectiveFrom) < new Date().setHours(0, 0, 0, 0)) {
-      newErrors.effectiveFrom = "Effective date cannot be in the past";
-    }
+//           {/* GST Percentage */}
+//           <div>
+//             <label className="block mb-1">GST (%)</label>
+//             <Field name="gstPercentage" type="number" className="w-full border rounded p-2" />
+//             <ErrorMessage name="gstPercentage" component="div" className="text-red-600 text-sm" />
+//           </div>
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+//           {/* Effective From */}
+//           <div>
+//             <label className="block mb-1">Effective From</label>
+//             <Field name="effectiveFrom" type="date" className="w-full border rounded p-2" />
+//             <ErrorMessage name="effectiveFrom" component="div" className="text-red-600 text-sm" />
+//           </div>
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
-    }
-  };
+//           {/* Description */}
+//           <div>
+//             <label className="block mb-1">Description (optional)</label>
+//             <Field name="description" as="textarea" className="w-full border rounded p-2" />
+//           </div>
 
-  const calculateTotalPrice = () => {
-    const base = parseFloat(formData.basePrice) || 0;
-    const gst = parseFloat(formData.gstPercentage) || 0;
-    const gstAmount = (base * gst) / 100;
-    return {
-      basePrice: base,
-      gstAmount: gstAmount,
-      totalPrice: base + gstAmount
-    };
-  };
+//           <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+//             Submit
+//           </button>
+//         </Form>
+//       </Formik>
+//     </div>
+//   );
+// };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+// export default ProductPricingForm;
 
-    setIsSubmitting(true);
+import React, { useState, useMemo } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  createColumnHelper
+} from '@tanstack/react-table';
+import {
+  DollarSign, Package, Users, Plus, Search, Edit, Eye, Trash2, 
+  ChevronLeft, ChevronRight, Tag, Calculator, TrendingUp,
+  Building2, Calendar, ToggleLeft, ToggleRight, X, Save
+} from 'lucide-react';
+import PricingForm from './PricingForm';
 
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      const calculations = calculateTotalPrice();
-      const submitData = {
-        ...formData,
-        ...calculations,
-        submittedAt: new Date().toISOString()
-      };
 
-      console.log("Product Pricing Master Submitted:", submitData);
-      setSubmitSuccess(true);
 
-      // Reset form after success
-      setTimeout(() => {
-        setFormData({
-          pricingCode: '',
-          product: '',
-          basePrice: '',
-          gstPercentage: '',
-          effectiveFrom: '',
-          description: ''
-        });
-        setSubmitSuccess(false);
-      }, 3000);
 
-    } catch (error) {
-      setErrors({ submit: "Submission failed. Please try again." });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const selectedProduct = products.find(p => p.id === formData.product);
-  const calculations = calculateTotalPrice();
-
-  if (submitSuccess) {
-    return (
-      <div className="max-w-2xl mx-auto p-8">
-        <div className="bg-green-50 border border-green-200 rounded-xl p-8 text-center">
-          <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-semibold text-green-800 mb-2">Pricing Configuration Saved!</h3>
-          <p className="text-green-600 text-lg">
-            Product pricing has been successfully configured and is now active.
-          </p>
-        </div>
-      </div>
-    );
+// Dummy pricing data
+const dummyPricingData = [
+  {
+    id: 1,
+    productName: 'mPOS Terminal Pro',
+    productCategory: 'pos_machine',
+    vendorName: 'HDFC Bank Solutions',
+    sku: 'HDFC-MPOS-001',
+    basePrice: 8500,
+    costPrice: 7500,
+    sellingPrice: 9500,
+    markup: 12.5,
+    status: 'active',
+    effectiveDate: '2024-01-01',
+    specialRates: { franchiseRate: 9000, merchantRate: 9500, bulkOrderRate: 8800 }
+  },
+  {
+    id: 2,
+    productName: 'QR Code Scanner HD',
+    productCategory: 'qr_scanner',
+    vendorName: 'ICICI Merchant Services',
+    sku: 'ICICI-QR-HD001',
+    basePrice: 3500,
+    costPrice: 3000,
+    sellingPrice: 4200,
+    markup: 20,
+    status: 'active',
+    effectiveDate: '2024-01-15',
+    specialRates: { franchiseRate: 3800, merchantRate: 4200, bulkOrderRate: 3600 }
+  },
+  {
+    id: 3,
+    productName: 'Card Reader Compact',
+    productCategory: 'card_reader',
+    vendorName: 'SBI Payment Solutions',
+    sku: 'SBI-CR-COMP01',
+    basePrice: 2800,
+    costPrice: 2400,
+    sellingPrice: 3300,
+    markup: 15,
+    status: 'active',
+    effectiveDate: '2024-02-01',
+    specialRates: { franchiseRate: 3000, merchantRate: 3300, bulkOrderRate: 2900 }
+  },
+  {
+    id: 4,
+    productName: 'Mobile POS Elite',
+    productCategory: 'mobile_pos',
+    vendorName: 'Axis Bank Digital',
+    sku: 'AXIS-MPOS-ELT',
+    basePrice: 12000,
+    costPrice: 10500,
+    sellingPrice: 14000,
+    markup: 16.67,
+    status: 'inactive',
+    effectiveDate: '2024-01-10',
+    specialRates: { franchiseRate: 13000, merchantRate: 14000, bulkOrderRate: 12500 }
+  },
+  {
+    id: 5,
+    productName: 'USB Cable Set',
+    productCategory: 'accessories',
+    vendorName: 'Kotak Mahindra Tech',
+    sku: 'KOT-USB-SET01',
+    basePrice: 450,
+    costPrice: 350,
+    sellingPrice: 600,
+    markup: 25,
+    status: 'active',
+    effectiveDate: '2024-01-01',
+    specialRates: { franchiseRate: 550, merchantRate: 600, bulkOrderRate: 500 }
   }
+];
+
+
+
+const ProductPricingPage = () => {
+  const [pricingData, setPricingData] = useState(dummyPricingData);
+  const [showForm, setShowForm] = useState(false);
+  const [editingPricing, setEditingPricing] = useState(null);
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  const columnHelper = createColumnHelper();
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('id', {
+        header: 'ID',
+        cell: info => `#${info.getValue()}`,
+        size: 80,
+      }),
+      columnHelper.accessor('productName', {
+        header: 'Product',
+        cell: info => (
+          <div>
+            <div className="font-medium text-gray-900">{info.getValue()}</div>
+            <div className="text-sm text-gray-500 capitalize">
+              {info.row.original.productCategory.replace('_', ' ')}
+            </div>
+            <div className="text-xs text-gray-400">{info.row.original.sku}</div>
+          </div>
+        ),
+      }),
+      columnHelper.accessor('vendorName', {
+        header: 'Vendor',
+        cell: info => (
+          <div className="font-medium text-gray-900">{info.getValue()}</div>
+        ),
+      }),
+      columnHelper.accessor('costPrice', {
+        header: 'Cost Price',
+        cell: info => (
+          <div className="font-medium text-gray-900">₹{info.getValue().toLocaleString()}</div>
+        ),
+      }),
+      columnHelper.accessor('sellingPrice', {
+        header: 'Selling Price',
+        cell: info => (
+          <div className="font-medium text-green-600">₹{info.getValue().toLocaleString()}</div>
+        ),
+      }),
+      columnHelper.accessor('markup', {
+        header: 'Markup',
+        cell: info => (
+          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+            {info.getValue()}%
+          </span>
+        ),
+      }),
+      columnHelper.accessor('specialRates', {
+        header: 'Special Rates',
+        cell: info => (
+          <div className="text-xs space-y-1">
+            <div>Franchise: ₹{info.getValue().franchiseRate.toLocaleString()}</div>
+            <div>Merchant: ₹{info.getValue().merchantRate.toLocaleString()}</div>
+            <div>Bulk: ₹{info.getValue().bulkOrderRate.toLocaleString()}</div>
+          </div>
+        ),
+      }),
+      columnHelper.accessor('status', {
+        header: 'Status',
+        cell: info => (
+          <span
+            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              info.getValue() === 'active'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+            }`}
+          >
+            {info.getValue() === 'active' ? 'Active' : 'Inactive'}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Actions',
+        cell: info => (
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleView(info.row.original)}
+              className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+              title="View Details"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => handleEdit(info.row.original)}
+              className="p-1 text-green-600 hover:bg-green-100 rounded"
+              title="Edit Pricing"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => handleDelete(info.row.original.id)}
+              className="p-1 text-red-600 hover:bg-red-100 rounded"
+              title="Delete Pricing"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ),
+      }),
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data: pricingData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      globalFilter,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    initialState: {
+      pagination: {
+        pageSize: 5,
+      },
+    },
+  });
+
+  const handleAddPricing = () => {
+    setEditingPricing(null);
+    setShowForm(true);
+  };
+
+  const handleEdit = (pricing) => {
+    setEditingPricing(pricing);
+    setShowForm(true);
+  };
+
+  const handleView = (pricing) => {
+    console.log('View pricing:', pricing);
+    alert(`Viewing pricing details for ${pricing.productName}`);
+  };
+
+  const handleDelete = (pricingId) => {
+    if (window.confirm('Are you sure you want to delete this pricing?')) {
+      setPricingData(pricingData.filter(pricing => pricing.id !== pricingId));
+    }
+  };
+
+  const handleFormSubmit = (data) => {
+    if (editingPricing) {
+      // Update existing pricing
+      setPricingData(pricingData.map(pricing => 
+        pricing.id === editingPricing.id 
+          ? { ...pricing, ...data }
+          : pricing
+      ));
+    } else {
+      // Add new pricing
+      const newPricing = {
+        ...data,
+        id: Math.max(...pricingData.map(p => p.id)) + 1,
+      };
+      setPricingData([...pricingData, newPricing]);
+    }
+    setShowForm(false);
+    setEditingPricing(null);
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingPricing(null);
+  };
+
+  // Calculate stats
+  const totalProducts = pricingData.length;
+  const activeProducts = pricingData.filter(p => p.status === 'active').length;
+  const avgMarkup = pricingData.reduce((acc, p) => acc + p.markup, 0) / pricingData.length;
+  const totalValue = pricingData.reduce((acc, p) => acc + p.sellingPrice, 0);
 
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-gray-600 to-gray-800 px-8 py-6">
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <DollarSign className="w-7 h-7" />
-            Product Pricing Master
-          </h1>
-          <p className="text-purple-100 mt-1">
-            Configure product pricing with tax calculations
-          </p>
-        </div>
-
-        <div className="p-8 space-y-6">
-          {/* Pricing Code */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Pricing Code <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Hash className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={formData.pricingCode}
-                onChange={(e) => handleInputChange("pricingCode", e.target.value.toUpperCase())}
-                placeholder="e.g., SWAP-001, QR-BASE-2024"
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                  errors.pricingCode ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-purple-500"
-                }`}
-              />
-            </div>
-            {errors.pricingCode && (
-              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.pricingCode}
-              </p>
-            )}
-          </div>
-
-          {/* Product Selection */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Product <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Package className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <select
-                value={formData.product}
-                onChange={(e) => handleInputChange("product", e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none ${
-                  errors.product ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-purple-500"
-                }`}
-              >
-                <option value="">Select a product</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} ({product.category})
-                  </option>
-                ))}
-              </select>
-            </div>
-            {selectedProduct && (
-              <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-800">
-                  <strong>{selectedProduct.category}:</strong> {selectedProduct.description}
-                </p>
-              </div>
-            )}
-            {errors.product && (
-              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.product}
-              </p>
-            )}
-          </div>
-
-          {/* Pricing Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Base Price */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Base Price (₹) <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                <input
-                  type="number"
-                  value={formData.basePrice}
-                  onChange={(e) => handleInputChange("basePrice", e.target.value)}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                    errors.basePrice ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-purple-500"
-                  }`}
-                />
-              </div>
-              {errors.basePrice && (
-                <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors.basePrice}
-                </p>
-              )}
-            </div>
-
-            {/* GST Percentage */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                GST Percentage (%) <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Percent className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                <input
-                  type="number"
-                  value={formData.gstPercentage}
-                  onChange={(e) => handleInputChange("gstPercentage", e.target.value)}
-                  placeholder="18"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                    errors.gstPercentage ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-purple-500"
-                  }`}
-                />
-              </div>
-              {errors.gstPercentage && (
-                <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors.gstPercentage}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Price Calculation Display */}
-          {(formData.basePrice || formData.gstPercentage) && (
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border border-green-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-green-600" />
-                Price Breakdown
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">Base Price</p>
-                  <p className="text-xl font-semibold text-gray-800">₹{calculations.basePrice.toFixed(2)}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">GST Amount</p>
-                  <p className="text-xl font-semibold text-orange-600">₹{calculations.gstAmount.toFixed(2)}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">Total Price</p>
-                  <p className="text-2xl font-bold text-green-600">₹{calculations.totalPrice.toFixed(2)}</p>
-                </div>
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <DollarSign className="h-8 w-8 text-green-600" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Product Pricing Management</h1>
+                <p className="text-gray-600">Manage pricing for all your products and services</p>
               </div>
             </div>
-          )}
-
-          {/* Effective Date */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Effective From <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="date"
-                value={formData.effectiveFrom}
-                onChange={(e) => handleInputChange("effectiveFrom", e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                  errors.effectiveFrom ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-purple-500"
-                }`}
-              />
-            </div>
-            {errors.effectiveFrom && (
-              <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.effectiveFrom}
-              </p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Description
-              <span className="text-gray-400 font-normal ml-1">(Optional)</span>
-            </label>
-            <div className="relative">
-              <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Add pricing notes, special conditions, or additional details..."
-                rows="3"
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg transition-all duration-200 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="pt-6 border-t border-gray-200">
-            {errors.submit && (
-              <p className="mb-4 text-sm text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.submit}
-              </p>
-            )}
-
             <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-green-600 to-green-800 text-white font-semibold py-4 px-6 rounded-lg hover:from-green-800 hover:to-green-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              onClick={handleAddPricing}
+              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
-              {isSubmitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving Pricing Configuration...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  Save Pricing Configuration
-                </>
-              )}
+              <Plus className="h-5 w-5" />
+              <span>Add Pricing</span>
             </button>
           </div>
         </div>
 
-        {/* Footer Info */}
-        <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
-            All prices are in Indian Rupees (₹) • GST calculations are applied automatically
-          </p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Package className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Products</p>
+                <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Tag className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Products</p>
+                <p className="text-2xl font-bold text-gray-900">{activeProducts}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Avg Markup</p>
+                <p className="text-2xl font-bold text-gray-900">{avgMarkup.toFixed(1)}%</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <DollarSign className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Value</p>
+                <p className="text-2xl font-bold text-gray-900">₹{totalValue.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Card */}
+        <div className="bg-white rounded-lg shadow">
+          {/* Table Header */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Product Pricing List</h2>
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <input
+                    value={globalFilter ?? ''}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Search products..."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th
+                        key={header.id}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        <div className="flex items-center space-x-1">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {{
+                            asc: ' 🔼',
+                            desc: ' 🔽',
+                          }[header.column.getIsSorted()] ?? null}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {table.getRowModel().rows.map(row => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="px-6 py-4 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-700">
+                  Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+                  {Math.min(
+                    (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                    table.getFilteredRowModel().rows.length
+                  )}{' '}
+                  of {table.getFilteredRowModel().rows.length} results
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                  className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-sm text-gray-700">
+                  Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                </span>
+                <button
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Form Modal */}
+      {showForm && (
+        <PricingForm
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+          initialData={editingPricing}
+          isEdit={!!editingPricing}
+        />
+      )}
     </div>
   );
 };
 
-export default ProductPricingForm;
+export default ProductPricingPage;

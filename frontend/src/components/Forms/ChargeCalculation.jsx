@@ -40,9 +40,9 @@ const ChargeCalculationForm = () => {
         <Form className="space-y-4">
           {/* Entity Type (Franchise/Vendor) */}
           <div>
-            <label className="block mb-1">Entity Type</label>
+            <label className="block mb-1">Cutomer Id</label>
             <Field name="entityType" as="select" className="w-full border rounded p-2">
-              <option value="">Select Type</option>
+              <option value=""></option>
               {entityTypes.map((type, i) => (
                 <option key={i} value={type}>{type}</option>
               ))}
@@ -50,9 +50,9 @@ const ChargeCalculationForm = () => {
             <ErrorMessage name="entityType" component="div" className="text-red-600 text-sm" />
           </div>
 
-          {/* Entity Name (manual input or dynamic dropdown) */}
+          {/* Cutomer Name (manual input or dynamic dropdown) */}
           <div>
-            <label className="block mb-1">Entity Name</label>
+            <label className="block mb-1">Cutomer Name</label>
             <Field name="entityName" type="text" className="w-full border rounded p-2" />
             <ErrorMessage name="entityName" component="div" className="text-red-600 text-sm" />
           </div>
