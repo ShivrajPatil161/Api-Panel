@@ -34,7 +34,7 @@ const productSchema = z.object({
   remarks: z.string().optional()
 });
 
-const ProductMasterForm = ({ onSubmit, initialData = null, isEdit = false }) => {
+const ProductMasterForm = ({ onSubmit,onCancel, initialData = null, isEdit = false }) => {
   const [vendors, setVendors] = useState([
     { id: '1', name: 'HDFC Bank', code: 'HDFC' },
     { id: '2', name: 'ICICI Bank', code: 'ICICI' },
@@ -114,12 +114,13 @@ const ProductMasterForm = ({ onSubmit, initialData = null, isEdit = false }) => 
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+      <div className="bg-gray-100 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="bg-white rounded-lg shadow-lg">
           {/* Header */}
           <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white p-6 rounded-t-lg">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-between" >
+               <div className="flex items-center space-x-3">
               <Package className="h-8 w-8" />
               <div>
                 <h1 className="text-2xl font-bold">
@@ -129,7 +130,15 @@ const ProductMasterForm = ({ onSubmit, initialData = null, isEdit = false }) => 
                   {isEdit ? 'Update product information' : 'Register a new product in the catalog'}
                 </p>
               </div>
+              
             </div>
+             <button
+              onClick={onCancel}
+              className="text-white hover:bg-blue-800 p-2 rounded-lg transition-colors"
+            >
+              ✕
+            </button>
+           </div>
           </div>
 
           <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-8">
@@ -330,7 +339,7 @@ const ProductMasterForm = ({ onSubmit, initialData = null, isEdit = false }) => 
             </div>
 
             {/* Physical Details */}
-            <div>
+            {/* <div>
               <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                 <Layers className="h-5 w-5 mr-2 text-green-600" />
                 Physical Details
@@ -385,7 +394,7 @@ const ProductMasterForm = ({ onSubmit, initialData = null, isEdit = false }) => 
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Warranty & Legal */}
             <div>

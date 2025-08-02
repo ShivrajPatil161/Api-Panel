@@ -132,11 +132,11 @@ const SidebarLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen ">
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} border-2  border-gray-300 transition-all duration-300 ease-in-out flex flex-col`}>
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg transition-all duration-300 ease-in-out flex flex-col`}>
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b-2 border-gray-300">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           {sidebarOpen && (
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -144,7 +144,7 @@ const SidebarLayout = ({ children }) => {
               </div>
               <div>
                 <h1 className="text-lg font-bold text-gray-800">Supply Chain</h1>
-                <p className="text-sm text-gray-800">Management System</p>
+                <p className="text-xs text-gray-500">Management System</p>
               </div>
             </div>
           )}
