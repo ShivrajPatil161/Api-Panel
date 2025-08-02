@@ -1,111 +1,6 @@
-// import React from "react";
-// import { Formik, Form, Field, ErrorMessage } from "formik";
-// import * as Yup from "yup";
 
-// // Role types can be used to distinguish franchise and merchant
-// const roleOptions = ["Franchise", "Merchant"];
-
-// const CustomerOnboardingForm = () => {
-//   const initialValues = {
-//     customerName: "",
-//     role: "",
-//     email: "",
-//     phone: "",
-//     address: "",
-//     contactPerson: "",
-//     gstNumber: "",
-//     isActive: false
-//   };
-
-//   const validationSchema = Yup.object({
-//     customerName: Yup.string().required("Customer name is required"),
-//     role: Yup.string().required("Role is required"),
-//     email: Yup.string().email("Invalid email").required("Email is required"),
-//     phone: Yup.string()
-//       .matches(/^[0-9]{10}$/, "Enter a valid 10-digit phone number")
-//       .required("Phone is required"),
-//     address: Yup.string().required("Address is required"),
-//     contactPerson: Yup.string().required("Contact person is required"),
-//     gstNumber: Yup.string()
-//       .matches(/^(\d{2}[A-Z]{5}\d{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1})$/, "Invalid GSTIN")
-//       .required("GST number is required"),
-//     isActive: Yup.boolean()
-//   });
-
-//   const onSubmit = (values, { resetForm }) => {
-//     console.log("Customer Onboarding Submitted:", values);
-//     resetForm();
-//   };
-
-//   return (
-//     <div className="max-w-xl mx-auto p-4 shadow-md rounded-xl bg-white">
-//       <h2 className="text-xl font-bold mb-4">Customer Onboarding Form</h2>
-//       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-//         <Form className="space-y-4">
-//           <div>
-//             <label className="block mb-1">Customer Name</label>
-//             <Field name="customerName" type="text" className="w-full border rounded p-2" />
-//             <ErrorMessage name="customerName" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">Role</label>
-//             <Field name="role" as="select" className="w-full border rounded p-2">
-//               <option value="">Select Role</option>
-//               {roleOptions.map((r, i) => (
-//                 <option key={i} value={r}>{r}</option>
-//               ))}
-//             </Field>
-//             <ErrorMessage name="role" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">Email</label>
-//             <Field name="email" type="email" className="w-full border rounded p-2" />
-//             <ErrorMessage name="email" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">Phone</label>
-//             <Field name="phone" type="text" className="w-full border rounded p-2" />
-//             <ErrorMessage name="phone" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">Address</label>
-//             <Field name="address" as="textarea" className="w-full border rounded p-2" />
-//             <ErrorMessage name="address" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">Contact Person</label>
-//             <Field name="contactPerson" type="text" className="w-full border rounded p-2" />
-//             <ErrorMessage name="contactPerson" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div>
-//             <label className="block mb-1">GST Number</label>
-//             <Field name="gstNumber" type="text" className="w-full border rounded p-2 uppercase" />
-//             <ErrorMessage name="gstNumber" component="div" className="text-red-600 text-sm" />
-//           </div>
-
-//           <div className="flex items-center">
-//             <Field name="isActive" type="checkbox" className="mr-2" />
-//             <label htmlFor="isActive">Active</label>
-//           </div>
-
-//           <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-//             Submit
-//           </button>
-//         </Form>
-//       </Formik>
-//     </div>
-//   );
-// };
-
-// export default CustomerOnboardingForm;
 import React, { useState } from "react";
-import { Building2, Store, Plus, Trash2, Users, Mail, Hash, AlertCircle, CheckCircle2, User } from "lucide-react";
+import { Building2, Store, Plus, Trash2, Users, Mail, Hash, AlertCircle, CheckCircle2, User, Contact } from "lucide-react";
 
 const CustomerOnboarding = () => {
   const [customerType, setCustomerType] = useState("");
@@ -113,6 +8,11 @@ const CustomerOnboarding = () => {
     name: "",
     code: "",
     email: "",
+    contactPersonName: "",
+    contactPersonPosition:"",
+    contactPersonEmail:"",
+    contactPersonNumber:"",
+    contactPersonDOB:"",
     merchants: []
   });
   const [merchantData, setMerchantData] = useState({
@@ -441,6 +341,136 @@ const CustomerOnboarding = () => {
                       </p>
                     )}
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-100 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Contact Person Information
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={franchiseData.contactPersonName}
+                        onChange={(e) => handleFranchiseChange("contactPersonName", e.target.value)}
+                        placeholder="Enter person name"
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                          errors.franchiseName ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-indigo-500"
+                        }`}
+                      />
+                    </div>
+                    {errors.franchiseName && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.franchiseName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Position <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Hash className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={franchiseData.contactPersonPosition}
+                        onChange={(e) => handleFranchiseChange("contactPersonPosition", e.target.value)}
+                        placeholder="Enter Position"
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                          errors.franchiseCode ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-indigo-500"
+                        }`}
+                      />
+                    </div>
+                    {errors.franchiseCode && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.franchiseCode}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      {/* <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" /> */}
+                      <input
+                        type="email"
+                        value={franchiseData.contactPersonEmail}
+                        onChange={(e) => handleFranchiseChange("contactPersonEmail", e.target.value)}
+                        placeholder="Enter email"
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                          errors.franchiseEmail ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-indigo-500"
+                        }`}
+                      />
+                    </div>
+                    {errors.franchiseEmail && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.franchiseEmail}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Contact Number <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      {/* <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" /> */}
+                      <input
+                        type="email"
+                        value={franchiseData.contactPersonNumber}
+                        onChange={(e) => handleFranchiseChange("contactPersonNumber", e.target.value)}
+                        placeholder="Enter email"
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                          errors.franchiseEmail ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-indigo-500"
+                        }`}
+                      />
+                    </div>
+                    {errors.franchiseEmail && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.franchiseEmail}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Date Of Birth <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      {/* <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" /> */}
+                      <input
+                        type="date"
+                        value={franchiseData.contactPersonDOB}
+                        onChange={(e) => handleFranchiseChange("contactPersonDOB", e.target.value)}
+                        placeholder="Enter email"
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                          errors.franchiseEmail ? "border-red-300 bg-red-50" : "border-gray-200 focus:border-indigo-500"
+                        }`}
+                      />
+                    </div>
+                    {errors.franchiseEmail && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.franchiseEmail}
+                      </p>
+                    )}
+                  </div>
+
                 </div>
               </div>
 
