@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import { 
+import {
   Home,
-  Users, 
-  Package, 
-  DollarSign, 
-  UserPlus, 
-  ArrowDown, 
-  ArrowUp, 
-  RotateCcw, 
-  Calculator, 
-  Upload, 
+  Users,
+  Package,
+  DollarSign,
+  UserPlus,
+  ArrowDown,
+  ArrowUp,
+  RotateCcw,
+  Calculator,
+  Upload,
   ChevronDown,
   ChevronRight,
   Menu,
@@ -40,6 +40,31 @@ const Sidebar = () => {
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
+
+    // If collapsing the sidebar, close all expanded menus
+    if (!sidebarCollapsed) {
+      setExpandedMenus({
+        vendors: false,
+        products: false,
+        inventory: false,
+        customers: false,
+        transactions: false
+      });
+    }
+  };
+  // Modified handler for menu items with children
+  const handleMenuClick = (menuKey) => {
+    if (sidebarCollapsed) {
+      // If sidebar is collapsed, expand it and open the menu
+      setSidebarCollapsed(false);
+      setExpandedMenus(prev => ({
+        ...prev,
+        [menuKey]: true
+      }));
+    } else {
+      // If sidebar is expanded, just toggle the menu
+      toggleMenu(menuKey);
+    }
   };
 
   const menuItems = [
@@ -56,7 +81,7 @@ const Sidebar = () => {
       iconColor: '',
       children: [
         { title: 'Vendor List', path: '/dashboard/vendors', icon: Users },
-        
+
         { title: 'Vendor Rates', path: '/dashboard/vendors/rates', icon: DollarSign }
       ]
     },
@@ -68,7 +93,7 @@ const Sidebar = () => {
       children: [
         { title: 'Product List', path: '/dashboard/inventory', icon: Package },
         { title: 'Product Pricing', path: '/dashboard/inventory/pricing', icon: Calculator },
-         { title: 'Inward Entry', path: '/dashboard/inventory/inward', icon: ArrowDown },
+        { title: 'Inward Entry', path: '/dashboard/inventory/inward', icon: ArrowDown },
         { title: 'Outward Entry', path: '/dashboard/inventory/outward', icon: ArrowUp },
         { title: 'Returns', path: '/dashboard/inventory/returns', icon: RotateCcw }
       ]
@@ -146,10 +171,9 @@ const Sidebar = () => {
                 // Menu with children
                 <div>
                   <button
-                    onClick={() => !sidebarCollapsed && toggleMenu(item.key)}
-                    className={`w-full flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 hover:bg-gray-50 group ${
-                      isActiveParent(item.children) ? 'bg-blue-50 border border-blue-200' : ''
-                    }`}
+                    onClick={() => handleMenuClick(item.key)}
+                    className={`w-full flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 hover:bg-gray-50 group ${isActiveParent(item.children) ? 'bg-blue-50 border border-blue-200' : ''
+                      }`}
                   >
                     <div className="flex items-center space-x-3">
                       <div className={`p-2 rounded-lg ${isActiveParent(item.children) ? 'bg-blue-100' : 'bg-gray-100 group-hover:bg-gray-200'} transition-colors duration-200`}>
@@ -171,18 +195,17 @@ const Sidebar = () => {
                       </div>
                     )}
                   </button>
-                  
+
                   {expandedMenus[item.key] && !sidebarCollapsed && (
                     <div className="ml-6 mt-2 space-y-1">
                       {item.children.map((child) => (
                         <Link
                           key={child.path}
                           to={child.path}
-                          className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${
-                            isActiveLink(child.path)
+                          className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${isActiveLink(child.path)
                               ? 'bg-blue-600 text-white shadow-md'
                               : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                          }`}
+                            }`}
                         >
                           <child.icon className="w-4 h-4" />
                           <span className="text-sm font-medium">{child.title}</span>
@@ -195,9 +218,8 @@ const Sidebar = () => {
                 // Single menu item
                 <Link
                   to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-3 rounded-xl transition-all duration-200 hover:bg-gray-50 group ${
-                    isActiveLink(item.path) ? 'bg-blue-50 border border-blue-200' : ''
-                  }`}
+                  className={`flex items-center space-x-3 px-3 py-3 rounded-xl transition-all duration-200 hover:bg-gray-50 group ${isActiveLink(item.path) ? 'bg-blue-50 border border-blue-200' : ''
+                    }`}
                 >
                   <div className={`p-2 rounded-lg ${isActiveLink(item.path) ? 'bg-blue-100' : 'bg-gray-100 group-hover:bg-gray-200'} transition-colors duration-200`}>
                     <item.icon className={`w-5 h-5 ${isActiveLink(item.path) ? 'text-blue-600' : item.iconColor}`} />
@@ -214,7 +236,7 @@ const Sidebar = () => {
         </div>
       </nav>
 
-    
+
     </div>
   );
 };
