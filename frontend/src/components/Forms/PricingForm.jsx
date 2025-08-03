@@ -1,618 +1,506 @@
-import React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState, useMemo, useEffect } from 'react'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { X, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 
+// ==================== FORM COMPONENTS ====================
 
-import {
-  DollarSign, Package, Users, Plus, Search, Edit, Eye, Trash2, 
-  ChevronLeft, ChevronRight, Tag, Calculator, TrendingUp,
-  Building2, Calendar, ToggleLeft, ToggleRight, X, Save
-} from 'lucide-react';
+// Reusable Input Component
+const Input = ({ label, name, register, errors, required = false, type = "text", ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      {...register(name, {
+        required: required ? `${label} is required` : false,
+        ...(type === 'email' && { pattern: { value: /^\S+@\S+$/i, message: 'Invalid email format' } })
+      })}
+      type={type}
+      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? 'border-red-500' : 'border-gray-300'
+        }`}
+      {...props}
+    />
+    {errors[name] && (
+      <p className="mt-1 text-sm text-red-500">{errors[name].message}</p>
+    )}
+  </div>
+)
 
-// Validation schema for pricing
-const pricingSchema = z.object({
-  productName: z.string().min(2, 'Product name is required'),
-  productCategory: z.enum(['pos_machine', 'qr_scanner', 'card_reader', 'mobile_pos', 'accessories'], {
-    errorMap: () => ({ message: 'Please select a product category' })
-  }),
-  vendorId: z.string().min(1, 'Please select a vendor'),
-  vendorName: z.string().min(1, 'Vendor name is required'),
-  sku: z.string().min(3, 'SKU must be at least 3 characters'),
-  basePrice: z.number().min(0, 'Base price must be 0 or greater'),
-  costPrice: z.number().min(0, 'Cost price must be 0 or greater'),
-  markup: z.number().min(0, 'Markup must be 0 or greater'),
-  sellingPrice: z.number().min(0, 'Selling price must be 0 or greater'),
-  minQuantity: z.number().min(1, 'Minimum quantity must be at least 1'),
-  maxQuantity: z.number().min(1, 'Maximum quantity must be at least 1'),
-  discountType: z.enum(['percentage', 'fixed']),
-  discountValue: z.number().min(0, 'Discount value must be 0 or greater'),
-  effectiveDate: z.string().min(1, 'Effective date is required'),
-  expiryDate: z.string().optional(),
-  status: z.enum(['active', 'inactive']),
-  tierPricing: z.array(z.object({
-    minQuantity: z.number().min(1, 'Min quantity must be at least 1'),
-    maxQuantity: z.number().min(1, 'Max quantity must be at least 1'),
-    price: z.number().min(0, 'Price must be 0 or greater'),
-    discount: z.number().min(0, 'Discount must be 0 or greater')
-  })).optional(),
-  specialRates: z.object({
-    franchiseRate: z.number().min(0, 'Franchise rate must be 0 or greater'),
-    merchantRate: z.number().min(0, 'Merchant rate must be 0 or greater'),
-    bulkOrderRate: z.number().min(0, 'Bulk order rate must be 0 or greater')
-  }),
-  description: z.string().optional(),
-  terms: z.string().optional()
-});
+// Reusable Select Component
+const Select = ({ label, name, register, errors, options, required = false, ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <select
+      {...register(name, { required: required ? `${label} is required` : false })}
+      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? 'border-red-500' : 'border-gray-300'
+        }`}
+      {...props}
+    >
+      <option value="">Select {label.toLowerCase()}</option>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+    {errors[name] && (
+      <p className="mt-1 text-sm text-red-500">{errors[name].message}</p>
+    )}
+  </div>
+)
 
-// Dummy vendors data
-const dummyVendors = [
-  { id: '1', name: 'HDFC Bank Solutions', bankName: 'HDFC Bank' },
-  { id: '2', name: 'ICICI Merchant Services', bankName: 'ICICI Bank' },
-  { id: '3', name: 'SBI Payment Solutions', bankName: 'State Bank of India' },
-  { id: '4', name: 'Axis Bank Digital', bankName: 'Axis Bank' },
-  { id: '5', name: 'Kotak Mahindra Tech', bankName: 'Kotak Mahindra Bank' }
-];
+// Customer Details Component
+const CustomerDetails = ({ register, errors, watch }) => {
+  const customerType = watch('customerType')
 
+  const customerTypeOptions = [
+    { value: 'franchise', label: 'Franchise' },
+    { value: 'direct_merchant', label: 'Direct Merchant' }
+  ]
 
-const PricingForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    control,
-    formState: { errors, isSubmitting }
-  } = useForm({
-    resolver: zodResolver(pricingSchema),
-    defaultValues: initialData || {
-      productName: '',
-      productCategory: 'pos_machine',
-      vendorId: '',
-      vendorName: '',
-      sku: '',
-      basePrice: 0,
-      costPrice: 0,
-      markup: 0,
-      sellingPrice: 0,
-      minQuantity: 1,
-      maxQuantity: 100,
-      discountType: 'percentage',
-      discountValue: 0,
-      effectiveDate: new Date().toISOString().split('T')[0],
-      expiryDate: '',
-      status: 'active',
-      tierPricing: [
-        { minQuantity: 1, maxQuantity: 10, price: 0, discount: 0 },
-        { minQuantity: 11, maxQuantity: 50, price: 0, discount: 5 },
-        { minQuantity: 51, maxQuantity: 100, price: 0, discount: 10 }
-      ],
-      specialRates: {
-        franchiseRate: 0,
-        merchantRate: 0,
-        bulkOrderRate: 0
-      },
-      description: '',
-      terms: ''
-    }
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'tierPricing'
-  });
-
-  const watchCostPrice = watch('costPrice');
-  const watchMarkup = watch('markup');
-  const watchSellingPrice = watch('sellingPrice');
-  const watchVendorId = watch('vendorId');
-  const watchStatus = watch('status');
-
-  // Auto-calculate selling price based on cost price and markup
-  React.useEffect(() => {
-    if (watchCostPrice && watchMarkup) {
-      const calculatedPrice = watchCostPrice * (1 + watchMarkup / 100);
-      setValue('sellingPrice', Math.round(calculatedPrice * 100) / 100);
-    }
-  }, [watchCostPrice, watchMarkup, setValue]);
-
-  // Auto-fill vendor name when vendor is selected
-  React.useEffect(() => {
-    if (watchVendorId) {
-      const selectedVendor = dummyVendors.find(v => v.id === watchVendorId);
-      if (selectedVendor) {
-        setValue('vendorName', selectedVendor.name);
-      }
-    }
-  }, [watchVendorId, setValue]);
-
-  const handleFormSubmit = (data) => {
-    console.log('Pricing Data:', data);
-    onSubmit?.(data);
-  };
-
-  const toggleStatus = () => {
-    setValue('status', watchStatus === 'active' ? 'inactive' : 'active');
-  };
-
-  const addTierPricing = () => {
-    append({ minQuantity: 1, maxQuantity: 10, price: 0, discount: 0 });
-  };
+  const franchiseOptions = [
+    { value: 'franchise_1', label: 'TechPay Franchise Mumbai' },
+    { value: 'franchise_2', label: 'PayMaster Franchise Delhi' },
+    { value: 'franchise_3', label: 'QuickPay Franchise Bangalore' },
+    { value: 'franchise_4', label: 'SmartPay Franchise Chennai' },
+    { value: 'franchise_5', label: 'EasyPay Franchise Pune' }
+  ]
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] overflow-y-auto">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6 rounded-t-lg sticky top-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <DollarSign className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {isEdit ? 'Edit Product Pricing' : 'Add Product Pricing'}
-                </h1>
-                <p className="text-green-100">
-                  {isEdit ? 'Update product pricing information' : 'Set up pricing for a new product'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onCancel}
-              className="text-white hover:bg-green-800 p-2 rounded-lg transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <h3 className="text-lg font-semibold text-gray-700 mb-4">Customer Details</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Select
+          label="Customer Type"
+          name="customerType"
+          register={register}
+          errors={errors}
+          options={customerTypeOptions}
+          required
+        />
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-8">
-          {/* Basic Product Information */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Package className="h-5 w-5 mr-2 text-green-600" />
-              Product Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product Name *
-                </label>
-                <input
-                  {...register('productName')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter product name"
-                />
-                {errors.productName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.productName.message}</p>
-                )}
-              </div>
+        {customerType === 'franchise' && (
+          <Select
+            label="Select Franchise"
+            name="franchiseId"
+            register={register}
+            errors={errors}
+            options={franchiseOptions}
+            required
+          />
+        )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product Category *
-                </label>
-                <select
-                  {...register('productCategory')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="pos_machine">POS Machine</option>
-                  <option value="qr_scanner">QR Scanner</option>
-                  <option value="card_reader">Card Reader</option>
-                  <option value="mobile_pos">Mobile POS</option>
-                  <option value="accessories">Accessories</option>
-                </select>
-                {errors.productCategory && (
-                  <p className="text-red-500 text-sm mt-1">{errors.productCategory.message}</p>
-                )}
-              </div>
-
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  SKU *
-                </label>
-                <input
-                  {...register('sku')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter product SKU"
-                />
-                {errors.sku && (
-                  <p className="text-red-500 text-sm mt-1">{errors.sku.message}</p>
-                )}
-              </div> */}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vendor *
-                </label>
-                <select
-                  {...register('vendorId')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="">Select Vendor</option>
-                  {dummyVendors.map(vendor => (
-                    <option key={vendor.id} value={vendor.id}>
-                      {vendor.name} ({vendor.bankName})
-                    </option>
-                  ))}
-                </select>
-                {errors.vendorId && (
-                  <p className="text-red-500 text-sm mt-1">{errors.vendorId.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <button
-                  type="button"
-                  onClick={toggleStatus}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    watchStatus === 'active'
-                      ? 'bg-green-100 text-green-700 border border-green-300'
-                      : 'bg-red-100 text-red-700 border border-red-300'
-                  }`}
-                >
-                  {watchStatus === 'active' ? (
-                    <ToggleRight className="h-5 w-5" />
-                  ) : (
-                    <ToggleLeft className="h-5 w-5" />
-                  )}
-                  <span className="font-medium">
-                    {watchStatus === 'active' ? 'Active' : 'Inactive'}
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Pricing Information */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Calculator className="h-5 w-5 mr-2 text-green-600" />
-              Pricing Details
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Base Price (₹) *
-                </label>
-                <input
-                  {...register('basePrice', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="0.00"
-                />
-                {errors.basePrice && (
-                  <p className="text-red-500 text-sm mt-1">{errors.basePrice.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cost Price (₹) *
-                </label>
-                <input
-                  {...register('costPrice', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="0.00"
-                />
-                {errors.costPrice && (
-                  <p className="text-red-500 text-sm mt-1">{errors.costPrice.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Markup (%) *
-                </label>
-                <input
-                  {...register('markup', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="0.00"
-                />
-                {errors.markup && (
-                  <p className="text-red-500 text-sm mt-1">{errors.markup.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Selling Price (₹) *
-                </label>
-                <input
-                  {...register('sellingPrice', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50"
-                  placeholder="0.00"
-                  readOnly
-                />
-                <p className="text-xs text-gray-500 mt-1">Auto-calculated from cost price + markup</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Special Rates */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
-              Special Rates
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Franchise Rate (₹) *
-                </label>
-                <input
-                  {...register('specialRates.franchiseRate', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Merchant Rate (₹) *
-                </label>
-                <input
-                  {...register('specialRates.merchantRate', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bulk Order Rate (₹) *
-                </label>
-                <input
-                  {...register('specialRates.bulkOrderRate', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Quantity & Discount */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Tag className="h-5 w-5 mr-2 text-green-600" />
-              Quantity & Discount Settings
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Min Quantity *
-                </label>
-                <input
-                  {...register('minQuantity', { valueAsNumber: true })}
-                  type="number"
-                  min="1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="1"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Quantity *
-                </label>
-                <input
-                  {...register('maxQuantity', { valueAsNumber: true })}
-                  type="number"
-                  min="1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Discount Type
-                </label>
-                <select
-                  {...register('discountType')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="percentage">Percentage (%)</option>
-                  <option value="fixed">Fixed Amount (₹)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Discount Value
-                </label>
-                <input
-                  {...register('discountValue', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Tier Pricing */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
-                Tier Pricing
-              </h2>
-              <button
-                type="button"
-                onClick={addTierPricing}
-                className="flex items-center space-x-2 px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add Tier</span>
-              </button>
-            </div>
-            <div className="space-y-4">
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border border-gray-200 rounded-lg">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Min Qty
-                    </label>
-                    <input
-                      {...register(`tierPricing.${index}.minQuantity`, { valueAsNumber: true })}
-                      type="number"
-                      min="1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Max Qty
-                    </label>
-                    <input
-                      {...register(`tierPricing.${index}.maxQuantity`, { valueAsNumber: true })}
-                      type="number"
-                      min="1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Price (₹)
-                    </label>
-                    <input
-                      {...register(`tierPricing.${index}.price`, { valueAsNumber: true })}
-                      type="number"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Discount (%)
-                    </label>
-                    <input
-                      {...register(`tierPricing.${index}.discount`, { valueAsNumber: true })}
-                      type="number"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Date Settings */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-green-600" />
-              Date Settings
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Effective Date *
-                </label>
-                <input
-                  {...register('effectiveDate')}
-                  type="date"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-                {errors.effectiveDate && (
-                  <p className="text-red-500 text-sm mt-1">{errors.effectiveDate.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Expiry Date (Optional)
-                </label>
-                <input
-                  {...register('expiryDate')}
-                  type="date"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Information */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Additional Information
-            </h2>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product Description
-                </label>
-                <textarea
-                  {...register('description')}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter product description..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Terms & Conditions
-                </label>
-                <textarea
-                  {...register('terms')}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter pricing terms and conditions..."
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-            >
-              <Save className="h-4 w-4" />
-              <span>{isSubmitting ? 'Saving...' : isEdit ? 'Update Pricing' : 'Create Pricing'}</span>
-            </button>
-          </div>
-        </form>
+        <Input
+          label="Effective Date"
+          name="effectiveDate"
+          register={register}
+          errors={errors}
+          type="date"
+          required
+        />
+        <Input
+          label="Expiry Date"
+          name="expiryDate"
+          register={register}
+          errors={errors}
+          type="date"
+        />
       </div>
     </div>
-  );
-};
+  )
+}
 
+// Rental Rate Component
+const RentalRate = ({ register, errors }) => {
+  const deviceOptions = [
+    { value: 'POS Machine', label: 'POS Machine' },
+    { value: 'QR Scanner', label: 'QR Scanner' },
+    { value: 'Card Reader', label: 'Card Reader' },
+    { value: 'Thermal Printer', label: 'Thermal Printer' },
+    { value: 'Tablet', label: 'Tablet' },
+    { value: 'Mobile Device', label: 'Mobile Device' },
+    { value: 'Other', label: 'Other' }
+  ]
 
-export default PricingForm
+  return (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Rental Rate</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Select
+          label="Device Type"
+          name="rental.deviceType"
+          register={register}
+          errors={errors}
+          options={deviceOptions}
+          required
+        />
+        <Input
+          label="Monthly Rate (₹)"
+          name="rental.monthlyRate"
+          register={register}
+          errors={errors}
+          type="number"
+          step="0.01"
+          min="0"
+          required
+          placeholder="Enter monthly rental"
+        />
+      </div>
+    </div>
+  )
+}
+
+// Card Rate Item Component for Direct Merchants
+const DirectMerchantCardRateItem = ({ index, register, errors, onRemove }) => {
+  return (
+    <div className="flex items-end gap-3 p-3 bg-white border border-gray-200 rounded-lg">
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Card Type <span className="text-red-500">*</span>
+        </label>
+        <input
+          {...register(`cardRates.${index}.cardType`, { required: 'Card type is required' })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter card type"
+        />
+        {errors.cardRates?.[index]?.cardType && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].cardType.message}</p>
+        )}
+      </div>
+
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Rate (%) <span className="text-red-500">*</span>
+        </label>
+        <input
+          {...register(`cardRates.${index}.rate`, {
+            required: 'Rate is required',
+            min: { value: 0, message: 'Rate must be positive' },
+            max: { value: 100, message: 'Rate cannot exceed 100%' }
+          })}
+          type="number"
+          step="0.01"
+          min="0"
+          max="100"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., 2.5"
+        />
+        {errors.cardRates?.[index]?.rate && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].rate.message}</p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onRemove}
+        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+        title="Remove card type"
+      >
+        <X size={20} />
+      </button>
+    </div>
+  )
+}
+
+// Card Rate Item Component for Franchises
+const FranchiseCardRateItem = ({ index, register, errors, onRemove }) => {
+  return (
+    <div className="flex items-end gap-3 p-3 bg-white border border-gray-200 rounded-lg">
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Card Type <span className="text-red-500">*</span>
+        </label>
+        <input
+          {...register(`cardRates.${index}.cardType`, { required: 'Card type is required' })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter card type"
+        />
+        {errors.cardRates?.[index]?.cardType && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].cardType.message}</p>
+        )}
+      </div>
+
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Franchise Rate (%) <span className="text-red-500">*</span>
+        </label>
+        <input
+          {...register(`cardRates.${index}.franchiseRate`, {
+            required: 'Franchise rate is required',
+            min: { value: 0, message: 'Rate must be positive' },
+            max: { value: 100, message: 'Rate cannot exceed 100%' }
+          })}
+          type="number"
+          step="0.01"
+          min="0"
+          max="100"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., 2.5"
+        />
+        {errors.cardRates?.[index]?.franchiseRate && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].franchiseRate.message}</p>
+        )}
+      </div>
+
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Merchant Rate (%) <span className="text-red-500">*</span>
+        </label>
+        <input
+          {...register(`cardRates.${index}.merchantRate`, {
+            required: 'Merchant rate is required',
+            min: { value: 0, message: 'Rate must be positive' },
+            max: { value: 100, message: 'Rate cannot exceed 100%' }
+          })}
+          type="number"
+          step="0.01"
+          min="0"
+          max="100"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., 3.0"
+        />
+        {errors.cardRates?.[index]?.merchantRate && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].merchantRate.message}</p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onRemove}
+        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+        title="Remove card type"
+      >
+        <X size={20} />
+      </button>
+    </div>
+  )
+}
+
+// Card Rates Component
+const CardRates = ({ control, register, errors, watch }) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "cardRates"
+  })
+
+  const [selectedCardType, setSelectedCardType] = useState('')
+  const customerType = watch('customerType')
+
+  const predefinedCardTypes = [
+    { value: 'credit', label: 'Credit Card' },
+    { value: 'debit', label: 'Debit Card' },
+    { value: 'american_express', label: 'American Express' }
+  ]
+
+  const addPredefinedCardRate = () => {
+    if (selectedCardType) {
+      const cardTypeLabel = predefinedCardTypes.find(type => type.value === selectedCardType)?.label || selectedCardType
+
+      if (customerType === 'franchise') {
+        append({ cardType: cardTypeLabel, franchiseRate: '', merchantRate: '' })
+      } else {
+        append({ cardType: cardTypeLabel, rate: '' })
+      }
+      setSelectedCardType('')
+    }
+  }
+
+  const addCustomCardRate = () => {
+    if (customerType === 'franchise') {
+      append({ cardType: '', franchiseRate: '', merchantRate: '' })
+    } else {
+      append({ cardType: '', rate: '' })
+    }
+  }
+
+  return (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-700">Card Processing Rates</h3>
+        <div className="flex gap-3">
+          <div className="flex gap-2">
+            <select
+              value={selectedCardType}
+              onChange={(e) => setSelectedCardType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select predefined type</option>
+              {predefinedCardTypes.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={addPredefinedCardRate}
+              disabled={!selectedCardType}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              Add Selected
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={addCustomCardRate}
+            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+          >
+            Add Custom Type
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {fields.map((field, index) => (
+          customerType === 'franchise' ? (
+            <FranchiseCardRateItem
+              key={field.id}
+              index={index}
+              register={register}
+              errors={errors}
+              onRemove={() => remove(index)}
+            />
+          ) : (
+            <DirectMerchantCardRateItem
+              key={field.id}
+              index={index}
+              register={register}
+              errors={errors}
+              onRemove={() => remove(index)}
+            />
+          )
+        ))}
+        {fields.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-sm">No card types added yet.</p>
+            <p className="text-xs mt-1">Use the buttons above to add predefined types or create custom ones.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ==================== CUSTOMER RATE FORM MODAL ====================
+const CustomerRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
+  const getDefaultValues = () => ({
+    customerType: '',
+    franchiseId: '',
+    effectiveDate: '',
+    expiryDate: '',
+    rental: {
+      deviceType: '',
+      monthlyRate: ''
+    },
+    cardRates: [],
+    remarks: ''
+  })
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch
+  } = useForm({
+    defaultValues: initialData || getDefaultValues()
+  })
+
+  useEffect(() => {
+    if (initialData) {
+      // Reset form with initial data when editing
+      Object.keys(initialData).forEach(key => {
+        register(key, { value: initialData[key] })
+      })
+    }
+  }, [initialData, register])
+
+  const onFormSubmit = (data) => {
+    const filteredData = {
+      ...data,
+      cardRates: data.cardRates.filter(rate => {
+        if (data.customerType === 'franchise') {
+          return rate.franchiseRate && parseFloat(rate.franchiseRate) > 0 &&
+            rate.merchantRate && parseFloat(rate.merchantRate) > 0 &&
+            rate.cardType.trim()
+        } else {
+          return rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim()
+        }
+      })
+    }
+
+    onSubmit(filteredData)
+    onCancel()
+  }
+
+  const handleCancel = () => {
+    onCancel()
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Modal Header */}
+        <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {isEdit ? 'Edit Customer Rates' : 'Add New Customer Rates'}
+          </h2>
+          <button
+            onClick={handleCancel}
+            className="p-2 hover:bg-gray-200 rounded-md transition-colors"
+            title="Close"
+          >
+            <X size={24} className="text-gray-600" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-6">
+          <div className="space-y-6">
+            <CustomerDetails register={register} errors={errors} watch={watch} />
+            <RentalRate register={register} errors={errors} />
+            <CardRates control={control} register={register} errors={errors} watch={watch} />
+
+            {/* Remarks */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Remarks
+                </label>
+                <textarea
+                  {...register('remarks')}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter any additional remarks about the customer rates"
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-4 pt-4 border-t">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit(onFormSubmit)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              >
+                {isEdit ? 'Update Customer Rates' : 'Save Customer Rates'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default CustomerRateForm
