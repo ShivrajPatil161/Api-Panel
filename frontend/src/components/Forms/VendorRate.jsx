@@ -1,557 +1,378 @@
-import React, { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { DollarSign, Calendar, Package, Users, Plus, X, Layers, ToggleLeft, ToggleRight, Calculator } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { X, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 
-// Validation schema
-const vendorRatesSchema = z.object({
-  vendorId: z.string().min(1, 'Please select a vendor'),
-  productId: z.string().min(1, 'Please select a product'),
-  effectiveDate: z.string().min(1, 'Effective date is required'),
-  expiryDate: z.string().min(1, 'Expiry date is required'),
-  currency: z.enum(['INR', 'USD', 'EUR']),
-  basePrice: z.number().min(0.01, 'Base price must be greater than 0'),
-  quantitySlabs: z.array(z.object({
-    minQuantity: z.number().min(1, 'Minimum quantity must be at least 1'),
-    maxQuantity: z.number().min(1, 'Maximum quantity must be at least 1'),
-    price: z.number().min(0.01, 'Price must be greater than 0'),
-    discountPercent: z.number().min(0).max(100, 'Discount must be between 0-100%')
-  })).min(1, 'At least one quantity slab is required'),
-  taxInclusive: z.boolean(),
-  gstPercent: z.number().min(0).max(100, 'GST must be between 0-100%'),
-  additionalCharges: z.array(z.object({
-    chargeName: z.string().min(1, 'Charge name is required'),
-    amount: z.number().min(0, 'Amount must be 0 or more'),
-    type: z.enum(['fixed', 'percentage'])
-  })).optional(),
-  paymentTerms: z.string().min(5, 'Payment terms are required'),
-  creditPeriod: z.number().min(0, 'Credit period must be 0 or more days'),
-  status: z.enum(['active', 'inactive']),
-  remarks: z.string().optional()
-});
+// ==================== FORM COMPONENTS ====================
 
-const VendorRatesForm = ({ onSubmit, initialData = null, isEdit = false }) => {
-  const [vendors] = useState([
-    { id: '1', name: 'HDFC Bank', code: 'HDFC' },
-    { id: '2', name: 'ICICI Bank', code: 'ICICI' },
-    { id: '3', name: 'SBI Bank', code: 'SBI' },
-    { id: '4', name: 'Axis Bank', code: 'AXIS' }
-  ]);
+// Reusable Input Component
+const Input = ({ label, name, register, errors, required = false, type = "text", ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      {...register(name, {
+        required: required ? `${label} is required` : false,
+        ...(type === 'email' && { pattern: { value: /^\S+@\S+$/i, message: 'Invalid email format' } })
+      })}
+      type={type}
+      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? 'border-red-500' : 'border-gray-300'
+        }`}
+      {...props}
+    />
+    {errors[name] && (
+      <p className="mt-1 text-sm text-red-500">{errors[name].message}</p>
+    )}
+  </div>
+)
 
-  const [products] = useState([
-    { id: '1', name: 'POS Terminal X200', code: 'PT-X200', vendorId: '1' },
-    { id: '2', name: 'QR Scanner Pro', code: 'QRS-PRO', vendorId: '1' },
-    { id: '3', name: 'Card Reader Mini', code: 'CR-MINI', vendorId: '2' },
-    { id: '4', name: 'Thermal Printer TP100', code: 'TP-100', vendorId: '3' }
-  ]);
+// Reusable Select Component
+const Select = ({ label, name, register, errors, options, required = false, ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <select
+      {...register(name, { required: required ? `${label} is required` : false })}
+      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? 'border-red-500' : 'border-gray-300'
+        }`}
+      {...props}
+    >
+      <option value="">Select {label.toLowerCase()}</option>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+    {errors[name] && (
+      <p className="mt-1 text-sm text-red-500">{errors[name].message}</p>
+    )}
+  </div>
+)
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting }
-  } = useForm({
-    resolver: zodResolver(vendorRatesSchema),
-    defaultValues: initialData || {
-      vendorId: '',
-      productId: '',
-      effectiveDate: '',
-      expiryDate: '',
-      currency: 'INR',
-      basePrice: 0,
-      quantitySlabs: [
-        { minQuantity: 1, maxQuantity: 10, price: 0, discountPercent: 0 }
-      ],
-      taxInclusive: false,
-      gstPercent: 18,
-      additionalCharges: [
-        { chargeName: '', amount: 0, type: 'fixed' }
-      ],
-      paymentTerms: '',
-      creditPeriod: 30,
-      status: 'active',
-      remarks: ''
-    }
-  });
+// Vendor Details Component
+const VendorDetails = ({ register, errors }) => (
+  <div className="bg-gray-50 p-4 rounded-lg">
+    <h3 className="text-lg font-semibold text-gray-700 mb-4">Vendor Details</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Input
+        label="Vendor ID"
+        name="vendorId"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Enter vendor ID"
+      />
+      <Input
+        label="Vendor Name"
+        name="vendorName"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Enter vendor name"
+      />
+      <Input
+        label="Effective Date"
+        name="effectiveDate"
+        register={register}
+        errors={errors}
+        type="date"
+        required
+      />
+      <Input
+        label="Expiry Date"
+        name="expiryDate"
+        register={register}
+        errors={errors}
+        type="date"
+      />
+    </div>
+  </div>
+)
 
-  const { fields: slabFields, append: appendSlab, remove: removeSlab } = useFieldArray({
-    control,
-    name: 'quantitySlabs'
-  });
-
-  const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({
-    control,
-    name: 'additionalCharges'
-  });
-
-  const watchVendor = watch('vendorId');
-  const watchStatus = watch('status');
-  const watchTaxInclusive = watch('taxInclusive');
-
-  const filteredProducts = products.filter(product => 
-    !watchVendor || product.vendorId === watchVendor
-  );
-
-  const handleFormSubmit = (data) => {
-    console.log('Vendor Rates Form Data:', data);
-    onSubmit?.(data);
-  };
-
-  const toggleStatus = () => {
-    setValue('status', watchStatus === 'active' ? 'inactive' : 'active');
-  };
-
-  const toggleTaxInclusive = () => {
-    setValue('taxInclusive', !watchTaxInclusive);
-  };
-
-  const addQuantitySlab = () => {
-    appendSlab({ minQuantity: 1, maxQuantity: 10, price: 0, discountPercent: 0 });
-  };
-
-  const addAdditionalCharge = () => {
-    appendCharge({ chargeName: '', amount: 0, type: 'fixed' });
-  };
+// Rental Rate Component
+const RentalRate = ({ register, errors }) => {
+  const deviceOptions = [
+    { value: 'POS Machine', label: 'POS Machine' },
+    { value: 'QR Scanner', label: 'QR Scanner' },
+    { value: 'Card Reader', label: 'Card Reader' },
+    { value: 'Thermal Printer', label: 'Thermal Printer' },
+    { value: 'Tablet', label: 'Tablet' },
+    { value: 'Mobile Device', label: 'Mobile Device' },
+    { value: 'Other', label: 'Other' }
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white p-6 rounded-t-lg">
-            <div className="flex items-center space-x-3">
-              <DollarSign className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {isEdit ? 'Edit Vendor Rates' : 'Add New Vendor Rates'}
-                </h1>
-                <p className="text-purple-100">
-                  {isEdit ? 'Update vendor pricing information' : 'Set up pricing structure for vendor products'}
-                </p>
-              </div>
-            </div>
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Rental Rate</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Select
+          label="Device Type"
+          name="rental.deviceType"
+          register={register}
+          errors={errors}
+          options={deviceOptions}
+          required
+        />
+        <Input
+          label="Monthly Rate (₹)"
+          name="rental.monthlyRate"
+          register={register}
+          errors={errors}
+          type="number"
+          step="0.01"
+          min="0"
+          required
+          placeholder="Enter monthly rental"
+        />
+      </div>
+    </div>
+  )
+}
+
+// Card Rate Item Component
+const CardRateItem = ({ index, register, errors, onRemove }) => {
+  return (
+    <div className="flex items-end gap-3 p-3 bg-white border border-gray-200 rounded-lg">
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Card Type <span className="text-red-500">*</span>
+        </label>
+        <input
+          {...register(`cardRates.${index}.cardType`, { required: 'Card type is required' })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter card type"
+        />
+        {errors.cardRates?.[index]?.cardType && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].cardType.message}</p>
+        )}
+      </div>
+
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Rate (%) <span className="text-red-500">*</span>
+        </label>
+        <input
+          {...register(`cardRates.${index}.rate`, {
+            required: 'Rate is required',
+            min: { value: 0, message: 'Rate must be positive' },
+            max: { value: 100, message: 'Rate cannot exceed 100%' }
+          })}
+          type="number"
+          step="0.01"
+          min="0"
+          max="100"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., 2.5"
+        />
+        {errors.cardRates?.[index]?.rate && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].rate.message}</p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onRemove}
+        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+        title="Remove card type"
+      >
+        <X size={20} />
+      </button>
+    </div>
+  )
+}
+
+// Card Rates Component
+const CardRates = ({ control, register, errors }) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "cardRates"
+  })
+
+  const [selectedCardType, setSelectedCardType] = useState('')
+
+  const predefinedCardTypes = [
+    { value: 'credit', label: 'Credit Card' },
+    { value: 'debit', label: 'Debit Card' },
+    { value: 'american_express', label: 'American Express' }
+  ]
+
+  const addPredefinedCardRate = () => {
+    if (selectedCardType) {
+      const cardTypeLabel = predefinedCardTypes.find(type => type.value === selectedCardType)?.label || selectedCardType
+      append({ cardType: cardTypeLabel, rate: '' })
+      setSelectedCardType('')
+    }
+  }
+
+  const addCustomCardRate = () => {
+    append({ cardType: '', rate: '' })
+  }
+
+  return (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-700">Card Processing Rates</h3>
+        <div className="flex gap-3">
+          <div className="flex gap-2">
+            <select
+              value={selectedCardType}
+              onChange={(e) => setSelectedCardType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select predefined type</option>
+              {predefinedCardTypes.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={addPredefinedCardRate}
+              disabled={!selectedCardType}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              Add Selected
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-8">
-            {/* Basic Information */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <Users className="h-5 w-5 mr-2 text-purple-600" />
-                Basic Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vendor *
-                  </label>
-                  <select
-                    {...register('vendorId')}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">Select Vendor</option>
-                    {vendors.map((vendor) => (
-                      <option key={vendor.id} value={vendor.id}>
-                        {vendor.name} ({vendor.code})
-                      </option>
-                    ))}
-                  </select>
-                  {errors.vendorId && (
-                    <p className="text-red-500 text-sm mt-1">{errors.vendorId.message}</p>
-                  )}
-                </div>
+          <button
+            type="button"
+            onClick={addCustomCardRate}
+            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+          >
+            Add Custom Type
+          </button>
+        </div>
+      </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product *
-                  </label>
-                  <select
-                    {...register('productId')}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">Select Product</option>
-                    {filteredProducts.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name} ({product.code})
-                      </option>
-                    ))}
-                  </select>
-                  {errors.productId && (
-                    <p className="text-red-500 text-sm mt-1">{errors.productId.message}</p>
-                  )}
-                </div>
+      <div className="space-y-3">
+        {fields.map((field, index) => (
+          <CardRateItem
+            key={field.id}
+            index={index}
+            register={register}
+            errors={errors}
+            onRemove={() => remove(index)}
+          />
+        ))}
+        {fields.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-sm">No card types added yet.</p>
+            <p className="text-xs mt-1">Use the buttons above to add predefined types or create custom ones.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Effective Date *
-                  </label>
-                  <input
-                    {...register('effectiveDate')}
-                    type="date"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                  {errors.effectiveDate && (
-                    <p className="text-red-500 text-sm mt-1">{errors.effectiveDate.message}</p>
-                  )}
-                </div>
+// ==================== VENDOR RATE FORM MODAL ====================
+const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
+  const getDefaultValues = () => ({
+    vendorId: '',
+    vendorName: '',
+    effectiveDate: '',
+    expiryDate: '',
+    rental: {
+      deviceType: '',
+      monthlyRate: ''
+    },
+    cardRates: [],
+    remarks: ''
+  })
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Expiry Date *
-                  </label>
-                  <input
-                    {...register('expiryDate')}
-                    type="date"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                  {errors.expiryDate && (
-                    <p className="text-red-500 text-sm mt-1">{errors.expiryDate.message}</p>
-                  )}
-                </div>
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors },
+    
+  } = useForm({
+    defaultValues: initialData || getDefaultValues()
+  })
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Currency
-                  </label>
-                  <select
-                    {...register('currency')}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="INR">INR (₹)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                  </select>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Base Price *
-                  </label>
-                  <input
-                    {...register('basePrice', { valueAsNumber: true })}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="0.00"
-                  />
-                  {errors.basePrice && (
-                    <p className="text-red-500 text-sm mt-1">{errors.basePrice.message}</p>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={toggleStatus}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                        watchStatus === 'active'
-                          ? 'bg-green-100 text-green-700 border border-green-300'
-                          : 'bg-red-100 text-red-700 border border-red-300'
-                      }`}
-                    >
-                      {watchStatus === 'active' ? (
-                        <ToggleRight className="h-5 w-5" />
-                      ) : (
-                        <ToggleLeft className="h-5 w-5" />
-                      )}
-                      <span className="font-medium">
-                        {watchStatus === 'active' ? 'Active' : 'Inactive'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+  const onFormSubmit = (data) => {
+    const filteredData = {
+      ...data,
+      cardRates: data.cardRates.filter(rate => rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim())
+    }
 
-            {/* Quantity Slabs */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <Layers className="h-5 w-5 mr-2 text-purple-600" />
-                Quantity Slabs
-              </h2>
-              <div className="space-y-4">
-                {slabFields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border border-gray-200 rounded-lg">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Min Qty *
-                      </label>
-                      <input
-                        {...register(`quantitySlabs.${index}.minQuantity`, { valueAsNumber: true })}
-                        type="number"
-                        min="1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="1"
-                      />
-                      {errors.quantitySlabs?.[index]?.minQuantity && (
-                        <p className="text-red-500 text-xs mt-1">{errors.quantitySlabs[index].minQuantity.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Max Qty *
-                      </label>
-                      <input
-                        {...register(`quantitySlabs.${index}.maxQuantity`, { valueAsNumber: true })}
-                        type="number"
-                        min="1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="10"
-                      />
-                      {errors.quantitySlabs?.[index]?.maxQuantity && (
-                        <p className="text-red-500 text-xs mt-1">{errors.quantitySlabs[index].maxQuantity.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Price *
-                      </label>
-                      <input
-                        {...register(`quantitySlabs.${index}.price`, { valueAsNumber: true })}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="0.00"
-                      />
-                      {errors.quantitySlabs?.[index]?.price && (
-                        <p className="text-red-500 text-xs mt-1">{errors.quantitySlabs[index].price.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Discount %
-                      </label>
-                      <input
-                        {...register(`quantitySlabs.${index}.discountPercent`, { valueAsNumber: true })}
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="0"
-                      />
-                      {errors.quantitySlabs?.[index]?.discountPercent && (
-                        <p className="text-red-500 text-xs mt-1">{errors.quantitySlabs[index].discountPercent.message}</p>
-                      )}
-                    </div>
-                    <div className="flex items-end">
-                      <button
-                        type="button"
-                        onClick={() => removeSlab(index)}
-                        disabled={slabFields.length <= 1}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addQuantitySlab}
-                  className="flex items-center space-x-2 px-4 py-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Quantity Slab</span>
-                </button>
-              </div>
-            </div>
+    onSubmit(filteredData)
+    onCancel()
+  }
 
-            {/* Tax Information */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <Calculator className="h-5 w-5 mr-2 text-purple-600" />
-                Tax Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={toggleTaxInclusive}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                        watchTaxInclusive
-                          ? 'bg-green-100 text-green-700 border border-green-300'
-                          : 'bg-gray-100 text-gray-700 border border-gray-300'
-                      }`}
-                    >
-                      {watchTaxInclusive ? (
-                        <ToggleRight className="h-5 w-5" />
-                      ) : (
-                        <ToggleLeft className="h-5 w-5" />
-                      )}
-                      <span className="font-medium">Tax Inclusive</span>
-                    </button>
-                  </label>
-                </div>
+  const handleCancel = () => {
+    onCancel()
+  }
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    GST Percentage *
-                  </label>
-                  <input
-                    {...register('gstPercent', { valueAsNumber: true })}
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="18"
-                  />
-                  {errors.gstPercent && (
-                    <p className="text-red-500 text-sm mt-1">{errors.gstPercent.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* Additional Charges */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <Plus className="h-5 w-5 mr-2 text-purple-600" />
-                Additional Charges (Optional)
-              </h2>
-              <div className="space-y-4">
-                {chargeFields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 rounded-lg">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Charge Name
-                      </label>
-                      <input
-                        {...register(`additionalCharges.${index}.chargeName`)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="e.g., Setup Fee"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Type
-                      </label>
-                      <select
-                        {...register(`additionalCharges.${index}.type`)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      >
-                        <option value="fixed">Fixed Amount</option>
-                        <option value="percentage">Percentage</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Amount
-                      </label>
-                      <input
-                        {...register(`additionalCharges.${index}.amount`, { valueAsNumber: true })}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div className="flex items-end">
-                      <button
-                        type="button"
-                        onClick={() => removeCharge(index)}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addAdditionalCharge}
-                  className="flex items-center space-x-2 px-4 py-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Additional Charge</span>
-                </button>
-              </div>
-            </div>
 
-            {/* Payment Terms */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-purple-600" />
-                Payment Terms
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Payment Terms *
-                  </label>
-                  <input
-                    {...register('paymentTerms')}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="e.g., Net 30, Advance payment"
-                  />
-                  {errors.paymentTerms && (
-                    <p className="text-red-500 text-sm mt-1">{errors.paymentTerms.message}</p>
-                  )}
-                </div>
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Modal Header */}
+        <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {isEdit ? 'Edit Vendor Rates' : 'Add New Vendor Rates'}
+          </h2>
+          <button
+            onClick={handleCancel}
+            className="p-2 hover:bg-gray-200 rounded-md transition-colors"
+            title="Close"
+          >
+            <X size={24} className="text-gray-600" />
+          </button>
+        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Credit Period (Days) *
-                  </label>
-                  <input
-                    {...register('creditPeriod', { valueAsNumber: true })}
-                    type="number"
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="30"
-                  />
-                  {errors.creditPeriod && (
-                    <p className="text-red-500 text-sm mt-1">{errors.creditPeriod.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
+        {/* Modal Body */}
+        <div className="p-6">
+          <div className="space-y-6">
+            <VendorDetails register={register} errors={errors} />
+            <RentalRate register={register} errors={errors} />
+            <CardRates control={control} register={register} errors={errors} />
 
             {/* Remarks */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Remarks
-              </label>
-              <textarea
-                {...register('remarks')}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Enter any additional remarks or notes"
-              />
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Remarks
+                </label>
+                <textarea
+                  {...register('remarks')}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter any additional remarks about the vendor rates"
+                />
+              </div>
             </div>
 
-            {/* Submit Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-4 pt-4 border-t">
               <button
                 type="button"
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={handleCancel}
+                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
               >
                 Cancel
               </button>
               <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                type="button"
+                onClick={handleSubmit(onFormSubmit)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
               >
-                {isSubmitting ? 'Saving...' : isEdit ? 'Update Rates' : 'Create Rates'}
+                {isEdit ? 'Update Vendor Rates' : 'Save Vendor Rates'}
               </button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default VendorRatesForm;
+export default VendorRateForm
