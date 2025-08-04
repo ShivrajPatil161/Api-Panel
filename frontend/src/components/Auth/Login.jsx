@@ -188,12 +188,7 @@ const Login = () => {
             </div>
           </div>
 
-          {/* User Type Info */}
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-gray-600 text-center">
-              💡 Tip: Include 'admin', 'franchise', or 'merchant' in your email to set user type
-            </p>
-          </div>
+         
         </div>
       </div>
     </div>

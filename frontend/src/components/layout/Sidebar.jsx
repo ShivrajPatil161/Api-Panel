@@ -346,7 +346,7 @@ const Sidebar = () => {
       />
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
+      <nav className="flex-1 overflow-y-auto py-4 ">
         <div className="space-y-2">
           {menuItems.map((item) => (
             <div key={item.key || item.path}>
