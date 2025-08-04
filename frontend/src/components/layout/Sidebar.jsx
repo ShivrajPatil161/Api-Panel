@@ -106,7 +106,7 @@ const Sidebar = () => {
       children: [
         { title: 'Customer List', path: '/dashboard/customers', icon: Users },
         { title: 'Onboard Customer', path: '/dashboard/customers/onboard', icon: UserPlus },
-        { title: 'Assign Products', path: '/dashboard/customers/assign-products', icon: Package }
+        { title: 'Products Distribution', path: '/dashboard/customers/products-distribution', icon: Package }
       ]
     },
     {

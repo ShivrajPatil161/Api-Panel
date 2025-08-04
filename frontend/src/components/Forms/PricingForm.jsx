@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
-import { X, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, Plus } from 'lucide-react'
 
 // ==================== FORM COMPONENTS ====================
 
@@ -13,7 +13,6 @@ const Input = ({ label, name, register, errors, required = false, type = "text",
     <input
       {...register(name, {
         required: required ? `${label} is required` : false,
-        ...(type === 'email' && { pattern: { value: /^\S+@\S+$/i, message: 'Invalid email format' } })
       })}
       type={type}
       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? 'border-red-500' : 'border-gray-300'
@@ -51,122 +50,21 @@ const Select = ({ label, name, register, errors, options, required = false, ...p
   </div>
 )
 
-// Customer Details Component
-const CustomerDetails = ({ register, errors, watch }) => {
-  const customerType = watch('customerType')
-
-  const customerTypeOptions = [
-    { value: 'franchise', label: 'Franchise' },
-    { value: 'direct_merchant', label: 'Direct Merchant' }
-  ]
-
-  const franchiseOptions = [
-    { value: 'franchise_1', label: 'TechPay Franchise Mumbai' },
-    { value: 'franchise_2', label: 'PayMaster Franchise Delhi' },
-    { value: 'franchise_3', label: 'QuickPay Franchise Bangalore' },
-    { value: 'franchise_4', label: 'SmartPay Franchise Chennai' },
-    { value: 'franchise_5', label: 'EasyPay Franchise Pune' }
-  ]
-
-  return (
-    <div className="bg-gray-50 p-4 rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">Customer Details</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Select
-          label="Customer Type"
-          name="customerType"
-          register={register}
-          errors={errors}
-          options={customerTypeOptions}
-          required
-        />
-
-        {customerType === 'franchise' && (
-          <Select
-            label="Select Franchise"
-            name="franchiseId"
-            register={register}
-            errors={errors}
-            options={franchiseOptions}
-            required
-          />
-        )}
-
-        <Input
-          label="Effective Date"
-          name="effectiveDate"
-          register={register}
-          errors={errors}
-          type="date"
-          required
-        />
-        <Input
-          label="Expiry Date"
-          name="expiryDate"
-          register={register}
-          errors={errors}
-          type="date"
-        />
-      </div>
-    </div>
-  )
-}
-
-// Rental Rate Component
-const RentalRate = ({ register, errors }) => {
-  const deviceOptions = [
-    { value: 'POS Machine', label: 'POS Machine' },
-    { value: 'QR Scanner', label: 'QR Scanner' },
-    { value: 'Card Reader', label: 'Card Reader' },
-    { value: 'Thermal Printer', label: 'Thermal Printer' },
-    { value: 'Tablet', label: 'Tablet' },
-    { value: 'Mobile Device', label: 'Mobile Device' },
-    { value: 'Other', label: 'Other' }
-  ]
-
-  return (
-    <div className="bg-gray-50 p-4 rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Rental Rate</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Select
-          label="Device Type"
-          name="rental.deviceType"
-          register={register}
-          errors={errors}
-          options={deviceOptions}
-          required
-        />
-        <Input
-          label="Monthly Rate (₹)"
-          name="rental.monthlyRate"
-          register={register}
-          errors={errors}
-          type="number"
-          step="0.01"
-          min="0"
-          required
-          placeholder="Enter monthly rental"
-        />
-      </div>
-    </div>
-  )
-}
-
 // Card Rate Item Component for Direct Merchants
 const DirectMerchantCardRateItem = ({ index, register, errors, onRemove }) => {
   return (
     <div className="flex items-end gap-3 p-3 bg-white border border-gray-200 rounded-lg">
       <div className="flex-1">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Card Type <span className="text-red-500">*</span>
+          Card Name <span className="text-red-500">*</span>
         </label>
         <input
-          {...register(`cardRates.${index}.cardType`, { required: 'Card type is required' })}
+          {...register(`cardRates.${index}.cardName`, { required: 'Card name is required' })}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter card type"
+          placeholder="Enter card name"
         />
-        {errors.cardRates?.[index]?.cardType && (
-          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].cardType.message}</p>
+        {errors.cardRates?.[index]?.cardName && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].cardName.message}</p>
         )}
       </div>
 
@@ -210,15 +108,15 @@ const FranchiseCardRateItem = ({ index, register, errors, onRemove }) => {
     <div className="flex items-end gap-3 p-3 bg-white border border-gray-200 rounded-lg">
       <div className="flex-1">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Card Type <span className="text-red-500">*</span>
+          Card Name <span className="text-red-500">*</span>
         </label>
         <input
-          {...register(`cardRates.${index}.cardType`, { required: 'Card type is required' })}
+          {...register(`cardRates.${index}.cardName`, { required: 'Card name is required' })}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter card type"
+          placeholder="Enter card name"
         />
-        {errors.cardRates?.[index]?.cardType && (
-          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].cardType.message}</p>
+        {errors.cardRates?.[index]?.cardName && (
+          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].cardName.message}</p>
         )}
       </div>
 
@@ -289,9 +187,13 @@ const CardRates = ({ control, register, errors, watch }) => {
   const customerType = watch('customerType')
 
   const predefinedCardTypes = [
-    { value: 'credit', label: 'Credit Card' },
-    { value: 'debit', label: 'Debit Card' },
-    { value: 'american_express', label: 'American Express' }
+    { value: 'visa_credit', label: 'Visa Credit Card' },
+    { value: 'visa_debit', label: 'Visa Debit Card' },
+    { value: 'mastercard_credit', label: 'Mastercard Credit' },
+    { value: 'mastercard_debit', label: 'Mastercard Debit' },
+    { value: 'american_express', label: 'American Express' },
+    { value: 'rupay', label: 'RuPay' },
+    { value: 'diners_club', label: 'Diners Club' }
   ]
 
   const addPredefinedCardRate = () => {
@@ -299,9 +201,9 @@ const CardRates = ({ control, register, errors, watch }) => {
       const cardTypeLabel = predefinedCardTypes.find(type => type.value === selectedCardType)?.label || selectedCardType
 
       if (customerType === 'franchise') {
-        append({ cardType: cardTypeLabel, franchiseRate: '', merchantRate: '' })
+        append({ cardName: cardTypeLabel, franchiseRate: '', merchantRate: '' })
       } else {
-        append({ cardType: cardTypeLabel, rate: '' })
+        append({ cardName: cardTypeLabel, rate: '' })
       }
       setSelectedCardType('')
     }
@@ -309,9 +211,9 @@ const CardRates = ({ control, register, errors, watch }) => {
 
   const addCustomCardRate = () => {
     if (customerType === 'franchise') {
-      append({ cardType: '', franchiseRate: '', merchantRate: '' })
+      append({ cardName: '', franchiseRate: '', merchantRate: '' })
     } else {
-      append({ cardType: '', rate: '' })
+      append({ cardName: '', rate: '' })
     }
   }
 
@@ -346,8 +248,9 @@ const CardRates = ({ control, register, errors, watch }) => {
           <button
             type="button"
             onClick={addCustomCardRate}
-            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
           >
+            <Plus size={16} />
             Add Custom Type
           </button>
         </div>
@@ -384,19 +287,14 @@ const CardRates = ({ control, register, errors, watch }) => {
   )
 }
 
-// ==================== CUSTOMER RATE FORM MODAL ====================
-const CustomerRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
+// ==================== PRICING SCHEME FORM MODAL ====================
+const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
   const getDefaultValues = () => ({
+    schemeCode: '',
+    rentalByMonth: '',
     customerType: '',
-    franchiseId: '',
-    effectiveDate: '',
-    expiryDate: '',
-    rental: {
-      deviceType: '',
-      monthlyRate: ''
-    },
     cardRates: [],
-    remarks: ''
+    description: ''
   })
 
   const {
@@ -404,19 +302,16 @@ const CustomerRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = fal
     register,
     handleSubmit,
     formState: { errors },
-    watch
+    watch,
+    reset
   } = useForm({
     defaultValues: initialData || getDefaultValues()
   })
 
-  useEffect(() => {
-    if (initialData) {
-      // Reset form with initial data when editing
-      Object.keys(initialData).forEach(key => {
-        register(key, { value: initialData[key] })
-      })
-    }
-  }, [initialData, register])
+  const customerTypeOptions = [
+    { value: 'franchise', label: 'Franchise' },
+    { value: 'direct_merchant', label: 'Direct Merchant' }
+  ]
 
   const onFormSubmit = (data) => {
     const filteredData = {
@@ -425,9 +320,9 @@ const CustomerRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = fal
         if (data.customerType === 'franchise') {
           return rate.franchiseRate && parseFloat(rate.franchiseRate) > 0 &&
             rate.merchantRate && parseFloat(rate.merchantRate) > 0 &&
-            rate.cardType.trim()
+            rate.cardName.trim()
         } else {
-          return rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim()
+          return rate.rate && parseFloat(rate.rate) > 0 && rate.cardName.trim()
         }
       })
     }
@@ -446,7 +341,7 @@ const CustomerRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = fal
         {/* Modal Header */}
         <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg">
           <h2 className="text-2xl font-bold text-gray-800">
-            {isEdit ? 'Edit Customer Rates' : 'Add New Customer Rates'}
+            {isEdit ? 'Edit Pricing Scheme' : 'Add New Pricing Scheme'}
           </h2>
           <button
             onClick={handleCancel}
@@ -460,21 +355,56 @@ const CustomerRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = fal
         {/* Modal Body */}
         <div className="p-6">
           <div className="space-y-6">
-            <CustomerDetails register={register} errors={errors} watch={watch} />
-            <RentalRate register={register} errors={errors} />
-            <CardRates control={control} register={register} errors={errors} watch={watch} />
+            {/* Basic Details */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Scheme Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input
+                  label="Scheme Code"
+                  name="schemeCode"
+                  register={register}
+                  errors={errors}
+                  required
+                  placeholder="e.g., SCHEME_001"
+                />
+                <Input
+                  label="Rental by Month (₹)"
+                  name="rentalByMonth"
+                  register={register}
+                  errors={errors}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  placeholder="Enter monthly rental"
+                />
+                <Select
+                  label="Customer Type"
+                  name="customerType"
+                  register={register}
+                  errors={errors}
+                  options={customerTypeOptions}
+                  required
+                />
+              </div>
+            </div>
 
-            {/* Remarks */}
+            {/* Card Rates */}
+            {watch('customerType') && (
+              <CardRates control={control} register={register} errors={errors} watch={watch} />
+            )}
+
+            {/* Description */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Remarks
+                  Description
                 </label>
                 <textarea
-                  {...register('remarks')}
+                  {...register('description')}
                   rows="3"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter any additional remarks about the customer rates"
+                  placeholder="Enter description for this pricing scheme"
                 />
               </div>
             </div>
@@ -493,7 +423,7 @@ const CustomerRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = fal
                 onClick={handleSubmit(onFormSubmit)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
               >
-                {isEdit ? 'Update Customer Rates' : 'Save Customer Rates'}
+                {isEdit ? 'Update Scheme' : 'Save Scheme'}
               </button>
             </div>
           </div>
@@ -503,4 +433,4 @@ const CustomerRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = fal
   )
 }
 
-export default CustomerRateForm
+export default PricingSchemeFormModal

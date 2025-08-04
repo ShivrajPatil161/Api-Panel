@@ -27,6 +27,8 @@ import ProductPricingPage from '../components/Tables/ProductPricing.jsx'
 import CustomerRatesManagement from '../components/Tables/PricingTable.jsx'
 import CustomerDashboard from '../components/Dashborad.jsx'
 import CustomerListComponent from '../components/Tables/CustomerList.jsx'
+import PricingSchemeForm from '../components/Forms/PricingForm.jsx'
+import SchemeList from '../components/Tables/SchemeList.jsx'
 
 
 
@@ -106,7 +108,8 @@ export const router = createBrowserRouter([
               },
               {
                 path: "pricing",
-                element: <CustomerRatesManagement />
+                // element: <PricingSchemeForm />
+                element: <SchemeList />
               },
               {
                 path: "inward",
@@ -135,7 +138,7 @@ export const router = createBrowserRouter([
                 element: <CustomerOnboarding />
               },
               {
-                path: "assign-products",
+                path: "products-distribution",
                 element: <ProductAssignmentForm />
               }
             ]
