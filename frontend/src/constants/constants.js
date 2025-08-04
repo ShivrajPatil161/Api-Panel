@@ -752,7 +752,7 @@ export const dummyDirectMerchantRates = [
 
 
     // Mock Data
-    export const franchiseData = [
+export const franchiseData = [
         {
             id: 'F001',
             name: 'ABC Retail Group',
@@ -810,7 +810,7 @@ export const dummyDirectMerchantRates = [
         }
     ];
 
-    export const merchantData = [
+export const merchantData = [
         {
             id: 'M101',
             name: 'Tech Solutions Pro',
@@ -857,3 +857,177 @@ export const dummyDirectMerchantRates = [
             franchise: null
         }
     ];
+
+
+export const schemeList = [
+        {
+            id: 1,
+            schemeCode: 'SCH_001',
+            rentalByMonth: '500.00',
+            customerType: 'franchise',
+            cardRates: [
+                { cardName: 'Visa Credit Card', franchiseRate: '2.5', merchantRate: '3.0' },
+                { cardName: 'Mastercard Credit', franchiseRate: '2.8', merchantRate: '3.2' }
+            ],
+            description: 'Standard franchise scheme for Visa and Mastercard'
+        },
+        {
+            id: 2,
+            schemeCode: 'SCH_002',
+            rentalByMonth: '300.00',
+            customerType: 'direct_merchant',
+            cardRates: [
+                { cardName: 'Visa Debit Card', rate: '2.0' },
+                { cardName: 'RuPay', rate: '1.8' }
+            ],
+            description: 'Direct merchant scheme for debit cards'
+        },
+        {
+            id: 3,
+            schemeCode: 'SCH_003',
+            rentalByMonth: '750.00',
+            customerType: 'franchise',
+            cardRates: [
+                { cardName: 'American Express', franchiseRate: '3.5', merchantRate: '4.0' },
+                { cardName: 'Diners Club', franchiseRate: '3.2', merchantRate: '3.8' }
+            ],
+            description: 'Premium franchise scheme for high-end cards'
+        },
+        {
+            id: 4,
+            schemeCode: 'SCH_004',
+            rentalByMonth: '400.00',
+            customerType: 'direct_merchant',
+            cardRates: [
+                { cardName: 'Visa Credit Card', rate: '2.8' },
+                { cardName: 'Mastercard Debit', rate: '2.2' }
+            ],
+            description: 'Mixed card scheme for direct merchants'
+        },
+        {
+            id: 5,
+            schemeCode: 'SCH_005',
+            rentalByMonth: '600.00',
+            customerType: 'franchise',
+            cardRates: [
+                { cardName: 'Visa Credit Card', franchiseRate: '2.6', merchantRate: '3.1' },
+                { cardName: 'Visa Debit Card', franchiseRate: '2.0', merchantRate: '2.5' },
+                { cardName: 'RuPay', franchiseRate: '1.5', merchantRate: '2.0' }
+            ],
+            description: 'Comprehensive Visa and RuPay franchise scheme'
+        },
+        {
+            id: 6,
+            schemeCode: 'SCH_006',
+            rentalByMonth: '350.00',
+            customerType: 'direct_merchant',
+            cardRates: [
+                { cardName: 'RuPay', rate: '1.5' },
+                { cardName: 'Visa Debit Card', rate: '1.9' }
+            ],
+            description: 'Budget-friendly debit card scheme'
+        },
+        {
+            id: 7,
+            schemeCode: 'SCH_007',
+            rentalByMonth: '800.00',
+            customerType: 'franchise',
+            cardRates: [
+                { cardName: 'American Express', franchiseRate: '3.8', merchantRate: '4.2' },
+                { cardName: 'Visa Credit Card', franchiseRate: '2.9', merchantRate: '3.4' },
+                { cardName: 'Mastercard Credit', franchiseRate: '2.7', merchantRate: '3.2' }
+            ],
+            description: 'Premium multi-card franchise scheme'
+        },
+        {
+            id: 8,
+            schemeCode: 'SCH_008',
+            rentalByMonth: '450.00',
+            customerType: 'direct_merchant',
+            cardRates: [
+                { cardName: 'Mastercard Credit', rate: '2.9' },
+                { cardName: 'Mastercard Debit', rate: '2.3' }
+            ],
+            description: 'Mastercard focused direct merchant scheme'
+        },
+        {
+            id: 9,
+            schemeCode: 'SCH_009',
+            rentalByMonth: '550.00',
+            customerType: 'franchise',
+            cardRates: [
+                { cardName: 'Visa Credit Card', franchiseRate: '2.4', merchantRate: '2.9' },
+                { cardName: 'Diners Club', franchiseRate: '3.0', merchantRate: '3.5' }
+            ],
+            description: 'Mid-tier franchise scheme with premium options'
+        },
+        {
+            id: 10,
+            schemeCode: 'SCH_010',
+            rentalByMonth: '280.00',
+            customerType: 'direct_merchant',
+            cardRates: [
+                { cardName: 'RuPay', rate: '1.2' },
+                { cardName: 'Visa Debit Card', rate: '1.6' }
+            ],
+            description: 'Economy debit card scheme for small merchants'
+        },
+        {
+            id: 11,
+            schemeCode: 'SCH_011',
+            rentalByMonth: '700.00',
+            customerType: 'franchise',
+            cardRates: [
+                { cardName: 'Visa Credit Card', franchiseRate: '2.7', merchantRate: '3.2' },
+                { cardName: 'Mastercard Credit', franchiseRate: '2.8', merchantRate: '3.3' },
+                { cardName: 'American Express', franchiseRate: '3.6', merchantRate: '4.1' }
+            ],
+            description: 'High-volume franchise scheme for all major cards'
+        },
+        {
+            id: 12,
+            schemeCode: 'SCH_012',
+            rentalByMonth: '320.00',
+            customerType: 'direct_merchant',
+            cardRates: [
+                { cardName: 'Visa Debit Card', rate: '2.1' },
+                { cardName: 'Mastercard Debit', rate: '2.0' }
+            ],
+            description: 'Standard debit card scheme for direct merchants'
+        },
+        {
+            id: 13,
+            schemeCode: 'SCH_013',
+            rentalByMonth: '650.00',
+            customerType: 'franchise',
+            cardRates: [
+                { cardName: 'RuPay', franchiseRate: '1.4', merchantRate: '1.9' },
+                { cardName: 'Visa Debit Card', franchiseRate: '1.8', merchantRate: '2.3' }
+            ],
+            description: 'Debit-focused franchise scheme with competitive rates'
+        },
+        {
+            id: 14,
+            schemeCode: 'SCH_014',
+            rentalByMonth: '480.00',
+            customerType: 'direct_merchant',
+            cardRates: [
+                { cardName: 'Visa Credit Card', rate: '3.1' },
+                { cardName: 'American Express', rate: '4.5' }
+            ],
+            description: 'Premium direct merchant scheme'
+        },
+        {
+            id: 15,
+            schemeCode: 'SCH_015',
+            rentalByMonth: '900.00',
+            customerType: 'franchise',
+            cardRates: [
+                { cardName: 'Visa Credit Card', franchiseRate: '2.3', merchantRate: '2.8' },
+                { cardName: 'Mastercard Credit', franchiseRate: '2.5', merchantRate: '3.0' },
+                { cardName: 'American Express', franchiseRate: '3.4', merchantRate: '3.9' },
+                { cardName: 'Diners Club', franchiseRate: '3.1', merchantRate: '3.6' }
+            ],
+            description: 'Enterprise franchise scheme with all card types and best rates'
+        }
+    ]

@@ -14,12 +14,12 @@ import {
   createColumnHelper
 } from '@tanstack/react-table';
 import {
-  DollarSign, Package, Users, Plus, Search, Edit, Eye, Trash2, 
+  DollarSign, Package, Users, Plus, Search, Edit, Eye, Trash2,
   ChevronLeft, ChevronRight, Tag, Calculator, TrendingUp,
   Building2, Calendar, ToggleLeft, ToggleRight, X, Save
 } from 'lucide-react';
 
-import CustomerRateForm from '../Forms/PricingForm'
+import PricingSchemeForm from '../Forms/PricingForm'
 
 import { dummyPricingData } from '../../constants/constants';
 
@@ -95,11 +95,10 @@ const ProductPricingPage = () => {
         header: 'Status',
         cell: info => (
           <span
-            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-              info.getValue() === 'active'
+            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${info.getValue() === 'active'
                 ? 'bg-green-100 text-green-800'
                 : 'bg-red-100 text-red-800'
-            }`}
+              }`}
           >
             {info.getValue() === 'active' ? 'Active' : 'Inactive'}
           </span>
@@ -180,8 +179,8 @@ const ProductPricingPage = () => {
   const handleFormSubmit = (data) => {
     if (editingPricing) {
       // Update existing pricing
-      setPricingData(pricingData.map(pricing => 
-        pricing.id === editingPricing.id 
+      setPricingData(pricingData.map(pricing =>
+        pricing.id === editingPricing.id
           ? { ...pricing, ...data }
           : pricing
       ));

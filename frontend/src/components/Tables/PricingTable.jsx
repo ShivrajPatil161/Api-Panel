@@ -23,10 +23,218 @@ import {
     X
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import CustomerRateForm from '../Forms/PricingForm';
+import PricingSchemeForm from '../Forms/PricingForm';
 
 
-import { dummyDirectMerchantRates, dummyFranchiseRates } from '../../constants/constants';
+// Dummy data for franchise rates
+export const dummyFranchiseRates = [
+    {
+        id: 1,
+        customerType: 'franchise',
+        franchiseId: 'FR001',
+        franchiseName: 'ABC Franchise Ltd',
+        effectiveDate: '2024-01-01',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'POS Terminal',
+            monthlyRate: '500'
+        },
+        cardRates: [
+            { cardType: 'Visa', franchiseRate: '1.5', merchantRate: '2.0' },
+            { cardType: 'MasterCard', franchiseRate: '1.6', merchantRate: '2.1' },
+            { cardType: 'RuPay', franchiseRate: '1.2', merchantRate: '1.8' }
+        ],
+        remarks: 'Premium franchise package',
+        status: 'active'
+    },
+    {
+        id: 2,
+        customerType: 'franchise',
+        franchiseId: 'FR002',
+        franchiseName: 'XYZ Business Solutions',
+        effectiveDate: '2024-02-01',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'Mobile POS',
+            monthlyRate: '350'
+        },
+        cardRates: [
+            { cardType: 'Visa', franchiseRate: '1.7', merchantRate: '2.2' },
+            { cardType: 'MasterCard', franchiseRate: '1.8', merchantRate: '2.3' },
+            { cardType: 'Amex', franchiseRate: '2.5', merchantRate: '3.0' }
+        ],
+        remarks: 'Standard franchise rates',
+        status: 'active'
+    },
+    {
+        id: 3,
+        customerType: 'franchise',
+        franchiseId: 'FR003',
+        franchiseName: 'Metro Retail Chain',
+        effectiveDate: '2024-03-01',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'Smart Terminal',
+            monthlyRate: '750'
+        },
+        cardRates: [
+            { cardType: 'Visa', franchiseRate: '1.3', merchantRate: '1.9' },
+            { cardType: 'MasterCard', franchiseRate: '1.4', merchantRate: '2.0' },
+            { cardType: 'RuPay', franchiseRate: '1.0', merchantRate: '1.5' }
+        ],
+        remarks: 'Volume discount applied',
+        status: 'active'
+    },
+    {
+        id: 4,
+        customerType: 'franchise',
+        franchiseId: 'FR004',
+        franchiseName: 'Digital Pay Solutions',
+        effectiveDate: '2024-01-15',
+        expiryDate: '2024-06-30',
+        rental: {
+            deviceType: 'Wireless Terminal',
+            monthlyRate: '600'
+        },
+        cardRates: [
+            { cardType: 'Visa', franchiseRate: '1.8', merchantRate: '2.4' },
+            { cardType: 'MasterCard', franchiseRate: '1.9', merchantRate: '2.5' }
+        ],
+        remarks: 'Temporary promotional rates',
+        status: 'inactive'
+    },
+    {
+        id: 5,
+        customerType: 'franchise',
+        franchiseId: 'FR005',
+        franchiseName: 'Quick Commerce Hub',
+        effectiveDate: '2024-04-01',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'Countertop Terminal',
+            monthlyRate: '450'
+        },
+        cardRates: [
+            { cardType: 'Visa', franchiseRate: '1.6', merchantRate: '2.1' },
+            { cardType: 'MasterCard', franchiseRate: '1.7', merchantRate: '2.2' },
+            { cardType: 'RuPay', franchiseRate: '1.3', merchantRate: '1.9' },
+            { cardType: 'Amex', franchiseRate: '2.8', merchantRate: '3.3' }
+        ],
+        remarks: 'New partnership rates',
+        status: 'active'
+    }
+];
+
+// Dummy data for direct merchant rates
+export const dummyDirectMerchantRates = [
+    {
+        id: 1,
+        customerType: 'direct',
+        merchantName: 'Green Grocery Store',
+        effectiveDate: '2024-01-01',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'Basic POS',
+            monthlyRate: '300'
+        },
+        cardRates: [
+            { cardType: 'Visa', rate: '2.2' },
+            { cardType: 'MasterCard', rate: '2.3' },
+            { cardType: 'RuPay', rate: '1.9' }
+        ],
+        remarks: 'Small business package',
+        status: 'active'
+    },
+    {
+        id: 2,
+        customerType: 'direct',
+        merchantName: 'Fashion Boutique Central',
+        effectiveDate: '2024-02-01',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'Touch Screen POS',
+            monthlyRate: '550'
+        },
+        cardRates: [
+            { cardType: 'Visa', rate: '2.0' },
+            { cardType: 'MasterCard', rate: '2.1' },
+            { cardType: 'Amex', rate: '3.2' }
+        ],
+        remarks: 'Premium merchant rates',
+        status: 'active'
+    },
+    {
+        id: 3,
+        customerType: 'direct',
+        merchantName: 'Tech Repair Shop',
+        effectiveDate: '2024-01-15',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'Mobile Reader',
+            monthlyRate: '200'
+        },
+        cardRates: [
+            { cardType: 'Visa', rate: '2.5' },
+            { cardType: 'MasterCard', rate: '2.6' }
+        ],
+        remarks: 'Basic service package',
+        status: 'active'
+    },
+    {
+        id: 4,
+        customerType: 'direct',
+        merchantName: 'Downtown Restaurant',
+        effectiveDate: '2024-03-01',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'Handheld Terminal',
+            monthlyRate: '400'
+        },
+        cardRates: [
+            { cardType: 'Visa', rate: '2.1' },
+            { cardType: 'MasterCard', rate: '2.2' },
+            { cardType: 'RuPay', rate: '1.8' },
+            { cardType: 'Amex', rate: '3.0' }
+        ],
+        remarks: 'Restaurant industry rates',
+        status: 'active'
+    },
+    {
+        id: 5,
+        customerType: 'direct',
+        merchantName: 'Medical Clinic Plus',
+        effectiveDate: '2024-02-15',
+        expiryDate: '2024-08-31',
+        rental: {
+            deviceType: 'Contactless Terminal',
+            monthlyRate: '350'
+        },
+        cardRates: [
+            { cardType: 'Visa', rate: '2.3' },
+            { cardType: 'MasterCard', rate: '2.4' }
+        ],
+        remarks: 'Healthcare sector rates',
+        status: 'inactive'
+    },
+    {
+        id: 6,
+        customerType: 'direct',
+        merchantName: 'Auto Parts Warehouse',
+        effectiveDate: '2024-04-01',
+        expiryDate: '2024-12-31',
+        rental: {
+            deviceType: 'Industrial Terminal',
+            monthlyRate: '650'
+        },
+        cardRates: [
+            { cardType: 'Visa', rate: '1.9' },
+            { cardType: 'MasterCard', rate: '2.0' },
+            { cardType: 'RuPay', rate: '1.7' }
+        ],
+        remarks: 'B2B wholesale rates',
+        status: 'active'
+    }
+];
 
 // Main Component
 const CustomerRatesManagement = () => {
@@ -93,8 +301,8 @@ const CustomerRatesManagement = () => {
                 cell: info => (
                     <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${info.getValue() === 'active'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}
                     >
                         {info.getValue() === 'active' ? 'Active' : 'Inactive'}
@@ -183,8 +391,8 @@ const CustomerRatesManagement = () => {
                 cell: info => (
                     <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${info.getValue() === 'active'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}
                     >
                         {info.getValue() === 'active' ? 'Active' : 'Inactive'}
@@ -493,8 +701,8 @@ const CustomerRatesManagement = () => {
                             <button
                                 onClick={() => setActiveTab('franchise')}
                                 className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'franchise'
-                                        ? 'border-blue-500 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 Franchise Rates ({franchiseRates.length})
@@ -502,8 +710,8 @@ const CustomerRatesManagement = () => {
                             <button
                                 onClick={() => setActiveTab('direct')}
                                 className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'direct'
-                                        ? 'border-blue-500 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 Direct Merchant Rates ({directMerchantRates.length})
@@ -532,7 +740,7 @@ const CustomerRatesManagement = () => {
 
             {/* Form Modal */}
             {showForm && (
-                <CustomerRateForm
+                <PricingSchemeForm
                     onSubmit={handleFormSubmit}
                     onCancel={handleFormCancel}
                     initialData={editingRate}
