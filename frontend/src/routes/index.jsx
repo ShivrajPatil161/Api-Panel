@@ -29,6 +29,9 @@ import CustomerDashboard from '../components/Dashborad.jsx'
 import CustomerListComponent from '../components/Tables/CustomerList.jsx'
 import PricingSchemeForm from '../components/Forms/PricingForm.jsx'
 import SchemeList from '../components/Tables/SchemeList.jsx'
+import ProductAssignment from '../components/Tables/ProductAssign_Scheme.jsx'
+import ProductDistribution from '../components/Forms/ProductAssign.jsx'
+import MerchantListComponent from '../components/Tables/MerchantList.jsx'
 
 
 
@@ -112,6 +115,10 @@ export const router = createBrowserRouter([
                 element: <SchemeList />
               },
               {
+                path: "products-assign",
+                element: <ProductAssignment />
+              },
+              {
                 path: "inward",
                 element: <Inward />
               },
@@ -139,8 +146,9 @@ export const router = createBrowserRouter([
               },
               {
                 path: "products-distribution",
-                element: <ProductAssignmentForm />
-              }
+                element: <ProductDistribution />
+              },
+              
             ]
           },
           // Transaction routes
@@ -156,6 +164,9 @@ export const router = createBrowserRouter([
                 element: <ChargeCalculationForm />
               }
             ]
+          }, {
+            path: 'merchants',
+            element: <MerchantListComponent />
           }
           // Reports
           // {

@@ -9,13 +9,14 @@ import {
   Wallet
 } from 'lucide-react';
 
-const Header = ({ userType = 'customer', userInfo = {} }) => {
+const Header = ({ userType, userInfo = {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userType')
     navigate('/login');
   };
 
@@ -72,12 +73,26 @@ const Header = ({ userType = 'customer', userInfo = {} }) => {
     return segments.map(segment => breadcrumbMap[segment] || segment).join(' > ');
   };
 
-  // Default user info
   const defaultUserInfo = {
-    name: userType === 'admin' ? 'Admin User' : 'Customer User',
-    email: userType === 'admin' ? 'admin@company.com' : 'customer@company.com',
-    initials: userType === 'admin' ? 'AD' : 'CU',
-    walletBalance: userType === 'customer' ? 25000 : null
+    name:
+      userType === 'admin'
+        ? 'Admin User'
+        : userType === 'merchant'
+          ? 'Merchant User'
+          : 'Franchise User',
+    email:
+      userType === 'admin'
+        ? 'admin@company.com'
+        : userType === 'merchant'
+          ? 'merchant@company.com'
+          : 'franchise@company.com',
+    initials:
+      userType === 'admin'
+        ? 'AD'
+        : userType === 'merchant'
+          ? 'MU'
+          : 'FU',
+    walletBalance: userType !== 'admin' ? 25000 : null,
   };
 
   const currentUser = { ...defaultUserInfo, ...userInfo };
@@ -100,7 +115,7 @@ const Header = ({ userType = 'customer', userInfo = {} }) => {
         {/* Right Section - Wallet & User Menu */}
         <div className="flex items-center space-x-4">
           {/* Wallet - Only for customers */}
-          {userType === 'customer' && (
+          {(userType === 'merchant' || userType=== 'franchise') && (
             <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
               <Wallet className="h-5 w-5 text-gray-600" />
               <div className="text-right">
