@@ -1,350 +1,4 @@
-// import React, { useState } from 'react';
-// import {
-//   Users,
-//   Package,
-//   ShoppingCart,
-//   DollarSign,
-//   TrendingUp,
-//   TrendingDown,
-//   AlertTriangle,
-//   CheckCircle,
-//   Clock,
-//   Eye,
-//   Edit,
-//   Trash2,
-//   Plus,
-//   Search,
-//   Filter,
-//   Download,
-//   Bell,
-//   Settings,
-//   BarChart3,
-//   PieChart,
-//   Activity
-// } from 'lucide-react';
-
-// const Dashboard = () => {
-//   const [activeTab, setActiveTab] = useState('overview');
-
-//   // Dummy data
-//   const stats = {
-//     totalVendors: 24,
-//     totalProducts: 156,
-//     totalCustomers: 1247,
-//     monthlyRevenue: 2456780,
-//     pendingOrders: 42,
-//     lowStockItems: 18,
-//     activeContracts: 67,
-//     averageDeliveryTime: 3.2
-//   };
-
-//   const recentOrders = [
-//     { id: 'ORD-001', customer: 'Tech Solutions Ltd', amount: 45000, status: 'Delivered', date: '2024-07-28' },
-//     { id: 'ORD-002', customer: 'Global Retail Corp', amount: 78500, status: 'Processing', date: '2024-07-29' },
-//     { id: 'ORD-003', customer: 'Metro Stores', amount: 23000, status: 'Shipped', date: '2024-07-30' },
-//     { id: 'ORD-004', customer: 'Digital Hub Inc', amount: 56700, status: 'Pending', date: '2024-07-30' },
-//     { id: 'ORD-005', customer: 'Smart Systems', amount: 34200, status: 'Delivered', date: '2024-07-29' }
-//   ];
-
-//   const getStatusColor = (status) => {
-//     switch (status.toLowerCase()) {
-//       case 'active':
-//       case 'delivered':
-//       case 'in stock':
-//       case 'premium':
-//         return 'text-green-600 bg-green-100';
-//       case 'pending':
-//       case 'processing':
-//       case 'low stock':
-//       case 'regular':
-//         return 'text-yellow-600 bg-yellow-100';
-//       case 'inactive':
-//       case 'shipped':
-//         return 'text-blue-600 bg-blue-100';
-//       case 'out of stock':
-//         return 'text-red-600 bg-red-100';
-//       default:
-//         return 'text-gray-600 bg-gray-100';
-//     }
-//   };
-
-//   const StatCard = ({ title, value, icon: Icon, trend, trendValue, color = "purple" }) => (
-//     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-//       <div className="flex items-center justify-between">
-//         <div>
-//           <p className="text-sm font-medium text-gray-600">{title}</p>
-//           <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-//           {trend && (
-//             <div className={`flex items-center mt-2 ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-//               {trend === 'up' ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
-//               <span className="text-sm font-medium">{trendValue}</span>
-//             </div>
-//           )}
-//         </div>
-//         <div className={`p-3 rounded-full bg-${color}-100`}>
-//           <Icon className={`h-6 w-6 text-${color}-600`} />
-//         </div>
-//       </div>
-//     </div>
-//   );
-
-//   const renderOverview = () => (
-//     <div className="space-y-6">
-//       {/* Stats Grid */}
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-//         <StatCard
-//           title="Total Vendors"
-//           value={stats.totalVendors}
-//           icon={Users}
-//           trend="up"
-//           trendValue="+12%"
-//           color="blue"
-//         />
-//         <StatCard
-//           title="Total Products"
-//           value={stats.totalProducts}
-//           icon={Package}
-//           trend="up"
-//           trendValue="+8%"
-//           color="green"
-//         />
-//         <StatCard
-//           title="Total Customers"
-//           value={stats.totalCustomers.toLocaleString()}
-//           icon={ShoppingCart}
-//           trend="up"
-//           trendValue="+23%"
-//           color="purple"
-//         />
-//         <StatCard
-//           title="Monthly Revenue"
-//           value={`₹${(stats.monthlyRevenue / 100000).toFixed(1)}L`}
-//           icon={DollarSign}
-//           trend="up"
-//           trendValue="+15%"
-//           color="yellow"
-//         />
-//       </div>
-
-//       {/* Quick Stats */}
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-//         <div className="bg-white rounded-lg shadow-md p-6">
-//           <div className="flex items-center justify-between">
-//             <div>
-//               <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-//               <p className="text-2xl font-bold text-orange-600">{stats.pendingOrders}</p>
-//             </div>
-//             <Clock className="h-8 w-8 text-orange-600" />
-//           </div>
-//         </div>
-//         <div className="bg-white rounded-lg shadow-md p-6">
-//           <div className="flex items-center justify-between">
-//             <div>
-//               <p className="text-sm font-medium text-gray-600">Low Stock Items</p>
-//               <p className="text-2xl font-bold text-red-600">{stats.lowStockItems}</p>
-//             </div>
-//             <AlertTriangle className="h-8 w-8 text-red-600" />
-//           </div>
-//         </div>
-//         <div className="bg-white rounded-lg shadow-md p-6">
-//           <div className="flex items-center justify-between">
-//             <div>
-//               <p className="text-sm font-medium text-gray-600">Active Contracts</p>
-//               <p className="text-2xl font-bold text-green-600">{stats.activeContracts}</p>
-//             </div>
-//             <CheckCircle className="h-8 w-8 text-green-600" />
-//           </div>
-//         </div>
-//         <div className="bg-white rounded-lg shadow-md p-6">
-//           <div className="flex items-center justify-between">
-//             <div>
-//               <p className="text-sm font-medium text-gray-600">Avg Delivery Time</p>
-//               <p className="text-2xl font-bold text-blue-600">{stats.averageDeliveryTime} days</p>
-//             </div>
-//             <Activity className="h-8 w-8 text-blue-600" />
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Recent Orders */}
-//       <div className="bg-white rounded-lg shadow-md">
-//         <div className="p-6 border-b border-gray-200">
-//           <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
-//         </div>
-//         <div className="overflow-x-auto">
-//           <table className="w-full">
-//             <thead className="bg-gray-50">
-//               <tr>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-//               </tr>
-//             </thead>
-//             <tbody className="bg-white divide-y divide-gray-200">
-//               {recentOrders.map((order) => (
-//                 <tr key={order.id} className="hover:bg-gray-50">
-//                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id}</td>
-//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.customer}</td>
-//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{order.amount.toLocaleString()}</td>
-//                   <td className="px-6 py-4 whitespace-nowrap">
-//                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
-//                       {order.status}
-//                     </span>
-//                   </td>
-//                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.date}</td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </div>
-//   );
-
-
-
-
-//   return (
-//     <div className="min-h-screen bg-gray-50">
-//       {/* Header */}
-//       <div className="bg-white shadow-sm border-b border-gray-200">
-//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//           <div className="flex justify-between items-center py-4">
-//             <div>
-            
-//               <p className="text- text-gray-600">Manage your vendors, products, and customers</p>
-//             </div>
-//             <div className="flex items-center space-x-4">
-//               <button className="p-2 text-gray-600 hover:text-gray-900">
-//                 <Bell className="h-5 w-5" />
-//               </button>
-//               <button className="p-2 text-gray-600 hover:text-gray-900">
-//                 <Settings className="h-5 w-5" />
-//               </button>
-//               <button className="flex items-center px-3 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-//                 <Download className="h-4 w-4 mr-2" />
-//                 Export Data
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Navigation Tabs */}
-//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-//         <div className="border-b border-gray-200 mb-6">
-//           <nav className="-mb-px flex space-x-8">
-//             {[
-//               { id: 'overview', label: 'Overview', icon: BarChart3 },
-             
-//             ].map((tab) => (
-//               <button
-//                 key={tab.id}
-//                 onClick={() => setActiveTab(tab.id)}
-//                 className={`flex items-center px-1 py-4 border-b-2 font-medium text-sm ${
-//                   activeTab === tab.id
-//                     ? 'border-purple-500 text-purple-600'
-//                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-//                 }`}
-//               >
-//                 <tab.icon className="h-5 w-5 mr-2" />
-//                 {tab.label}
-//               </button>
-//             ))}
-//           </nav>
-//         </div>
-
-//         {/* Content */}
-//         {activeTab === 'overview' && renderOverview()}
-        
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Dashboard;
-
-// import React from "react"
-
-// // Dummy vendor data
-// const dummyVendors = [
-//   {
-//     name: "Acme Tech Solutions",
-//     bank: "Axis Bank",
-//     email: "acme@vendor.com",
-//     products: 40
-//   },
-//   {
-//     name: "SwiftPOS Systems",
-//     bank: "HDFC",
-//     email: "swift@vendor.com",
-//     products: 55
-//   },
-//   {
-//     name: "NeoBank Devices Pvt Ltd",
-//     bank: "ICICI",
-//     email: "neo@vendor.com",
-//     products: 30
-//   }
-// ]
-
-// const Dashboard = () => {
-//   return (
-//     <div className="space-y-6 ml-7" >
-//       <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-
-//       {/* Top Stats */}
-//       <div className="grid grid-cols-4 gap-4">
-//         <StatCard label="Vendors" value="3" />
-//         <StatCard label="Products in Stock" value="125" />
-//         <StatCard label="Franchises" value="12" />
-//         <StatCard label="Merchants" value="47" />
-//       </div>
-
-//       {/* Vendor Table */}
-//       <div>
-//         <h2 className="text-lg font-semibold mb-2">Vendors Summary</h2>
-//         <div className="overflow-x-auto rounded-lg shadow">
-//           <table className="w-full text-left text-sm bg-white">
-//             <thead className="bg-gray-100 text-gray-700">
-//               <tr>
-//                 <th className="p-2">Vendor Name</th>
-//                 <th className="p-2">Bank</th>
-//                 <th className="p-2">Email</th>
-//                 <th className="p-2">Total Products</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {dummyVendors.map((vendor, idx) => (
-//                 <tr key={idx} className="border-t">
-//                   <td className="p-2">{vendor.name}</td>
-//                   <td className="p-2">{vendor.bank}</td>
-//                   <td className="p-2">{vendor.email}</td>
-//                   <td className="p-2">{vendor.products}</td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
-
-// // Dummy stat card component
-// const StatCard = ({ label, value }) => (
-//   <div className="bg-white p-4 rounded shadow text-center">
-//     <div className="text-3xl font-bold">{value}</div>
-//     <div className="text-sm text-gray-600">{label}</div>
-//   </div>
-// )
-
-// export default Dashboard
-
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Wallet,
   CreditCard,
@@ -361,39 +15,186 @@ import {
   Store,
   Package,
   BarChart3,
-  History
+  History,
+  Building2
 } from 'lucide-react';
 
-const CustomerDashboard = () => {
-  const [userType, setUserType] = useState('franchise'); // 'franchise' or 'merchant'
+// Reusable Stat Card Component
+const StatCard = ({ label, value, icon: Icon, color = 'blue', onClick }) => (
+  <div
+    className={`bg-white rounded-xl p-6 shadow-sm border border-gray-100 ${onClick ? 'cursor-pointer hover:shadow-md' : ''} transition-shadow`}
+    onClick={onClick}
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-gray-600">{label}</p>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+      </div>
+      {Icon && (
+        <div className={`p-3 bg-${color}-50 rounded-lg`}>
+          <Icon className={`w-6 h-6 text-${color}-600`} />
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+// Reusable Product Card Component
+const ProductCard = ({ type, count, active }) => {
+  const icons = {
+    POS: CreditCard,
+    QR: QrCode,
+    Soundbox: Volume2
+  };
+  const Icon = icons[type];
+
+  return (
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-blue-50 rounded-lg">
+            <Icon className="w-6 h-6 text-blue-600" />
+          </div>
+          <h3 className="font-semibold text-gray-900">{type}</h3>
+        </div>
+        <button className="p-1 hover:bg-gray-50 rounded">
+          <Plus className="w-4 h-4 text-gray-400" />
+        </button>
+      </div>
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <span className="text-sm text-gray-600">Total</span>
+          <span className="font-medium">{count}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-sm text-gray-600">Active</span>
+          <span className="font-medium text-green-600">{active}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Reusable Table Component
+const DataTable = ({ title, headers, data, renderRow }) => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <h2 className="text-xl font-semibold text-gray-900 mb-6">{title}</h2>
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-gray-50 text-gray-700">
+          <tr>
+            {headers.map((header, index) => (
+              <th key={index} className="p-3 font-medium">{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((item, index) => (
+            <tr key={index} className="border-t border-gray-100 hover:bg-gray-50">
+              {renderRow(item, index)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+// Reusable Activity Card Component
+const ActivityCard = ({ transactions, title = "Recent Activity" }) => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <button className="text-blue-600 text-sm hover:text-blue-700">View All</button>
+    </div>
+    <div className="space-y-3">
+      {transactions.map((transaction) => (
+        <div key={transaction.id} className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className={`p-2 rounded-lg ${transaction.type === 'credit' ? 'bg-green-50' : 'bg-red-50'}`}>
+              {transaction.type === 'credit' ? (
+                <ArrowDownRight className="w-4 h-4 text-green-600" />
+              ) : (
+                <ArrowUpRight className="w-4 h-4 text-red-600" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount?.toLocaleString() || transaction.amount}
+              </p>
+              <p className="text-xs text-gray-600">{transaction.desc}</p>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">{transaction.time}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// Main Dashboard Component
+const Dashboard = () => {
+  const [userType, setUserType] = useState('merchant'); // Default fallback
   const [selectedMerchant, setSelectedMerchant] = useState('all');
 
-  // Mock data
-  const franchiseData = {
-    name: "ABC Retail Franchise",
-    totalMerchants: 12,
-    totalProducts: 45,
-    walletBalance: 125000,
-    merchants: [
-      { id: 1, name: "Store Alpha", location: "Mumbai", products: 5, revenue: 45000 },
-      { id: 2, name: "Store Beta", location: "Delhi", products: 3, revenue: 32000 },
-      { id: 3, name: "Store Gamma", location: "Pune", products: 4, revenue: 38000 }
+  // Get user type from localStorage on component mount
+  useEffect(() => {
+    const storedUserType = localStorage.getItem('userType');
+    if (storedUserType) {
+      setUserType(storedUserType);
+    }
+  }, []);
+
+  // Mock data for different user types
+  const mockData = {
+    admin: {
+      name: "Admin Dashboard",
+      vendors: [
+        { name: "Acme Tech Solutions", bank: "Axis Bank", email: "acme@vendor.com", products: 40 },
+        { name: "SwiftPOS Systems", bank: "HDFC", email: "swift@vendor.com", products: 55 },
+        { name: "NeoBank Devices Pvt Ltd", bank: "ICICI", email: "neo@vendor.com", products: 30 }
+      ],
+      stats: {
+        vendors: 3,
+        products: 125,
+        franchises: 12,
+        merchants: 47,
+        totalRevenue: 2500000
+      }
+    },
+    franchise: {
+      name: "ABC Retail Franchise",
+      totalMerchants: 12,
+      totalProducts: 45,
+      walletBalance: 125000,
+      monthlyRevenue: 115000,
+      merchants: [
+        { id: 1, name: "Store Alpha", location: "Mumbai", products: 5, revenue: 45000 },
+        { id: 2, name: "Store Beta", location: "Delhi", products: 3, revenue: 32000 },
+        { id: 3, name: "Store Gamma", location: "Pune", products: 4, revenue: 38000 }
+      ]
+    },
+    merchant: {
+      name: "XYZ Electronics",
+      location: "Bangalore",
+      walletBalance: 25000,
+      products: 3,
+      monthlyRevenue: 15000
+    }
+  };
+
+  const products = {
+    franchise: [
+      { type: 'POS', count: 18, active: 15 },
+      { type: 'QR', count: 20, active: 18 },
+      { type: 'Soundbox', count: 7, active: 6 }
+    ],
+    merchant: [
+      { type: 'POS', count: 2, active: 2 },
+      { type: 'QR', count: 1, active: 1 },
+      { type: 'Soundbox', count: 0, active: 0 }
     ]
   };
-
-  const merchantData = {
-    name: "XYZ Electronics",
-    location: "Bangalore",
-    walletBalance: 25000,
-    products: 3,
-    monthlyRevenue: 15000
-  };
-
-  const products = [
-    { type: 'POS', count: userType === 'franchise' ? 18 : 2, active: userType === 'franchise' ? 15 : 2 },
-    { type: 'QR', count: userType === 'franchise' ? 20 : 1, active: userType === 'franchise' ? 18 : 1 },
-    { type: 'Soundbox', count: userType === 'franchise' ? 7 : 0, active: userType === 'franchise' ? 6 : 0 }
-  ];
 
   const recentTransactions = [
     { id: 1, type: 'credit', amount: 5000, desc: 'Product distribution payment', time: '2 hours ago' },
@@ -401,248 +202,169 @@ const CustomerDashboard = () => {
     { id: 3, type: 'credit', amount: 8500, desc: 'Commission payment', time: '2 days ago' }
   ];
 
-  const ProductCard = ({ type, count, active }) => {
-    const icons = {
-      POS: CreditCard,
-      QR: QrCode,
-      Soundbox: Volume2
-    };
-    const Icon = icons[type];
+  // Render Admin Dashboard
+  const renderAdminDashboard = () => (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+
+      {/* Admin Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <StatCard label="Vendors" value={mockData.admin.stats.vendors} icon={Building2} color="blue" />
+        <StatCard label="Products in Stock" value={mockData.admin.stats.products} icon={Package} color="purple" />
+        <StatCard label="Franchises" value={mockData.admin.stats.franchises} icon={Store} color="green" />
+        <StatCard label="Merchants" value={mockData.admin.stats.merchants} icon={Users} color="orange" />
+        <StatCard label="Total Revenue" value={`₹${(mockData.admin.stats.totalRevenue / 100000).toFixed(1)}L`} icon={TrendingUp} color="green" />
+      </div>
+
+      {/* Vendors Table */}
+      <DataTable
+        title="Vendors Summary"
+        headers={["Vendor Name", "Bank", "Email", "Total Products"]}
+        data={mockData.admin.vendors}
+        renderRow={(vendor) => (
+          <>
+            <td className="p-3">{vendor.name}</td>
+            <td className="p-3">{vendor.bank}</td>
+            <td className="p-3">{vendor.email}</td>
+            <td className="p-3">{vendor.products}</td>
+          </>
+        )}
+      />
+    </div>
+  );
+
+  // Render Franchise/Merchant Dashboard
+  const renderUserDashboard = () => {
+    const currentData = mockData[userType];
+    const currentProducts = products[userType] || [];
 
     return (
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Icon className="w-6 h-6 text-blue-600" />
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-bold text-gray-900">{currentData.name}</h1>
+                <div className="flex items-center space-x-2">
+                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm capitalize">
+                    {userType}
+                  </span>
+                </div>
+              </div>
             </div>
-            <h3 className="font-semibold text-gray-900">{type}</h3>
           </div>
-          <button className="p-1 hover:bg-gray-50 rounded">
-            <Plus className="w-4 h-4 text-gray-400" />
-          </button>
         </div>
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Total</span>
-            <span className="font-medium">{count}</span>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard
+              label="Wallet Balance"
+              value={`₹${currentData.walletBalance?.toLocaleString()}`}
+              icon={Wallet}
+              color="green"
+            />
+
+            {userType === 'franchise' && (
+              <StatCard
+                label="Total Merchants"
+                value={currentData.totalMerchants}
+                icon={Users}
+                color="blue"
+              />
+            )}
+
+            <StatCard
+              label="Total Products"
+              value={currentData.totalProducts || currentData.products}
+              icon={Package}
+              color="purple"
+            />
+
+            <StatCard
+              label="Monthly Revenue"
+              value={`₹${currentData.monthlyRevenue?.toLocaleString()}`}
+              icon={TrendingUp}
+              color="orange"
+            />
           </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Active</span>
-            <span className="font-medium text-green-600">{active}</span>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Products Section */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Products Overview</h2>
+                  {userType === 'franchise' && (
+                    <select
+                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      value={selectedMerchant}
+                      onChange={(e) => setSelectedMerchant(e.target.value)}
+                    >
+                      <option value="all">All Merchants</option>
+                      {currentData.merchants?.map(merchant => (
+                        <option key={merchant.id} value={merchant.id}>{merchant.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {currentProducts.map((product, index) => (
+                    <ProductCard key={index} {...product} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Merchants List (Franchise only) */}
+              {userType === 'franchise' && currentData.merchants && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Merchant Network</h2>
+                  <div className="space-y-4">
+                    {currentData.merchants.map((merchant) => (
+                      <div key={merchant.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-2 bg-blue-50 rounded-lg">
+                            <Store className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">{merchant.name}</h3>
+                            <p className="text-sm text-gray-600">{merchant.location}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-gray-900">{merchant.products} Products</p>
+                          <p className="text-sm text-green-600">₹{merchant.revenue.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <ActivityCard transactions={recentTransactions} />
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
+  // Main render logic based on user type
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {userType === 'franchise' ? franchiseData.name : merchantData.name}
-              </h1>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setUserType('franchise')}
-                  className={`px-3 py-1 rounded-full text-sm ${userType === 'franchise'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-600'
-                    }`}
-                >
-                  Franchise View
-                </button>
-                <button
-                  onClick={() => setUserType('merchant')}
-                  className={`px-3 py-1 rounded-full text-sm ${userType === 'merchant'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-600'
-                    }`}
-                >
-                  Merchant View
-                </button>
-              </div>
-            </div>
-           
-          </div>
+      {userType === 'admin' ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {renderAdminDashboard()}
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Wallet Balance</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  ₹{(userType === 'franchise' ? franchiseData.walletBalance : merchantData.walletBalance).toLocaleString()}
-                </p>
-              </div>
-              <div className="p-3 bg-green-50 rounded-lg">
-                <Wallet className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          {userType === 'franchise' && (
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Merchants</p>
-                  <p className="text-2xl font-bold text-gray-900">{franchiseData.totalMerchants}</p>
-                </div>
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {userType === 'franchise' ? franchiseData.totalProducts : merchantData.products}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <Package className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Monthly Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  ₹{(userType === 'franchise' ? 115000 : merchantData.monthlyRevenue).toLocaleString()}
-                </p>
-              </div>
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Products Section */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Products Overview</h2>
-                {userType === 'franchise' && (
-                  <select
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                    value={selectedMerchant}
-                    onChange={(e) => setSelectedMerchant(e.target.value)}
-                  >
-                    <option value="all">All Merchants</option>
-                    {franchiseData.merchants.map(merchant => (
-                      <option key={merchant.id} value={merchant.id}>{merchant.name}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {products.map((product, index) => (
-                  <ProductCard key={index} {...product} />
-                ))}
-              </div>
-            </div>
-
-            {/* Merchants List (Franchise only) */}
-            {userType === 'franchise' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Merchant Network</h2>
-                <div className="space-y-4">
-                  {franchiseData.merchants.map((merchant) => (
-                    <div key={merchant.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                          <Store className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{merchant.name}</h3>
-                          <p className="text-sm text-gray-600">{merchant.location}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">{merchant.products} Products</p>
-                        <p className="text-sm text-green-600">₹{merchant.revenue.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Wallet Actions */}
-            {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <button className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                  <Plus className="w-4 h-4" />
-                  <span>Add Funds</span>
-                </button>
-                <button className="w-full flex items-center justify-center space-x-2 border border-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                  <ArrowUpRight className="w-4 h-4" />
-                  <span>Transfer Funds</span>
-                </button>
-                {userType === 'franchise' && (
-                  <button className="w-full flex items-center justify-center space-x-2 border border-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Package className="w-4 h-4" />
-                    <span>Distribute Products</span>
-                  </button>
-                )}
-              </div>
-            </div> */}
-
-            {/* Recent Transactions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-                <button className="text-blue-600 text-sm hover:text-blue-700">View All</button>
-              </div>
-              <div className="space-y-3">
-                {recentTransactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${transaction.type === 'credit' ? 'bg-green-50' : 'bg-red-50'
-                        }`}>
-                        {transaction.type === 'credit' ? (
-                          <ArrowDownRight className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <ArrowUpRight className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-600">{transaction.desc}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">{transaction.time}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      ) : (
+        renderUserDashboard()
+      )}
     </div>
   );
 };
 
-export default CustomerDashboard;
+export default Dashboard;
