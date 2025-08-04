@@ -32,6 +32,7 @@ import SchemeList from '../components/Tables/SchemeList.jsx'
 import ProductAssignment from '../components/Tables/ProductAssign_Scheme.jsx'
 import ProductDistribution from '../components/Forms/ProductAssign.jsx'
 import MerchantListComponent from '../components/Tables/MerchantList.jsx'
+import ErrorPage from '../components/ErrorPage.jsx'
 
 
 
@@ -176,5 +177,10 @@ export const router = createBrowserRouter([
         ]
       }
     ]
+  },
+  {
+    path: '*',
+    element: <ErrorPage />
   }
+
 ])

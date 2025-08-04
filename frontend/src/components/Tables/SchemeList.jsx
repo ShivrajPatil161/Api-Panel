@@ -7,7 +7,7 @@ import {
     getFilteredRowModel,
     flexRender
 } from '@tanstack/react-table'
-import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight,X } from 'lucide-react'
 
 import { schemeList } from '../../constants/constants'
 import PricingSchemeFormModal from '../Forms/PricingForm'
