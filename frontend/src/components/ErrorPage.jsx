@@ -5,8 +5,8 @@ import { Link } from 'react-router';
 const ErrorPage = () => {
     return (
         <div className="h-screen w-full flex flex-col justify-center items-center bg-gray-100 text-center px-4">
-            <h1 className="text-5xl font-bold text-blue-600 mb-4">🚧 Under Construction</h1>
-            <p className="text-lg text-gray-700 mb-6">
+            <h1 className="text-5xl font-bold animate-bounce  text-yellow-500 mb-4">🚧<br /> Site Under Development</h1>
+            <p className="text-lg text-red-700 mb-6">
                 This page is currently under development or does not exist.
             </p>
             <Link

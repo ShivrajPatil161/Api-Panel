@@ -18,6 +18,7 @@ const ProductList = () => {
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [globalFilter, setGlobalFilter] = useState('')
+  const userType = localStorage.getItem('userType')
 
   const columnHelper = createColumnHelper()
 
@@ -183,7 +184,8 @@ const ProductList = () => {
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg">
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
+        {userType=== 'admin' &&(
+           <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-gray-800">Product Master</h1>
           <button
             onClick={handleAddProduct}
@@ -192,6 +194,7 @@ const ProductList = () => {
             + Add Product
           </button>
         </div>
+        )}
 
         {/* Search Filter */}
         <div className="mb-4">

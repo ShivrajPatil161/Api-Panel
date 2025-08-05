@@ -160,10 +160,10 @@ export const router = createBrowserRouter([
                 path: "upload",
                 element: <FileUploadForm />
               },
-              {
-                path: "charges",
-                element: <ChargeCalculationForm />
-              }
+              // {
+              //   path: "charges",
+              //   element: <ChargeCalculationForm />
+              // }
             ]
           }, {
             path: 'merchants',
