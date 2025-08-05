@@ -161,10 +161,10 @@ export const router = createBrowserRouter([
                 path: "upload",
                 element: <VendorProductUploadForm />
               },
-              {
-                path: "charges",
-                element: <ChargeCalculationForm />
-              }
+              // {
+              //   path: "charges",
+              //   element: <ChargeCalculationForm />
+              // }
             ]
           }, {
             path: 'merchants',

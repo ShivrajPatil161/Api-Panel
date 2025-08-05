@@ -38,7 +38,7 @@ const MenuItem = ({
       <div>
         <button
           onClick={() => onMenuClick(item.key)}
-          className={`w-full flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 hover:bg-gray-50 group ${isParentActive ? 'bg-blue-50 border border-blue-200' : ''
+          className={`w-full flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 hover:bg-blue-100 group ${isParentActive ? 'bg-blue-100 border border-blue-500' : ''
             }`}
         >
           <div className="flex items-center space-x-3">
@@ -72,7 +72,7 @@ const MenuItem = ({
                 key={child.path}
                 to={child.path}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${isActiveLink(child.path)
-                    ? 'bg-blue-600 text-white shadow-md'
+                    ? 'bg-gray-500 text-white shadow-md'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
               >

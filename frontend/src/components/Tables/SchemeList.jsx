@@ -54,12 +54,34 @@ const SchemeList = () => {
         },
         {
             accessorKey: 'cardRates',
-            header: 'Card Types',
-            cell: ({ row }) => (
-                <div className="text-gray-600">
-                    {row.getValue('cardRates').length} types
-                </div>
-            ),
+            header: 'Card Types & Rates',
+            cell: ({ row }) => {
+                const cardRates = row.getValue('cardRates')
+                const customerType = row.getValue('customerType')
+                const maxVisible = 2
+                
+                return (
+                    <div className="text-xs text-gray-600 max-w-xs">
+                        {cardRates.slice(0, maxVisible).map((rate, index) => (
+                            <div key={index} className="mb-1">
+                                <span className="font-medium text-gray-800">{rate.cardName}:</span>
+                                {customerType === 'franchise' ? (
+                                    <span className="ml-1">
+                                        F: {rate.franchiseRate}% | M: {rate.merchantRate}%
+                                    </span>
+                                ) : (
+                                    <span className="ml-1">{rate.rate}%</span>
+                                )}
+                            </div>
+                        ))}
+                        {cardRates.length > maxVisible && (
+                            <div className="text-gray-500 italic">
+                                ...and {cardRates.length - maxVisible} more
+                            </div>
+                        )}
+                    </div>
+                )
+            },
         },
         {
             accessorKey: 'description',
