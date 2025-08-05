@@ -37,8 +37,8 @@ const Header = ({ userType, userInfo = {} }) => {
       '/dashboard/customers': 'Customer List',
       '/dashboard/customers/onboard': 'Customer Onboarding',
       '/dashboard/customers/assign-products': 'Product Assignment',
-      '/dashboard/transactions/upload': 'File Upload',
-      '/dashboard/transactions/charges': 'Charge Calculation',
+      '/dashboard/others/upload': 'File Upload',
+      '/dashboard/others/charges': 'Charge Calculation',
       '/dashboard/reports': 'Reports'
     };
     return routeTitles[path] || 'Supply Chain Management';

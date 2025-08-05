@@ -33,6 +33,7 @@ import ProductAssignment from '../components/Tables/ProductAssign_Scheme.jsx'
 import ProductDistribution from '../components/Forms/ProductAssign.jsx'
 import MerchantListComponent from '../components/Tables/MerchantList.jsx'
 import ErrorPage from '../components/ErrorPage.jsx'
+import VendorProductUploadForm from '../components/Forms/FileUpload.jsx'
 
 
 
@@ -158,7 +159,7 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: "upload",
-                element: <FileUploadForm />
+                element: <VendorProductUploadForm />
               },
               {
                 path: "charges",
