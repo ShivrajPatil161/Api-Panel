@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from 'react-router'
 import App from '../App.jsx'
 import ProtectedRoute from './ProtectedRoutes.jsx'
