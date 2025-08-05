@@ -257,7 +257,7 @@ const ProductDistribution = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-8xl mx-auto p-6 space-y-8">
       {/* Header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center space-x-3 mb-2">
@@ -285,13 +285,13 @@ const ProductDistribution = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="">
         {/* Form Section */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Distribution Details</h2>
 
-            <div className="space-y-6">
+            <div className="space-y-6 grid grid-cols-4 gap-10">
               {/* Franchise Selection (Admin only) */}
               {userType === 'admin' && (
                 <FormField label="Select Franchise" error={errors.franchise} required>
