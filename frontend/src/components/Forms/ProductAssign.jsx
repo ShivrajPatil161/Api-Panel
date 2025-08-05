@@ -79,6 +79,38 @@ const MerchantCard = ({ merchant, isSelected, onToggle, quantity, onQuantityChan
           <p className="text-sm text-gray-600">{merchant.location}</p>
         </div>
       </div>
+      {isSelected && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Quantity to Distribute
+          </label>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => onQuantityChange(Math.max(0, quantity - 1))}
+              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => onQuantityChange(Math.max(0, parseInt(e.target.value) || 0))}
+              min="0"
+              max={maxQuantity}
+              className="w-20 px-3 py-2 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="button"
+              onClick={() => onQuantityChange(Math.min(maxQuantity, quantity + 1))}
+              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <span className="text-sm text-gray-600">/ {maxQuantity}</span>
+          </div>
+        </div>
+      )}
       <button
         type="button"
         onClick={onToggle}
@@ -91,38 +123,7 @@ const MerchantCard = ({ merchant, isSelected, onToggle, quantity, onQuantityChan
       </button>
     </div>
 
-    {isSelected && (
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Quantity to Distribute
-        </label>
-        <div className="flex items-center space-x-2">
-          <button
-            type="button"
-            onClick={() => onQuantityChange(Math.max(0, quantity - 1))}
-            className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-          <input
-            type="number"
-            value={quantity}
-            onChange={(e) => onQuantityChange(Math.max(0, parseInt(e.target.value) || 0))}
-            min="0"
-            max={maxQuantity}
-            className="w-20 px-3 py-2 text-center border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-          />
-          <button
-            type="button"
-            onClick={() => onQuantityChange(Math.min(maxQuantity, quantity + 1))}
-            className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-          <span className="text-sm text-gray-600">/ {maxQuantity}</span>
-        </div>
-      </div>
-    )}
+    
   </div>
 );
 
@@ -358,7 +359,7 @@ const ProductDistribution = () => {
         </div>
 
         {/* Merchant Selection Section */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-1 space-y-6 mt-10">
           {(userType === 'franchise' || (userType === 'admin' && selectedFranchise)) && watchedValues.totalQuantity > 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
@@ -375,7 +376,7 @@ const ProductDistribution = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols- gap-4 max-h-96 overflow-y-auto">
                 {filteredMerchants.map((merchant) => (
                   <MerchantCard
                     key={merchant.id}
