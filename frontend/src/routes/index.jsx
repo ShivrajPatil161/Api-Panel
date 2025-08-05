@@ -3,12 +3,11 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import App from '../App.jsx'
 import ProtectedRoute from './ProtectedRoutes.jsx'
 import Layout from '../components/layout/Layout.jsx'
-
+//Auth pages
 import Login from '../components/Auth/Login.jsx'
 
-// // Auth pages
-// import Login from '../pages/auth/Login.jsx'
-// import Signup from '../pages/auth/Signup.jsx'
+
+
 import Dashboard from '../components/Dashborad.jsx'
 import VendorRatesForm from '../components/Forms/VendorRate.jsx'
 import CustomerOnboarding from '../components/Forms/CustomerOnborading.jsx'
@@ -25,7 +24,7 @@ import ProductList from '../components/Tables/ProductList.jsx'
 import VendorRatesManagement from '../components/Tables/VendorRatesTable.jsx'
 import ProductPricingPage from '../components/Tables/ProductPricing.jsx'
 import CustomerRatesManagement from '../components/Tables/PricingTable.jsx'
-import CustomerDashboard from '../components/Dashborad.jsx'
+
 import CustomerListComponent from '../components/Tables/CustomerList.jsx'
 import PricingSchemeForm from '../components/Forms/PricingForm.jsx'
 import SchemeList from '../components/Tables/SchemeList.jsx'
@@ -34,6 +33,7 @@ import ProductDistribution from '../components/Forms/ProductAssign.jsx'
 import MerchantListComponent from '../components/Tables/MerchantList.jsx'
 import ErrorPage from '../components/ErrorPage.jsx'
 import VendorProductUploadForm from '../components/Forms/FileUpload.jsx'
+import AdminApproval from '../components/Admin/AdminApproval.jsx'
 
 
 
@@ -75,7 +75,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <CustomerDashboard />
+            element: <Dashboard />
           },
           // Vendors routes
           {
@@ -85,18 +85,12 @@ export const router = createBrowserRouter([
                 index: true,
                 element: <VendorListPage />
               },
-              {
-                path: "add",
-                element: <VendorMasterForm />
-              },
+              
               {
                 path: "rates",
                 element: <VendorRatesManagement />
               }
-              // {
-              //   path: ":id",
-              //   element: <VendorDetails />
-              // }
+              
             ]
           },
           // Inventory routes
@@ -106,10 +100,6 @@ export const router = createBrowserRouter([
               {
                 index: true,
                 element: <ProductList />
-              },
-              {
-                path: "add",
-                element: <ProductMasterForm />
               },
               {
                 path: "pricing",
@@ -145,6 +135,10 @@ export const router = createBrowserRouter([
               {
                 path: "onboard",
                 element: <CustomerOnboarding />
+              },
+              {
+                path: "admin-approval",
+                element: <AdminApproval />
               },
               {
                 path: "products-distribution",
