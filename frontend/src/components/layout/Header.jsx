@@ -35,7 +35,8 @@ const Header = ({ userType, userInfo = {} }) => {
       '/dashboard/inventory/outward': 'Outward Entry',
       '/dashboard/inventory/returns': 'Returns',
       '/dashboard/customers': 'Customer List',
-      '/dashboard/customers/onboard': 'Customer Onboarding',
+      '/dashboard/customers/onboard': 'Customer Onboarding', 
+      '/dashboard/customers/admin-approval': 'Merchant Approval',
       '/dashboard/customers/assign-products': 'Product Assignment',
       '/dashboard/others/upload': 'File Upload',
       '/dashboard/others/charges': 'Charge Calculation',
@@ -66,6 +67,7 @@ const Header = ({ userType, userInfo = {} }) => {
       returns: 'Returns',
       onboard: 'Onboard',
       'assign-products': 'Assign Products',
+      'admin-approval': 'Approval',
       upload: 'Upload',
       charges: 'Charges'
     };

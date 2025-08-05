@@ -18,7 +18,9 @@ import {
   BarChart3,
   Warehouse,
   CreditCard,
-  Store
+  Store,
+  Banknote,
+  Coins
 } from 'lucide-react';
 
 // Reusable Menu Item Component
@@ -187,6 +189,7 @@ const getMenuItems = (userType) => {
         children: [
           { title: 'Customer List', path: '/dashboard/customers', icon: Users },
           { title: 'Onboard Customer', path: '/dashboard/customers/onboard', icon: UserPlus },
+          { title: 'Merchant Approval', path: '/dashboard/customers/admin-approval', icon: UserPlus },
           { title: 'Products Distribution', path: '/dashboard/customers/products-distribution', icon: Package }
         ]
       },
@@ -257,14 +260,24 @@ const getMenuItems = (userType) => {
         ]
       },
       {
-        title: 'Payment',
+        title: 'Bill Payment',
         key: 'payment',
+        icon: Banknote,
+        iconColor: ''
+      
+      },
+      {
+        title: 'Payout',
+        key: 'payout',
+        icon: Coins,
+        iconColor: ''
+       
+      },
+      {
+        title: 'Card Details',
+        key: 'card-details',
         icon: CreditCard,
-        iconColor: '',
-        children: [
-          { title: 'Bill Payment', path: '/dashboard/payment/bill-payment', icon: CreditCard },
-          { title: 'Payout', path: '/dashboard/payment/payout', icon: CreditCard }
-        ]
+        iconColor: ''
       },
       {
         title: 'Reports',
