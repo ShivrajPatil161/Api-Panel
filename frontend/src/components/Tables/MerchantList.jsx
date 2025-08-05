@@ -19,194 +19,39 @@ import {
     Wallet,
     TrendingUp,
     Mail,
-    Phone
+    Phone,
+    Plus,
+    X
 } from 'lucide-react';
+import CustomerOnboarding from '../Forms/CustomerOnborading';
 
-// Dummy merchant data
-const merchantData = [
-    {
-        id: 'MER001',
-        name: 'Green Valley Foods',
-        businessType: 'Grocery Store',
-        contactPerson: 'Rajesh Kumar',
-        email: 'rajesh@greenvalley.com',
-        phone: '+91-9876543210',
-        location: 'Mumbai, Maharashtra',
-        products: 245,
-        walletBalance: 15000,
-        monthlyRevenue: 85000,
-        status: 'active',
-        joinedDate: '2024-01-15'
-    },
-    {
-        id: 'MER002',
-        name: 'Tech Solutions Hub',
-        businessType: 'Electronics',
-        contactPerson: 'Priya Sharma',
-        email: 'priya@techsol.com',
-        phone: '+91-9876543211',
-        location: 'Bangalore, Karnataka',
-        products: 180,
-        walletBalance: 22000,
-        monthlyRevenue: 120000,
-        status: 'active',
-        joinedDate: '2024-02-10'
-    },
-    {
-        id: 'MER003',
-        name: 'Fashion Forward',
-        businessType: 'Clothing',
-        contactPerson: 'Amit Patel',
-        email: 'amit@fashionforward.com',
-        phone: '+91-9876543212',
-        location: 'Delhi, Delhi',
-        products: 320,
-        walletBalance: 8500,
-        monthlyRevenue: 95000,
-        status: 'pending',
-        joinedDate: '2024-03-05'
-    },
-    {
-        id: 'MER004',
-        name: 'Home Essentials',
-        businessType: 'Home & Garden',
-        contactPerson: 'Sunita Singh',
-        email: 'sunita@homeessentials.com',
-        phone: '+91-9876543213',
-        location: 'Pune, Maharashtra',
-        products: 150,
-        walletBalance: 12000,
-        monthlyRevenue: 65000,
-        status: 'active',
-        joinedDate: '2024-01-20'
-    },
-    {
-        id: 'MER005',
-        name: 'Sports Arena',
-        businessType: 'Sports & Fitness',
-        contactPerson: 'Vikram Joshi',
-        email: 'vikram@sportsarena.com',
-        phone: '+91-9876543214',
-        location: 'Chennai, Tamil Nadu',
-        products: 95,
-        walletBalance: 18500,
-        monthlyRevenue: 75000,
-        status: 'inactive',
-        joinedDate: '2023-12-08'
-    },
-    {
-        id: 'MER006',
-        name: 'Book Paradise',
-        businessType: 'Books & Media',
-        contactPerson: 'Meera Reddy',
-        email: 'meera@bookparadise.com',
-        phone: '+91-9876543215',
-        location: 'Hyderabad, Telangana',
-        products: 420,
-        walletBalance: 5500,
-        monthlyRevenue: 45000,
-        status: 'active',
-        joinedDate: '2024-02-28'
-    },
-    {
-        id: 'MER007',
-        name: 'Auto Parts Plus',
-        businessType: 'Automotive',
-        contactPerson: 'Ravi Gupta',
-        email: 'ravi@autopartsplus.com',
-        phone: '+91-9876543216',
-        location: 'Jaipur, Rajasthan',
-        products: 280,
-        walletBalance: 25000,
-        monthlyRevenue: 110000,
-        status: 'active',
-        joinedDate: '2024-01-03'
-    },
-    {
-        id: 'MER008',
-        name: 'Beauty Bliss',
-        businessType: 'Beauty & Personal Care',
-        contactPerson: 'Kavita Agarwal',
-        email: 'kavita@beautybliss.com',
-        phone: '+91-9876543217',
-        location: 'Kolkata, West Bengal',
-        products: 165,
-        walletBalance: 9200,
-        monthlyRevenue: 58000,
-        status: 'suspended',
-        joinedDate: '2023-11-15'
-    },
-    {
-        id: 'MER009',
-        name: 'Pet Care Corner',
-        businessType: 'Pet Supplies',
-        contactPerson: 'Arjun Menon',
-        email: 'arjun@petcare.com',
-        phone: '+91-9876543218',
-        location: 'Kochi, Kerala',
-        products: 75,
-        walletBalance: 14500,
-        monthlyRevenue: 42000,
-        status: 'active',
-        joinedDate: '2024-03-12'
-    },
-    {
-        id: 'MER010',
-        name: 'Kitchen King',
-        businessType: 'Kitchenware',
-        contactPerson: 'Deepak Yadav',
-        email: 'deepak@kitchenking.com',
-        phone: '+91-9876543219',
-        location: 'Lucknow, Uttar Pradesh',
-        products: 210,
-        walletBalance: 11800,
-        monthlyRevenue: 72000,
-        status: 'active',
-        joinedDate: '2024-02-14'
-    },
-    {
-        id: 'MER011',
-        name: 'Toy World',
-        businessType: 'Toys & Games',
-        contactPerson: 'Sneha Kulkarni',
-        email: 'sneha@toyworld.com',
-        phone: '+91-9876543220',
-        location: 'Nashik, Maharashtra',
-        products: 135,
-        walletBalance: 7800,
-        monthlyRevenue: 38000,
-        status: 'pending',
-        joinedDate: '2024-03-20'
-    },
-    {
-        id: 'MER012',
-        name: 'Fresh Fruits Co',
-        businessType: 'Food & Beverages',
-        contactPerson: 'Suresh Iyer',
-        email: 'suresh@freshfruits.com',
-        phone: '+91-9876543221',
-        location: 'Coimbatore, Tamil Nadu',
-        products: 85,
-        walletBalance: 16200,
-        monthlyRevenue: 55000,
-        status: 'active',
-        joinedDate: '2024-01-08'
-    },
-    {
-        id: 'MER013',
-        name: 'Digital Dreams',
-        businessType: 'Computer & Software',
-        contactPerson: 'Ankit Jain',
-        email: 'ankit@digitaldreams.com',
-        phone: '+91-9876543222',
-        location: 'Indore, Madhya Pradesh',
-        products: 95,
-        walletBalance: 21500,
-        monthlyRevenue: 98000,
-        status: 'active',
-        joinedDate: '2024-02-22'
-    }
-];
+import { merchantData } from '../../constants/merchantlistData';
+
+
+
+// Modal Component
+const Modal = ({ isOpen, onClose, children }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-gray-800">Add New Merchant</h2>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                <div className="p-6">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // Reusable Components
 const StatusBadge = ({ status }) => {
@@ -243,7 +88,7 @@ const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', size = 'sm', cla
     );
 };
 
-const TableHeader = ({ title, count, searchValue, onSearchChange }) => (
+const TableHeader = ({ title, count, searchValue, onSearchChange, onAddMerchant }) => (
     <div className="flex items-center justify-between mb-6">
         <div>
             <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
@@ -260,12 +105,20 @@ const TableHeader = ({ title, count, searchValue, onSearchChange }) => (
                     className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
             </div>
+            <button
+                onClick={onAddMerchant}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            >
+                <Plus className="w-4 h-4" />
+                <span>Add Merchant</span>
+            </button>
         </div>
     </div>
 );
 
 const MerchantListComponent = () => {
     const [globalFilter, setGlobalFilter] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Column Helper
     const columnHelper = createColumnHelper();
@@ -385,6 +238,14 @@ const MerchantListComponent = () => {
         },
     });
 
+    const handleAddMerchant = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-7xl mx-auto">
@@ -394,6 +255,7 @@ const MerchantListComponent = () => {
                     count={merchantData.length}
                     searchValue={globalFilter}
                     onSearchChange={setGlobalFilter}
+                    onAddMerchant={handleAddMerchant}
                 />
 
                 {/* Table */}
@@ -485,33 +347,39 @@ const MerchantListComponent = () => {
                                     disabled={!table.getCanPreviousPage()}
                                     className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
+                                    {'<'}
                                 </button>
-                            <span className="flex items-center space-x-1">
-                                <span>Page</span>
-                                <strong>
-                                    {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                                </strong>
-                            </span>
-                            <button
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
-                                className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {'>'}
-                            </button>
-                            <button
-                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                disabled={!table.getCanNextPage()}
-                                className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {'>>'}
-                            </button>
+                                <span className="flex items-center space-x-1">
+                                    <span>Page</span>
+                                    <strong>
+                                        {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                                    </strong>
+                                </span>
+                                <button
+                                    onClick={() => table.nextPage()}
+                                    disabled={!table.getCanNextPage()}
+                                    className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {'>'}
+                                </button>
+                                <button
+                                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                    disabled={!table.getCanNextPage()}
+                                    className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {'>>'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Add Merchant Modal */}
+                <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
+                    <CustomerOnboarding onClose={handleCloseModal} isFranchiseContext={true} isModal={true } />
+                </Modal>
             </div>
         </div>
-        </div >
     );
 };
 
