@@ -20,7 +20,7 @@ public class VendorController {
     private VendorService vendorService;
 
     // 🔹 Create Vendor
-    @PostMapping("/addVendor")
+    @PostMapping
     public ResponseEntity<?> createVendor(@Valid @RequestBody Vendor vendor) {
         try {
             Vendor savedVendor = vendorService.createVendor(vendor);
@@ -31,13 +31,13 @@ public class VendorController {
     }
 
     // 🔹 Get All Vendors
-    @GetMapping("/allVendor")
+    @GetMapping
     public ResponseEntity<List<Vendor>> getAllVendors() {
         return ResponseEntity.ok(vendorService.getAllVendors());
     }
 
     // 🔹 Get Vendor by ID
-    @GetMapping("/addVendorById/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> getVendorById(@PathVariable Long id) {
         try {
             Vendor vendor = vendorService.getVendorById(id);
