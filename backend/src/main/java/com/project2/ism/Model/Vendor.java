@@ -27,6 +27,11 @@ public class Vendor {
     // ========== Contact Person Information ==========
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "name", column = @Column(name = "contact_person_name")),
+            @AttributeOverride(name = "email", column = @Column(name = "contact_person_email")),
+            @AttributeOverride(name = "phoneNumber", column = @Column(name = "contact_person_phone"))
+    })
     @NotNull(message = "Contact person details are required")
     private ContactPerson contactPerson;
 
@@ -75,6 +80,8 @@ public class Vendor {
     private String paymentTerms;
 
     private String remarks;
+
+
 
     public Long getId() {
         return id;
