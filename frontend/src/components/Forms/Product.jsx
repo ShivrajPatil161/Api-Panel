@@ -21,12 +21,7 @@ const productSchema = z.object({
   })).min(1, 'At least one specification is required'),
   warrantyPeriod: z.number().min(0, 'Warranty period must be 0 or more months'),
   warrantyType: z.enum(['manufacturer', 'vendor', 'none']),
-  dimensions: z.object({
-    length: z.number().min(0, 'Length must be positive').optional(),
-    width: z.number().min(0, 'Width must be positive').optional(),
-    height: z.number().min(0, 'Height must be positive').optional(),
-    weight: z.number().min(0, 'Weight must be positive').optional()
-  }),
+ 
   hsn: z.string().regex(/^[0-9]{4,8}$/, 'HSN must be 4-8 digits'),
   status: z.enum(['active', 'inactive']),
   minOrderQuantity: z.number().min(1, 'Minimum order quantity must be at least 1'),
@@ -61,12 +56,7 @@ const ProductMasterForm = ({ onSubmit,onCancel, initialData = null, isEdit = fal
       specifications: [{ key: '', value: '' }],
       warrantyPeriod: 12,
       warrantyType: 'manufacturer',
-      dimensions: {
-        length: '',
-        width: '',
-        height: '',
-        weight: ''
-      },
+     
       hsn: '',
       status: 'active',
       minOrderQuantity: 1,
@@ -338,63 +328,7 @@ const ProductMasterForm = ({ onSubmit,onCancel, initialData = null, isEdit = fal
               </div>
             </div>
 
-            {/* Physical Details */}
-            {/* <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <Layers className="h-5 w-5 mr-2 text-green-600" />
-                Physical Details
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Length (cm)
-                  </label>
-                  <input
-                    {...register('dimensions.length', { valueAsNumber: true })}
-                    type="number"
-                    step="0.1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="0.0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Width (cm)
-                  </label>
-                  <input
-                    {...register('dimensions.width', { valueAsNumber: true })}
-                    type="number"
-                    step="0.1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="0.0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Height (cm)
-                  </label>
-                  <input
-                    {...register('dimensions.height', { valueAsNumber: true })}
-                    type="number"
-                    step="0.1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="0.0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Weight (kg)
-                  </label>
-                  <input
-                    {...register('dimensions.weight', { valueAsNumber: true })}
-                    type="number"
-                    step="0.1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="0.0"
-                  />
-                </div>
-              </div>
-            </div> */}
+           
 
             {/* Warranty & Legal */}
             <div>

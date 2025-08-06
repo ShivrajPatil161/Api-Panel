@@ -40,4 +40,21 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid Credentials"));
         }
     }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signUser(@RequestBody User user) {
+        Optional<User> result = userService.signUpUser(user);
+
+        if (result.isPresent()) {
+            return ResponseEntity.ok(Map.of(
+                    "message", "User registered successfully",
+                    "email", result.get().getEmail()
+            ));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "User already exists"));
+        }
+    }
+
 }
