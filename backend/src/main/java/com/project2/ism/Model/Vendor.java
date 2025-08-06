@@ -76,6 +76,8 @@ public class Vendor {
 
     private String remarks;
 
+
+
     public Long getId() {
         return id;
     }

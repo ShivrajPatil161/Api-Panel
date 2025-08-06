@@ -1,7 +1,7 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.Model.User;
-import com.project2.ism.Repository.UserRepo;
+import com.project2.ism.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,7 +13,7 @@ import java.util.Optional;
 public class UserService {
 
     @Autowired
-    private UserRepo userRepository;
+    private UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
 

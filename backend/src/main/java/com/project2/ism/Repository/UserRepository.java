@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepo {
+public interface UserRepository {
 
     Optional<User> findByEmail(String email);
     Optional<User> findByResetToken(String resetToken);
