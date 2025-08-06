@@ -1,13 +1,24 @@
 package com.project2.ism.Model;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 @Embeddable
 public class ContactPerson {
+
+    @NotBlank(message = "name is required")
     private String name;
+
+    @NotBlank(message = "phone number is required")
     private String phoneNumber;
-    private String alternatePhonenum;
+
+    private String alternatePhoneNum;
+
+    @NotBlank
+    @Email(message = "Invalid email format")
     private String email;
+
     private String LandlineNumber;
 
     public String getName() {
@@ -26,12 +37,12 @@ public class ContactPerson {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getAlternatePhonenum() {
-        return alternatePhonenum;
+    public String getAlternatePhoneNum() {
+        return alternatePhoneNum;
     }
 
-    public void setAlternatePhonenum(String alternatePhonenum) {
-        this.alternatePhonenum = alternatePhonenum;
+    public void setAlternatePhoneNum(String alternatePhonenum) {
+        this.alternatePhoneNum = alternatePhonenum;
     }
 
     public String getEmail() {
