@@ -3,10 +3,12 @@ package com.project2.ism.Service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.function.Function;
 
+@Service
 public class JwtService {
     private final String SECRET_KEY = "12345678kjhgfhjkldfghjklkjhgfdvghjkkjhglkjhbg"; // Use env variable in production
 
