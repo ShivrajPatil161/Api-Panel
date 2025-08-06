@@ -28,4 +28,15 @@ public class UserService {
         return Optional.empty();  // Invalid credentials
     }
 
+    public Optional<User> signUpUser(User user) {
+        Optional<User> existUser = userRepository.findByEmail(user.getEmail());
+
+        if (existUser.isPresent()) {
+            return Optional.empty();
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        User savedUser = userRepository.save(user);
+        return Optional.of(savedUser);
+    }
 }
