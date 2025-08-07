@@ -134,16 +134,10 @@ const ActivityCard = ({ transactions, title = "Recent Activity" }) => (
 
 // Main Dashboard Component
 const Dashboard = () => {
-  const [userType, setUserType] = useState('merchant'); // Default fallback
+  const userType = localStorage.getItem("userType")
   const [selectedMerchant, setSelectedMerchant] = useState('all');
 
-  // Get user type from localStorage on component mount
-  useEffect(() => {
-    const storedUserType = localStorage.getItem('userType');
-    if (storedUserType) {
-      setUserType(storedUserType);
-    }
-  }, []);
+
 
   // Mock data for different user types
   const mockData = {
