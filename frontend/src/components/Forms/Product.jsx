@@ -470,15 +470,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
 import { Package, Settings, FileText, ToggleRight, ToggleLeft, Plus, X } from 'lucide-react';
 import { z } from 'zod';
+import axiosInstance from '../../constants/API/axiosInstance';
 
-// Configure axios base URL
-const API_BASE_URL = 'http://localhost:8081/api';
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+
 
 const productSchema = z.object({
   productName: z.string().min(2, 'Product name must be at least 2 characters'),
@@ -549,7 +543,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
     if (!productCode || productCode.length < 3) return false;
 
     try {
-      const response = await api.get(`/products/exists/${productCode}`);
+      const response = await axiosInstance.get(`/products/exists/${productCode}`);
       return response.data.exists;
     } catch (error) {
       console.error('Error checking product code:', error);
@@ -585,10 +579,10 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
 
       if (isEdit && initialData?.id) {
         // Update existing product
-        response = await api.put(`/products/${initialData.id}`, transformedData);
+        response = await axiosInstance.put(`/products/${initialData.id}`, transformedData);
       } else {
         // Create new product
-        response = await api.post('/products', transformedData);
+        response = await axiosInstance.post('/products', transformedData);
       }
 
       console.log('Product saved successfully:', response.data);

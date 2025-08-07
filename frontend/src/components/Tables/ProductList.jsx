@@ -318,19 +318,11 @@ import {
   Building
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+
 import { generateDummyProducts } from '../../constants/constants';
 import ProductMasterForm from '../Forms/Product';
+import axiosInstance from '../../constants/API/axiosInstance';
 
-// Configure axios base URL
-const API_BASE_URL = 'http://localhost:8081/api';
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBpc20uY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU0NTAyODYxLCJleHAiOjE3NTQ1ODkyNjF9.USFikBbbGNzX5YkDRjNRqK0Kk6MlyLBAoc1DdQWxRy0'
-  },
-});
 
 const ProductList = () => {
   const [data, setData] = useState([]);
@@ -374,7 +366,7 @@ const ProductList = () => {
         url = `/products/search?q=${encodeURIComponent(search)}&page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
       }
 
-      const response = await api.get(url);
+      const response = await axiosInstance.get(url);
 
       // Transform backend data to match frontend format
       const transformedData = response.data.content?.map(product => ({
@@ -592,7 +584,7 @@ const ProductList = () => {
     }
 
     try {
-      await api.delete(`/products/${productId}`);
+      await axiosInstance.delete(`/products/${productId}`);
       toast.success('Product deleted successfully');
 
       // Refresh current page

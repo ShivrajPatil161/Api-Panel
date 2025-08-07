@@ -1,7 +1,8 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-
+import axios from 'axios';
+import {toast} from 'react-toastify'
 // Reusable Input Component
 const FormInput = ({ label, name, type = "text",  placeholder,  register,  errors,  validation}) => (
   <div>
@@ -64,37 +65,28 @@ const Login = () => {
     }
   });
 
-  // Function to determine userType based on email
-  const getUserTypeFromEmail = (email) => {
-    const emailLower = email.toLowerCase();
-    if (emailLower.includes('admin')) return 'admin';
-    if (emailLower.includes('franchise')) return 'franchise';
-    if (emailLower.includes('merchant')) return 'merchant';
-    return 'merchant'; // default
-  };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (formData) => {
     try {
-      // Determine userType from email
-      const userType = getUserTypeFromEmail(data.email);
+      const response = await axios.post(
+        "http://localhost:8081/api/users/login",
+        formData
+      );
 
-      // Set auth token and userType in localStorage
-      localStorage.setItem('authToken', "dasdcad");
-      localStorage.setItem('userType', userType);
+      if (response?.status === 200) {
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("userType", response.data.role);
 
-      // Simulate login process
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      alert(`Welcome! Logging in as ${userType}: ${data.email}`);
-
-      // Reset form and navigate
-      reset();
-      navigate("/dashboard");
-
+        toast.success("Login successful!");
+        reset();
+        navigate("/dashboard");
+      }
     } catch (error) {
-      alert('Login failed. Please try again.');
+      console.error("Login Error:", error?.response?.data?.error || error.message);
+      toast.error(error?.response?.data?.error || "Login failed. Please try again.");
     }
   };
+
 
   const handleForgotPassword = () => {
     const email = prompt('Enter your email address to reset password:');
@@ -131,10 +123,10 @@ const Login = () => {
               errors={errors}
               validation={{
                 required: "Email is required",
-                // pattern: {
-                //   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                //   message: "Invalid email address"
-                // }
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Invalid email address"
+                }
               }}
             />
 
@@ -146,13 +138,13 @@ const Login = () => {
               placeholder="Enter your password"
               register={register}
               errors={errors}
-              // validation={{
-              //   required: "Password is required",
-              //   minLength: {
-              //     value: 6,
-              //     message: "Password must be at least 6 characters"
-              //   }
-              // }}
+              validation={{
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters"
+                }
+              }}
             />
 
             {/* Submit Button */}
