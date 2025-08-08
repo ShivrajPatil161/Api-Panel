@@ -327,6 +327,7 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
       })
     }
 
+    //await checkSchemeCodeExists();
     onSubmit(filteredData)
     onCancel()
   }
