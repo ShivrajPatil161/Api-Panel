@@ -22,10 +22,12 @@ public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleProductNotFoundException(
-            ProductNotFoundException ex, WebRequest request) {
-        logger.error("Product not found: {}", ex.getMessage());
+    // 🔹 Handle all "Not Found" cases in one place
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException ex, WebRequest request) {
+
+        logger.error("Resource not found: {}", ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
@@ -33,10 +35,8 @@ public class GlobalExceptionHandler {
                 request.getDescription(false),
                 LocalDateTime.now()
         );
-
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
-
     @ExceptionHandler(DuplicateProductCodeException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateProductCodeException(
             DuplicateProductCodeException ex, WebRequest request) {

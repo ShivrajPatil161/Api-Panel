@@ -2,7 +2,7 @@ package com.project2.ism.Service;
 
 
 
-import com.project2.ism.Exception.ProductNotFoundException;
+import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Exception.DuplicateProductCodeException;
 import com.project2.ism.Model.Product.*;
 import com.project2.ism.enums.ProductCategory;
@@ -60,7 +60,7 @@ public class ProductService {
     public Product getProductById(Long id) {
         logger.debug("Fetching product with ID: {}", id);
         return productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product with ID " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id ));
     }
 
     /**
@@ -70,7 +70,7 @@ public class ProductService {
     public Product getProductByIdWithSpecifications(Long id) {
         logger.debug("Fetching product with specifications for ID: {}", id);
         return productRepository.findByIdWithSpecifications(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product with ID " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id ));
     }
 
     /**
@@ -80,7 +80,7 @@ public class ProductService {
     public Product getProductByCode(String productCode) {
         logger.debug("Fetching product with code: {}", productCode);
         return productRepository.findByProductCode(productCode)
-                .orElseThrow(() -> new ProductNotFoundException("Product with code " + productCode + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", productCode ));
     }
 
     /**
@@ -136,7 +136,7 @@ public class ProductService {
         logger.info("Deleting product with ID: {}", id);
 
         if (!productRepository.existsById(id)) {
-            throw new ProductNotFoundException("Product with ID " + id + " not found");
+            throw new ResourceNotFoundException("Product", id );
         }
 
         productRepository.deleteById(id);
