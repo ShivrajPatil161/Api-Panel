@@ -1,8 +1,60 @@
-import axiosInstance from "./axiosInstance";
+import api from './axiosInstance';
+const vendorApi = {
+  // Get all vendors
+  async getAllVendors() {
+    try {
+      const response = await api.get('/vendor/allVendor');
+      return response.data;
+    } catch (error) {
+      console.warn('Backend unavailable, using dummy data:', error);
+      // Fallback to dummy data if backend is unavailable
+      throw new Error('BACKEND_UNAVAILABLE');
+    }
+  },
 
+  // Create new vendor
+  async createVendor(vendorData) {
+    try {
+      const response = await api.post('/vendor/addVendor', vendorData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create vendor:', error);
+      throw new Error('BACKEND_UNAVAILABLE');
+    }
+  },
 
-export const getAllVendors = () => axiosInstance.get(`/vendors`);
-export const getVendorById = (id) => axiosInstance.get(`${`/vendors`}/${id}`);
-export const createVendor = (data) => axiosInstance.post(`/vendors`, data, );
-export const updateVendor = (id, data) => axiosInstance.put(`${`/vendors`}/${id}`, data, );
-export const deleteVendor = (id) => axiosInstance.delete(`${`/vendors`}/${id}`, );
+  // Update existing vendor
+  async updateVendor(id, vendorData) {
+    try {
+      const response = await api.put(`/vendor/${id}`, vendorData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update vendor:', error);
+      throw new Error('BACKEND_UNAVAILABLE');
+    }
+  },
+
+  // Delete vendor
+  async deleteVendor(id) {
+    try {
+      await api.delete(`/vendor/${id}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to delete vendor:', error);
+      throw new Error('BACKEND_UNAVAILABLE');
+    }
+  },
+
+  // Get vendor by ID
+  async getVendorById(id) {
+    try {
+      const response = await api.get(`/vendor/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch vendor:', error);
+      throw new Error('BACKEND_UNAVAILABLE');
+    }
+  }
+};
+
+export default vendorApi;

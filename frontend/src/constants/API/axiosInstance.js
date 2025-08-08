@@ -1,26 +1,37 @@
-// src/api/axiosInstance.js
 import axios from 'axios';
+import { Navigate } from 'react-router';
 
-const API_BASE_URL = 'http://localhost:8081/api';
-
-const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+const api = axios.create({
+  baseURL: 'http://localhost:8081/api',
   headers: {
     'Content-Type': 'application/json',
-    },
-  withCredentials: true,
+  }
 });
 
-// Add interceptor to attach token dynamically
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken'); 
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (
+      error.response &&
+      (error.response.status === 401 || error.response.status === 403)
+    ) {
+      // Optional: check if error message mentions token expiry
+      if (error.response.data.message?.toLowerCase().includes("expired")) {
+        localStorage.removeItem("authToken");
+        window.location.href = "/login";
+        Navigate
+      }
     }
-    return config;
-  },
-  (error) => Promise.reject(error)
+    return Promise.reject(error);
+  }
 );
 
-export default axiosInstance;
+export default api;

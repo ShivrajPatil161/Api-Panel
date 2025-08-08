@@ -1,15 +1,18 @@
 package com.project2.ism.Exception;
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,10 +22,12 @@ public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleProductNotFoundException(
-            ProductNotFoundException ex, WebRequest request) {
-        logger.error("Product not found: {}", ex.getMessage());
+    // 🔹 Handle all "Not Found" cases in one place
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException ex, WebRequest request) {
+
+        logger.error("Resource not found: {}", ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
@@ -30,10 +35,8 @@ public class GlobalExceptionHandler {
                 request.getDescription(false),
                 LocalDateTime.now()
         );
-
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
-
     @ExceptionHandler(DuplicateProductCodeException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateProductCodeException(
             DuplicateProductCodeException ex, WebRequest request) {
@@ -86,6 +89,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidJson(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        ErrorResponse error = new ErrorResponse();
+        error.setStatus(HttpStatus.BAD_REQUEST.value());
+        error.setMessage("Invalid JSON input: " + ex.getMostSpecificCause().getMessage());
+        error.setPath(request.getRequestURI());
+        error.setTimestamp(LocalDateTime.now());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
@@ -100,4 +115,6 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
 }
