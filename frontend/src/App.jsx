@@ -9,7 +9,7 @@ function App() {
        {/* Toast Container */}
       {/* Toast Container */}
       <ToastContainer
-        position="top-right"
+        position="top-center"
         autoClose={1000}
         hideProgressBar={false}
         newestOnTop={true}
@@ -18,7 +18,7 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="light"
+        theme="dark"
         toastClassName="text-sm"
         bodyClassName="text-sm"
         limit={5}
