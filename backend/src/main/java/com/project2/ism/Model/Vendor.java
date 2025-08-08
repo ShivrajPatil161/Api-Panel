@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Vendor {
@@ -81,6 +83,11 @@ public class Vendor {
 
     private String remarks;
 
+    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VendorRates> vendorRates = new ArrayList<>();
+
+    public Vendor() {
+    }
 
 
     public Long getId() {
@@ -210,5 +217,13 @@ public class Vendor {
 
     public void setPaymentTerms(String paymentTerms) {
         this.paymentTerms = paymentTerms;
+    }
+
+    public List<VendorRates> getVendorRates() {
+        return vendorRates;
+    }
+
+    public void setVendorRates(List<VendorRates> vendorRates) {
+        this.vendorRates = vendorRates;
     }
 }
