@@ -30,6 +30,7 @@ public class VendorRates {
     @NotNull(message = "expiry date required")
     private LocalDate expiryDate;
 
+    //ouyhgsfw
     @NotNull(message = "card rate required ")
     @DecimalMin(value = "0.0", inclusive = false, message = "Rent must be greater than zero")
     @Digits(integer = 10, fraction = 2, message = "Monthly rent must be a valid amount")
