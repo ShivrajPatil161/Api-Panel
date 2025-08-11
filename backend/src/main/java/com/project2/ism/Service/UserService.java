@@ -1,6 +1,6 @@
 package com.project2.ism.Service;
 
-import com.project2.ism.Model.User;
+import com.project2.ism.Model.Users.User;
 import com.project2.ism.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

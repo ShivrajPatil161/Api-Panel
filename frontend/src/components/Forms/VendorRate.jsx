@@ -57,20 +57,20 @@ const VendorDetails = ({ register, errors }) => (
     <h3 className="text-lg font-semibold text-gray-700 mb-4">Vendor Details</h3>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Input
-        label="Vendor ID"
-        name="vendorId"
-        register={register}
-        errors={errors}
-        required
-        placeholder="Enter vendor ID"
-      />
-      <Input
         label="Vendor Name"
         name="vendorName"
         register={register}
         errors={errors}
         required
         placeholder="Enter vendor name"
+      />
+      <Input
+        label="Vendor ID"
+        name="vendorId"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Enter vendor ID"
       />
       <Input
         label="Effective Date"
@@ -95,12 +95,8 @@ const VendorDetails = ({ register, errors }) => (
 const RentalRate = ({ register, errors }) => {
   const deviceOptions = [
     { value: 'POS Machine', label: 'POS Machine' },
-    { value: 'QR Scanner', label: 'QR Scanner' },
-    { value: 'Card Reader', label: 'Card Reader' },
-    { value: 'Thermal Printer', label: 'Thermal Printer' },
-    { value: 'Tablet', label: 'Tablet' },
-    { value: 'Mobile Device', label: 'Mobile Device' },
-    { value: 'Other', label: 'Other' }
+    { value: 'QR Code', label: 'QR Code' }
+    
   ]
 
   return (
@@ -108,7 +104,15 @@ const RentalRate = ({ register, errors }) => {
       <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Rental Rate</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Select
-          label="Device Type"
+          label="Product Category"
+          name="rental.deviceType"
+          register={register}
+          errors={errors}
+          options={deviceOptions}
+          required
+        />
+        <Select
+          label="Product"
           name="rental.deviceType"
           register={register}
           errors={errors}
