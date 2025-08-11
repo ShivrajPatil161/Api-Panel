@@ -1,6 +1,6 @@
 package com.project2.ism.Controller;
 
-import com.project2.ism.Model.VendorRates;
+import com.project2.ism.Model.Vendor.VendorRates;
 import com.project2.ism.Service.VendorRatesService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

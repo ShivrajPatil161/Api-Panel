@@ -1,6 +1,6 @@
 package com.project2.ism.Service;
 
-import com.project2.ism.Model.Vendor;
+import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Repository.VendorRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;

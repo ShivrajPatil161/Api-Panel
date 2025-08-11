@@ -1,6 +1,6 @@
 package com.project2.ism.Repository;
 
-import com.project2.ism.Model.User;
+import com.project2.ism.Model.Users.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

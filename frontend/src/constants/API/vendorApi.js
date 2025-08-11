@@ -3,7 +3,7 @@ const vendorApi = {
   // Get all vendors
   async getAllVendors() {
     try {
-      const response = await api.get('/vendor/allVendor');
+      const response = await api.get('/vendors');
       return response.data;
     } catch (error) {
       console.warn('Backend unavailable, using dummy data:', error);

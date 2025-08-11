@@ -220,7 +220,7 @@ const CardRates = ({ control, register, errors, watch }) => {
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-700">Card Processing Rates</h3>
+        <h3 className="text-lg font-semibold text-gray-700">Category Processing Rates</h3>
         <div className="flex gap-3">
           <div className="flex gap-2">
             <select
@@ -313,6 +313,12 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
     { value: 'direct_merchant', label: 'Direct Merchant' }
   ]
 
+  const deviceOptions = [
+    { value: 'POS Machine', label: 'POS Machine' },
+    { value: 'QR Code', label: 'QR Code' }
+
+  ]
+
   const onFormSubmit = (data) => {
     const filteredData = {
       ...data,
@@ -359,7 +365,7 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
             {/* Basic Details */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Scheme Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="Scheme Code"
                   name="schemeCode"
@@ -367,6 +373,14 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
                   errors={errors}
                   required
                   placeholder="e.g., SCHEME_001"
+                />
+                <Select
+                  label="Product Type"
+                  name="customerType"
+                  register={register}
+                  errors={errors}
+                  options={deviceOptions}
+                  required
                 />
                 <Input
                   label="Rental by Month (₹)"

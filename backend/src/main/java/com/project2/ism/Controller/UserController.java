@@ -1,6 +1,6 @@
 package com.project2.ism.Controller;
 
-import com.project2.ism.Model.User;
+import com.project2.ism.Model.Users.User;
 import com.project2.ism.Service.JwtService;
 import com.project2.ism.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
