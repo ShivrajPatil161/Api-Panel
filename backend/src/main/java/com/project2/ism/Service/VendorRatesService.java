@@ -1,5 +1,6 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.VendorRates;
 import com.project2.ism.Repository.VendorRatesRepository;
 import jakarta.validation.Valid;
@@ -29,14 +30,14 @@ public class VendorRatesService {
     // READ BY ID
     public VendorRates getVendorRatesById(Long id) {
         return vendorRatesRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("VendorRates not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("VendorRates",id));
     }
 
     // UPDATE
     public VendorRates updateVendorRates(Long id, @Valid VendorRates updatedRates) {
         VendorRates existingRates = getVendorRatesById(id);
 
-        existingRates.setProductName(updatedRates.getProductName());
+        //existingRates.setProductName(updatedRates.getProductName());
         existingRates.setMonthlyRent(updatedRates.getMonthlyRent());
         existingRates.setEffectiveDate(updatedRates.getEffectiveDate());
         existingRates.setExpiryDate(updatedRates.getExpiryDate());

@@ -4,6 +4,7 @@ import com.project2.ism.Model.Product.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -16,6 +17,12 @@ public class VendorRates {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotBlank(message = "Vendor id required")
+    private String vendorId;
+
+    @NotBlank(message = "Product code required")
+    private String productCode;
 
     @NotNull(message = "effective date is required")
     private LocalDate effectiveDate;
@@ -109,5 +116,29 @@ public class VendorRates {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public String getVendorId() {
+        return vendorId;
+    }
+
+    public void setVendorId(String vendorId) {
+        this.vendorId = vendorId;
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
     }
 }
