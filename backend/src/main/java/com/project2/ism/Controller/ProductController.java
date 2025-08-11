@@ -2,10 +2,8 @@ package com.project2.ism.Controller;
 
 
 
-import com.project2.ism.Model.Product.*;
+import com.project2.ism.Model.Product;
 import com.project2.ism.Service.ProductService;
-import com.project2.ism.enums.ProductCategory;
-import com.project2.ism.enums.ProductStatus;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,15 +75,7 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    /**
-     * Get product by ID with specifications
-     */
-    @GetMapping("/{id}/specifications")
-    public ResponseEntity<Product> getProductByIdWithSpecifications(@PathVariable Long id) {
-        logger.debug("REST request to get Product with specifications by ID: {}", id);
-        Product product = productService.getProductByIdWithSpecifications(id);
-        return ResponseEntity.ok(product);
-    }
+
 
     /**
      * Get product by product code
@@ -146,28 +136,28 @@ public class ProductController {
     /**
      * Get products by category
      */
-    @GetMapping("/category/{category}")
-    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable ProductCategory category) {
-        logger.debug("REST request to get Products by category: {}", category);
-        List<Product> products = productService.getProductsByCategory(category);
-        return ResponseEntity.ok(products);
-    }
+//    @GetMapping("/category/{category}")
+//    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable ProductCategory category) {
+//        logger.debug("REST request to get Products by category: {}", category);
+//        List<Product> products = productService.getProductsByCategory(category);
+//        return ResponseEntity.ok(products);
+//    }
 
     /**
      * Get products by status
      */
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<Product>> getProductsByStatus(@PathVariable ProductStatus status) {
-        logger.debug("REST request to get Products by status: {}", status);
-        List<Product> products = productService.getProductsByStatus(status);
-        return ResponseEntity.ok(products);
-    }
+//    @GetMapping("/status/{status}")
+//    public ResponseEntity<List<Product>> getProductsByStatus(@PathVariable ProductStatus status) {
+//        logger.debug("REST request to get Products by status: {}", status);
+//        List<Product> products = productService.getProductsByStatus(status);
+//        return ResponseEntity.ok(products);
+//    }
 
     /**
      * Get products by vendor
      */
     @GetMapping("/vendor/{vendorId}")
-    public ResponseEntity<List<Product>> getProductsByVendor(@PathVariable String vendorId) {
+    public ResponseEntity<List<Product>> getProductsByVendor(@PathVariable Long vendorId) {
         logger.debug("REST request to get Products by vendor: {}", vendorId);
         List<Product> products = productService.getProductsByVendor(vendorId);
         return ResponseEntity.ok(products);
@@ -178,9 +168,9 @@ public class ProductController {
      */
     @GetMapping("/filter")
     public ResponseEntity<Page<Product>> getProductsByCriteria(
-            @RequestParam(required = false) ProductCategory category,
-            @RequestParam(required = false) ProductStatus status,
-            @RequestParam(required = false) String vendorId,
+//            @RequestParam(required = false) ProductCategory category,
+//            @RequestParam(required = false) ProductStatus status,
+            @RequestParam(required = false) Long vendorId,
             @RequestParam(required = false) String brand,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -193,7 +183,7 @@ public class ProductController {
                 Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Product> products = productService.getProductsByCriteria(category, status, vendorId, brand, pageable);
+        Page<Product> products = productService.getProductsByCriteria(/*category, status,*/ vendorId, brand, pageable);
 
         return ResponseEntity.ok(products);
     }
@@ -214,39 +204,39 @@ public class ProductController {
     /**
      * Get dashboard statistics
      */
-    @GetMapping("/stats")
-    public ResponseEntity<Map<String, Object>> getProductStats() {
-        logger.debug("REST request to get product statistics");
+//    @GetMapping("/stats")
+//    public ResponseEntity<Map<String, Object>> getProductStats() {
+//        logger.debug("REST request to get product statistics");
+//
+//        Map<String, Object> stats = new HashMap<>();
+//        stats.put("totalActive", productService.getProductCountByStatus(ProductStatus.ACTIVE));
+//        stats.put("totalInactive", productService.getProductCountByStatus(ProductStatus.INACTIVE));
+//        stats.put("totalPOS", productService.getProductCountByCategory(ProductCategory.POS));
+//        stats.put("totalQRScanner", productService.getProductCountByCategory(ProductCategory.QR_SCANNER));
+//        stats.put("totalCardReader", productService.getProductCountByCategory(ProductCategory.CARD_READER));
+//        stats.put("totalPrinter", productService.getProductCountByCategory(ProductCategory.PRINTER));
+//        stats.put("totalAccessories", productService.getProductCountByCategory(ProductCategory.ACCESSORIES));
+//
+//        return ResponseEntity.ok(stats);
+//    }
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalActive", productService.getProductCountByStatus(ProductStatus.ACTIVE));
-        stats.put("totalInactive", productService.getProductCountByStatus(ProductStatus.INACTIVE));
-        stats.put("totalPOS", productService.getProductCountByCategory(ProductCategory.POS));
-        stats.put("totalQRScanner", productService.getProductCountByCategory(ProductCategory.QR_SCANNER));
-        stats.put("totalCardReader", productService.getProductCountByCategory(ProductCategory.CARD_READER));
-        stats.put("totalPrinter", productService.getProductCountByCategory(ProductCategory.PRINTER));
-        stats.put("totalAccessories", productService.getProductCountByCategory(ProductCategory.ACCESSORIES));
-
-        return ResponseEntity.ok(stats);
-    }
-
-    /**
-     * Activate product
-     */
-    @PatchMapping("/{id}/activate")
-    public ResponseEntity<Product> activateProduct(@PathVariable Long id) {
-        logger.info("REST request to activate Product ID: {}", id);
-        Product product = productService.activateProduct(id);
-        return ResponseEntity.ok(product);
-    }
-
-    /**
-     * Deactivate product
-     */
-    @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<Product> deactivateProduct(@PathVariable Long id) {
-        logger.info("REST request to deactivate Product ID: {}", id);
-        Product product = productService.deactivateProduct(id);
-        return ResponseEntity.ok(product);
-    }
+//    /**
+//     * Activate product
+//     */
+//    @PatchMapping("/{id}/activate")
+//    public ResponseEntity<Product> activateProduct(@PathVariable Long id) {
+//        logger.info("REST request to activate Product ID: {}", id);
+//        Product product = productService.activateProduct(id);
+//        return ResponseEntity.ok(product);
+//    }
+//
+//    /**
+//     * Deactivate product
+//     */
+//    @PatchMapping("/{id}/deactivate")
+//    public ResponseEntity<Product> deactivateProduct(@PathVariable Long id) {
+//        logger.info("REST request to deactivate Product ID: {}", id);
+//        Product product = productService.deactivateProduct(id);
+//        return ResponseEntity.ok(product);
+//    }
 }

@@ -1,7 +1,7 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.Exception.ResourceNotFoundException;
-import com.project2.ism.Model.VendorRates;
+import com.project2.ism.Model.Vendor.VendorRates;
 import com.project2.ism.Repository.VendorRatesRepository;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;

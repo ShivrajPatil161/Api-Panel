@@ -1,6 +1,8 @@
-package com.project2.ism.Model;
+package com.project2.ism.Model.Vendor;
 
-import com.project2.ism.Model.Product.Product;
+import com.project2.ism.Model.Product;
+import com.project2.ism.Model.Vendor.Vendor;
+import com.project2.ism.Model.Vendor.VendorCardRates;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -18,8 +20,6 @@ public class VendorRates {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Vendor id required")
-    private String vendorId;
 
     @NotBlank(message = "Product code required")
     private String productCode;
@@ -118,13 +118,6 @@ public class VendorRates {
         this.remark = remark;
     }
 
-    public String getVendorId() {
-        return vendorId;
-    }
-
-    public void setVendorId(String vendorId) {
-        this.vendorId = vendorId;
-    }
 
     public String getProductCode() {
         return productCode;

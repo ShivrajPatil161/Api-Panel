@@ -1,4 +1,4 @@
-package com.project2.ism.Model;
+package com.project2.ism.Model.Users;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
