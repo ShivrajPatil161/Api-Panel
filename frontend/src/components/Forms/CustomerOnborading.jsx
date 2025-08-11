@@ -79,15 +79,7 @@ const DocumentUpload = ({ label, name, register, errors, required = false, accep
 
 // Basic Details Component
 const BasicDetailsForm = ({ register, errors, customerType }) => {
-  const businessTypes = [
-    { value: 'retail', label: 'Retail Store' },
-    { value: 'restaurant', label: 'Restaurant/Food' },
-    { value: 'services', label: 'Services' },
-    { value: 'grocery', label: 'Grocery/Supermarket' },
-    { value: 'pharmacy', label: 'Pharmacy' },
-    { value: 'other', label: 'Other' }
-  ]
-
+ 
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">
@@ -100,7 +92,7 @@ const BasicDetailsForm = ({ register, errors, customerType }) => {
           name="businessName"
           register={register}
           errors={errors}
-          required
+          
           placeholder="Enter business name"
         />
 
@@ -109,17 +101,16 @@ const BasicDetailsForm = ({ register, errors, customerType }) => {
           name="legalName"
           register={register}
           errors={errors}
-          required
+          
           placeholder="As per registration documents"
         />
 
-        <FormSelect
+        <FormInput
           label="Business Type"
           name="businessType"
           register={register}
           errors={errors}
-          required
-          options={businessTypes}
+          placeholder="Enter business type"
         />
 
         <FormInput
@@ -127,7 +118,6 @@ const BasicDetailsForm = ({ register, errors, customerType }) => {
           name="gstNumber"
           register={register}
           errors={errors}
-          required
           placeholder="Enter GST number"
         />
 
@@ -136,7 +126,7 @@ const BasicDetailsForm = ({ register, errors, customerType }) => {
           name="panNumber"
           register={register}
           errors={errors}
-          required
+          
           placeholder="Enter PAN number"
         />
 
@@ -155,7 +145,7 @@ const BasicDetailsForm = ({ register, errors, customerType }) => {
           name="businessAddress"
           register={register}
           errors={errors}
-          required
+          
           rows={3}
           placeholder="Complete business address"
         />
@@ -175,7 +165,7 @@ const ContactDetailsForm = ({ register, errors }) => (
         name="primaryContactName"
         register={register}
         errors={errors}
-        required
+        
         placeholder="Contact person name"
       />
 
@@ -184,7 +174,7 @@ const ContactDetailsForm = ({ register, errors }) => (
         name="primaryContactMobile"
         register={register}
         errors={errors}
-        required
+        
         type="tel"
         placeholder="Primary mobile number"
       />
@@ -194,7 +184,7 @@ const ContactDetailsForm = ({ register, errors }) => (
         name="primaryContactEmail"
         register={register}
         errors={errors}
-        required
+        
         type="email"
         placeholder="Primary email address"
       />
@@ -215,15 +205,6 @@ const ContactDetailsForm = ({ register, errors }) => (
         errors={errors}
         type="tel"
         placeholder="Landline with STD code"
-      />
-
-      <FormInput
-        label="WhatsApp Number"
-        name="whatsappNumber"
-        register={register}
-        errors={errors}
-        type="tel"
-        placeholder="WhatsApp number"
       />
     </div>
   </div>
@@ -299,7 +280,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="bankName"
         register={register}
         errors={errors}
-        required
+        
         placeholder="Enter bank name"
       />
 
@@ -308,7 +289,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="accountHolderName"
         register={register}
         errors={errors}
-        required
+        
         placeholder="As per bank records"
       />
 
@@ -317,7 +298,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="accountNumber"
         register={register}
         errors={errors}
-        required
+        
         placeholder="Bank account number"
       />
 
@@ -326,7 +307,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="ifscCode"
         register={register}
         errors={errors}
-        required
+        
         placeholder="Bank IFSC code"
       />
 
@@ -335,7 +316,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="branchName"
         register={register}
         errors={errors}
-        required
+        
         placeholder="Bank branch name"
       />
 
@@ -344,7 +325,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="accountType"
         register={register}
         errors={errors}
-        required
+        
         options={[
           { value: 'current', label: 'Current Account' },
           { value: 'savings', label: 'Savings Account' }

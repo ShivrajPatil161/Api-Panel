@@ -9,11 +9,16 @@ import jakarta.validation.constraints.NotNull;
 
 public class Franchise {
 
+    private Long id;
     private String name;
+
+    private String legalName;
     private String businessType;
     private String GSTNumber;
 
     private String panNumber;
+
+    private String registrationNumber;
     private String address;
 
     @Embedded
@@ -26,6 +31,9 @@ public class Franchise {
     })
     @NotNull(message = "Contact person details are required")
     private ContactPerson contactPerson;
+
+    @Embedded
+    private BankDetails bankDetails;
 
 
 
