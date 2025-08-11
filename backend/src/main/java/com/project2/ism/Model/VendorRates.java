@@ -18,9 +18,6 @@ public class VendorRates {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Vendor id required")
-    private String vendorId;
-
     @NotBlank(message = "Product code required")
     private String productCode;
 
@@ -116,14 +113,6 @@ public class VendorRates {
 
     public void setRemark(String remark) {
         this.remark = remark;
-    }
-
-    public String getVendorId() {
-        return vendorId;
-    }
-
-    public void setVendorId(String vendorId) {
-        this.vendorId = vendorId;
     }
 
     public String getProductCode() {
