@@ -1,6 +1,8 @@
-package com.project2.ism.Model;
+package com.project2.ism.Model.Vendor;
 
-import com.project2.ism.Model.Product.Product;
+import com.project2.ism.Model.Product;
+import com.project2.ism.Model.Vendor.Vendor;
+import com.project2.ism.Model.Vendor.VendorCardRates;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -18,6 +20,7 @@ public class VendorRates {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     @NotBlank(message = "Product code required")
     private String productCode;
 
@@ -26,6 +29,7 @@ public class VendorRates {
 
     @NotNull(message = "expiry date required")
     private LocalDate expiryDate;
+
 
     @NotNull(message = "card rate required ")
     @DecimalMin(value = "0.0", inclusive = false, message = "Rent must be greater than zero")
@@ -114,6 +118,7 @@ public class VendorRates {
     public void setRemark(String remark) {
         this.remark = remark;
     }
+
 
     public String getProductCode() {
         return productCode;
