@@ -92,7 +92,7 @@ public class ProductService {
         existingProduct.setProductName(productDetails.getProductName());
         existingProduct.setProductCode(productDetails.getProductCode());
         existingProduct.setVendor(productDetails.getVendor());
-        existingProduct.setCategory(productDetails.getCategory());
+        existingProduct.setProductCategory(productDetails.getProductCategory());
         existingProduct.setModel(productDetails.getModel());
         existingProduct.setBrand(productDetails.getBrand());
         existingProduct.setDescription(productDetails.getDescription());

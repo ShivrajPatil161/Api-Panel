@@ -6,7 +6,6 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class BankDetails {
 
-    private Long id;
     private String bankName;
     private String accountHolderName;
     private Integer accountNumber;
