@@ -1,40 +1,50 @@
 package com.project2.ism.Model.Users;
 
 import com.project2.ism.Model.ContactPerson;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class Franchise {
+import java.util.ArrayList;
+import java.util.List;
 
+@Entity
+public class Franchise extends CustomerBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
 
-    private String legalName;
-    private String businessType;
-    private String GSTNumber;
+    @NotBlank(message = "Franchise name required")
+    private String franchiseName;
 
-    private String panNumber;
+    @OneToMany(mappedBy = "franchise", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Merchant> merchants = new ArrayList<>();
 
-    private String registrationNumber;
-    private String address;
+    public Franchise() {
+    }
 
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "name", column = @Column(name = "contact_person_name")),
-            @AttributeOverride(name = "email", column = @Column(name = "contact_person_email")),
-            @AttributeOverride(name = "phoneNumber", column = @Column(name = "contact_person_phone")),
-            @AttributeOverride(name = "alternatePhoneNum", column = @Column(name = "contact_person_alt_phone")),
-            @AttributeOverride(name = "LandlineNumber", column = @Column(name = "contact_person_landline"))
-    })
-    @NotNull(message = "Contact person details are required")
-    private ContactPerson contactPerson;
+    public Long getId() {
+        return id;
+    }
 
-    @Embedded
-    private BankDetails bankDetails;
+    public void setId(Long id) {
+        this.id = id;
+    }
 
+    public String getFranchiseName() {
+        return franchiseName;
+    }
 
+    public void setFranchiseName(String franchiseName) {
+        this.franchiseName = franchiseName;
+    }
 
+    public List<Merchant> getMerchants() {
+        return merchants;
+    }
+
+    public void setMerchants(List<Merchant> merchants) {
+        this.merchants = merchants;
+    }
 }
