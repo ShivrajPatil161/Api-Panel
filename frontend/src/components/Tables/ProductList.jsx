@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   createColumnHelper,
@@ -18,17 +16,242 @@ import {
   ChevronRight,
   X,
   Package,
-  Calendar,
   Shield,
   Building
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-import { generateDummyProducts } from '../../constants/constants';
 import ProductMasterForm from '../Forms/Product';
-import axiosInstance from '../../constants/API/axiosInstance';
+import { getProducts, createProduct, updateProduct, deleteProduct } from '../../constants/API/productApi';
 
 
+// Modular Components
+const SearchBar = ({ searchInput, setSearchInput, onSearch, onClear, loading }) => (
+  <div className="mb-4">
+    <div className="flex max-w-md">
+      <div className="relative flex-1">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && onSearch()}
+          className="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {searchInput && (
+          <button
+            onClick={onClear}
+            className="absolute right-2 top-2.5 text-gray-400 hover:text-gray-600"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+      <button
+        onClick={onSearch}
+        disabled={loading}
+        className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+      >
+        <Search size={16} />
+      </button>
+    </div>
+  </div>
+);
+
+const LoadingSpinner = () => (
+  <div className="mb-4 text-center">
+    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+    <span className="ml-2">Loading products...</span>
+  </div>
+);
+
+const EmptyState = () => (
+  <div className="text-center py-8">
+    <Package className="mx-auto h-12 w-12 text-gray-400" />
+    <p className="mt-2 text-gray-500">No products found.</p>
+  </div>
+);
+
+const StatusBadge = ({ status }) => (
+  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    }`}>
+    {status ? 'Active' : 'Inactive'}
+  </span>
+);
+
+const CategoryBadge = ({ categoryName }) => {
+  const getCategoryStyle = (category) => {
+    switch (category?.toUpperCase()) {
+      case 'POS': return 'bg-blue-100 text-blue-800';
+      case 'QR_SCANNER': return 'bg-green-100 text-green-800';
+      case 'CARD_READER': return 'bg-yellow-100 text-yellow-800';
+      case 'PRINTER': return 'bg-red-100 text-red-800';
+      default: return 'bg-purple-100 text-purple-800';
+    }
+  };
+
+  return (
+    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryStyle(categoryName)}`}>
+      {categoryName || 'Unknown'}
+    </span>
+  );
+};
+
+const ActionButtons = ({ product, onView, onEdit, onDelete }) => (
+  <div className="flex space-x-1">
+    <button
+      onClick={() => onView(product)}
+      className="p-1 text-green-600 hover:text-green-900 hover:bg-green-50 rounded"
+      title="View Details"
+    >
+      <Eye size={16} />
+    </button>
+    <button
+      onClick={() => onEdit(product)}
+      className="p-1 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
+      title="Edit Product"
+    >
+      <Edit size={16} />
+    </button>
+    <button
+      onClick={() => onDelete(product.id,product.productName)}
+      className="p-1 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+      title="Delete Product"
+    >
+      <Trash2 size={16} />
+    </button>
+  </div>
+);
+
+const ProductViewModal = ({ product, onClose }) => {
+  if (!product) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-800">Product Details</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <Package className="text-blue-500" size={16} />
+              <span className="font-medium">Product Name:</span>
+              <span>{product.productName}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Code:</span>
+              <span className="font-mono">{product.productCode}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Building className="text-green-500" size={16} />
+              <span className="font-medium">Vendor:</span>
+              <span>{product.vendor.name}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Category:</span>
+              <CategoryBadge categoryName={product.productCategory.categoryName} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Brand:</span>
+              <span>{product.brand}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Model:</span>
+              <span>{product.model}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Status:</span>
+              <StatusBadge status={product.status} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Shield className="text-purple-500" size={16} />
+              <span className="font-medium">Warranty:</span>
+              <span>{product.warrantyPeriod} months ({product.warrantyType})</span>
+            </div>
+          </div>
+
+          {product.hsn && (
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">HSN:</span>
+              <span>{product.hsn}</span>
+            </div>
+          )}
+
+          {product.description && (
+            <div>
+              <span className="font-medium">Description:</span>
+              <p className="mt-1 text-gray-700">{product.description}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Min Order Qty:</span>
+              <span>{product.minOrderQuantity}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium">Max Order Qty:</span>
+              <span>{product.maxOrderQuantity}</span>
+            </div>
+          </div>
+
+          {product.remarks && (
+            <div>
+              <span className="font-medium">Remarks:</span>
+              <p className="mt-1 text-gray-700">{product.remarks}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Pagination = ({ table, pagination, totalPages, totalElements }) => (
+  <div className="flex items-center justify-between mt-4">
+    <div className="flex items-center space-x-2">
+      <span className="text-sm text-gray-600">
+        Showing {pagination.pageIndex * pagination.pageSize + 1} to{' '}
+        {Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalElements)} of{' '}
+        {totalElements} results
+      </span>
+    </div>
+
+    <div className="flex items-center space-x-2">
+      <button
+        onClick={() => table.previousPage()}
+        disabled={!table.getCanPreviousPage()}
+        className="flex items-center px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+      >
+        <ChevronLeft size={16} className="mr-1" />
+        Previous
+      </button>
+
+      <span className="text-sm text-gray-600">
+        Page {pagination.pageIndex + 1} of {totalPages}
+      </span>
+
+      <button
+        onClick={() => table.nextPage()}
+        disabled={!table.getCanNextPage()}
+        className="flex items-center px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+      >
+        Next
+        <ChevronRight size={16} className="ml-1" />
+      </button>
+    </div>
+  </div>
+);
+
+// Main Component
 const ProductList = () => {
   const [data, setData] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -46,65 +269,32 @@ const ProductList = () => {
   const [sorting, setSorting] = useState([]);
 
   const userType = localStorage.getItem('userType');
-
   const columnHelper = createColumnHelper();
 
-  // Helper function to get vendor name
-  const getVendorName = (vendorId) => {
-    const vendors = {
-      '1': 'HDFC Bank',
-      '2': 'ICICI Bank',
-      '3': 'SBI Bank',
-      '4': 'Axis Bank'
-    };
-    return vendors[vendorId] || 'Unknown Vendor';
-  };
-
-  // Fetch products from backend with proper pagination
-  const fetchProducts = async (page = 0, size = 10, sortBy = 'productName', sortDir = 'asc', search = '') => {
+  // Fetch products from backend
+  const fetchProducts = async () => {
     setLoading(true);
+    toast.loading('Fetching products...', { toastId: 'fetch-products' });
+
     try {
-      let url = `/products?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
+      const data = await getProducts(pagination.pageIndex, pagination.pageSize, sorting[0]?.id || 'productName', sorting[0]?.desc ? 'desc' : 'asc', searchQuery);
 
-      // Use search endpoint if there's a search query
-      if (search.trim()) {
-        url = `/products/search?q=${encodeURIComponent(search)}&page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
-      }
+      setData(data.content || []);
+      setTotalPages(data.totalPages || 0);
+      setTotalElements(data.totalElements || 0);
 
-      const response = await axiosInstance.get(url);
-
-      // Transform backend data to match frontend format
-      const transformedData = response.data.content?.map(product => ({
-        ...product,
-        vendorName: getVendorName(product.vendorId),
-        status: product.status?.toLowerCase() || 'active',
-        category: product.category || 'POS'
-      })) || [];
-
-      setData(transformedData);
-      setTotalPages(response.data.totalPages || 0);
-      setTotalElements(response.data.totalElements || 0);
-
-      toast.success(`Loaded ${transformedData.length} products`);
+      toast.dismiss('fetch-products');
+      toast.success(`Loaded ${data.content?.length || 0} products`);
     } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Failed to load products from server. Using demo data.');
-
-      // Fallback to dummy data with client-side pagination
-      const dummyData = generateDummyProducts();
-      const startIndex = page * size;
-      const endIndex = startIndex + size;
-      const paginatedDummy = dummyData.slice(startIndex, endIndex);
-
-      setData(paginatedDummy);
-      setTotalPages(Math.ceil(dummyData.length / size));
-      setTotalElements(dummyData.length);
+      setData([]);
+      setTotalPages(0);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
   };
 
-  // Load products on component mount and when pagination/search changes
+  // Load products on component mount and when dependencies change
   useEffect(() => {
     const sortField = sorting[0]?.id || 'productName';
     const sortDirection = sorting[0]?.desc ? 'desc' : 'asc';
@@ -118,24 +308,21 @@ const ProductList = () => {
     );
   }, [pagination.pageIndex, pagination.pageSize, sorting, searchQuery]);
 
-  // Handle search
+  // Search handlers
   const handleSearch = () => {
+    toast.info(`Searching for: ${searchInput}`);
     setSearchQuery(searchInput);
-    setPagination(prev => ({ ...prev, pageIndex: 0 })); // Reset to first page
-  };
-
-  const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
   };
 
   const clearSearch = () => {
     setSearchInput('');
     setSearchQuery('');
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    toast.info('Search cleared');
   };
 
+  // Table columns configuration
   const columns = useMemo(
     () => [
       columnHelper.accessor('id', {
@@ -155,32 +342,18 @@ const ProductList = () => {
           </div>
         ),
       }),
-      columnHelper.accessor('vendorName', {
+      columnHelper.accessor('vendor.name', {
         header: 'Vendor',
         cell: info => (
           <div>
             <div className="text-sm font-medium text-gray-900">{info.getValue()}</div>
-            <div className="text-xs text-gray-500">{info.row.original.vendorId}</div>
+            <div className="text-xs text-gray-500">ID: {info.row.original.vendor.id}</div>
           </div>
         ),
       }),
-      columnHelper.accessor('category', {
+      columnHelper.accessor('productCategory.categoryName', {
         header: 'Category',
-        cell: info => {
-          const category = info.getValue();
-          return (
-            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${category === 'POS' ? 'bg-blue-100 text-blue-800' :
-                category === 'QR_SCANNER' ? 'bg-green-100 text-green-800' :
-                  category === 'CARD_READER' ? 'bg-yellow-100 text-yellow-800' :
-                    category === 'PRINTER' ? 'bg-red-100 text-red-800' :
-                      'bg-purple-100 text-purple-800'
-              }`}>
-              {category === 'QR_SCANNER' ? 'QR Scanner' :
-                category === 'CARD_READER' ? 'Card Reader' :
-                  category || 'Unknown'}
-            </span>
-          );
-        },
+        cell: info => <CategoryBadge categoryName={info.getValue()} />,
       }),
       columnHelper.accessor('model', {
         header: 'Model',
@@ -193,15 +366,7 @@ const ProductList = () => {
       }),
       columnHelper.accessor('status', {
         header: 'Status',
-        cell: info => (
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${info.getValue() === 'active' || info.getValue() === 'ACTIVE'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-            }`}>
-            {(info.getValue() || '').toString().charAt(0).toUpperCase() +
-              (info.getValue() || '').toString().slice(1).toLowerCase()}
-          </span>
-        ),
+        cell: info => <StatusBadge status={info.getValue()} />,
       }),
       columnHelper.accessor('warrantyPeriod', {
         header: 'Warranty',
@@ -218,35 +383,19 @@ const ProductList = () => {
         id: 'actions',
         header: 'Actions',
         cell: info => (
-          <div className="flex space-x-1">
-            <button
-              onClick={() => handleView(info.row.original)}
-              className="p-1 text-green-600 hover:text-green-900 hover:bg-green-50 rounded"
-              title="View Details"
-            >
-              <Eye size={16} />
-            </button>
-            <button
-              onClick={() => handleEdit(info.row.original)}
-              className="p-1 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded"
-              title="Edit Product"
-            >
-              <Edit size={16} />
-            </button>
-            <button
-              onClick={() => handleDelete(info.row.original.id)}
-              className="p-1 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
-              title="Delete Product"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
+          <ActionButtons
+            product={info.row.original}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         ),
       }),
     ],
     []
   );
 
+  // Table configuration
   const table = useReactTable({
     data,
     columns,
@@ -263,80 +412,97 @@ const ProductList = () => {
     manualSorting: true,
   });
 
+  // Action handlers
   const handleAddProduct = () => {
     setEditingProduct(null);
     setShowForm(true);
+    toast.info('Opening product creation form');
   };
 
   const handleEdit = (product) => {
     const editData = {
       ...product,
-      status: product.status?.toLowerCase() || 'active',
       warrantyType: product.warrantyType?.toLowerCase() || 'manufacturer',
-      specifications: product.specifications || [{ key: '', value: '' }]
     };
     setEditingProduct(editData);
     setShowForm(true);
+    toast.info(`Editing product: ${product.productName}`);
   };
 
   const handleView = (product) => {
     setViewingProduct(product);
+    toast.info(`Viewing product: ${product.productName}`);
   };
 
-  const handleDelete = async (productId) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) {
-      return;
-    }
 
+  const handleDelete = (productId, productName) => {
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete(productId, productName);
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info('Delete operation cancelled'); // ✅ Same behavior as alert version
+    };
+
+    toast.warn(
+      <div className="flex flex-col space-y-2">
+        <span>Delete "{productName}"?</span>
+        <div className="flex space-x-2">
+          <button
+            onClick={confirmDelete}
+            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+          >
+            Delete
+          </button>
+          <button
+            onClick={cancelDelete}
+            className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        closeButton: false
+      }
+    );
+  };
+
+  const performDelete = async (productId, productName) => {
     try {
-      await axiosInstance.delete(`/products/${productId}`);
-      toast.success('Product deleted successfully');
-
-      // Refresh current page
-      const sortField = sorting[0]?.id || 'productName';
-      const sortDirection = sorting[0]?.desc ? 'desc' : 'asc';
-      fetchProducts(
-        pagination.pageIndex,
-        pagination.pageSize,
-        sortField,
-        sortDirection,
-        searchQuery
-      );
+      await deleteProduct(productId);
+      fetchProducts();
     } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Failed to delete product. Please try again.');
+      const errorMessage = error?.response?.data?.message || 'Failed to delete product';
+      toast.error(errorMessage);
     }
   };
+
+
 
   const handleFormSubmit = async (formData) => {
+    const isEdit = !!editingProduct;
     try {
-      setShowForm(false);
-      setEditingProduct(null);
-
-      // Refresh data to show the latest changes
-      const sortField = sorting[0]?.id || 'productName';
-      const sortDirection = sorting[0]?.desc ? 'desc' : 'asc';
-
-      setTimeout(() => {
-        fetchProducts(
-          pagination.pageIndex,
-          pagination.pageSize,
-          sortField,
-          sortDirection,
-          searchQuery
-        );
-      }, 500);
-
-      toast.success(editingProduct ? 'Product updated successfully' : 'Product created successfully');
+      if (isEdit) {
+        await updateProduct(editingProduct.id, formData);
+      } else {
+        await createProduct(formData);
+      }
+      fetchProducts();
+      handleCloseForm();
     } catch (error) {
-      console.error('Error in form submission:', error);
-      toast.error('Operation failed. Please try again.');
+      console.error('Form submission failed:', error);
     }
   };
-
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingProduct(null);
+    toast.info('Form closed');
   };
 
   return (
@@ -354,43 +520,20 @@ const ProductList = () => {
           </div>
         )}
 
-        {/* Search */}
-        <div className="mb-4">
-          <div className="flex max-w-md">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
-                className="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {searchInput && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-2 top-2.5 text-gray-400 hover:text-gray-600"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-            <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              <Search size={16} />
-            </button>
-          </div>
-          {searchQuery && (
-            <p className="mt-2 text-sm text-gray-600">
-              Searching for: "<strong>{searchQuery}</strong>"
-            </p>
-          )}
-        </div>
+        <SearchBar
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          onSearch={handleSearch}
+          onClear={clearSearch}
+          loading={loading}
+        />
 
-        {/* Results Info */}
+        {searchQuery && (
+          <p className="mt-2 mb-4 text-sm text-gray-600">
+            Searching for: "<strong>{searchQuery}</strong>"
+          </p>
+        )}
+
         <div className="mb-4">
           <span className="text-sm text-gray-600">
             Showing {totalElements} products
@@ -398,15 +541,8 @@ const ProductList = () => {
         </div>
       </div>
 
-      {/* Loading Indicator */}
-      {loading && (
-        <div className="mb-4 text-center">
-          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-2">Loading products...</span>
-        </div>
-      )}
+      {loading && <LoadingSpinner />}
 
-      {/* Product Form Modal */}
       {showForm && (
         <ProductMasterForm
           onSubmit={handleFormSubmit}
@@ -416,106 +552,10 @@ const ProductList = () => {
         />
       )}
 
-      {/* Product View Modal */}
-      {viewingProduct && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Product Details</h2>
-              <button
-                onClick={() => setViewingProduct(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Package className="text-blue-500" size={16} />
-                  <span className="font-medium">Product Name:</span>
-                  <span>{viewingProduct.productName}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">Code:</span>
-                  <span className="font-mono">{viewingProduct.productCode}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Building className="text-green-500" size={16} />
-                  <span className="font-medium">Vendor:</span>
-                  <span>{viewingProduct.vendorName}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">Category:</span>
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${viewingProduct.category === 'POS' ? 'bg-blue-100 text-blue-800' :
-                      viewingProduct.category === 'QR_SCANNER' ? 'bg-green-100 text-green-800' :
-                        viewingProduct.category === 'CARD_READER' ? 'bg-yellow-100 text-yellow-800' :
-                          viewingProduct.category === 'PRINTER' ? 'bg-red-100 text-red-800' :
-                            'bg-purple-100 text-purple-800'
-                    }`}>
-                    {viewingProduct.category === 'QR_SCANNER' ? 'QR Scanner' :
-                      viewingProduct.category === 'CARD_READER' ? 'Card Reader' :
-                        viewingProduct.category}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">Brand:</span>
-                  <span>{viewingProduct.brand}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">Model:</span>
-                  <span>{viewingProduct.model}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">Status:</span>
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${viewingProduct.status === 'active' || viewingProduct.status === 'ACTIVE'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                    }`}>
-                    {viewingProduct.status?.charAt(0).toUpperCase() + viewingProduct.status?.slice(1).toLowerCase()}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Shield className="text-purple-500" size={16} />
-                  <span className="font-medium">Warranty:</span>
-                  <span>{viewingProduct.warrantyPeriod} months ({viewingProduct.warrantyType})</span>
-                </div>
-              </div>
-
-              {viewingProduct.hsn && (
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">HSN:</span>
-                  <span>{viewingProduct.hsn}</span>
-                </div>
-              )}
-
-              {viewingProduct.description && (
-                <div>
-                  <span className="font-medium">Description:</span>
-                  <p className="mt-1 text-gray-700">{viewingProduct.description}</p>
-                </div>
-              )}
-
-              {viewingProduct.specifications && viewingProduct.specifications.length > 0 && (
-                <div>
-                  <span className="font-medium">Specifications:</span>
-                  <div className="mt-2 space-y-2">
-                    {viewingProduct.specifications.map((spec, index) => (
-                      spec.key && spec.value && (
-                        <div key={index} className="flex justify-between p-2 bg-gray-50 rounded">
-                          <span className="font-medium">{spec.key}:</span>
-                          <span>{spec.value}</span>
-                        </div>
-                      )
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ProductViewModal
+        product={viewingProduct}
+        onClose={() => setViewingProduct(null)}
+      />
 
       {/* Table */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg">
@@ -561,49 +601,15 @@ const ProductList = () => {
         </table>
       </div>
 
-      {/* Empty State */}
-      {data.length === 0 && !loading && (
-        <div className="text-center py-8">
-          <Package className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="mt-2 text-gray-500">No products found.</p>
-        </div>
-      )}
+      {data.length === 0 && !loading && <EmptyState />}
 
-      {/* Pagination */}
       {data.length > 0 && (
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">
-              Showing {pagination.pageIndex * pagination.pageSize + 1} to{' '}
-              {Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalElements)} of{' '}
-              {totalElements} results
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="flex items-center px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              <ChevronLeft size={16} className="mr-1" />
-              Previous
-            </button>
-
-            <span className="text-sm text-gray-600">
-              Page {pagination.pageIndex + 1} of {totalPages}
-            </span>
-
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="flex items-center px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Next
-              <ChevronRight size={16} className="ml-1" />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          table={table}
+          pagination={pagination}
+          totalPages={totalPages}
+          totalElements={totalElements}
+        />
       )}
     </div>
   );

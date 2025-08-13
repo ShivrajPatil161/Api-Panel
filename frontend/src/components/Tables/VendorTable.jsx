@@ -185,6 +185,7 @@ const VendorListPage = () => {
 
     const cancelDelete = () => {
       toast.dismiss();
+      toast.info('Delete operation cancelled'); // ✅ Same behavior as alert version
     };
 
     toast.warn(
@@ -217,7 +218,7 @@ const VendorListPage = () => {
   const performDelete = async (vendorId, vendorName) => {
     try {
       await vendorApi.deleteVendor(vendorId);
-      loadVendors()
+      loadVendors();
       toast.success(`${vendorName} deleted successfully!`);
     } catch (error) {
       const errorMessage = error?.response?.data?.message || 'Failed to delete vendor';

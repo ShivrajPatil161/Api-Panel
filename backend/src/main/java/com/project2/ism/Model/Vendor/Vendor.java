@@ -84,8 +84,6 @@ public class Vendor {
 
     private String remarks;
 
-    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<VendorRates> vendorRates = new ArrayList<>();
 
     public Vendor() {
     }
@@ -220,11 +218,4 @@ public class Vendor {
         this.paymentTerms = paymentTerms;
     }
 
-    public List<VendorRates> getVendorRates() {
-        return vendorRates;
-    }
-
-    public void setVendorRates(List<VendorRates> vendorRates) {
-        this.vendorRates = vendorRates;
-    }
 }

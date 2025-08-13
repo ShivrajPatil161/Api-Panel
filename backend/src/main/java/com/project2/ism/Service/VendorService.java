@@ -1,5 +1,6 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.DTO.VendorIDNameDTO;
 import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Repository.VendorRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -46,5 +47,12 @@ public class VendorService {
             throw new EntityNotFoundException("Cannot delete. Vendor not found with ID: " + id);
         }
         vendorRepository.deleteById(id);
+    }
+
+    public List<VendorIDNameDTO> getAllVendorsIdAndName() {
+        return vendorRepository.findAll()
+                .stream()
+                .map(v -> new VendorIDNameDTO(v.getId(), v.getName()))
+                .toList();
     }
 }
