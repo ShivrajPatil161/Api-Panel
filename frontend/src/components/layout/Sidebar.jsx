@@ -174,6 +174,7 @@ const getMenuItems = (userType) => {
         iconColor: '',
         children: [
           { title: 'Product List', path: '/dashboard/inventory', icon: Package },
+          { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: Package },
           { title: 'Product Pricing', path: '/dashboard/inventory/pricing', icon: Calculator },
           { title: 'Product Assign', path: '/dashboard/inventory/products-assign', icon: Calculator },
           { title: 'Inward Entry', path: '/dashboard/inventory/inward', icon: ArrowDown },

@@ -1,58 +1,92 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, flexRender, createColumnHelper } from '@tanstack/react-table'
-import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, Search, Eye, Building2, CreditCard, Calendar, DollarSign, Users } from 'lucide-react'
+import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, Search, Eye, Building2, CreditCard, Calendar, DollarSign, Users, Loader2 } from 'lucide-react'
 import VendorRateForm from '../Forms/VendorRate'
-import { generateDummyData } from '../../constants/constants'
-
+import { getAllVendorRates, createVendorRate, updateVendorRate, deleteVendorRate } from '../../constants/API/vendorRates'
 
 const VendorRateList = () => {
-    const [data, setData] = useState(() => generateDummyData())
+    const [data, setData] = useState([])
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingData, setEditingData] = useState(null)
     const [isEdit, setIsEdit] = useState(false)
     const [globalFilter, setGlobalFilter] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [submitting, setSubmitting] = useState(false)
 
     const columnHelper = createColumnHelper()
 
+    // Fetch data on component mount
+    useEffect(() => {
+        fetchVendorRates()
+    }, [])
+
+    const fetchVendorRates = async () => {
+        try {
+            setLoading(true)
+            const response = await getAllVendorRates()
+            setData(response.data || response || [])
+        } catch (error) {
+            console.error('Error fetching vendor rates:', error)
+            setData([])
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const columns = useMemo(() => [
-        columnHelper.accessor('vendorId', {
-            header: 'Vendor ID',
+        columnHelper.accessor('id', {
+            header: 'ID',
             cell: info => (
                 <span className="font-mono text-sm">{info.getValue()}</span>
             ),
-            size: 100
+            size: 80
         }),
-        columnHelper.accessor('vendorName', {
+        columnHelper.accessor('vendor.name', {
             header: 'Vendor Name',
             cell: info => (
                 <div>
-                    <div className="font-medium text-gray-900">{info.getValue()}</div>
-                    <div className="text-sm text-gray-500">{info.row.original.rental.deviceType}</div>
+                    <div className="font-medium text-gray-900">{info.getValue() || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{info.row.original.vendor?.code || 'N/A'}</div>
                 </div>
             ),
         }),
-        columnHelper.accessor('rental.monthlyRate', {
-            header: 'Monthly Rate',
+        columnHelper.accessor('product.name', {
+            header: 'Product',
             cell: info => (
-                <div className="font-semibold text-green-700">₹{info.getValue()}</div>
+                <div>
+                    <div className="font-medium text-gray-900">{info.getValue() || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{info.row.original.productCode || 'N/A'}</div>
+                </div>
+            ),
+        }),
+        columnHelper.accessor('monthlyRent', {
+            header: 'Monthly Rent',
+            cell: info => (
+                <div className="font-semibold text-green-700">
+                    ₹{info.getValue() ? parseFloat(info.getValue()).toLocaleString('en-IN') : 'N/A'}
+                </div>
             ),
             size: 120
         }),
-        columnHelper.accessor('cardRates', {
+        columnHelper.accessor('vendorCardRates', {
             header: 'Card Rates',
             cell: info => {
-                const rates = info.getValue()
+                const rates = info.getValue() || []
                 const displayRates = rates.slice(0, 2)
                 const hasMore = rates.length > 2
 
                 return (
                     <div className="space-y-1">
-                        {displayRates.map((rate, index) => (
-                            <div key={index} className="text-xs">
-                                <span className="text-gray-600">{rate.cardType}:</span>{' '}
-                                <span className="font-medium">{rate.rate}%</span>
-                            </div>
-                        ))}
+                        {displayRates.length > 0 ? (
+                            displayRates.map((rate, index) => (
+                                <div key={index} className="text-xs">
+                                    <span className="text-gray-600">{rate.cardType}:</span>{' '}
+                                    <span className="font-medium">{rate.rate}%</span>
+                                </div>
+                            ))
+                        ) : (
+                            <span className="text-xs text-gray-500">No rates</span>
+                        )}
                         {hasMore && (
                             <div className="text-xs text-gray-500">
                                 +{rates.length - 2} more...
@@ -68,7 +102,7 @@ const VendorRateList = () => {
             cell: info => (
                 <div>
                     <div className="font-medium text-gray-900">
-                        {new Date(info.getValue()).toLocaleDateString('en-IN')}
+                        {info.getValue() ? new Date(info.getValue()).toLocaleDateString('en-IN') : 'N/A'}
                     </div>
                     <div className="text-sm text-gray-500">
                         {info.row.original.expiryDate
@@ -79,15 +113,42 @@ const VendorRateList = () => {
                 </div>
             ),
         }),
-        columnHelper.accessor('status', {
+        columnHelper.accessor(row => {
+            // Calculate status based on dates
+            const currentDate = new Date()
+            const effectiveDate = new Date(row.effectiveDate)
+            const expiryDate = row.expiryDate ? new Date(row.expiryDate) : null
+
+            if (expiryDate && currentDate > expiryDate) {
+                return 'Expired'
+            } else if (currentDate >= effectiveDate) {
+                return 'Active'
+            } else {
+                return 'Pending'
+            }
+        }, {
+            id: 'status',
             header: 'Status',
             cell: info => {
                 const status = info.getValue()
+                let statusClass = ''
+
+                switch (status) {
+                    case 'Active':
+                        statusClass = 'bg-green-100 text-green-800'
+                        break
+                    case 'Expired':
+                        statusClass = 'bg-red-100 text-red-800'
+                        break
+                    case 'Pending':
+                        statusClass = 'bg-yellow-100 text-yellow-800'
+                        break
+                    default:
+                        statusClass = 'bg-gray-100 text-gray-800'
+                }
+
                 return (
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${status === 'Active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                        }`}>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusClass}`}>
                         {status}
                     </span>
                 )
@@ -103,6 +164,7 @@ const VendorRateList = () => {
                         onClick={() => handleView(info.row.original)}
                         className="p-1 text-blue-600 hover:bg-blue-100 rounded"
                         title="View Details"
+                        disabled={submitting}
                     >
                         <Eye className="h-4 w-4" />
                     </button>
@@ -110,6 +172,7 @@ const VendorRateList = () => {
                         onClick={() => handleEdit(info.row.original)}
                         className="p-1 text-green-600 hover:bg-green-100 rounded"
                         title="Edit Rate"
+                        disabled={submitting}
                     >
                         <Edit className="h-4 w-4" />
                     </button>
@@ -117,6 +180,7 @@ const VendorRateList = () => {
                         onClick={() => handleDelete(info.row.original.id)}
                         className="p-1 text-red-600 hover:bg-red-100 rounded"
                         title="Delete Rate"
+                        disabled={submitting}
                     >
                         <Trash2 className="h-4 w-4" />
                     </button>
@@ -124,7 +188,7 @@ const VendorRateList = () => {
             ),
             size: 100
         })
-    ], [])
+    ], [submitting])
 
     const table = useReactTable({
         data,
@@ -139,7 +203,7 @@ const VendorRateList = () => {
         onGlobalFilterChange: setGlobalFilter,
         initialState: {
             pagination: {
-                pageSize: 5
+                pageSize: 10
             }
         }
     })
@@ -148,7 +212,6 @@ const VendorRateList = () => {
         setEditingData(null)
         setIsEdit(false)
         setIsFormOpen(true)
-        console.log("jjj")
     }
 
     const handleEdit = (vendorData) => {
@@ -159,37 +222,99 @@ const VendorRateList = () => {
 
     const handleView = (vendorData) => {
         console.log('View vendor rate:', vendorData)
-        alert(`Viewing details for ${vendorData.vendorName}`)
+
+        // Create a detailed view string
+        const details = `
+Vendor: ${vendorData.vendor?.name || 'N/A'}
+Product: ${vendorData.product?.name || 'N/A'} (${vendorData.productCode || 'N/A'})
+Monthly Rent: ₹${vendorData.monthlyRent ? parseFloat(vendorData.monthlyRent).toLocaleString('en-IN') : 'N/A'}
+Effective Date: ${vendorData.effectiveDate ? new Date(vendorData.effectiveDate).toLocaleDateString('en-IN') : 'N/A'}
+Expiry Date: ${vendorData.expiryDate ? new Date(vendorData.expiryDate).toLocaleDateString('en-IN') : 'No expiry'}
+Card Rates: ${vendorData.vendorCardRates?.length || 0} rate(s)
+Remarks: ${vendorData.remark || 'None'}
+        `
+
+        alert(details.trim())
     }
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this vendor rate?')) {
-            setData(prev => prev.filter(item => item.id !== id))
+            try {
+                setSubmitting(true)
+                await deleteVendorRate(id)
+                await fetchVendorRates() // Refresh the data
+            } catch (error) {
+                console.error('Error deleting vendor rate:', error)
+            } finally {
+                setSubmitting(false)
+            }
         }
     }
 
-    const handleFormSubmit = (formData) => {
-        if (isEdit) {
-            setData(prev => prev.map(item =>
-                item.id === editingData.id
-                    ? { ...formData, id: editingData.id, status: item.status }
-                    : item
-            ))
-        } else {
-            const newData = {
-                ...formData,
-                id: Math.max(...data.map(d => d.id)) + 1,
-                status: 'Active'
+    const handleFormSubmit = async (formData) => {
+        try {
+            setSubmitting(true)
+            let success = false
+
+            if (isEdit) {
+                await updateVendorRate(editingData.id, formData)
+                success = true
+            } else {
+                await createVendorRate(formData)
+                success = true
             }
-            setData(prev => [...prev, newData])
+
+            // Only close form and refresh data on success
+            if (success) {
+                await fetchVendorRates() // Refresh the data
+                setIsFormOpen(false)
+                setEditingData(null)
+                setIsEdit(false)
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error)
+            // Don't close the form on error - let user retry
+        } finally {
+            setSubmitting(false)
         }
-        setIsFormOpen(false)
-        setEditingData(null)
     }
 
     const handleFormCancel = () => {
         setIsFormOpen(false)
         setEditingData(null)
+        setIsEdit(false)
+    }
+
+    // Calculate stats safely based on backend structure
+    const stats = useMemo(() => {
+        const totalVendors = data.length
+
+        // Calculate status for each record
+        const currentDate = new Date()
+        const activeRates = data.filter(d => {
+            const effectiveDate = new Date(d.effectiveDate)
+            const expiryDate = d.expiryDate ? new Date(d.expiryDate) : null
+            return currentDate >= effectiveDate && (!expiryDate || currentDate <= expiryDate)
+        }).length
+
+        const expiredRates = data.filter(d =>
+            d.expiryDate && new Date(d.expiryDate) < currentDate
+        ).length
+
+       
+
+        return { totalVendors, activeRates, expiredRates }
+    }, [data])
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Loading vendor rates...</p>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -207,9 +332,14 @@ const VendorRateList = () => {
                         </div>
                         <button
                             onClick={handleAddVendorRate}
-                            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                            disabled={submitting}
+                            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Plus className="h-5 w-5" />
+                            {submitting ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                                <Plus className="h-5 w-5" />
+                            )}
                             <span>Add Rate</span>
                         </button>
                     </div>
@@ -223,8 +353,8 @@ const VendorRateList = () => {
                                 <Users className="h-6 w-6 text-blue-600" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Total Vendors</p>
-                                <p className="text-2xl font-bold text-gray-900">{data.length}</p>
+                                <p className="text-sm font-medium text-gray-600">Total Rates</p>
+                                <p className="text-2xl font-bold text-gray-900">{stats.totalVendors}</p>
                             </div>
                         </div>
                     </div>
@@ -235,9 +365,7 @@ const VendorRateList = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Active Rates</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {data.filter(d => d.status === 'Active').length}
-                                </p>
+                                <p className="text-2xl font-bold text-gray-900">{stats.activeRates}</p>
                             </div>
                         </div>
                     </div>
@@ -248,25 +376,11 @@ const VendorRateList = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Expired Rates</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {data.filter(d => d.expiryDate && new Date(d.expiryDate) < new Date()).length}
-                                </p>
+                                <p className="text-2xl font-bold text-gray-900">{stats.expiredRates}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-yellow-100 rounded-lg">
-                                <DollarSign className="h-6 w-6 text-yellow-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Avg Monthly Rate</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    ₹{(data.reduce((sum, d) => sum + parseFloat(d.rental.monthlyRate), 0) / data.length).toFixed(0)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                   
                 </div>
 
                 {/* Table Card */}
@@ -283,6 +397,7 @@ const VendorRateList = () => {
                                         onChange={(e) => setGlobalFilter(e.target.value)}
                                         className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Search vendor rates..."
+                                        disabled={submitting}
                                     />
                                 </div>
                             </div>
@@ -314,53 +429,67 @@ const VendorRateList = () => {
                                 ))}
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {table.getRowModel().rows.map(row => (
-                                    <tr key={row.id} className="hover:bg-gray-50">
-                                        {row.getVisibleCells().map(cell => (
-                                            <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </td>
-                                        ))}
+                                {data.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={columns.length} className="px-6 py-12 text-center">
+                                            <div className="text-gray-500">
+                                                <CreditCard className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                                <p className="text-lg font-medium">No vendor rates found</p>
+                                                <p className="text-sm">Get started by adding a new vendor rate.</p>
+                                            </div>
+                                        </td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    table.getRowModel().rows.map(row => (
+                                        <tr key={row.id} className="hover:bg-gray-50">
+                                            {row.getVisibleCells().map(cell => (
+                                                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
 
                     {/* Pagination */}
-                    <div className="px-6 py-4 border-t border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-700">
-                                    Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
-                                    {Math.min(
-                                        (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                                        table.getFilteredRowModel().rows.length
-                                    )}{' '}
-                                    of {table.getFilteredRowModel().rows.length} results
-                                </span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <button
-                                    onClick={() => table.previousPage()}
-                                    disabled={!table.getCanPreviousPage()}
-                                    className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                </button>
-                                <span className="text-sm text-gray-700">
-                                    Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                                </span>
-                                <button
-                                    onClick={() => table.nextPage()}
-                                    disabled={!table.getCanNextPage()}
-                                    className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                                >
-                                    <ChevronRight className="h-4 w-4" />
-                                </button>
+                    {data.length > 0 && (
+                        <div className="px-6 py-4 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-700">
+                                        Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+                                        {Math.min(
+                                            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                                            table.getFilteredRowModel().rows.length
+                                        )}{' '}
+                                        of {table.getFilteredRowModel().rows.length} results
+                                    </span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() => table.previousPage()}
+                                        disabled={!table.getCanPreviousPage() || submitting}
+                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </button>
+                                    <span className="text-sm text-gray-700">
+                                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                                    </span>
+                                    <button
+                                        onClick={() => table.nextPage()}
+                                        disabled={!table.getCanNextPage() || submitting}
+                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
 
@@ -371,6 +500,7 @@ const VendorRateList = () => {
                     onCancel={handleFormCancel}
                     initialData={editingData}
                     isEdit={isEdit}
+                    submitting={submitting}
                 />
             )}
         </div>

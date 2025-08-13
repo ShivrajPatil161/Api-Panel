@@ -33,6 +33,7 @@ import MerchantListComponent from '../components/Tables/MerchantList.jsx'
 import ErrorPage from '../components/ErrorPage.jsx'
 import VendorProductUploadForm from '../components/Forms/FileUpload.jsx'
 import AdminApproval from '../components/Admin/AdminApproval.jsx'
+import InventoryManagement from '../components/Inventory.jsx'
 
 
 
@@ -99,6 +100,10 @@ export const router = createBrowserRouter([
               {
                 index: true,
                 element: <ProductList />
+              },
+              {
+                path: "inventory",
+                element: <InventoryManagement />
               },
               {
                 path: "pricing",

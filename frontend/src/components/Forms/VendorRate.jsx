@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
-import { X, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X } from 'lucide-react'
 
 // ==================== FORM COMPONENTS ====================
 
@@ -51,84 +51,84 @@ const Select = ({ label, name, register, errors, options, required = false, ...p
   </div>
 )
 
-// Vendor Details Component
-const VendorDetails = ({ register, errors }) => (
-  <div className="bg-gray-50 p-4 rounded-lg">
-    <h3 className="text-lg font-semibold text-gray-700 mb-4">Vendor Details</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Input
-        label="Vendor Name"
-        name="vendorName"
-        register={register}
-        errors={errors}
-        required
-        placeholder="Enter vendor name"
-      />
-      <Input
-        label="Vendor ID"
-        name="vendorId"
-        register={register}
-        errors={errors}
-        required
-        placeholder="Enter vendor ID"
-      />
-      <Input
-        label="Effective Date"
-        name="effectiveDate"
-        register={register}
-        errors={errors}
-        type="date"
-        required
-      />
-      <Input
-        label="Expiry Date"
-        name="expiryDate"
-        register={register}
-        errors={errors}
-        type="date"
-      />
-    </div>
-  </div>
-)
+// Vendor and Product Selection Component
+const VendorProductDetails = ({ register, errors }) => {
+  // Mock data - replace with actual API calls
+  const vendorOptions = [
+    { value: '1', label: 'Vendor A' },
+    { value: '2', label: 'Vendor B' }
+  ]
 
-// Rental Rate Component
-const RentalRate = ({ register, errors }) => {
-  const deviceOptions = [
-    { value: 'POS Machine', label: 'POS Machine' },
-    { value: 'QR Code', label: 'QR Code' }
-    
+  const productOptions = [
+    { value: '1', label: 'POS Machine' },
+    { value: '2', label: 'QR Code Scanner' }
   ]
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Rental Rate</h3>
+      <h3 className="text-lg font-semibold text-gray-700 mb-4">Vendor & Product Details</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Select
-          label="Product Category"
-          name="rental.deviceType"
+          label="Vendor"
+          name="vendorId"
           register={register}
           errors={errors}
-          options={deviceOptions}
+          options={vendorOptions}
           required
         />
         <Select
           label="Product"
-          name="rental.deviceType"
+          name="productId"
           register={register}
           errors={errors}
-          options={deviceOptions}
+          options={productOptions}
           required
         />
         <Input
-          label="Monthly Rate (₹)"
-          name="rental.monthlyRate"
+          label="Product Code"
+          name="productCode"
+          register={register}
+          errors={errors}
+          required
+          placeholder="Enter product code"
+        />
+        <Input
+          label="Effective Date"
+          name="effectiveDate"
+          register={register}
+          errors={errors}
+          type="date"
+          required
+        />
+        <Input
+          label="Expiry Date"
+          name="expiryDate"
+          register={register}
+          errors={errors}
+          type="date"
+          required
+        />
+      </div>
+    </div>
+  )
+}
+
+// Monthly Rent Component
+const MonthlyRent = ({ register, errors }) => {
+  return (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Rent</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="Monthly Rent (₹)"
+          name="monthlyRent"
           register={register}
           errors={errors}
           type="number"
           step="0.01"
-          min="0"
+          min="0.01"
           required
-          placeholder="Enter monthly rental"
+          placeholder="Enter monthly rent"
         />
       </div>
     </div>
@@ -144,12 +144,12 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
           Card Type <span className="text-red-500">*</span>
         </label>
         <input
-          {...register(`cardRates.${index}.cardType`, { required: 'Card type is required' })}
+          {...register(`vendorCardRates.${index}.cardType`, { required: 'Card type is required' })}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Enter card type"
         />
-        {errors.cardRates?.[index]?.cardType && (
-          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].cardType.message}</p>
+        {errors.vendorCardRates?.[index]?.cardType && (
+          <p className="mt-1 text-sm text-red-500">{errors.vendorCardRates[index].cardType.message}</p>
         )}
       </div>
 
@@ -158,7 +158,7 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
           Rate (%) <span className="text-red-500">*</span>
         </label>
         <input
-          {...register(`cardRates.${index}.rate`, {
+          {...register(`vendorCardRates.${index}.rate`, {
             required: 'Rate is required',
             min: { value: 0, message: 'Rate must be positive' },
             max: { value: 100, message: 'Rate cannot exceed 100%' }
@@ -170,8 +170,8 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="e.g., 2.5"
         />
-        {errors.cardRates?.[index]?.rate && (
-          <p className="mt-1 text-sm text-red-500">{errors.cardRates[index].rate.message}</p>
+        {errors.vendorCardRates?.[index]?.rate && (
+          <p className="mt-1 text-sm text-red-500">{errors.vendorCardRates[index].rate.message}</p>
         )}
       </div>
 
@@ -191,21 +191,20 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
 const CardRates = ({ control, register, errors }) => {
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "cardRates"
+    name: "vendorCardRates"
   })
 
   const [selectedCardType, setSelectedCardType] = useState('')
 
   const predefinedCardTypes = [
-    { value: 'credit', label: 'Credit Card' },
-    { value: 'debit', label: 'Debit Card' },
-    { value: 'american_express', label: 'American Express' }
+    { value: 'Credit Card', label: 'Credit Card' },
+    { value: 'Debit Card', label: 'Debit Card' },
+    { value: 'American Express', label: 'American Express' }
   ]
 
   const addPredefinedCardRate = () => {
     if (selectedCardType) {
-      const cardTypeLabel = predefinedCardTypes.find(type => type.value === selectedCardType)?.label || selectedCardType
-      append({ cardType: cardTypeLabel, rate: '' })
+      append({ cardType: selectedCardType, rate: '' })
       setSelectedCardType('')
     }
   }
@@ -277,33 +276,28 @@ const CardRates = ({ control, register, errors }) => {
 const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
   const getDefaultValues = () => ({
     vendorId: '',
-    vendorName: '',
+    productId: '',
+    productCode: '',
     effectiveDate: '',
     expiryDate: '',
-    rental: {
-      deviceType: '',
-      monthlyRate: ''
-    },
-    cardRates: [],
-    remarks: ''
+    monthlyRent: '',
+    vendorCardRates: [],
+    remark: ''
   })
 
   const {
     control,
     register,
     handleSubmit,
-    formState: { errors },
-    
+    formState: { errors }
   } = useForm({
     defaultValues: initialData || getDefaultValues()
   })
 
-
-
   const onFormSubmit = (data) => {
     const filteredData = {
       ...data,
-      cardRates: data.cardRates.filter(rate => rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim())
+      vendorCardRates: data.vendorCardRates.filter(rate => rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim())
     }
 
     onSubmit(filteredData)
@@ -313,8 +307,6 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
   const handleCancel = () => {
     onCancel()
   }
-
-
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -336,8 +328,8 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
         {/* Modal Body */}
         <div className="p-6">
           <div className="space-y-6">
-            <VendorDetails register={register} errors={errors} />
-            <RentalRate register={register} errors={errors} />
+            <VendorProductDetails register={register} errors={errors} />
+            <MonthlyRent register={register} errors={errors} />
             <CardRates control={control} register={register} errors={errors} />
 
             {/* Remarks */}
@@ -347,7 +339,7 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
                   Remarks
                 </label>
                 <textarea
-                  {...register('remarks')}
+                  {...register('remark')}
                   rows="3"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter any additional remarks about the vendor rates"
