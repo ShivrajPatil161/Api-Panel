@@ -1,5 +1,6 @@
 package com.project2.ism.Controller;
 
+import com.project2.ism.DTO.VendorIDNameDTO;
 import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Service.VendorService;
 import jakarta.persistence.EntityNotFoundException;
@@ -45,6 +46,12 @@ public class VendorController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    // get all vendor with just id and name
+    @GetMapping("/id_name")
+    public ResponseEntity<List<VendorIDNameDTO>> getAllVendorsIdAndName(){
+        return ResponseEntity.ok(vendorService.getAllVendorsIdAndName());
     }
 
     // 🔹 Update Vendor

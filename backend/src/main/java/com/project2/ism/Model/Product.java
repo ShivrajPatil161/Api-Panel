@@ -28,7 +28,7 @@ public class Product {
     private String productCode;
 
     @NotNull(message = "Please select a vendor")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne( optional = false)
     @JoinColumn(name = "vendor_id", nullable = false)
     private Vendor vendor;
 

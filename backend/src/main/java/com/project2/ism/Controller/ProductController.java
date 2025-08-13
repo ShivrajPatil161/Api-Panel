@@ -1,8 +1,7 @@
 package com.project2.ism.Controller;
 
-
-
-import com.project2.ism.Model.Product;
+import com.project2.ism.DTO.ProductDTO;
+import com.project2.ism.Model.ProductCategory;
 import com.project2.ism.Service.ProductService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -22,6 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/products")
+@CrossOrigin(origins = "*")
 public class ProductController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
@@ -33,167 +33,157 @@ public class ProductController {
         this.productService = productService;
     }
 
-    /**
-     * Create a new product
-     */
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
-        logger.info("REST request to create Product: {}", product.getProductCode());
-        Product createdProduct = productService.createProduct(product);
-        return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
+    public ResponseEntity<Map<String, Object>> createProduct(@Valid @RequestBody ProductDTO productDTO) {
+        logger.info("Creating product: {}", productDTO.getProductName());
+
+        try {
+            ProductDTO createdProduct = productService.createProduct(productDTO);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Product created successfully");
+            response.put("data", createdProduct);
+            response.put("generatedProductCode", createdProduct.getProductCode());
+
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            logger.error("Error creating product: {}", e.getMessage());
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Failed to create product: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
     }
 
-    /**
-     * Get all products with pagination and sorting
-     */
     @GetMapping
-    public ResponseEntity<Page<Product>> getAllProducts(
+    public ResponseEntity<Page<ProductDTO>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "productName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
 
-        logger.debug("REST request to get all Products - page: {}, size: {}, sortBy: {}, sortDir: {}",
-                page, size, sortBy, sortDir);
-
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Product> products = productService.getAllProducts(pageable);
+        Page<ProductDTO> products = productService.getAllProducts(pageable);
 
         return ResponseEntity.ok(products);
     }
 
-    /**
-     * Get product by ID
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        logger.debug("REST request to get Product by ID: {}", id);
-        Product product = productService.getProductById(id);
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
+        ProductDTO product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
-
-
-    /**
-     * Get product by product code
-     */
     @GetMapping("/code/{productCode}")
-    public ResponseEntity<Product> getProductByCode(@PathVariable String productCode) {
-        logger.debug("REST request to get Product by code: {}", productCode);
-        Product product = productService.getProductByCode(productCode);
+    public ResponseEntity<ProductDTO> getProductByCode(@PathVariable String productCode) {
+        ProductDTO product = productService.getProductByCode(productCode);
         return ResponseEntity.ok(product);
     }
 
-    /**
-     * Update product
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id,
-                                                 @Valid @RequestBody Product productDetails) {
-        logger.info("REST request to update Product ID: {}", id);
-        Product updatedProduct = productService.updateProduct(id, productDetails);
-        return ResponseEntity.ok(updatedProduct);
+    @PatchMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> updateProduct(@PathVariable Long id,
+                                                             @RequestBody ProductDTO productDTO) {
+        logger.info("Updating product ID: {}", id);
+
+        try {
+            ProductDTO updatedProduct = productService.updateProduct(id, productDTO);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Product updated successfully");
+            response.put("data", updatedProduct);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error updating product: {}", e.getMessage());
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Failed to update product: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
     }
 
-    /**
-     * Delete product
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteProduct(@PathVariable Long id) {
-        logger.info("REST request to delete Product ID: {}", id);
-        productService.deleteProduct(id);
+    public ResponseEntity<Map<String, Object>> deleteProduct(@PathVariable Long id) {
+        logger.info("Deleting product ID: {}", id);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Product deleted successfully");
-        return ResponseEntity.ok(response);
+        try {
+            productService.deleteProduct(id);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Product deleted successfully");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error deleting product: {}", e.getMessage());
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Failed to delete product: " + e.getMessage());
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    /**
-     * Search products
-     */
     @GetMapping("/search")
-    public ResponseEntity<Page<Product>> searchProducts(
+    public ResponseEntity<Page<ProductDTO>> searchProducts(
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "productName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
 
-        logger.debug("REST request to search Products with query: {}", q);
-
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Product> products = productService.searchProducts(q, pageable);
+        Page<ProductDTO> products = productService.searchProducts(q, pageable);
 
         return ResponseEntity.ok(products);
     }
 
-    /**
-     * Get products by category
-     */
-//    @GetMapping("/category/{category}")
-//    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable ProductCategory category) {
-//        logger.debug("REST request to get Products by category: {}", category);
-//        List<Product> products = productService.getProductsByCategory(category);
-//        return ResponseEntity.ok(products);
-//    }
-
-    /**
-     * Get products by status
-     */
-//    @GetMapping("/status/{status}")
-//    public ResponseEntity<List<Product>> getProductsByStatus(@PathVariable ProductStatus status) {
-//        logger.debug("REST request to get Products by status: {}", status);
-//        List<Product> products = productService.getProductsByStatus(status);
-//        return ResponseEntity.ok(products);
-//    }
-
-    /**
-     * Get products by vendor
-     */
     @GetMapping("/vendor/{vendorId}")
-    public ResponseEntity<List<Product>> getProductsByVendor(@PathVariable Long vendorId) {
-        logger.debug("REST request to get Products by vendor: {}", vendorId);
-        List<Product> products = productService.getProductsByVendor(vendorId);
+    public ResponseEntity<List<ProductDTO>> getProductsByVendor(@PathVariable Long vendorId) {
+        List<ProductDTO> products = productService.getProductsByVendor(vendorId);
         return ResponseEntity.ok(products);
     }
 
-    /**
-     * Advanced filtering with pagination
-     */
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<ProductDTO>> getProductsByCategory(@PathVariable Long categoryId) {
+        List<ProductDTO> products = productService.getProductsByCategory(categoryId);
+        return ResponseEntity.ok(products);
+    }
+
     @GetMapping("/filter")
-    public ResponseEntity<Page<Product>> getProductsByCriteria(
-//            @RequestParam(required = false) ProductCategory category,
-//            @RequestParam(required = false) ProductStatus status,
+    public ResponseEntity<Page<ProductDTO>> getProductsByCriteria(
             @RequestParam(required = false) Long vendorId,
             @RequestParam(required = false) String brand,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "productName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
 
-        logger.debug("REST request to filter Products with criteria");
-
         Sort sort = sortDir.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Product> products = productService.getProductsByCriteria(/*category, status,*/ vendorId, brand, pageable);
+        Page<ProductDTO> products = productService.getProductsByCriteria(vendorId, brand, categoryId, pageable);
 
         return ResponseEntity.ok(products);
     }
 
-    /**
-     * Check if product code exists
-     */
     @GetMapping("/exists/{productCode}")
     public ResponseEntity<Map<String, Boolean>> checkProductCodeExists(@PathVariable String productCode) {
-        logger.debug("REST request to check if product code exists: {}", productCode);
         boolean exists = productService.productCodeExists(productCode);
 
         Map<String, Boolean> response = new HashMap<>();
@@ -201,42 +191,15 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get dashboard statistics
-     */
-//    @GetMapping("/stats")
-//    public ResponseEntity<Map<String, Object>> getProductStats() {
-//        logger.debug("REST request to get product statistics");
-//
-//        Map<String, Object> stats = new HashMap<>();
-//        stats.put("totalActive", productService.getProductCountByStatus(ProductStatus.ACTIVE));
-//        stats.put("totalInactive", productService.getProductCountByStatus(ProductStatus.INACTIVE));
-//        stats.put("totalPOS", productService.getProductCountByCategory(ProductCategory.POS));
-//        stats.put("totalQRScanner", productService.getProductCountByCategory(ProductCategory.QR_SCANNER));
-//        stats.put("totalCardReader", productService.getProductCountByCategory(ProductCategory.CARD_READER));
-//        stats.put("totalPrinter", productService.getProductCountByCategory(ProductCategory.PRINTER));
-//        stats.put("totalAccessories", productService.getProductCountByCategory(ProductCategory.ACCESSORIES));
-//
-//        return ResponseEntity.ok(stats);
-//    }
+    @GetMapping("/categories")
+    public ResponseEntity<List<ProductCategory>> getAllCategories() {
+        List<ProductCategory> categories = productService.getAllCategories();
+        return ResponseEntity.ok(categories);
+    }
 
-//    /**
-//     * Activate product
-//     */
-//    @PatchMapping("/{id}/activate")
-//    public ResponseEntity<Product> activateProduct(@PathVariable Long id) {
-//        logger.info("REST request to activate Product ID: {}", id);
-//        Product product = productService.activateProduct(id);
-//        return ResponseEntity.ok(product);
-//    }
-//
-//    /**
-//     * Deactivate product
-//     */
-//    @PatchMapping("/{id}/deactivate")
-//    public ResponseEntity<Product> deactivateProduct(@PathVariable Long id) {
-//        logger.info("REST request to deactivate Product ID: {}", id);
-//        Product product = productService.deactivateProduct(id);
-//        return ResponseEntity.ok(product);
-//    }
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getProductStats() {
+        Map<String, Object> stats = productService.getProductStats();
+        return ResponseEntity.ok(stats);
+    }
 }
