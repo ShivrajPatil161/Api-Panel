@@ -1,42 +1,49 @@
 package com.project2.ism.Model.Users;
 
 import com.project2.ism.Model.ContactPerson;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class Merchant {
+@Entity
+public class Merchant extends CustomerBase {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "franchise_id", nullable = true)
+    private Franchise franchise;
 
-    private String legalName;
+    @NotBlank(message = "Business name required")
+    private String businessName;
 
-    private String businessType;
+    public Merchant() {
+    }
 
-    private String GSTNumber;
+    public Long getId() {
+        return id;
+    }
 
-    private String panNumber;
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    private String registrationNumber;
+    public Franchise getFranchise() {
+        return franchise;
+    }
 
-    private String address;
+    public void setFranchise(Franchise franchise) {
+        this.franchise = franchise;
+    }
 
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "name", column = @Column(name = "contact_person_name")),
-            @AttributeOverride(name = "email", column = @Column(name = "contact_person_email")),
-            @AttributeOverride(name = "phoneNumber", column = @Column(name = "contact_person_phone")),
-            @AttributeOverride(name = "alternatePhoneNum", column = @Column(name = "contact_person_alt_phone")),
-            @AttributeOverride(name = "LandlineNumber", column = @Column(name = "contact_person_landline"))
-    })
-    @NotNull(message = "Contact person details are required")
-    private ContactPerson contactPerson;
+    public String getBusinessName() {
+        return businessName;
+    }
 
-    @Embedded
-    private BankDetails bankDetails;
-
+    public void setBusinessName(String businessName) {
+        this.businessName = businessName;
+    }
 }
