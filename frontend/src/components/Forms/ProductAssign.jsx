@@ -452,25 +452,25 @@ const ProductDistribution = () => {
           </FormField>
 
           {/* Quantity */}
-          {selectedProduct && (
+          
             <FormField label="Quantity to Distribute" error={errors.quantity} required>
               <input
                 type="number"
                 min="1"
-                max={selectedProduct.availableQuantity}
+                max={selectedProduct?.availableQuantity}
                 {...register('quantity', { valueAsNumber: true })}
                 className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-100 ${errors.quantity ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'
                   }`}
                 placeholder="Enter quantity"
               />
               <p className="text-sm text-gray-600">
-                Available: {selectedProduct.availableQuantity}
+                Available: {selectedProduct?.availableQuantity}
               </p>
             </FormField>
-          )}
+          
 
           {/* Merchant Selection */}
-          {(userType === 'franchise' || (userType === 'admin' && selectedFranchise)) && (
+          
             <FormField label="Select Merchant" error={errors.merchant} required>
               <Select
                 placeholder="Choose merchant"
@@ -480,7 +480,7 @@ const ProductDistribution = () => {
                 error={errors.merchant}
               />
             </FormField>
-          )}
+          
         </div>
       </div>
 
