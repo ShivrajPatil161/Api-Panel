@@ -10,7 +10,6 @@ import jakarta.validation.constraints.Pattern;
 @MappedSuperclass
 public abstract class CustomerBase {
 
-
     @NotBlank(message = "Legal name is required")
     private String legalName;
 
