@@ -60,6 +60,10 @@ public class MerchantService {
     }
 
     public List<Merchant> getMerchantsByFranchise(Long franchiseId) {
+        // Optional: check if franchise exists
+        if (!franchiseRepository.existsById(franchiseId)) {
+            throw new IllegalArgumentException("Franchise not found with ID " + franchiseId);
+        }
         return merchantRepository.findByFranchiseId(franchiseId);
     }
 }
