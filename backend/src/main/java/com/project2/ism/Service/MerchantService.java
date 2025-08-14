@@ -2,6 +2,7 @@ package com.project2.ism.Service;
 
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.Users.Merchant;
+import com.project2.ism.Repository.FranchiseRepository;
 import com.project2.ism.Repository.MerchantRepository;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +13,27 @@ public class MerchantService {
 
     private final MerchantRepository merchantRepository;
 
-    public MerchantService(MerchantRepository merchantRepository) {
+    private final FranchiseRepository franchiseRepository;
+
+    public MerchantService(MerchantRepository merchantRepository, FranchiseRepository franchiseRepository) {
         this.merchantRepository = merchantRepository;
+        this.franchiseRepository = franchiseRepository;
     }
 
     public Merchant createMerchant(Merchant merchant) {
+        // Check if franchise is provided
+
+        if (merchant.getFranchise() != null && merchant.getFranchise().getId() != null) {
+            Long franchiseId = merchant.getFranchise().getId();
+            System.out.printf(String.valueOf(franchiseId));
+            // Verify if franchise exists
+            boolean exists = franchiseRepository.existsById(franchiseId);
+            if (!exists) {
+                throw new IllegalArgumentException("Franchise with ID " + franchiseId + " does not exist");
+            }
+        }
+
+        // Save and return
         return merchantRepository.save(merchant);
     }
 
