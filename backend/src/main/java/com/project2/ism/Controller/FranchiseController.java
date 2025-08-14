@@ -1,13 +1,16 @@
 package com.project2.ism.Controller;
 
 
+import com.project2.ism.DTO.FranchiseFormDTO;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Service.FranchiseService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/franchise")
@@ -19,9 +22,13 @@ public class FranchiseController {
         this.franchiseService = franchiseService;
     }
 
-    @PostMapping
-    public ResponseEntity<Franchise> createFranchise(@Valid @RequestBody Franchise franchise) {
-        return ResponseEntity.ok(franchiseService.createFranchise(franchise));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createFranchise(@ModelAttribute FranchiseFormDTO formDTO) {
+        franchiseService.createFranchise(formDTO);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Franchise created successfully"
+        ));
     }
 
     @GetMapping
