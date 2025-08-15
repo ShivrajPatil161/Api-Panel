@@ -4,8 +4,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 public class FranchiseFormDTO {
 
-    private String customerType; // e.g., "franchise"
-
     private String franchiseName;
     private String legalName;
     private String businessType;
@@ -46,8 +44,8 @@ public class FranchiseFormDTO {
         this.franchiseName = franchiseName;
     }
 
-    public FranchiseFormDTO(String customerType,String franchiseName, String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, MultipartFile panCardDocument, MultipartFile gstCertificate, MultipartFile addressProof, MultipartFile bankProof, MultipartFile franchiseAgreement) {
-        this.customerType = customerType;
+    public FranchiseFormDTO(String franchiseName,    String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, MultipartFile panCardDocument, MultipartFile gstCertificate, MultipartFile addressProof, MultipartFile bankProof, MultipartFile franchiseAgreement) {
+
         this.legalName = legalName;
         this.businessType = businessType;
         this.gstNumber = gstNumber;
@@ -73,13 +71,7 @@ public class FranchiseFormDTO {
         this.franchiseAgreement = franchiseAgreement;
     }
 
-    public String getCustomerType() {
-        return customerType;
-    }
 
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
-    }
 
     public String getLegalName() {
         return legalName;

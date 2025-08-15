@@ -1,15 +1,677 @@
+// import { useState } from 'react'
+// import { useForm } from 'react-hook-form'
+// import api from "../../constants/API/axiosInstance"
+// // Reusable Form Components
+// const FormInput = ({ label, name, register, errors, required = false, type = "text", ...props }) => (
+//   <div>
+//     <label className="block text-sm font-medium text-gray-700 mb-1">
+//       {label} {required && <span className="text-red-500">*</span>}
+//     </label>
+//     <input
+//       type={type}
+//       {...register(name, { required: required && `${label} is required` })}
+//       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//       {...props}
+//     />
+//     {errors[name] && (
+//       <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
+//     )}
+//   </div>
+// )
+
+// const FormSelect = ({ label, name, register, errors, required = false, options, placeholder, ...props }) => (
+//   <div>
+//     <label className="block text-sm font-medium text-gray-700 mb-1">
+//       {label} {required && <span className="text-red-500">*</span>}
+//     </label>
+//     <select
+//       {...register(name, { required: required && `${label} is required` })}
+//       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//       {...props}
+//     >
+//       <option value="">{placeholder || `Select ${label}`}</option>
+//       {options.map(option => (
+//         <option key={option.value} value={option.value}>
+//           {option.label}
+//         </option>
+//       ))}
+//     </select>
+//     {errors[name] && (
+//       <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
+//     )}
+//   </div>
+// )
+
+// const FormTextarea = ({ label, name, register, errors, required = false, ...props }) => (
+//   <div>
+//     <label className="block text-sm font-medium text-gray-700 mb-1">
+//       {label} {required && <span className="text-red-500">*</span>}
+//     </label>
+//     <textarea
+//       {...register(name, { required: required && `${label} is required` })}
+//       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//       {...props}
+//     />
+//     {errors[name] && (
+//       <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
+//     )}
+//   </div>
+// )
+
+// // Document Upload Component
+// const DocumentUpload = ({ label, name, register, errors, required = false, acceptedTypes = ".pdf,.jpg,.jpeg,.png" }) => (
+//   <div>
+//     <label className="block text-sm font-medium text-gray-700 mb-1">
+//       {label} {required && <span className="text-red-500">*</span>}
+//     </label>
+//     <input
+//       type="file"
+//       accept={acceptedTypes}
+//       {...register(name, { required: required && `${label} is required` })}
+//       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+//     />
+//     <p className="mt-1 text-xs text-gray-500">Accepted formats: PDF, JPG, PNG (Max 5MB)</p>
+//     {errors[name] && (
+//       <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
+//     )}
+//   </div>
+// )
+
+// // Basic Details Component
+// const BasicDetailsForm = ({ register, errors, customerType }) => {
+ 
+//   return (
+//     <div className="bg-gray-50 p-6 rounded-lg">
+//       <h3 className="text-lg font-semibold text-gray-800 mb-4">
+//         {customerType === 'franchise' ? 'Franchise' : 'Merchant'} Basic Details
+//       </h3>
+
+//       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//         <FormInput
+//           label={customerType === 'franchise' ? 'Franchise Name' : 'Business Name'}
+//           name="businessName"
+//           register={register}
+//           errors={errors}
+          
+//           placeholder="Enter business name"
+//         />
+
+//         <FormInput
+//           label="Legal Entity Name"
+//           name="legalName"
+//           register={register}
+//           errors={errors}
+          
+//           placeholder="As per registration documents"
+//         />
+
+//         <FormInput
+//           label="Business Type"
+//           name="businessType"
+//           register={register}
+//           errors={errors}
+//           placeholder="Enter business type"
+//         />
+
+//         <FormInput
+//           label="GST Number"
+//           name="gstNumber"
+//           register={register}
+//           errors={errors}
+//           placeholder="Enter GST number"
+//         />
+
+//         <FormInput
+//           label="PAN Number"
+//           name="panNumber"
+//           register={register}
+//           errors={errors}
+          
+//           placeholder="Enter PAN number"
+//         />
+
+//         <FormInput
+//           label="Registration Number"
+//           name="registrationNumber"
+//           register={register}
+//           errors={errors}
+//           placeholder="Company/Shop registration number"
+//         />
+//       </div>
+
+//       <div className="mt-4">
+//         <FormTextarea
+//           label="Business Address"
+//           name="businessAddress"
+//           register={register}
+//           errors={errors}
+          
+//           rows={3}
+//           placeholder="Complete business address"
+//         />
+//       </div>
+//     </div>
+//   )
+// }
+
+// // Contact Details Component
+// const ContactDetailsForm = ({ register, errors }) => (
+//   <div className="bg-gray-50 p-6 rounded-lg">
+//     <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Details</h3>
+
+//     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//       <FormInput
+//         label="Primary Contact Name"
+//         name="primaryContactName"
+//         register={register}
+//         errors={errors}
+        
+//         placeholder="Contact person name"
+//       />
+
+//       <FormInput
+//         label="Primary Contact Mobile"
+//         name="primaryContactMobile"
+//         register={register}
+//         errors={errors}
+        
+//         type="tel"
+//         placeholder="Primary mobile number"
+//       />
+
+//       <FormInput
+//         label="Primary Contact Email"
+//         name="primaryContactEmail"
+//         register={register}
+//         errors={errors}
+        
+//         type="email"
+//         placeholder="Primary email address"
+//       />
+
+//       <FormInput
+//         label="Alternate Mobile"
+//         name="alternateContactMobile"
+//         register={register}
+//         errors={errors}
+//         type="tel"
+//         placeholder="Alternate mobile number"
+//       />
+
+//       <FormInput
+//         label="Landline Number"
+//         name="landlineNumber"
+//         register={register}
+//         errors={errors}
+//         type="tel"
+//         placeholder="Landline with STD code"
+//       />
+//     </div>
+//   </div>
+// )
+
+// // Document Upload Component
+// const DocumentsForm = ({ register, errors, customerType }) => (
+//   <div className="bg-gray-50 p-6 rounded-lg">
+//     <h3 className="text-lg font-semibold text-gray-800 mb-4">Document Upload</h3>
+
+//     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//       <DocumentUpload
+//         label="PAN Card"
+//         name="panCardDocument"
+//         register={register}
+//         errors={errors}
+//         required
+//       />
+
+//       <DocumentUpload
+//         label="GST Certificate"
+//         name="gstCertificate"
+//         register={register}
+//         errors={errors}
+//         required
+//       />
+
+//       <DocumentUpload
+//         label="Address Proof"
+//         name="addressProof"
+//         register={register}
+//         errors={errors}
+//         required
+//       />
+
+//       <DocumentUpload
+//         label="Bank Account Proof"
+//         name="bankProof"
+//         register={register}
+//         errors={errors}
+//         required
+//       />
+
+//       {customerType === 'franchise' && (
+//         <>
+//           <DocumentUpload
+//             label="Franchise Agreement"
+//             name="franchiseAgreement"
+//             register={register}
+//             errors={errors}
+//           />
+
+//           <DocumentUpload
+//             label="Trade License"
+//             name="tradeLicense"
+//             register={register}
+//             errors={errors}
+//           />
+//         </>
+//       )}
+//     </div>
+//   </div>
+// )
+
+// // Bank Details Component
+// const BankDetailsForm = ({ register, errors }) => (
+//   <div className="bg-gray-50 p-6 rounded-lg">
+//     <h3 className="text-lg font-semibold text-gray-800 mb-4">Bank Account Details</h3>
+
+//     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//       <FormInput
+//         label="Bank Name"
+//         name="bankName"
+//         register={register}
+//         errors={errors}
+        
+//         placeholder="Enter bank name"
+//       />
+
+//       <FormInput
+//         label="Account Holder Name"
+//         name="accountHolderName"
+//         register={register}
+//         errors={errors}
+        
+//         placeholder="As per bank records"
+//       />
+
+//       <FormInput
+//         label="Account Number"
+//         name="accountNumber"
+//         register={register}
+//         errors={errors}
+        
+//         placeholder="Bank account number"
+//       />
+
+//       <FormInput
+//         label="IFSC Code"
+//         name="ifscCode"
+//         register={register}
+//         errors={errors}
+        
+//         placeholder="Bank IFSC code"
+//       />
+
+//       <FormInput
+//         label="Branch Name"
+//         name="branchName"
+//         register={register}
+//         errors={errors}
+        
+//         placeholder="Bank branch name"
+//       />
+
+//       <FormSelect
+//         label="Account Type"
+//         name="accountType"
+//         register={register}
+//         errors={errors}
+        
+//         options={[
+//           { value: 'current', label: 'Current Account' },
+//           { value: 'savings', label: 'Savings Account' }
+//         ]}
+//       />
+//     </div>
+//   </div>
+// )
+
+// // Franchise Selection Component
+// const FranchiseSelectionForm = ({ register, errors }) => {
+//   const [hasFranchise, setHasFranchise] = useState('')
+
+//   // Mock franchise data - replace with API call
+//   const availableFranchises = [
+//     { value: 'franchise_001', label: 'TechPay Solutions' },
+//     { value: 'franchise_002', label: 'Digital Commerce Hub' },
+//     { value: 'franchise_003', label: 'PayTech Partners' }
+//   ]
+
+//   return (
+//     <div className="bg-gray-50 p-6 rounded-lg">
+//       <h3 className="text-lg font-semibold text-gray-800 mb-4">Franchise Association</h3>
+
+//       <div className="space-y-4">
+//         <div>
+//           <label className="block text-sm font-medium text-gray-700 mb-3">
+//             Do you belong to a franchise?
+//           </label>
+//           <div className="space-y-2">
+//             <label className="flex items-center">
+//               <input
+//                 type="radio"
+//                 value="yes"
+//                 {...register('hasFranchise', { required: 'Please select an option' })}
+//                 onChange={(e) => setHasFranchise(e.target.value)}
+//                 className="mr-2"
+//               />
+//               <span>Yes, I belong to a franchise</span>
+//             </label>
+//             <label className="flex items-center">
+//               <input
+//                 type="radio"
+//                 value="no"
+//                 {...register('hasFranchise', { required: 'Please select an option' })}
+//                 onChange={(e) => setHasFranchise(e.target.value)}
+//                 className="mr-2"
+//               />
+//               <span>No, I'm an independent merchant</span>
+//             </label>
+//           </div>
+//           {errors.hasFranchise && (
+//             <p className="mt-1 text-sm text-red-600">{errors.hasFranchise.message}</p>
+//           )}
+//         </div>
+
+//         {hasFranchise === 'yes' && (
+//           <FormSelect
+//             label="Select Your Franchise"
+//             name="franchiseId"
+//             register={register}
+//             errors={errors}
+//             required
+//             options={availableFranchises}
+//             placeholder="Choose your franchise"
+//           />
+//         )}
+//       </div>
+//     </div>
+//   )
+// }
+
+// // Main Onboarding Component
+// const CustomerOnboarding = ({
+//   merchant,
+//   onClose,
+//   isFranchiseContext = false,
+//   isModal = false
+// }) => {
+//   const [customerType, setCustomerType] = useState(
+//     isFranchiseContext ? 'merchant' : (merchant || "")
+//   )
+//   const [currentStep, setCurrentStep] = useState(isFranchiseContext ? 3 : 1)
+//   const [formData, setFormData] = useState({})
+
+//   const { register, handleSubmit, formState: { errors }, reset } = useForm()
+
+//   const getStepsForCustomerType = () => {
+//     const baseSteps = ['Customer Type']
+
+//     if (customerType === 'franchise') {
+//       return [...baseSteps, 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
+//     } else if (customerType === 'merchant') {
+//       return [...baseSteps, 'Franchise Info', 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
+//     } else if (customerType === 'franchise_merchant') {
+//       return [...baseSteps, 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
+//     }
+
+//     return baseSteps
+//   }
+
+//   const steps = getStepsForCustomerType()
+
+//   const handleCustomerTypeSelect = (type) => {
+//     setCustomerType(type)
+//     setCurrentStep(2)
+//   }
+
+//   const handleStepSubmit = async (data) => {
+//     setFormData(prev => ({ ...prev, ...data }))
+
+//     if (currentStep < steps.length) {
+//       setCurrentStep(currentStep + 1)
+//     } else {
+//       // Final submission
+//       const finalData = { ...formData, ...data, customerType }
+      
+//       console.log('Customer Onboarding Data:', finalData)
+//       if (isFranchiseContext) {
+//         finalData.franchiseName = finalData.businessName;
+//         const response = await api.post("/franchise", finalData, {
+//         headers: { "Content-Type": "multipart/form-data" }
+//       });
+//       }
+//       else {
+//         finalData.franchiseId = 1;
+//         const response = await api.post("/merchants", finalData, {
+//           //headers: { "Content-Type": "multipart/form-data" }
+//         });
+//       }
+//       const successMessage = isFranchiseContext
+//         ? 'Merchant added successfully!'
+//         : 'Customer onboarding completed successfully!'
+
+//       alert(successMessage)
+
+//       // Reset form
+//       reset()
+//       setFormData({})
+
+//       if (isFranchiseContext && onClose) {
+//         onClose()
+//       } else {
+//         setCurrentStep(1)
+//         setCustomerType('')
+//       }
+//     }
+//   }
+
+//   const goToPreviousStep = () => {
+//     const minStep = isFranchiseContext ? 3 : 1
+//     if (currentStep > minStep) {
+//       setCurrentStep(currentStep - 1)
+//     }
+//   }
+
+//   // Get visible steps for progress bar
+//   const getVisibleSteps = () => {
+//     if (isFranchiseContext) {
+//       return steps.slice(2) // Skip 'Customer Type' and 'Franchise Info'
+//     }
+//     return steps
+//   }
+
+//   const visibleSteps = getVisibleSteps()
+//   const progressStepNumber = isFranchiseContext ? currentStep - 2 : currentStep
+
+//   // Container class based on context
+//   const containerClass = isModal
+//     ? "space-y-6"
+//     : "max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg"
+
+//   return (
+//     <div className={containerClass}>
+//       {!isModal && (
+//         <h1 className="text-2xl font-bold text-gray-800 mb-6">Customer Onboarding</h1>
+//       )}
+
+//       {/* Progress Steps */}
+//       <div className="mb-8">
+//         <div className="flex justify-between items-center">
+//           {visibleSteps.map((step, index) => (
+//             <div key={index} className="flex flex-col items-center">
+//               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${index + 1 <= progressStepNumber
+//                   ? 'bg-blue-600 text-white'
+//                   : 'bg-gray-200 text-gray-600'
+//                 }`}>
+//                 {index + 1}
+//               </div>
+//               <span className="text-xs mt-1 text-gray-600">{step}</span>
+//             </div>
+//           ))}
+//         </div>
+//         <div className="flex mt-2">
+//           <div
+//             className="h-1 bg-blue-600 transition-all duration-300"
+//             style={{ width: `${((progressStepNumber - 1) / (visibleSteps.length - 1)) * 100}%` }}
+//           />
+//           <div
+//             className="flex-1 h-1 bg-gray-200"
+//           />
+//         </div>
+//       </div>
+
+//       {/* Step Content */}
+//       <div className="space-y-6">
+//         {currentStep === 1 && !isFranchiseContext && (
+//           <div className="text-center">
+//             <h2 className="text-xl font-semibold mb-6">Select Customer Type</h2>
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+//               <button
+//                 onClick={() => handleCustomerTypeSelect('franchise')}
+//                 className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+//               >
+//                 <div className="text-4xl mb-2">🏢</div>
+//                 <h3 className="font-semibold">Franchise</h3>
+//                 <p className="text-sm text-gray-600">Register as a franchise owner</p>
+//               </button>
+
+//               <button
+//                 onClick={() => handleCustomerTypeSelect('merchant')}
+//                 className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+//               >
+//                 <div className="text-4xl mb-2">🏪</div>
+//                 <h3 className="font-semibold">Merchant</h3>
+//                 <p className="text-sm text-gray-600">merchant onboarding</p>
+//               </button>
+//             </div>
+//           </div>
+//         )}
+
+//         {currentStep > 1 && (
+//           <div onSubmit={handleSubmit(handleStepSubmit)}>
+//             {/* Franchise Info Step - only for independent merchants and not in franchise context */}
+//             {currentStep === 2 && customerType === 'merchant' && !isFranchiseContext && (
+//               <FranchiseSelectionForm register={register} errors={errors} />
+//             )}
+
+//             {/* Basic Details Step */}
+//             {((currentStep === 2 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
+//               (currentStep === 3 && customerType === 'merchant')) && (
+//                 <BasicDetailsForm
+//                   register={register}
+//                   errors={errors}
+//                   customerType={isFranchiseContext ? 'merchant' : customerType}
+//                 />
+//               )}
+
+//             {/* Contact Details Step */}
+//             {((currentStep === 3 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
+//               (currentStep === 4 && customerType === 'merchant')) && (
+//                 <ContactDetailsForm register={register} errors={errors} />
+//               )}
+
+//             {/* Bank Details Step */}
+//             {((currentStep === 4 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
+//               (currentStep === 5 && customerType === 'merchant')) && (
+//                 <BankDetailsForm register={register} errors={errors} />
+//               )}
+
+//             {/* Documents Step */}
+//             {((currentStep === 5 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
+//               (currentStep === 6 && customerType === 'merchant')) && (
+//                 <DocumentsForm
+//                   register={register}
+//                   errors={errors}
+//                   customerType={isFranchiseContext ? 'merchant' : customerType}
+//                 />
+//               )}
+
+//             {/* Navigation Buttons */}
+//             <div className="flex justify-between mt-8">
+//               <button
+//                 type="button"
+//                 onClick={goToPreviousStep}
+//                 disabled={currentStep <= (isFranchiseContext ? 3 : 1)}
+//                 className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+//               >
+//                 Previous
+//               </button>
+
+//               <button
+//                 type="button"
+//                 onClick={handleSubmit(handleStepSubmit)}
+//                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+//               >
+//                 {currentStep === steps.length ? (
+//                   isFranchiseContext ? 'Add Merchant' : (
+//                     customerType === 'franchise_merchant' ? 'Add Merchant' : 'Complete Onboarding'
+//                   )
+//                 ) : 'Next Step'}
+//               </button>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default CustomerOnboarding
+
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import api from "../../constants/API/axiosInstance"
+import { toast } from 'react-toastify'
+
+// Form validation patterns
+const VALIDATION_PATTERNS = {
+  pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+  gst: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/,
+  ifsc: /^[A-Z]{4}0[A-Z0-9]{6}$/,
+  mobile: /^[6-9]\d{9}$/,
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+}
+
+// File validation
+const FILE_CONSTRAINTS = {
+  maxSize: 5 * 1024 * 1024, // 5MB
+  allowedTypes: ['image/jpeg', 'image/png', 'application/pdf']
+}
 
 // Reusable Form Components
-const FormInput = ({ label, name, register, errors, required = false, type = "text", ...props }) => (
+const FormInput = ({
+  label,
+  name,
+  register,
+  errors,
+  required = false,
+  type = "text",
+  pattern,
+  ...props
+}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <input
       type={type}
-      {...register(name, { required: required && `${label} is required` })}
+      {...register(name, {
+        required: required && `${label} is required`,
+        pattern: pattern && {
+          value: pattern,
+          message: `Invalid ${label} format`
+        }
+      })}
       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       {...props}
     />
@@ -19,7 +681,16 @@ const FormInput = ({ label, name, register, errors, required = false, type = "te
   </div>
 )
 
-const FormSelect = ({ label, name, register, errors, required = false, options, placeholder, ...props }) => (
+const FormSelect = ({
+  label,
+  name,
+  register,
+  errors,
+  required = false,
+  options,
+  placeholder,
+  ...props
+}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -42,7 +713,14 @@ const FormSelect = ({ label, name, register, errors, required = false, options, 
   </div>
 )
 
-const FormTextarea = ({ label, name, register, errors, required = false, ...props }) => (
+const FormTextarea = ({
+  label,
+  name,
+  register,
+  errors,
+  required = false,
+  ...props
+}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -58,16 +736,33 @@ const FormTextarea = ({ label, name, register, errors, required = false, ...prop
   </div>
 )
 
-// Document Upload Component
-const DocumentUpload = ({ label, name, register, errors, required = false, acceptedTypes = ".pdf,.jpg,.jpeg,.png" }) => (
+const DocumentUpload = ({
+  label,
+  name,
+  register,
+  errors,
+  required = false
+}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <input
       type="file"
-      accept={acceptedTypes}
-      {...register(name, { required: required && `${label} is required` })}
+      accept=".pdf,.jpg,.jpeg,.png"
+      {...register(name, {
+        required: required && `${label} is required`,
+        validate: {
+          fileSize: (files) => {
+            if (!files[0]) return true
+            return files[0].size <= FILE_CONSTRAINTS.maxSize || 'File size must be less than 5MB'
+          },
+          fileType: (files) => {
+            if (!files[0]) return true
+            return FILE_CONSTRAINTS.allowedTypes.includes(files[0].type) || 'Only PDF, JPG, and PNG files are allowed'
+          }
+        }
+      })}
       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
     />
     <p className="mt-1 text-xs text-gray-500">Accepted formats: PDF, JPG, PNG (Max 5MB)</p>
@@ -77,84 +772,84 @@ const DocumentUpload = ({ label, name, register, errors, required = false, accep
   </div>
 )
 
-// Basic Details Component
-const BasicDetailsForm = ({ register, errors, customerType }) => {
- 
-  return (
-    <div className="bg-gray-50 p-6 rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        {customerType === 'franchise' ? 'Franchise' : 'Merchant'} Basic Details
-      </h3>
+// Step Components
+const BasicDetailsForm = ({ register, errors, customerType }) => (
+  <div className="bg-gray-50 p-6 rounded-lg">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+      {customerType === 'franchise' ? 'Franchise' : 'Merchant'} Basic Details
+    </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormInput
-          label={customerType === 'franchise' ? 'Franchise Name' : 'Business Name'}
-          name="businessName"
-          register={register}
-          errors={errors}
-          
-          placeholder="Enter business name"
-        />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormInput
+        label={customerType === 'franchise' ? 'Franchise Name' : 'Business Name'}
+        name="businessName"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Enter business name"
+      />
 
-        <FormInput
-          label="Legal Entity Name"
-          name="legalName"
-          register={register}
-          errors={errors}
-          
-          placeholder="As per registration documents"
-        />
+      <FormInput
+        label="Legal Entity Name"
+        name="legalName"
+        register={register}
+        errors={errors}
+        required
+        placeholder="As per registration documents"
+      />
 
-        <FormInput
-          label="Business Type"
-          name="businessType"
-          register={register}
-          errors={errors}
-          placeholder="Enter business type"
-        />
+      <FormInput
+        label="Business Type"
+        name="businessType"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Enter business type"
+      />
 
-        <FormInput
-          label="GST Number"
-          name="gstNumber"
-          register={register}
-          errors={errors}
-          placeholder="Enter GST number"
-        />
+      <FormInput
+        label="GST Number"
+        name="gstNumber"
+        register={register}
+        errors={errors}
+        pattern={VALIDATION_PATTERNS.gst}
+        placeholder="Enter GST number"
+      />
 
-        <FormInput
-          label="PAN Number"
-          name="panNumber"
-          register={register}
-          errors={errors}
-          
-          placeholder="Enter PAN number"
-        />
+      <FormInput
+        label="PAN Number"
+        name="panNumber"
+        register={register}
+        errors={errors}
+        required
+        pattern={VALIDATION_PATTERNS.pan}
+        placeholder="Enter PAN number"
+      />
 
-        <FormInput
-          label="Registration Number"
-          name="registrationNumber"
-          register={register}
-          errors={errors}
-          placeholder="Company/Shop registration number"
-        />
-      </div>
-
-      <div className="mt-4">
-        <FormTextarea
-          label="Business Address"
-          name="businessAddress"
-          register={register}
-          errors={errors}
-          
-          rows={3}
-          placeholder="Complete business address"
-        />
-      </div>
+      <FormInput
+        label="Registration Number"
+        name="registrationNumber"
+        register={register}
+        errors={errors}
+        required
+        placeholder="Company/Shop registration number"
+      />
     </div>
-  )
-}
 
-// Contact Details Component
+    <div className="mt-4">
+      <FormTextarea
+        label="Business Address"
+        name="businessAddress"
+        register={register}
+        errors={errors}
+        required
+        rows={3}
+        placeholder="Complete business address"
+      />
+    </div>
+  </div>
+)
+
 const ContactDetailsForm = ({ register, errors }) => (
   <div className="bg-gray-50 p-6 rounded-lg">
     <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Details</h3>
@@ -165,7 +860,7 @@ const ContactDetailsForm = ({ register, errors }) => (
         name="primaryContactName"
         register={register}
         errors={errors}
-        
+        required
         placeholder="Contact person name"
       />
 
@@ -174,8 +869,9 @@ const ContactDetailsForm = ({ register, errors }) => (
         name="primaryContactMobile"
         register={register}
         errors={errors}
-        
+        required
         type="tel"
+        pattern={VALIDATION_PATTERNS.mobile}
         placeholder="Primary mobile number"
       />
 
@@ -184,8 +880,9 @@ const ContactDetailsForm = ({ register, errors }) => (
         name="primaryContactEmail"
         register={register}
         errors={errors}
-        
+        required
         type="email"
+        pattern={VALIDATION_PATTERNS.email}
         placeholder="Primary email address"
       />
 
@@ -195,6 +892,7 @@ const ContactDetailsForm = ({ register, errors }) => (
         register={register}
         errors={errors}
         type="tel"
+        pattern={VALIDATION_PATTERNS.mobile}
         placeholder="Alternate mobile number"
       />
 
@@ -210,7 +908,6 @@ const ContactDetailsForm = ({ register, errors }) => (
   </div>
 )
 
-// Document Upload Component
 const DocumentsForm = ({ register, errors, customerType }) => (
   <div className="bg-gray-50 p-6 rounded-lg">
     <h3 className="text-lg font-semibold text-gray-800 mb-4">Document Upload</h3>
@@ -229,7 +926,6 @@ const DocumentsForm = ({ register, errors, customerType }) => (
         name="gstCertificate"
         register={register}
         errors={errors}
-        required
       />
 
       <DocumentUpload
@@ -269,7 +965,6 @@ const DocumentsForm = ({ register, errors, customerType }) => (
   </div>
 )
 
-// Bank Details Component
 const BankDetailsForm = ({ register, errors }) => (
   <div className="bg-gray-50 p-6 rounded-lg">
     <h3 className="text-lg font-semibold text-gray-800 mb-4">Bank Account Details</h3>
@@ -280,7 +975,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="bankName"
         register={register}
         errors={errors}
-        
+        required
         placeholder="Enter bank name"
       />
 
@@ -289,7 +984,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="accountHolderName"
         register={register}
         errors={errors}
-        
+        required
         placeholder="As per bank records"
       />
 
@@ -298,7 +993,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="accountNumber"
         register={register}
         errors={errors}
-        
+        required
         placeholder="Bank account number"
       />
 
@@ -307,7 +1002,8 @@ const BankDetailsForm = ({ register, errors }) => (
         name="ifscCode"
         register={register}
         errors={errors}
-        
+        required
+        pattern={VALIDATION_PATTERNS.ifsc}
         placeholder="Bank IFSC code"
       />
 
@@ -316,7 +1012,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="branchName"
         register={register}
         errors={errors}
-        
+        required
         placeholder="Bank branch name"
       />
 
@@ -325,7 +1021,7 @@ const BankDetailsForm = ({ register, errors }) => (
         name="accountType"
         register={register}
         errors={errors}
-        
+        required
         options={[
           { value: 'current', label: 'Current Account' },
           { value: 'savings', label: 'Savings Account' }
@@ -335,11 +1031,10 @@ const BankDetailsForm = ({ register, errors }) => (
   </div>
 )
 
-// Franchise Selection Component
 const FranchiseSelectionForm = ({ register, errors }) => {
   const [hasFranchise, setHasFranchise] = useState('')
 
-  // Mock franchise data - replace with API call
+  // This should be fetched from API in real implementation
   const availableFranchises = [
     { value: 'franchise_001', label: 'TechPay Solutions' },
     { value: 'franchise_002', label: 'Digital Commerce Hub' },
@@ -353,7 +1048,7 @@ const FranchiseSelectionForm = ({ register, errors }) => {
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Do you belong to a franchise?
+            Do you belong to a franchise? <span className="text-red-500">*</span>
           </label>
           <div className="space-y-2">
             <label className="flex items-center">
@@ -398,7 +1093,7 @@ const FranchiseSelectionForm = ({ register, errors }) => {
   )
 }
 
-// Main Onboarding Component
+// Main Component
 const CustomerOnboarding = ({
   merchant,
   onClose,
@@ -408,8 +1103,10 @@ const CustomerOnboarding = ({
   const [customerType, setCustomerType] = useState(
     isFranchiseContext ? 'merchant' : (merchant || "")
   )
-  const [currentStep, setCurrentStep] = useState(isFranchiseContext ? 3 : 1)
+  const [currentStep, setCurrentStep] = useState(isFranchiseContext ? 2 : 1)
   const [formData, setFormData] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm()
 
@@ -420,8 +1117,6 @@ const CustomerOnboarding = ({
       return [...baseSteps, 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
     } else if (customerType === 'merchant') {
       return [...baseSteps, 'Franchise Info', 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
-    } else if (customerType === 'franchise_merchant') {
-      return [...baseSteps, 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
     }
 
     return baseSteps
@@ -432,59 +1127,216 @@ const CustomerOnboarding = ({
   const handleCustomerTypeSelect = (type) => {
     setCustomerType(type)
     setCurrentStep(2)
+    setError('')
   }
 
-  const handleStepSubmit = (data) => {
-    setFormData(prev => ({ ...prev, ...data }))
+  const createFormData = (data) => {
+    const formDataObj = new FormData()
+
+    // Append text fields
+    Object.keys(data).forEach(key => {
+      if (data[key] && typeof data[key] === 'string') {
+        formDataObj.append(key, data[key])
+      }
+    })
+
+    // Append files
+    const fileFields = ['panCardDocument', 'gstCertificate', 'addressProof', 'bankProof', 'franchiseAgreement', 'tradeLicense']
+    fileFields.forEach(field => {
+      if (data[field] && data[field][0]) {
+        formDataObj.append(field, data[field][0])
+      }
+    })
+
+    return formDataObj
+  }
+
+  const handleStepSubmit = async (data) => {
+    setError('')
+    const updatedFormData = { ...formData, ...data }
+    setFormData(updatedFormData)
 
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1)
     } else {
       // Final submission
-      const finalData = { ...formData, ...data, customerType }
-      console.log('Customer Onboarding Data:', finalData)
+      setLoading(true)
 
-      const successMessage = isFranchiseContext
-        ? 'Merchant added successfully!'
-        : 'Customer onboarding completed successfully!'
+      try {
+        const finalData = { ...updatedFormData, customerType }
 
-      alert(successMessage)
+        if (isFranchiseContext) {
+          finalData.franchiseName = finalData.businessName
+          const formDataToSend = createFormData(finalData)
 
-      // Reset form
-      reset()
-      setFormData({})
+          await api.post("/franchise", formDataToSend, {
+            headers: { "Content-Type": "multipart/form-data" }
+          })
+        } else {
+          finalData.franchiseId = finalData.franchiseId || 1
+          const formDataToSend = createFormData(finalData)
 
-      if (isFranchiseContext && onClose) {
-        onClose()
-      } else {
-        setCurrentStep(1)
-        setCustomerType('')
+          await api.post("/merchants", formDataToSend, {
+            headers: { "Content-Type": "multipart/form-data" }
+          })
+        }
+
+        const successMessage = isFranchiseContext
+          ? 'Merchant added successfully!'
+          : 'Customer onboarding completed successfully!'
+
+        toast.success(successMessage)
+
+        // Reset form
+        reset()
+        setFormData({})
+
+        if (isFranchiseContext && onClose) {
+          onClose()
+        } else {
+          setCurrentStep(1)
+          setCustomerType('')
+        }
+      } catch (err) {
+        console.error('API Error:', err)
+        setError(
+          err.response?.data?.message ||
+          'An error occurred during submission. Please try again.'
+        )
+      } finally {
+        setLoading(false)
       }
     }
   }
 
   const goToPreviousStep = () => {
-    const minStep = isFranchiseContext ? 3 : 1
+    const minStep = isFranchiseContext ? 2 : 1
     if (currentStep > minStep) {
       setCurrentStep(currentStep - 1)
+      setError('')
     }
   }
 
-  // Get visible steps for progress bar
   const getVisibleSteps = () => {
     if (isFranchiseContext) {
-      return steps.slice(2) // Skip 'Customer Type' and 'Franchise Info'
+      return steps.slice(1) // Skip 'Customer Type'
     }
     return steps
   }
 
   const visibleSteps = getVisibleSteps()
-  const progressStepNumber = isFranchiseContext ? currentStep - 2 : currentStep
+  const progressStepNumber = isFranchiseContext ? currentStep - 1 : currentStep
 
-  // Container class based on context
   const containerClass = isModal
     ? "space-y-6"
-    : "max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg"
+    : "max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg"
+
+  const renderStepContent = () => {
+    // Customer Type Selection
+    if (currentStep === 1 && !isFranchiseContext) {
+      return (
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-6">Select Customer Type</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <button
+              onClick={() => handleCustomerTypeSelect('franchise')}
+              className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="text-4xl mb-2">🏢</div>
+              <h3 className="font-semibold">Franchise</h3>
+              <p className="text-sm text-gray-600">Register as a franchise owner</p>
+            </button>
+
+            <button
+              onClick={() => handleCustomerTypeSelect('merchant')}
+              className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="text-4xl mb-2">🏪</div>
+              <h3 className="font-semibold">Merchant</h3>
+              <p className="text-sm text-gray-600">Merchant onboarding</p>
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    // Form steps
+    return (
+      <form onSubmit={handleSubmit(handleStepSubmit)}>
+        {/* Franchise Info Step */}
+        {currentStep === 2 && customerType === 'merchant' && !isFranchiseContext && (
+          <FranchiseSelectionForm register={register} errors={errors} />
+        )}
+
+        {/* Basic Details Step */}
+        {((currentStep === 2 && customerType === 'franchise') ||
+          (currentStep === 3 && customerType === 'merchant') ||
+          (currentStep === 2 && isFranchiseContext)) && (
+            <BasicDetailsForm
+              register={register}
+              errors={errors}
+              customerType={isFranchiseContext ? 'merchant' : customerType}
+            />
+          )}
+
+        {/* Contact Details Step */}
+        {((currentStep === 3 && customerType === 'franchise') ||
+          (currentStep === 4 && customerType === 'merchant') ||
+          (currentStep === 3 && isFranchiseContext)) && (
+            <ContactDetailsForm register={register} errors={errors} />
+          )}
+
+        {/* Bank Details Step */}
+        {((currentStep === 4 && customerType === 'franchise') ||
+          (currentStep === 5 && customerType === 'merchant') ||
+          (currentStep === 4 && isFranchiseContext)) && (
+            <BankDetailsForm register={register} errors={errors} />
+          )}
+
+        {/* Documents Step */}
+        {((currentStep === 5 && customerType === 'franchise') ||
+          (currentStep === 6 && customerType === 'merchant') ||
+          (currentStep === 5 && isFranchiseContext)) && (
+            <DocumentsForm
+              register={register}
+              errors={errors}
+              customerType={isFranchiseContext ? 'merchant' : customerType}
+            />
+          )}
+
+        {/* Error Display */}
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between mt-8">
+          <button
+            type="button"
+            onClick={goToPreviousStep}
+            disabled={currentStep <= (isFranchiseContext ? 2 : 1)}
+            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Processing...' : (
+              currentStep === steps.length ? (
+                isFranchiseContext ? 'Add Merchant' : 'Complete Onboarding'
+              ) : 'Next Step'
+            )}
+          </button>
+        </div>
+      </form>
+    )
+  }
 
   return (
     <div className={containerClass}>
@@ -498,8 +1350,8 @@ const CustomerOnboarding = ({
           {visibleSteps.map((step, index) => (
             <div key={index} className="flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${index + 1 <= progressStepNumber
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-600'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-600'
                 }`}>
                 {index + 1}
               </div>
@@ -512,103 +1364,13 @@ const CustomerOnboarding = ({
             className="h-1 bg-blue-600 transition-all duration-300"
             style={{ width: `${((progressStepNumber - 1) / (visibleSteps.length - 1)) * 100}%` }}
           />
-          <div
-            className="flex-1 h-1 bg-gray-200"
-          />
+          <div className="flex-1 h-1 bg-gray-200" />
         </div>
       </div>
 
       {/* Step Content */}
       <div className="space-y-6">
-        {currentStep === 1 && !isFranchiseContext && (
-          <div className="text-center">
-            <h2 className="text-xl font-semibold mb-6">Select Customer Type</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <button
-                onClick={() => handleCustomerTypeSelect('franchise')}
-                className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="text-4xl mb-2">🏢</div>
-                <h3 className="font-semibold">Franchise</h3>
-                <p className="text-sm text-gray-600">Register as a franchise owner</p>
-              </button>
-
-              <button
-                onClick={() => handleCustomerTypeSelect('merchant')}
-                className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="text-4xl mb-2">🏪</div>
-                <h3 className="font-semibold">Merchant</h3>
-                <p className="text-sm text-gray-600">merchant onboarding</p>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {currentStep > 1 && (
-          <div onSubmit={handleSubmit(handleStepSubmit)}>
-            {/* Franchise Info Step - only for independent merchants and not in franchise context */}
-            {currentStep === 2 && customerType === 'merchant' && !isFranchiseContext && (
-              <FranchiseSelectionForm register={register} errors={errors} />
-            )}
-
-            {/* Basic Details Step */}
-            {((currentStep === 2 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
-              (currentStep === 3 && customerType === 'merchant')) && (
-                <BasicDetailsForm
-                  register={register}
-                  errors={errors}
-                  customerType={isFranchiseContext ? 'merchant' : customerType}
-                />
-              )}
-
-            {/* Contact Details Step */}
-            {((currentStep === 3 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
-              (currentStep === 4 && customerType === 'merchant')) && (
-                <ContactDetailsForm register={register} errors={errors} />
-              )}
-
-            {/* Bank Details Step */}
-            {((currentStep === 4 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
-              (currentStep === 5 && customerType === 'merchant')) && (
-                <BankDetailsForm register={register} errors={errors} />
-              )}
-
-            {/* Documents Step */}
-            {((currentStep === 5 && (customerType === 'franchise' || customerType === 'franchise_merchant')) ||
-              (currentStep === 6 && customerType === 'merchant')) && (
-                <DocumentsForm
-                  register={register}
-                  errors={errors}
-                  customerType={isFranchiseContext ? 'merchant' : customerType}
-                />
-              )}
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
-              <button
-                type="button"
-                onClick={goToPreviousStep}
-                disabled={currentStep <= (isFranchiseContext ? 3 : 1)}
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSubmit(handleStepSubmit)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {currentStep === steps.length ? (
-                  isFranchiseContext ? 'Add Merchant' : (
-                    customerType === 'franchise_merchant' ? 'Add Merchant' : 'Complete Onboarding'
-                  )
-                ) : 'Next Step'}
-              </button>
-            </div>
-          </div>
-        )}
+        {renderStepContent()}
       </div>
     </div>
   )

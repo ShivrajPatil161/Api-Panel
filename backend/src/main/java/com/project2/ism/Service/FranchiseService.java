@@ -7,6 +7,7 @@ import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Repository.FranchiseRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,11 +18,15 @@ public class FranchiseService {
     private final FranchiseRepository franchiseRepository;
     private final FileStorageService fileStorageService;
 
-    public FranchiseService(FranchiseRepository franchiseRepository, FileStorageService fileStorageService) {
+    private final UserService userService;
+
+    public FranchiseService(FranchiseRepository franchiseRepository, FileStorageService fileStorageService, UserService userService) {
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
+        this.userService = userService;
     }
 
+    @Transactional
     public void createFranchise(FranchiseFormDTO dto) {
         Franchise franchise = new Franchise();
 
@@ -62,6 +67,12 @@ public class FranchiseService {
         franchise.setUploadDocuments(docs);
 
         franchiseRepository.save(franchise);
+        // Create login for this franchise
+        userService.createAndSendCredentials(
+                dto.getPrimaryContactEmail(), // email
+                "FRANCHISE",                  // role
+                null                          // password (null → auto-generate)
+        );
     }
 
     public List<Franchise> getAllFranchises() {

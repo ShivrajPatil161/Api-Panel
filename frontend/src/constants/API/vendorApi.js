@@ -15,7 +15,7 @@ const vendorApi = {
   // Create new vendor
   async createVendor(vendorData) {
     try {
-      const response = await api.post('/vendor/addVendor', vendorData);
+      const response = await api.post('/vendors', vendorData);
       return response.data;
     } catch (error) {
       console.error('Failed to create vendor:', error);
@@ -26,7 +26,7 @@ const vendorApi = {
   // Update existing vendor
   async updateVendor(id, vendorData) {
     try {
-      const response = await api.put(`/vendor/${id}`, vendorData);
+      const response = await api.put(`/vendors/${id}`, vendorData);
       return response.data;
     } catch (error) {
       console.error('Failed to update vendor:', error);
@@ -37,7 +37,7 @@ const vendorApi = {
   // Delete vendor
   async deleteVendor(id) {
     try {
-      await api.delete(`/vendor/${id}`);
+      await api.delete(`/vendors/${id}`);
       return true;
     } catch (error) {
       console.error('Failed to delete vendor:', error);
@@ -48,7 +48,7 @@ const vendorApi = {
   // Get vendor by ID
   async getVendorById(id) {
     try {
-      const response = await api.get(`/vendor/${id}`);
+      const response = await api.get(`/vendors/${id}`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch vendor:', error);
