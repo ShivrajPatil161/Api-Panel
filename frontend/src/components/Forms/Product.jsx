@@ -67,6 +67,7 @@ const CategorySelectField = ({
   );
 };
 
+
 // Validation Schema
 const productSchema = z.object({
   productName: z.string().min(2, 'Product name must be at least 2 characters'),

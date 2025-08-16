@@ -5,7 +5,7 @@ import Sidebar from './Sidebar.jsx'
 
 const Layout = () => {
 
-  const userType = localStorage.getItem("userType")
+  const userType = localStorage.getItem("userType").toLowerCase()
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}

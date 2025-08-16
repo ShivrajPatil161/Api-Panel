@@ -15,9 +15,12 @@ public class MerchantService {
 
     private final FranchiseRepository franchiseRepository;
 
-    public MerchantService(MerchantRepository merchantRepository, FranchiseRepository franchiseRepository) {
+    private final UserService userService;
+
+    public MerchantService(MerchantRepository merchantRepository, FranchiseRepository franchiseRepository, UserService userService) {
         this.merchantRepository = merchantRepository;
         this.franchiseRepository = franchiseRepository;
+        this.userService = userService;
     }
 
     public Merchant createMerchant(Merchant merchant) {
@@ -32,9 +35,14 @@ public class MerchantService {
                 throw new IllegalArgumentException("Franchise with ID " + franchiseId + " does not exist");
             }
         }
-
+        userService.createAndSendCredentials(
+                "htaien277353@gmail.com",
+                "MERCHANT",
+                null
+        );
         // Save and return
         return merchantRepository.save(merchant);
+
     }
 
     public List<Merchant> getAllMerchants() {
