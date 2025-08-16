@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState,useEffect,useRef } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { X } from 'lucide-react'
+import api from '../../constants/API/axiosInstance'
 
 // ==================== FORM COMPONENTS ====================
 
@@ -26,16 +27,25 @@ const Input = ({ label, name, register, errors, required = false, type = "text",
   </div>
 )
 
-// Reusable Select Component
-const Select = ({ label, name, register, errors, options, required = false, ...props }) => (
+// Reusable Select Component (fixed to support register + custom onChange)
+const Select = ({ label, name, register, errors, options, required = false, onChange, ...props }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <select
       {...register(name, { required: required ? `${label} is required` : false })}
-      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? 'border-red-500' : 'border-gray-300'
+      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? "border-red-500" : "border-gray-300"
         }`}
+      onChange={(e) => {
+        // React Hook Form register will still work
+        register(name).onChange(e)
+        // Call parent custom handler (like fetchProducts)
+        if (onChange) {
+          const selectedOption = options.find(opt => opt.value === e.target.value)
+          onChange(selectedOption || null)
+        }
+      }}
       {...props}
     >
       <option value="">Select {label.toLowerCase()}</option>
@@ -51,18 +61,172 @@ const Select = ({ label, name, register, errors, options, required = false, ...p
   </div>
 )
 
-// Vendor and Product Selection Component
-const VendorProductDetails = ({ register, errors }) => {
-  // Mock data - replace with actual API calls
-  const vendorOptions = [
-    { value: '1', label: 'Vendor A' },
-    { value: '2', label: 'Vendor B' }
-  ]
 
-  const productOptions = [
-    { value: '1', label: 'POS Machine' },
-    { value: '2', label: 'QR Code Scanner' }
-  ]
+
+// Searchable Select Component
+const SearchableSelect = ({
+  label,
+  name,
+  register,
+  errors,
+  options = [],
+  required = false,
+  placeholder = "Search and select...",
+  onChange,
+  disabled = false,
+  ...props
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedOption, setSelectedOption] = useState(null)
+  const [filteredOptions, setFilteredOptions] = useState(options)
+  const dropdownRef = useRef(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    setFilteredOptions(
+      options.filter(option =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+  }, [searchTerm, options])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleSelect = (option) => {
+    setSelectedOption(option)
+    setSearchTerm(option.label)
+    setIsOpen(false)
+    if (onChange) onChange(option)
+  }
+
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value)
+    setIsOpen(true)
+    if (!e.target.value) {
+      setSelectedOption(null)
+      if (onChange) onChange(null)
+    }
+  }
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+
+      <input
+        {...register(name, { required: required ? `${label} is required` : false })}
+        ref={inputRef}
+        type="text"
+        value={searchTerm}
+        onChange={handleInputChange}
+        onFocus={() => setIsOpen(true)}
+        placeholder={placeholder}
+        disabled={disabled}
+        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? 'border-red-500' : 'border-gray-300'
+          } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+        autoComplete="off"
+        {...props}
+      />
+
+      {/* Hidden input for form submission */}
+      <input
+        type="hidden"
+        {...register(`${name}Id`)}
+        value={selectedOption?.value || ''}
+      />
+
+      {isOpen && !disabled && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((option) => (
+              <div
+                key={option.value}
+                onClick={() => handleSelect(option)}
+                className="px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
+              >
+                {option.label}
+              </div>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-gray-500">No options found</div>
+          )}
+        </div>
+      )}
+
+      {errors[name] && (
+        <p className="mt-1 text-sm text-red-500">{errors[name].message}</p>
+      )}
+    </div>
+  )
+}
+
+// Enhanced Vendor Product Details Component
+const VendorProductDetails = ({ register, errors }) => {
+  const [vendors, setVendors] = useState([])
+  const [products, setProducts] = useState([])
+  const [selectedVendor, setSelectedVendor] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [productsLoading, setProductsLoading] = useState(false)
+
+  // Fetch vendors on component mount
+  useEffect(() => {
+    fetchVendors()
+  }, [])
+
+  const fetchVendors = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get('/vendors/id_name')
+      const vendorOptions = response.data.map(vendor => ({
+        value: vendor.id.toString(),
+        label: vendor.name,
+        id: vendor.id
+      }))
+      setVendors(vendorOptions)
+    } catch (error) {
+      console.error('Error fetching vendors:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchProductsByVendor = async (vendorId) => {
+    try {
+      setProductsLoading(true)
+      const response = await api.get(`/products/vendor/${vendorId}`)
+      const productOptions = response.data.map(product => ({
+        value: product.id.toString(),
+        label: `${product.productCode} - ${product.productName}`,
+        productCode: product.productCode,
+        id: product.id
+      }))
+      setProducts(productOptions)
+    } catch (error) {
+      console.error('Error fetching products:', error)
+      setProducts([])
+    } finally {
+      setProductsLoading(false)
+    }
+  }
+
+  const handleVendorChange = (vendor) => {
+    setSelectedVendor(vendor)
+    setProducts([]) // Clear products when vendor changes
+
+    if (vendor && vendor.id) {
+      fetchProductsByVendor(vendor.id)
+    }
+  }
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
@@ -70,28 +234,33 @@ const VendorProductDetails = ({ register, errors }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Select
           label="Vendor"
-          name="vendorId"
+          name="vendor"
           register={register}
           errors={errors}
-          options={vendorOptions}
+          options={vendors}
+          placeholder={loading ? "Loading vendors..." : "Search and select vendor"}
+          onChange={handleVendorChange}
+          disabled={loading}
           required
         />
+
         <Select
-          label="Product"
-          name="productId"
-          register={register}
-          errors={errors}
-          options={productOptions}
-          required
-        />
-        <Input
           label="Product Code"
           name="productCode"
           register={register}
           errors={errors}
+          options={products}
+          placeholder={
+            !selectedVendor
+              ? "Select vendor first"
+              : productsLoading
+                ? "Loading products..."
+                : "Search and select product"
+          }
+          disabled={!selectedVendor || productsLoading}
           required
-          placeholder="Enter product code"
         />
+
         <Input
           label="Effective Date"
           name="effectiveDate"
@@ -100,6 +269,7 @@ const VendorProductDetails = ({ register, errors }) => {
           type="date"
           required
         />
+
         <Input
           label="Expiry Date"
           name="expiryDate"

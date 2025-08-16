@@ -274,7 +274,7 @@ const ProductList = () => {
   // Fetch products from backend
   const fetchProducts = async () => {
     setLoading(true);
-    toast.loading('Fetching products...', { toastId: 'fetch-products' });
+   
 
     try {
       const data = await getProducts(pagination.pageIndex, pagination.pageSize, sorting[0]?.id || 'productName', sorting[0]?.desc ? 'desc' : 'asc', searchQuery);

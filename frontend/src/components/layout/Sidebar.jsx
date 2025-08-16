@@ -111,6 +111,7 @@ const MenuItem = ({
 
 // Reusable Sidebar Header Component
 const SidebarHeader = ({ sidebarCollapsed, onToggle, userType }) => {
+
   const getUserTypeDisplay = (type) => {
     switch (type) {
       case 'admin': return 'Admin Panel';
@@ -174,7 +175,6 @@ const getMenuItems = (userType) => {
         iconColor: '',
         children: [
           { title: 'Product List', path: '/dashboard/inventory', icon: Package },
-          { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: Package },
           { title: 'Product Pricing', path: '/dashboard/inventory/pricing', icon: Calculator },
           { title: 'Product Assign', path: '/dashboard/inventory/products-assign', icon: Calculator },
           { title: 'Inward Entry', path: '/dashboard/inventory/inward', icon: ArrowDown },
@@ -293,9 +293,9 @@ const getMenuItems = (userType) => {
 };
 
 // Main Sidebar Component
-const Sidebar = () => {
+const Sidebar = ({userType}) => {
   const location = useLocation();
-  const [userType, setUserType] = useState('merchant'); // Default fallback
+ console.log(userType)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState({
     vendors: false,
@@ -307,14 +307,7 @@ const Sidebar = () => {
     other: false
   });
 
-  // Get user type from localStorage on component mount
-  useEffect(() => {
-    const storedUserType = localStorage.getItem('userType');
-    if (storedUserType) {
-      setUserType(storedUserType);
-    }
-  }, []);
-
+ 
   const toggleMenu = (menuKey) => {
     setExpandedMenus(prev => ({
       ...prev,

@@ -628,10 +628,12 @@
 
 // export default CustomerOnboarding
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { FileText, X, Download } from 'lucide-react'
 import api from "../../constants/API/axiosInstance"
 import { toast } from 'react-toastify'
+import { DocumentPreview } from '../Tables/CustomerList'
 
 // Form validation patterns
 const VALIDATION_PATTERNS = {
@@ -648,17 +650,152 @@ const FILE_CONSTRAINTS = {
   allowedTypes: ['image/jpeg', 'image/png', 'application/pdf']
 }
 
+// Document Preview Component (Exportable)
+// export const DocumentPreview = ({ documentPath, documentName, onClose }) => {
+//   const [loading, setLoading] = useState(true)
+//   const [error, setError] = useState(null)
+//   const [blobUrl, setBlobUrl] = useState(null)
+
+//   const cleanPath = documentPath
+//     ?.replace(/\\\\/g, '/')
+//     ?.replace(/\\/g, '/')
+//     ?.replace(/^\/+/, '')
+
+//   const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(cleanPath || '')
+//   const isPdf = /\.pdf$/i.test(cleanPath || '')
+//   const filename = cleanPath?.split('/').pop()
+//   const apiUrl = cleanPath ? `/file/files/${cleanPath}` : null
+
+//   useEffect(() => {
+//     if (!apiUrl) return
+
+//     const fetchFile = async () => {
+//       try {
+//         setLoading(true)
+//         const response = await api.get(apiUrl, { responseType: 'blob' })
+//         const blob = response.data
+//         const url = window.URL.createObjectURL(blob)
+//         setBlobUrl(url)
+//         setLoading(false)
+//       } catch (error) {
+//         console.error('File fetch error:', error)
+//         setError('Failed to load document.')
+//         setLoading(false)
+//       }
+//     }
+
+//     fetchFile()
+
+//     return () => {
+//       if (blobUrl) {
+//         window.URL.revokeObjectURL(blobUrl)
+//       }
+//     }
+//   }, [apiUrl, blobUrl])
+
+//   const handleDownload = async () => {
+//     try {
+//       const response = await api.get(apiUrl, { responseType: 'blob' })
+//       const blob = response.data
+//       const url = window.URL.createObjectURL(blob)
+//       const link = document.createElement('a')
+//       link.href = url
+//       link.download = filename || 'download'
+//       document.body.appendChild(link)
+//       link.click()
+//       document.body.removeChild(link)
+//       window.URL.revokeObjectURL(url)
+//     } catch (error) {
+//       toast.error('Download failed. Please try again.')
+//     }
+//   }
+
+//   if (!cleanPath) {
+//     return (
+//       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+//         <div className="bg-white rounded-lg max-w-md w-full p-6 text-center">
+//           <h3 className="text-lg font-semibold mb-2">Document Not Found</h3>
+//           <p className="text-gray-600 mb-4">The document path is invalid or missing.</p>
+//           <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+//             Close
+//           </button>
+//         </div>
+//       </div>
+//     )
+//   }
+
+//   return (
+//     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+//       <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full flex flex-col">
+//         {/* Header */}
+//         <div className="flex items-center justify-between p-4 border-b">
+//           <div>
+//             <h3 className="text-lg font-semibold">{documentName}</h3>
+//             <p className="text-sm text-gray-500">{filename}</p>
+//           </div>
+//           <div className="flex items-center space-x-2">
+//             <button onClick={handleDownload} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100" title="Download">
+//               <Download className="w-5 h-5" />
+//             </button>
+//             <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100" title="Close">
+//               <X className="w-5 h-5" />
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Content */}
+//         <div className="flex-1 overflow-auto p-4">
+//           {loading && (
+//             <div className="flex items-center justify-center h-64">
+//               <span className="text-gray-600">Loading document...</span>
+//             </div>
+//           )}
+
+//           {error && (
+//             <div className="text-center py-8">
+//               <h4 className="text-lg font-semibold mb-2">Error Loading Document</h4>
+//               <p className="text-gray-600 mb-4">{error}</p>
+//               <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+//                 Try Download
+//               </button>
+//             </div>
+//           )}
+
+//           {isImage && !error && blobUrl && (
+//             <div className="flex justify-center">
+//               <img
+//                 src={blobUrl}
+//                 alt={documentName}
+//                 className="max-w-full h-auto rounded-lg shadow-lg"
+//               />
+//             </div>
+//           )}
+
+//           {isPdf && !error && blobUrl && (
+//             <iframe
+//               src={`${blobUrl}#toolbar=1`}
+//               className="w-full h-[600px] border-0 rounded-lg shadow-lg"
+//               title={documentName}
+//             />
+//           )}
+
+//           {!isImage && !isPdf && !error && !loading && (
+//             <div className="text-center py-8">
+//               <h4 className="text-lg font-semibold mb-2">Preview Not Available</h4>
+//               <p className="text-gray-600 mb-4">This document type cannot be previewed. You can download it to view.</p>
+//               <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+//                 Download Document
+//               </button>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
+
 // Reusable Form Components
-const FormInput = ({
-  label,
-  name,
-  register,
-  errors,
-  required = false,
-  type = "text",
-  pattern,
-  ...props
-}) => (
+const FormInput = ({ label, name, register, errors, required = false, type = "text", pattern, ...props }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -681,16 +818,7 @@ const FormInput = ({
   </div>
 )
 
-const FormSelect = ({
-  label,
-  name,
-  register,
-  errors,
-  required = false,
-  options,
-  placeholder,
-  ...props
-}) => (
+const FormSelect = ({ label, name, register, errors, required = false, options, placeholder, ...props }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -713,14 +841,7 @@ const FormSelect = ({
   </div>
 )
 
-const FormTextarea = ({
-  label,
-  name,
-  register,
-  errors,
-  required = false,
-  ...props
-}) => (
+const FormTextarea = ({ label, name, register, errors, required = false, ...props }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -736,22 +857,48 @@ const FormTextarea = ({
   </div>
 )
 
-const DocumentUpload = ({
-  label,
-  name,
-  register,
-  errors,
-  required = false
-}) => (
+// Updated DocumentUpload Component with Preview
+const DocumentUpload = ({  label,  name,  register,  errors,  required = false,  existingFile = null,  onPreview = null,onDelete = null}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
+
+    {/* Show existing file if available */}
+    {existingFile && (
+      <div className="mb-2 p-3 bg-blue-50 rounded border border-blue-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <FileText className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-700">Current file uploaded</span>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => onPreview?.(existingFile, label)}
+              className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+            >
+              Preview
+            </button>
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(name)}
+                className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
     <input
       type="file"
       accept=".pdf,.jpg,.jpeg,.png"
       {...register(name, {
-        required: required && `${label} is required`,
+        required: required && !existingFile && `${label} is required`,
         validate: {
           fileSize: (files) => {
             if (!files[0]) return true
@@ -765,7 +912,10 @@ const DocumentUpload = ({
       })}
       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
     />
-    <p className="mt-1 text-xs text-gray-500">Accepted formats: PDF, JPG, PNG (Max 5MB)</p>
+    <p className="mt-1 text-xs text-gray-500">
+      Accepted formats: PDF, JPG, PNG (Max 5MB)
+      {existingFile && " • Upload new file to replace existing one"}
+    </p>
     {errors[name] && (
       <p className="mt-1 text-sm text-red-600">{errors[name].message}</p>
     )}
@@ -773,15 +923,13 @@ const DocumentUpload = ({
 )
 
 // Step Components
-const BasicDetailsForm = ({ register, errors, customerType }) => (
+const BasicDetailsForm = ({ register, errors }) => (
   <div className="bg-gray-50 p-6 rounded-lg">
-    <h3 className="text-lg font-semibold text-gray-800 mb-4">
-      {customerType === 'franchise' ? 'Franchise' : 'Merchant'} Basic Details
-    </h3>
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Merchant Basic Details</h3>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormInput
-        label={customerType === 'franchise' ? 'Franchise Name' : 'Business Name'}
+        label="Business Name"
         name="businessName"
         register={register}
         errors={errors}
@@ -908,63 +1056,6 @@ const ContactDetailsForm = ({ register, errors }) => (
   </div>
 )
 
-const DocumentsForm = ({ register, errors, customerType }) => (
-  <div className="bg-gray-50 p-6 rounded-lg">
-    <h3 className="text-lg font-semibold text-gray-800 mb-4">Document Upload</h3>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <DocumentUpload
-        label="PAN Card"
-        name="panCardDocument"
-        register={register}
-        errors={errors}
-        required
-      />
-
-      <DocumentUpload
-        label="GST Certificate"
-        name="gstCertificate"
-        register={register}
-        errors={errors}
-      />
-
-      <DocumentUpload
-        label="Address Proof"
-        name="addressProof"
-        register={register}
-        errors={errors}
-        required
-      />
-
-      <DocumentUpload
-        label="Bank Account Proof"
-        name="bankProof"
-        register={register}
-        errors={errors}
-        required
-      />
-
-      {customerType === 'franchise' && (
-        <>
-          <DocumentUpload
-            label="Franchise Agreement"
-            name="franchiseAgreement"
-            register={register}
-            errors={errors}
-          />
-
-          <DocumentUpload
-            label="Trade License"
-            name="tradeLicense"
-            register={register}
-            errors={errors}
-          />
-        </>
-      )}
-    </div>
-  </div>
-)
-
 const BankDetailsForm = ({ register, errors }) => (
   <div className="bg-gray-50 p-6 rounded-lg">
     <h3 className="text-lg font-semibold text-gray-800 mb-4">Bank Account Details</h3>
@@ -1031,107 +1122,108 @@ const BankDetailsForm = ({ register, errors }) => (
   </div>
 )
 
-const FranchiseSelectionForm = ({ register, errors }) => {
-  const [hasFranchise, setHasFranchise] = useState('')
+const DocumentsForm = ({  register,  errors,  existingFiles = null,  onDocumentPreview = null, onDocumentDelete = null}) => (
+  <div className="bg-gray-50 p-6 rounded-lg">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Document Upload</h3>
 
-  // This should be fetched from API in real implementation
-  const availableFranchises = [
-    { value: 'franchise_001', label: 'TechPay Solutions' },
-    { value: 'franchise_002', label: 'Digital Commerce Hub' },
-    { value: 'franchise_003', label: 'PayTech Partners' }
-  ]
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <DocumentUpload
+        label="PAN Card"
+        name="panCardDocument"
+        register={register}
+        errors={errors}
+        required
+        existingFile={existingFiles?.panCardDocument}
+        onPreview={onDocumentPreview}
+        onDelete={onDocumentDelete}
+      />
 
-  return (
-    <div className="bg-gray-50 p-6 rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Franchise Association</h3>
+      <DocumentUpload
+        label="GST Certificate"
+        name="gstCertificate"
+        register={register}
+        errors={errors}
+        existingFile={existingFiles?.gstCertificate}
+        onPreview={onDocumentPreview}
+        onDelete={onDocumentDelete}
+      />
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Do you belong to a franchise? <span className="text-red-500">*</span>
-          </label>
-          <div className="space-y-2">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                value="yes"
-                {...register('hasFranchise', { required: 'Please select an option' })}
-                onChange={(e) => setHasFranchise(e.target.value)}
-                className="mr-2"
-              />
-              <span>Yes, I belong to a franchise</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                value="no"
-                {...register('hasFranchise', { required: 'Please select an option' })}
-                onChange={(e) => setHasFranchise(e.target.value)}
-                className="mr-2"
-              />
-              <span>No, I'm an independent merchant</span>
-            </label>
-          </div>
-          {errors.hasFranchise && (
-            <p className="mt-1 text-sm text-red-600">{errors.hasFranchise.message}</p>
-          )}
-        </div>
+      <DocumentUpload
+        label="Address Proof"
+        name="addressProof"
+        register={register}
+        errors={errors}
+        required
+        existingFile={existingFiles?.addressProof}
+        onPreview={onDocumentPreview}
+        onDelete={onDocumentDelete}
+      />
 
-        {hasFranchise === 'yes' && (
-          <FormSelect
-            label="Select Your Franchise"
-            name="franchiseId"
-            register={register}
-            errors={errors}
-            required
-            options={availableFranchises}
-            placeholder="Choose your franchise"
-          />
-        )}
-      </div>
+      <DocumentUpload
+        label="Bank Account Proof"
+        name="bankProof"
+        register={register}
+        errors={errors}
+        required
+        existingFile={existingFiles?.bankProof}
+        onPreview={onDocumentPreview}
+        onDelete={onDocumentDelete}
+      />
     </div>
-  )
-}
+  </div>
+)
 
 // Main Component
 const CustomerOnboarding = ({
-  merchant,
   onClose,
-  isFranchiseContext = false,
-  isModal = false
+  isModal = false,
+  // Props for different contexts
+  franchiseId = null, // When franchise is adding a merchant
+  // Props for edit mode
+  isEditMode = false,
+  customerData = null,
+  customerId = null,
+  onSuccess = null
 }) => {
-  const [customerType, setCustomerType] = useState(
-    isFranchiseContext ? 'merchant' : (merchant || "")
-  )
-  const [currentStep, setCurrentStep] = useState(isFranchiseContext ? 2 : 1)
+  const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [documentPreview, setDocumentPreview] = useState(null)
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm()
+  // Form with default values for edit mode
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
+    defaultValues: isEditMode ? {
+      businessName: customerData?.businessName || customerData?.franchiseName || '',
+      legalName: customerData?.legalName || '',
+      businessType: customerData?.businessType || '',
+      gstNumber: customerData?.gstNumber || '',
+      panNumber: customerData?.panNumber || '',
+      registrationNumber: customerData?.registrationNumber || '',
+      businessAddress: customerData?.businessAddress || customerData?.address || '',
+      primaryContactName: customerData?.contactPerson?.name || customerData?.primaryContactName || '',
+      primaryContactMobile: customerData?.contactPerson?.phoneNumber || customerData?.primaryContactMobile || '',
+      primaryContactEmail: customerData?.contactPerson?.email || customerData?.primaryContactEmail || '',
+      alternateContactMobile: customerData?.alternatePhoneNum || '',
+      landlineNumber: customerData?.landlineNumber || '',
+      bankName: customerData?.bankDetails?.bankName || '',
+      accountHolderName: customerData?.bankDetails?.accountHolderName || '',
+      accountNumber: customerData?.bankDetails?.accountNumber || '',
+      ifscCode: customerData?.bankDetails?.ifscCode || '',
+      branchName: customerData?.bankDetails?.branchName || '',
+      accountType: customerData?.bankDetails?.accountType || ''
+    } : {}
+  })
 
-  const getStepsForCustomerType = () => {
-    const baseSteps = ['Customer Type']
-
-    if (customerType === 'franchise') {
-      return [...baseSteps, 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
-    } else if (customerType === 'merchant') {
-      return [...baseSteps, 'Franchise Info', 'Basic Details', 'Contact Details', 'Bank Details', 'Documents']
-    }
-
-    return baseSteps
-  }
-
-  const steps = getStepsForCustomerType()
-
-  const handleCustomerTypeSelect = (type) => {
-    setCustomerType(type)
-    setCurrentStep(2)
-    setError('')
-  }
+  const steps = ['Basic Details', 'Contact Details', 'Bank Details', 'Documents']
 
   const createFormData = (data) => {
     const formDataObj = new FormData()
+
+    // Add franchise ID if provided
+    if (franchiseId) {
+      formDataObj.append('franchiseId', franchiseId.toString())
+    }
 
     // Append text fields
     Object.keys(data).forEach(key => {
@@ -1140,8 +1232,8 @@ const CustomerOnboarding = ({
       }
     })
 
-    // Append files
-    const fileFields = ['panCardDocument', 'gstCertificate', 'addressProof', 'bankProof', 'franchiseAgreement', 'tradeLicense']
+    // Append files - only new files will be sent
+    const fileFields = ['panCardDocument', 'gstCertificate', 'addressProof', 'bankProof']
     fileFields.forEach(field => {
       if (data[field] && data[field][0]) {
         formDataObj.append(field, data[field][0])
@@ -1163,45 +1255,36 @@ const CustomerOnboarding = ({
       setLoading(true)
 
       try {
-        const finalData = { ...updatedFormData, customerType }
-
-        if (isFranchiseContext) {
-          finalData.franchiseName = finalData.businessName
-          const formDataToSend = createFormData(finalData)
-
-          await api.post("/franchise", formDataToSend, {
+        if (isEditMode) {
+          // Edit mode - use PUT
+          const formDataToSend = createFormData(updatedFormData)
+          await api.put(`/merchants/${customerId}`, formDataToSend, {
             headers: { "Content-Type": "multipart/form-data" }
           })
+          toast.success('Merchant updated successfully!')
         } else {
-          finalData.franchiseId = finalData.franchiseId || 1
-          const formDataToSend = createFormData(finalData)
-
+          // Create mode
+          const formDataToSend = createFormData(updatedFormData)
           await api.post("/merchants", formDataToSend, {
             headers: { "Content-Type": "multipart/form-data" }
           })
+          toast.success('Merchant added successfully!')
         }
-
-        const successMessage = isFranchiseContext
-          ? 'Merchant added successfully!'
-          : 'Customer onboarding completed successfully!'
-
-        toast.success(successMessage)
 
         // Reset form
         reset()
         setFormData({})
+        setCurrentStep(1)
 
-        if (isFranchiseContext && onClose) {
-          onClose()
-        } else {
-          setCurrentStep(1)
-          setCustomerType('')
-        }
+        // Call success callback and close modal
+        onSuccess?.()
+        onClose?.()
+
       } catch (err) {
         console.error('API Error:', err)
         setError(
           err.response?.data?.message ||
-          'An error occurred during submission. Please try again.'
+          `An error occurred during ${isEditMode ? 'update' : 'submission'}. Please try again.`
         )
       } finally {
         setLoading(false)
@@ -1210,99 +1293,57 @@ const CustomerOnboarding = ({
   }
 
   const goToPreviousStep = () => {
-    const minStep = isFranchiseContext ? 2 : 1
-    if (currentStep > minStep) {
+    if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
       setError('')
     }
   }
 
-  const getVisibleSteps = () => {
-    if (isFranchiseContext) {
-      return steps.slice(1) // Skip 'Customer Type'
-    }
-    return steps
+  const handleDocumentPreview = (filePath, documentName) => {
+    setDocumentPreview({ documentPath: filePath, documentName })
   }
 
-  const visibleSteps = getVisibleSteps()
-  const progressStepNumber = isFranchiseContext ? currentStep - 1 : currentStep
+  const handleDocumentDelete = async (fieldName) => {
+    if (window.confirm('Are you sure you want to delete this document?')) {
+      try {
+        await api.delete(`/merchants/${customerId}/document/${fieldName}`)
+        toast.success('Document deleted successfully')
+        // Refresh customer data or update state
+        setValue(fieldName, null)
+      } catch (error) {
+        toast.error('Failed to delete document')
+      }
+    }
+  }
 
   const containerClass = isModal
     ? "space-y-6"
     : "max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg"
 
   const renderStepContent = () => {
-    // Customer Type Selection
-    if (currentStep === 1 && !isFranchiseContext) {
-      return (
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-6">Select Customer Type</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <button
-              onClick={() => handleCustomerTypeSelect('franchise')}
-              className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              <div className="text-4xl mb-2">🏢</div>
-              <h3 className="font-semibold">Franchise</h3>
-              <p className="text-sm text-gray-600">Register as a franchise owner</p>
-            </button>
-
-            <button
-              onClick={() => handleCustomerTypeSelect('merchant')}
-              className="p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              <div className="text-4xl mb-2">🏪</div>
-              <h3 className="font-semibold">Merchant</h3>
-              <p className="text-sm text-gray-600">Merchant onboarding</p>
-            </button>
-          </div>
-        </div>
-      )
-    }
-
-    // Form steps
     return (
       <form onSubmit={handleSubmit(handleStepSubmit)}>
-        {/* Franchise Info Step */}
-        {currentStep === 2 && customerType === 'merchant' && !isFranchiseContext && (
-          <FranchiseSelectionForm register={register} errors={errors} />
+        {currentStep === 1 && (
+          <BasicDetailsForm register={register} errors={errors} />
         )}
 
-        {/* Basic Details Step */}
-        {((currentStep === 2 && customerType === 'franchise') ||
-          (currentStep === 3 && customerType === 'merchant') ||
-          (currentStep === 2 && isFranchiseContext)) && (
-            <BasicDetailsForm
-              register={register}
-              errors={errors}
-              customerType={isFranchiseContext ? 'merchant' : customerType}
-            />
-          )}
+        {currentStep === 2 && (
+          <ContactDetailsForm register={register} errors={errors} />
+        )}
 
-        {/* Contact Details Step */}
-        {((currentStep === 3 && customerType === 'franchise') ||
-          (currentStep === 4 && customerType === 'merchant') ||
-          (currentStep === 3 && isFranchiseContext)) && (
-            <ContactDetailsForm register={register} errors={errors} />
-          )}
+        {currentStep === 3 && (
+          <BankDetailsForm register={register} errors={errors} />
+        )}
 
-        {/* Bank Details Step */}
-        {((currentStep === 4 && customerType === 'franchise') ||
-          (currentStep === 5 && customerType === 'merchant') ||
-          (currentStep === 4 && isFranchiseContext)) && (
-            <BankDetailsForm register={register} errors={errors} />
-          )}
-
-        {/* Documents Step */}
-        {((currentStep === 5 && customerType === 'franchise') ||
-          (currentStep === 6 && customerType === 'merchant') ||
-          (currentStep === 5 && isFranchiseContext)) && (
-            <DocumentsForm
-              register={register}
-              errors={errors}
-              customerType={isFranchiseContext ? 'merchant' : customerType}
-            />
-          )}
+        {currentStep === 4 && (
+          <DocumentsForm
+            register={register}
+            errors={errors}
+            existingFiles={isEditMode ? customerData?.documents : null}
+            onDocumentPreview={handleDocumentPreview}
+            onDocumentDelete={isEditMode ? handleDocumentDelete : null}
+          />
+        )}
 
         {/* Error Display */}
         {error && (
@@ -1316,7 +1357,7 @@ const CustomerOnboarding = ({
           <button
             type="button"
             onClick={goToPreviousStep}
-            disabled={currentStep <= (isFranchiseContext ? 2 : 1)}
+            disabled={currentStep === 1}
             className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
@@ -1329,7 +1370,7 @@ const CustomerOnboarding = ({
           >
             {loading ? 'Processing...' : (
               currentStep === steps.length ? (
-                isFranchiseContext ? 'Add Merchant' : 'Complete Onboarding'
+                isEditMode ? 'Update Merchant' : 'Add Merchant'
               ) : 'Next Step'
             )}
           </button>
@@ -1339,40 +1380,53 @@ const CustomerOnboarding = ({
   }
 
   return (
-    <div className={containerClass}>
-      {!isModal && (
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Customer Onboarding</h1>
-      )}
+    <>
+      <div className={containerClass}>
+        {!isModal && (
+          <h1 className="text-2xl font-bold text-gray-800 mb-6">
+            {isEditMode ? 'Edit Merchant' : 'Add Merchant'}
+          </h1>
+        )}
 
-      {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          {visibleSteps.map((step, index) => (
-            <div key={index} className="flex flex-col items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${index + 1 <= progressStepNumber
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-600'
-                }`}>
-                {index + 1}
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            {steps.map((step, index) => (
+              <div key={index} className="flex flex-col items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${index + 1 <= currentStep
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-600'
+                  }`}>
+                  {index + 1}
+                </div>
+                <span className="text-xs mt-1 text-gray-600">{step}</span>
               </div>
-              <span className="text-xs mt-1 text-gray-600">{step}</span>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="flex mt-2">
+            <div
+              className="h-1 bg-blue-600 transition-all duration-300"
+              style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+            />
+            <div className="flex-1 h-1 bg-gray-200" />
+          </div>
         </div>
-        <div className="flex mt-2">
-          <div
-            className="h-1 bg-blue-600 transition-all duration-300"
-            style={{ width: `${((progressStepNumber - 1) / (visibleSteps.length - 1)) * 100}%` }}
-          />
-          <div className="flex-1 h-1 bg-gray-200" />
+
+        {/* Step Content */}
+        <div className="space-y-6">
+          {renderStepContent()}
         </div>
       </div>
 
-      {/* Step Content */}
-      <div className="space-y-6">
-        {renderStepContent()}
-      </div>
-    </div>
+      {/* Document Preview Modal */}
+      {documentPreview && (
+        <DocumentPreview
+          documentPath={documentPreview.documentPath}
+          documentName={documentPreview.documentName}
+          onClose={() => setDocumentPreview(null)}
+        />
+      )}
+    </>
   )
 }
 
