@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/products")
-@CrossOrigin(origins = "*")
 public class ProductController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
@@ -154,7 +154,10 @@ public class ProductController {
     @GetMapping("/vendor/{vendorId}")
     public ResponseEntity<List<ProductDTO>> getProductsByVendor(@PathVariable Long vendorId) {
         List<ProductDTO> products = productService.getProductsByVendor(vendorId);
-        return ResponseEntity.ok(products);
+        List<ProductDTO> productCodes = products.stream()
+                .map(p -> new ProductDTO(p.getId(), p.getProductCode(), p.getProductName()))
+                .toList();
+        return ResponseEntity.ok(productCodes);
     }
 
     @GetMapping("/category/{categoryId}")
