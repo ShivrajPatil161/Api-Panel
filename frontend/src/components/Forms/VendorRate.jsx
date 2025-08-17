@@ -61,8 +61,6 @@ const Select = ({ label, name, register, errors, options, required = false, onCh
   </div>
 )
 
-
-
 // Searchable Select Component
 const SearchableSelect = ({
   label,

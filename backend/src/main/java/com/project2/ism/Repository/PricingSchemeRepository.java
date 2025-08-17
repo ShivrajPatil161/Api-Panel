@@ -32,6 +32,8 @@ public interface PricingSchemeRepository extends JpaRepository<PricingScheme, Lo
                                   @Param("customerType") String customerType,
                                   @Param("excludeId") Long excludeId);
 
+
+
     @Query("SELECT CASE WHEN COUNT(ps) > 0 THEN true ELSE false END FROM PricingScheme ps " +
             "WHERE ps.schemeCode = :schemeCode AND ps.rentalByMonth = :rentalByMonth " +
             "AND ps.customerType = :customerType")

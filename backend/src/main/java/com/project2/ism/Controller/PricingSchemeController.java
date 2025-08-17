@@ -275,5 +275,7 @@ public class PricingSchemeController {
             error.put("error", "Failed to generate scheme code");
             return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+
     }
 }

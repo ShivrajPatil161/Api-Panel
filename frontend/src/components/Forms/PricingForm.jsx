@@ -323,7 +323,6 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
 
       if (response.status === 200) {
         setValue('schemeCode', response?.data?.schemeCode)
-        
       }
     } catch (error) {
       console.error('Error fetching scheme code:', error)

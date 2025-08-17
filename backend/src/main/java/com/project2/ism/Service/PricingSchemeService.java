@@ -116,6 +116,8 @@
                     .filter(scheme -> scheme.getCustomerType().equals(customerType))
                     .toList();
         }
+
+
         @Transactional(readOnly = true)
         public String generateNextSchemeCode() {
             // Get the latest scheme code

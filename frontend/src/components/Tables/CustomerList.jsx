@@ -589,7 +589,6 @@ const LoadingSpinner = () => (
     </div>
 )
 
-
 // View Modal Component
 const ViewModal = ({ customer, customerType, onClose }) => {
     const [documents, setDocuments] = useState({})

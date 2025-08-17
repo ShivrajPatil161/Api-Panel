@@ -26,6 +26,8 @@ const Login = () => {
         formData
       );
 
+
+      
       if (status === 200) {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("userType", data.role);

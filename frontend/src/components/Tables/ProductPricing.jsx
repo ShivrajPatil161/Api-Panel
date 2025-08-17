@@ -24,8 +24,6 @@ import { dummyPricingData } from '../../constants/constants';
 
 
 
-
-
 const ProductPricingPage = () => {
   const [pricingData, setPricingData] = useState(dummyPricingData);
   const [showForm, setShowForm] = useState(false);

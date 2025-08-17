@@ -646,6 +646,8 @@ const CustomerOnboarding = ({
     return ''
   })
 
+  
+
   // Initialize current step based on context
   const [currentStep, setCurrentStep] = useState(() => {
     if (isEditMode || isFranchiseContext) return 1
