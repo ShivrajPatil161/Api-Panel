@@ -9,18 +9,7 @@ import {
 } from 'lucide-react';
 
 // Reusable Input Component
-const FormInput = ({
-  label,
-  name,
-  register,
-  error,
-  required = false,
-  type = "text",
-  placeholder = "",
-  maxLength,
-  style,
-  ...props
-}) => (
+const FormInput = ({  label, name,  register,  error,  required = false,  type = "text", placeholder = "",  maxLength,  style, ...props}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
       {label} {required && <span className="text-red-500">*</span>}
@@ -41,16 +30,7 @@ const FormInput = ({
 );
 
 // Reusable Textarea Component
-const FormTextarea = ({
-  label,
-  name,
-  register,
-  error,
-  required = false,
-  rows = 3,
-  placeholder = "",
-  ...props
-}) => (
+const FormTextarea = ({  label,  name,  register,  error, required = false,  rows = 3,  placeholder = "",  ...props}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
       {label} {required && <span className="text-red-500">*</span>}
@@ -69,16 +49,7 @@ const FormTextarea = ({
 );
 
 // Reusable Select Component
-const FormSelect = ({
-  label,
-  name,
-  register,
-  error,
-  required = false,
-  options = [],
-  placeholder = "Select an option",
-  ...props
-}) => (
+const FormSelect = ({  label,  name,  register, error, required = false,  options = [],  placeholder = "Select an option", ...props}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
       {label} {required && <span className="text-red-500">*</span>}

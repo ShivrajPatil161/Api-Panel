@@ -546,6 +546,7 @@ import {
 } from 'lucide-react'
 import api from '../../constants/API/axiosInstance'
 import CustomerOnboarding from '../Forms/CustomerOnborading'
+import { toast } from 'react-toastify';
 
 // Utility Components
 const StatusBadge = ({ status }) => {

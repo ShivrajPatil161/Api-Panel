@@ -256,4 +256,24 @@ public class PricingSchemeController {
             return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * Generate next available scheme code
+     */
+    @GetMapping("/generate-code")
+    public ResponseEntity<?> generateSchemeCode() {
+        try {
+            logger.debug("REST request to generate new scheme code");
+            String newSchemeCode = pricingSchemeService.generateNextSchemeCode();
+
+            Map<String, String> response = new HashMap<>();
+            response.put("schemeCode", newSchemeCode);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error generating scheme code: {}", e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to generate scheme code");
+            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

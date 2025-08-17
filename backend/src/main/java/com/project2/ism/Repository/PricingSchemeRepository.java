@@ -38,4 +38,6 @@ public interface PricingSchemeRepository extends JpaRepository<PricingScheme, Lo
     boolean existsDuplicateSchemeForNew(@Param("schemeCode") String schemeCode,
                                         @Param("rentalByMonth") Double rentalByMonth,
                                         @Param("customerType") String customerType);
+
+    Optional<PricingScheme> findTopByOrderBySchemeCodeDesc();
 }
