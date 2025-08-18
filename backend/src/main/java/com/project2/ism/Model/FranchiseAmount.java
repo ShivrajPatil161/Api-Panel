@@ -4,7 +4,6 @@ import com.project2.ism.Model.Users.Franchise;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.time.LocalDate;
@@ -39,4 +38,5 @@ public class FranchiseAmount extends AmountBase {
     public void setFranchise(Franchise franchise) {
         this.franchise = franchise;
     }
+
 }
