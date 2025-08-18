@@ -4,7 +4,6 @@ import com.project2.ism.Model.Users.Merchant;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.groups.Default;
-
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.time.LocalDate;
@@ -39,4 +38,5 @@ public class MerchantAmount extends AmountBase {
     public void setId(Long id) {
         this.id = id;
     }
+
 }
