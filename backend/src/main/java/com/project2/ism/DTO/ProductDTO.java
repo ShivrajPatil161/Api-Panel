@@ -44,6 +44,12 @@ public class ProductDTO {
         this.maxOrderQuantity = maxOrderQuantity;
         this.remarks = remarks;
     }
+    public ProductDTO(Long id, String productCode, String productName) {
+        this.id = id;
+        this.productCode = productCode;
+        this.productName = productName;
+    }
+
 
     // All getters and setters remain the same
     public Long getId() {

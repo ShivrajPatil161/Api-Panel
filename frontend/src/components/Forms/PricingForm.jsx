@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { X, Plus } from 'lucide-react'
+import api from '../../constants/API/axiosInstance'
 
 // ==================== FORM COMPONENTS ====================
 
@@ -303,10 +304,31 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
     handleSubmit,
     formState: { errors },
     watch,
-    reset
+    reset,
+    setValue
   } = useForm({
     defaultValues: initialData || getDefaultValues()
   })
+
+  // Fetch scheme code on mount for new schemes
+  useEffect(() => {
+    if (!isEdit && !initialData) {
+      fetchNewSchemeCode()
+    }
+  }, [isEdit, initialData])
+
+  const fetchNewSchemeCode = async () => {
+    try {
+      const response = await api.get('/pricing-schemes/generate-code')
+
+      if (response.status === 200) {
+        setValue('schemeCode', response?.data?.schemeCode)
+      }
+    } catch (error) {
+      console.error('Error fetching scheme code:', error)
+      // Fallback to manual entry if API fails
+    }
+  }
 
   const customerTypeOptions = [
     { value: 'franchise', label: 'Franchise' },
@@ -316,7 +338,6 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
   const deviceOptions = [
     { value: 'POS Machine', label: 'POS Machine' },
     { value: 'QR Code', label: 'QR Code' }
-
   ]
 
   const onFormSubmit = (data) => {
@@ -333,7 +354,6 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
       })
     }
 
-    //await checkSchemeCodeExists();
     onSubmit(filteredData)
     onCancel()
   }
@@ -372,7 +392,9 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
                   register={register}
                   errors={errors}
                   required
-                  placeholder="e.g., SCHEME_001"
+                  disabled
+                  readOnly={!isEdit}
+                  placeholder="Auto-generated"
                 />
                 <Select
                   label="Product Type"

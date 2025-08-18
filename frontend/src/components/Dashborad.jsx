@@ -134,7 +134,7 @@ const ActivityCard = ({ transactions, title = "Recent Activity" }) => (
 
 // Main Dashboard Component
 const Dashboard = () => {
-  const userType = localStorage.getItem("userType")
+  const userType = localStorage.getItem("userType").toLowerCase()
   const [selectedMerchant, setSelectedMerchant] = useState('all');
 
 

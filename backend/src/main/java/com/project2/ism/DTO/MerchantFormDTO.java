@@ -2,9 +2,10 @@ package com.project2.ism.DTO;
 
 import org.springframework.web.multipart.MultipartFile;
 
-public class FranchiseFormDTO {
+public class MerchantFormDTO {
 
-    private String franchiseName;
+    private Long franchiseId;
+    private String businessName;
     private String legalName;
     private String businessType;
     private String gstNumber;
@@ -32,24 +33,14 @@ public class FranchiseFormDTO {
     private MultipartFile bankProof;
     private MultipartFile franchiseAgreement;
 
-    // Getters & Setters
-    // (Generate in IntelliJ)
 
-
-    public String getFranchiseName() {
-        return franchiseName;
-    }
-
-    public void setFranchiseName(String franchiseName) {
-        this.franchiseName = franchiseName;
-    }
-
-    public FranchiseFormDTO(String franchiseName,    String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, MultipartFile panCardDocument, MultipartFile gstCertificate, MultipartFile addressProof, MultipartFile bankProof, MultipartFile franchiseAgreement) {
-
+    //constructor
+    public MerchantFormDTO(Long franchiseId,String businessName, String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, MultipartFile panCardDocument, MultipartFile gstCertificate, MultipartFile addressProof, MultipartFile bankProof, MultipartFile franchiseAgreement) {
+        this.franchiseId = franchiseId;
+        this.businessName = businessName;
         this.legalName = legalName;
         this.businessType = businessType;
         this.gstNumber = gstNumber;
-        this.franchiseName = franchiseName;
         this.panNumber = panNumber;
         this.registrationNumber = registrationNumber;
         this.businessAddress = businessAddress;
@@ -71,7 +62,23 @@ public class FranchiseFormDTO {
         this.franchiseAgreement = franchiseAgreement;
     }
 
+    //setter getter
 
+    public Long getFranchiseId() {
+        return franchiseId;
+    }
+
+    public void setFranchiseId(Long franchiseId) {
+        this.franchiseId = franchiseId;
+    }
+
+    public String getBusinessName() {
+        return businessName;
+    }
+
+    public void setBusinessName(String businessName) {
+        this.businessName = businessName;
+    }
 
     public String getLegalName() {
         return legalName;
@@ -249,4 +256,3 @@ public class FranchiseFormDTO {
         this.franchiseAgreement = franchiseAgreement;
     }
 }
-

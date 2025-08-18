@@ -3,7 +3,10 @@ package com.project2.ism.Model.Users;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 public class Merchant extends CustomerBase {
@@ -19,6 +22,54 @@ public class Merchant extends CustomerBase {
     @NotBlank(message = "Business name required")
     private String businessName;
 
+    @Column(name = "status")
+    private String status = "ACTIVE";
+
+    @Column(name = "wallet_balance", precision = 10, scale = 2)
+    private BigDecimal walletBalance = BigDecimal.ZERO;
+
+    @Column(name = "monthly_revenue", precision = 12, scale = 2)
+    private BigDecimal monthlyRevenue = BigDecimal.ZERO;
+
+    @Column(name = "products")
+    private Integer products = 0;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    // Add getters and setters for these fields
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public BigDecimal getWalletBalance() { return walletBalance; }
+    public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }
+
+    public BigDecimal getMonthlyRevenue() { return monthlyRevenue; }
+    public void setMonthlyRevenue(BigDecimal monthlyRevenue) { this.monthlyRevenue = monthlyRevenue; }
+
+    public Integer getProducts() { return products; }
+    public void setProducts(Integer products) { this.products = products; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // Add these methods to automatically set timestamps
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
     public Merchant() {
     }
 
