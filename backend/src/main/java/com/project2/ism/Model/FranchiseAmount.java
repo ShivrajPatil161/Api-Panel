@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-public class FranchiseAmount {
+public class FranchiseAmount extends AmountBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
