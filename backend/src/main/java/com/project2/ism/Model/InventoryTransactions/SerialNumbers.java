@@ -101,4 +101,6 @@ public class SerialNumbers {
     public void setProduct(Product product) {
         this.product = product;
     }
+
+
 }
