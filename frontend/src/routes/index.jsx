@@ -8,24 +8,14 @@ import Login from '../components/Auth/Login.jsx'
 
 
 import Dashboard from '../components/Dashborad.jsx'
-import VendorRatesForm from '../components/Forms/VendorRate.jsx'
 import CustomerOnboarding from '../components/Forms/CustomerOnborading.jsx'
-import ProductAssignmentForm from '../components/Forms/ProductAssign.jsx'
-import FileUploadForm from '../components/Forms/FileUpload.jsx'
-import ChargeCalculationForm from '../components/Forms/ChargeCalculation.jsx'
 import VendorListPage from '../components/Tables/VendorTable.jsx'
-import VendorMasterForm from '../components/Forms/Vendor.jsx'
-import ProductMasterForm from '../components/Forms/Product.jsx'
 import Inward from '../components/Forms/Inward.jsx'
 import Outward from '../components/Forms/Outward.jsx'
 import Returns from '../components/Forms/Return.jsx'
 import ProductList from '../components/Tables/ProductList.jsx'
 import VendorRatesManagement from '../components/Tables/VendorRatesTable.jsx'
-import ProductPricingPage from '../components/Tables/ProductPricing.jsx'
-import CustomerRatesManagement from '../components/Tables/PricingTable.jsx'
-
 import CustomerListComponent from '../components/Tables/CustomerList.jsx'
-import PricingSchemeForm from '../components/Forms/PricingForm.jsx'
 import SchemeList from '../components/Tables/SchemeList.jsx'
 import ProductAssignment from '../components/Tables/ProductAssign_Scheme.jsx'
 import ProductDistribution from '../components/Forms/ProductAssign.jsx'
@@ -33,7 +23,6 @@ import MerchantListComponent from '../components/Tables/MerchantList.jsx'
 import ErrorPage from '../components/ErrorPage.jsx'
 import VendorProductUploadForm from '../components/Forms/FileUpload.jsx'
 import AdminApproval from '../components/Admin/AdminApproval.jsx'
-import InventoryManagement from '../components/Inventory.jsx'
 import ForgotPassword from '../components/Auth/ForgotPass.jsx'
 
 
@@ -105,10 +94,6 @@ export const router = createBrowserRouter([
               {
                 index: true,
                 element: <ProductList />
-              },
-              {
-                path: "inventory",
-                element: <InventoryManagement />
               },
               {
                 path: "pricing",

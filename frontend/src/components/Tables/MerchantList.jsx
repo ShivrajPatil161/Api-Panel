@@ -27,8 +27,6 @@ import CustomerOnboarding from '../Forms/CustomerOnborading';
 
 import { merchantData } from '../../constants/merchantlistData';
 
-
-
 // Modal Component
 const Modal = ({ isOpen, onClose, children }) => {
     if (!isOpen) return null;

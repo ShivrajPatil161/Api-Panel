@@ -26,10 +26,14 @@ const Login = () => {
         formData
       );
 
+
+      
       if (status === 200) {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("userType", data.role);
-
+        if (data.role.toLowerCase() === "franchise") {
+          localStorage.setItem("franchiseId", 1);
+        }
         toast.success("Login successful!");
         reset();
         navigate("/dashboard");

@@ -380,30 +380,3 @@ export const LoadingSpinner = ({ message = "Loading..." }) => (
     </div>
 );
 
-// ==================== CONSTANTS ====================
-
-// Common validation patterns
-export const VALIDATION_PATTERNS = {
-    email: /^\S+@\S+$/i,
-    phone: /^[0-9]{10}$/,
-    pincode: /^[0-9]{6}$/,
-    gst: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-    pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-    hsn: /^[0-9]{4,8}$/
-};
-
-// Common validation rules
-export const VALIDATION_RULES = {
-    required: (fieldName) => ({ required: `${fieldName} is required` }),
-    email: {
-        required: 'Email is required',
-        pattern: { value: VALIDATION_PATTERNS.email, message: 'Invalid email format' }
-    },
-    phone: {
-        required: 'Phone number is required',
-        pattern: { value: VALIDATION_PATTERNS.phone, message: 'Phone number must be 10 digits' }
-    },
-    minLength: (min, fieldName) => ({ minLength: { value: min, message: `${fieldName} must be at least ${min} characters` } }),
-    maxLength: (max, fieldName) => ({ maxLength: { value: max, message: `${fieldName} cannot exceed ${max} characters` } })
-};
-
