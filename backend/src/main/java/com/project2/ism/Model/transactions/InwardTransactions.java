@@ -49,6 +49,7 @@ public class InwardTransactions {
     @Column(nullable = false)
     private Integer quantity;
 
+
     private String batchNumber;
 
     private Integer warrantyPeriod;
