@@ -203,10 +203,8 @@ const VendorProductDetails = ({ register, errors }) => {
       setProductsLoading(true)
       const response = await api.get(`/products/vendor/${vendorId}`)
       const productOptions = response.data.map(product => ({
-        value: product.productCode,
-        label: `${product.productCode} - ${product.productName}`,
-        productCode: product.productCode,
-        id: product.id
+        value: product.id.toString(),
+        label: `${product.productCode} - ${product.productName}`
       }))
       setProducts(productOptions)
     } catch (error) {
@@ -245,7 +243,7 @@ const VendorProductDetails = ({ register, errors }) => {
 
         <Select
           label="Product Code"
-          name="productCode"
+          name="productId"
           register={register}
           errors={errors}
           options={products}
@@ -445,7 +443,7 @@ const CardRates = ({ control, register, errors }) => {
 const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
   const getDefaultValues = () => ({
     vendor: '',
-    productCode: '',
+    productId: '',
     effectiveDate: '',
     expiryDate: '',
     monthlyRent: '',
@@ -466,7 +464,8 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
     console.log(data)
     const filteredData = {
       ...data,
-      vendor:{id: Number(data.vendor)},
+      vendor: { id: Number(data.vendor) },
+      product: { id: Number(data.productId) },
       vendorCardRates: data.vendorCardRates.filter(rate => rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim())
     }
 

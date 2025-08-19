@@ -1,5 +1,6 @@
 package com.project2.ism.Controller;
 
+import com.project2.ism.DTO.VendorRatesDTO;
 import com.project2.ism.Model.Vendor.VendorRates;
 import com.project2.ism.Service.VendorRatesService;
 import jakarta.validation.Valid;
@@ -19,26 +20,33 @@ public class VendorRatesController {
     }
 
     @PostMapping
-    public ResponseEntity<VendorRates> createVendorRate(@Valid @RequestBody VendorRates vendorRates) {
-        return ResponseEntity.ok(vendorRatesService.createVendorRates(vendorRates));
+    public ResponseEntity<VendorRatesDTO> createVendorRate(@Valid @RequestBody VendorRates vendorRates) {
+        VendorRates saved = vendorRatesService.createVendorRates(vendorRates);
+        return ResponseEntity.ok(VendorRatesDTO.fromEntity(saved));
     }
 
     @GetMapping
-    public ResponseEntity<List<VendorRates>> getAllVendorRates() {
-        return ResponseEntity.ok(vendorRatesService.getAllVendorRates());
+    public ResponseEntity<List<VendorRatesDTO>> getAllVendorRates() {
+        List<VendorRatesDTO> result = vendorRatesService.getAllVendorRates()
+                .stream()
+                .map(VendorRatesDTO::fromEntity)
+                .toList();
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VendorRates> getVendorRateById(@PathVariable Long id) {
-        return ResponseEntity.ok(vendorRatesService.getVendorRatesById(id));
+    public ResponseEntity<VendorRatesDTO> getVendorRateById(@PathVariable Long id) {
+        VendorRates found = vendorRatesService.getVendorRatesById(id);
+        return ResponseEntity.ok(VendorRatesDTO.fromEntity(found));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<VendorRates> updateVendorRate(
+    public ResponseEntity<VendorRatesDTO> updateVendorRate(
             @PathVariable Long id,
             @Valid @RequestBody VendorRates vendorRates
     ) {
-        return ResponseEntity.ok(vendorRatesService.updateVendorRates(id, vendorRates));
+        VendorRates updated = vendorRatesService.updateVendorRates(id, vendorRates);
+        return ResponseEntity.ok(VendorRatesDTO.fromEntity(updated));
     }
 
     @DeleteMapping("/{id}")
