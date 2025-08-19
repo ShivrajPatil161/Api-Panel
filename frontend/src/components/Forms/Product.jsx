@@ -368,7 +368,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
         remarks: data.remarks || null
       };
 
-console.log(transformedData)
+
       onSubmit(transformedData);
 
     } catch (error) {

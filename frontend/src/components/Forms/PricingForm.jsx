@@ -290,15 +290,20 @@ const CardRates = ({ control, register, errors, watch }) => {
 
 // ==================== PRICING SCHEME FORM MODAL ====================
 const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
+
+  const [category, setCategory] = useState([]);
+  const [loading, setLoading] = useState(true)
   const getDefaultValues = () => ({
     schemeCode: '',
     rentalByMonth: '',
     customerType: '',
     cardRates: [],
-    description: ''
+    description: '',
+    productCategoryName: '',
+    productCategoryId:''
   })
 
-  const [category, setCategory] = useState([]);
+  
   const {
     control,
     register,
@@ -308,15 +313,19 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
     reset,
     setValue
   } = useForm({
-    defaultValues: initialData || getDefaultValues()
+    defaultValues: initialData
+      ? { ...initialData, productCategoryId: String(initialData.productCategoryId) }
+      : getDefaultValues()
   })
+
 
   // Fetch scheme code on mount for new schemes
   useEffect(() => {
     if (!isEdit && !initialData) {
       fetchNewSchemeCode()
-      fetchCategory()
+      
     }
+    fetchCategory()
   }, [isEdit, initialData])
 
   const fetchNewSchemeCode = async () => {
@@ -335,12 +344,14 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
     try {
       const response = await api.get("/product-categories")
       setCategory(response.data.map(category => ({
-        value: category.id,
+        value: String(category.id),
         label: category.categoryName
       })));
 
     } catch (error) {
       console.error(error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -409,14 +420,18 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
                   readOnly={!isEdit}
                   placeholder="Auto-generated"
                 />
-                <Select
-                  label="Product Type"
-                  name="productCategoryId"
-                  register={register}
-                  errors={errors}
-                  options={category}
-                  required
-                />
+                {loading ? (
+                  <div className="flex items-center">Loading categories...</div>
+                ) : (
+                  <Select
+                    label="Product Type"
+                    name="productCategoryId"
+                    register={register}
+                    errors={errors}
+                    options={category}
+                    required
+                  />
+                )}
                 <Input
                   label="Rental by Month (₹)"
                   name="rentalByMonth"
