@@ -1,6 +1,7 @@
 package com.project2.ism.Controller;
 
 
+import com.project2.ism.DTO.InwardTransactionDTO;
 import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
 import com.project2.ism.Service.InwardTransactionService;
 import org.springframework.http.ResponseEntity;
@@ -19,23 +20,25 @@ public class InwardTransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<InwardTransactions> create(@RequestBody InwardTransactions inward) {
-        return ResponseEntity.ok(inwardService.createTransaction(inward));
+    public ResponseEntity<InwardTransactionDTO> create(@RequestBody InwardTransactionDTO dto) {
+        InwardTransactionDTO saved = inwardService.createTransaction(dto);
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping
-    public ResponseEntity<List<InwardTransactions>> getAll() {
+    public ResponseEntity<List<InwardTransactionDTO>> getAll() {
         return ResponseEntity.ok(inwardService.getAllTransactions());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<InwardTransactions> getById(@PathVariable Long id) {
+    public ResponseEntity<InwardTransactionDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(inwardService.getTransaction(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<InwardTransactions> update(@PathVariable Long id, @RequestBody InwardTransactions inward) {
-        return ResponseEntity.ok(inwardService.updateTransaction(id, inward));
+    public ResponseEntity<InwardTransactionDTO> update(@PathVariable Long id,
+                                                       @RequestBody InwardTransactionDTO dto) {
+        return ResponseEntity.ok(inwardService.updateTransaction(id, dto));
     }
 
     @DeleteMapping("/{id}")

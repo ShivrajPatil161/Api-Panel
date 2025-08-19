@@ -163,5 +163,19 @@ public class InwardTransactions {
         this.remark = remark;
     }
 
+    public ProductCategory getProductCategory() {
+        return productCategory;
+    }
 
+    public void setProductCategory(ProductCategory productCategory) {
+        this.productCategory = productCategory;
+    }
+
+    public List<ProductSerialNumbers> getProductSerialNumbers() {
+        return productSerialNumbers;
+    }
+
+    public void setProductSerialNumbers(List<ProductSerialNumbers> productSerialNumbers) {
+        this.productSerialNumbers = productSerialNumbers;
+    }
 }

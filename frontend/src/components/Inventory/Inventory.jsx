@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import InventoryTable from './InventoryTable' 
 import InwardTable from './InwardTable' 
 import OutwardTable from './OutwardTable' 
 import ReturnTable from './ReturnTable' 
-import { InwardFormModal } from '../Forms/Inward'
+import InwardFormModal from '../Forms/Inward'
 import OutwardForm from '../Forms/Outward'
 import ReturnsForm from '../Forms/Return'
+import inwardAPI from '../../constants/API/inwardApi'
+
 
 const InventoryManagement = () => {
     const [activeTab, setActiveTab] = useState('inventory')
@@ -24,7 +26,8 @@ const InventoryManagement = () => {
     const [inwardData, setInwardData] = useState([])
     const [outwardData, setOutwardData] = useState([])
     const [returnData, setReturnData] = useState([])
-
+    const [loading, setLoading] = useState(false)
+    const [editingInward, setEditingInward] = useState(null)
     const tabs = [
         { id: 'inventory', label: 'Inventory', count: inventoryData.length },
         { id: 'inward', label: 'Inward Entry', count: inwardData.length },
@@ -32,9 +35,82 @@ const InventoryManagement = () => {
         { id: 'returns', label: 'Returns', count: returnData.length }
     ]
 
-    const handleInwardSubmit = (data) => {
-        setInwardData(prev => [...prev, { ...data, id: Date.now() }])
-        setIsInwardModalOpen(false)
+
+    useEffect(() => {
+        if (activeTab === 'inward') {
+            fetchInwardData()
+        }
+    }, [activeTab])
+
+
+   
+    // 4. Add API functions
+    const fetchInwardData = async () => {
+        setLoading(true)
+        try {
+            const response = await inwardAPI.getAllInwardTransactions()
+            // Transform backend data to frontend format
+            //const transformedData = response.map(item => transformToFrontendFormat(item))
+            console.log(response)
+            setInwardData(response)
+        } catch (error) {
+            console.error('Error fetching inward data:', error)
+            alert('Error fetching inward transactions. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+
+    const handleInwardSubmit = async (data) => {
+        setLoading(true)
+        try {
+            if (editingInward) {
+                // Update existing entry
+                await inwardAPI.updateInwardTransaction(editingInward.id, data)
+                alert('Inward transaction updated successfully!')
+            } else {
+                // Create new entry
+                await inwardAPI.createInwardTransaction(data)
+                alert('Inward transaction created successfully!')
+            }
+
+            // Refresh data
+            await fetchInwardData()
+            setIsInwardModalOpen(false)
+            setEditingInward(null)
+        } catch (error) {
+            console.error('Error saving inward transaction:', error)
+            alert('Error saving inward transaction. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleEditInward = (inwardEntry) => {
+        setEditingInward(inwardEntry)
+        setIsInwardModalOpen(true)
+    }
+
+    const handleViewInward = (inwardEntry) => {
+        // You can implement a view modal similar to your existing one
+        console.log('View inward entry:', inwardEntry)
+    }
+
+    const handleDeleteInward = async (id) => {
+        if (window.confirm('Are you sure you want to delete this inward transaction?')) {
+            setLoading(true)
+            try {
+                await inwardAPI.deleteInwardTransaction(id)
+                alert('Inward transaction deleted successfully!')
+                await fetchInwardData()
+            } catch (error) {
+                console.error('Error deleting inward transaction:', error)
+                alert('Error deleting inward transaction. Please try again.')
+            } finally {
+                setLoading(false)
+            }
+        }
     }
 
     const handleOutwardSubmit = (data) => {
@@ -89,7 +165,15 @@ const InventoryManagement = () => {
             case 'inventory':
                 return <InventoryTable data={inventoryData} />
             case 'inward':
-                return <InwardTable data={inwardData} />
+                return (
+                    <InwardTable
+                        data={inwardData}
+                        onEdit={handleEditInward}
+                        onView={handleViewInward}
+                        onDelete={handleDeleteInward}
+                        loading={loading}
+                    />
+                )
             case 'outward':
                 return <OutwardTable data={outwardData} />
             case 'returns':
@@ -153,8 +237,12 @@ const InventoryManagement = () => {
                 {/* Modals */}
                 <InwardFormModal
                     isOpen={isInwardModalOpen}
-                    onClose={() => setIsInwardModalOpen(false)}
+                    onClose={() => {
+                        setIsInwardModalOpen(false)
+                        setEditingInward(null)
+                    }}
                     onSubmit={handleInwardSubmit}
+                    editData={editingInward}
                 />
 
                 {isOutwardModalOpen && (
