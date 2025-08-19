@@ -416,7 +416,7 @@ const ProductList = () => {
   const handleAddProduct = () => {
     setEditingProduct(null);
     setShowForm(true);
-    toast.info('Opening product creation form');
+    
   };
 
   const handleEdit = (product) => {
@@ -426,12 +426,12 @@ const ProductList = () => {
     };
     setEditingProduct(editData);
     setShowForm(true);
-    toast.info(`Editing product: ${product.productName}`);
+   
   };
 
   const handleView = (product) => {
     setViewingProduct(product);
-    toast.info(`Viewing product: ${product.productName}`);
+    
   };
 
 
@@ -502,7 +502,7 @@ const ProductList = () => {
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingProduct(null);
-    toast.info('Form closed');
+   
   };
 
   return (
