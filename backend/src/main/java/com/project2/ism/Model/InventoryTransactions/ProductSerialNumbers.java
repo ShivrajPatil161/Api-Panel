@@ -32,6 +32,10 @@ public class ProductSerialNumbers {
     private InwardTransactions inwardTransaction;
 
     @ManyToOne
+    @JoinColumn(name = "outward_transaction_id", nullable = false)
+    private InwardTransactions outwardTransaction;
+
+    @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
@@ -103,4 +107,11 @@ public class ProductSerialNumbers {
     }
 
 
+    public InwardTransactions getOutwardTransaction() {
+        return outwardTransaction;
+    }
+
+    public void setOutwardTransaction(InwardTransactions outwardTransaction) {
+        this.outwardTransaction = outwardTransaction;
+    }
 }

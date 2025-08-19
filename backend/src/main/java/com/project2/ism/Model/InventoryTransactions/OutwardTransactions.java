@@ -67,7 +67,7 @@ public class OutwardTransactions {
 
     private LocalDate expectedDeliveryDate;
 
-    @OneToMany(mappedBy = "inwardTransaction")
+    @OneToMany(mappedBy = "outwardTransaction")
     private List<ProductSerialNumbers> productSerialNumbers;
 
     private String remarks;
