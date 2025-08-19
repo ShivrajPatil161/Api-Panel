@@ -40,6 +40,16 @@ public class Merchant extends CustomerBase {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    private boolean isApproved;
+
+    public boolean isApproved() {
+        return isApproved;
+    }
+
+    public void setApproved(boolean approved) {
+        isApproved = approved;
+    }
+
     // Add getters and setters for these fields
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
