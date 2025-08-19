@@ -3,6 +3,7 @@ import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowMode
 import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, Search, Eye, Building2, CreditCard, Calendar, DollarSign, Users, Loader2 } from 'lucide-react'
 import VendorRateForm from '../Forms/VendorRate'
 import { getAllVendorRates, createVendorRate, updateVendorRate, deleteVendorRate } from '../../constants/API/vendorRates'
+import VendorRateView from '../View/VendorRateView'
 
 const VendorRateList = () => {
     const [data, setData] = useState([])
@@ -12,8 +13,20 @@ const VendorRateList = () => {
     const [globalFilter, setGlobalFilter] = useState('')
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [viewData, setViewData] = useState(null)
+    const [isViewOpen, setIsViewOpen] = useState(false)
 
     const columnHelper = createColumnHelper()
+
+    const handleView = (vendorData) => {
+        setViewData(vendorData)
+        setIsViewOpen(true)
+    }
+
+    const handleViewClose = () => {
+        setViewData(null)
+        setIsViewOpen(false)
+    }
 
     // Fetch data on component mount
     useEffect(() => {
@@ -41,16 +54,16 @@ const VendorRateList = () => {
             ),
             size: 80
         }),
-        columnHelper.accessor('vendor.name', {
+        columnHelper.accessor('vendorName', {
             header: 'Vendor Name',
             cell: info => (
                 <div>
                     <div className="font-medium text-gray-900">{info.getValue() || 'N/A'}</div>
-                    <div className="text-sm text-gray-500">{info.row.original.vendor?.code || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{info.row.original.vendorId || 'N/A'}</div>
                 </div>
             ),
         }),
-        columnHelper.accessor('product.name', {
+        columnHelper.accessor('productName', {
             header: 'Product',
             cell: info => (
                 <div>
@@ -220,22 +233,7 @@ const VendorRateList = () => {
         setIsFormOpen(true)
     }
 
-    const handleView = (vendorData) => {
-        console.log('View vendor rate:', vendorData)
 
-        // Create a detailed view string
-        const details = `
-Vendor: ${vendorData.vendor?.name || 'N/A'}
-Product: ${vendorData.product?.name || 'N/A'} (${vendorData.productCode || 'N/A'})
-Monthly Rent: ₹${vendorData.monthlyRent ? parseFloat(vendorData.monthlyRent).toLocaleString('en-IN') : 'N/A'}
-Effective Date: ${vendorData.effectiveDate ? new Date(vendorData.effectiveDate).toLocaleDateString('en-IN') : 'N/A'}
-Expiry Date: ${vendorData.expiryDate ? new Date(vendorData.expiryDate).toLocaleDateString('en-IN') : 'No expiry'}
-Card Rates: ${vendorData.vendorCardRates?.length || 0} rate(s)
-Remarks: ${vendorData.remark || 'None'}
-        `
-
-        alert(details.trim())
-    }
 
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this vendor rate?')) {
@@ -503,6 +501,12 @@ Remarks: ${vendorData.remark || 'None'}
                     submitting={submitting}
                 />
             )}
+            {/* View Modal */}
+            <VendorRateView
+                vendorData={viewData}
+                onClose={handleViewClose}
+                isOpen={isViewOpen}
+            />
         </div>
     )
 }

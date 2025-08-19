@@ -1,16 +1,19 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.DTO.InwardTransactionDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
-import com.project2.ism.Repository.InwardTransactionRepository;
-import com.project2.ism.Repository.ProductSerialsRepository;
-import jakarta.persistence.Entity;
+import com.project2.ism.Model.Product;
+import com.project2.ism.Model.ProductCategory;
+import com.project2.ism.Model.Vendor.Vendor;
+import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InwardTransactionService {
@@ -18,57 +21,98 @@ public class InwardTransactionService {
     private final InwardTransactionRepository inwardRepo;
     private final ProductSerialsRepository serialRepo;
 
-    public InwardTransactionService(InwardTransactionRepository inwardRepo, ProductSerialsRepository serialRepo) {
+    private final VendorRepository vendorRepo;
+
+    private final ProductRepository productRepo;
+    private final ProductCategoryRepository productCategoryRepo;
+
+
+
+    public InwardTransactionService(InwardTransactionRepository inwardRepo, ProductSerialsRepository serialRepo, VendorRepository vendorRepo, ProductRepository productRepo, ProductCategoryRepository productCategoryRepo) {
         this.inwardRepo = inwardRepo;
         this.serialRepo = serialRepo;
+        this.vendorRepo = vendorRepo;
+        this.productRepo = productRepo;
+        this.productCategoryRepo = productCategoryRepo;
     }
 
     @Transactional
-    public InwardTransactions createTransaction(InwardTransactions inward) {
+    public InwardTransactionDTO createTransaction(InwardTransactionDTO dto) {
+        Vendor vendor = vendorRepo.findById(dto.vendorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
+        Product product = productRepo.findById(dto.productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        ProductCategory category = productCategoryRepo.findById(dto.productCategoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        InwardTransactions inward = dto.toEntity(vendor, product, category);
+
+        // Validate serials before save
         validateAndAttachSerials(inward);
-        return inwardRepo.save(inward);
+
+        InwardTransactions saved = inwardRepo.save(inward);
+        return InwardTransactionDTO.fromEntity(saved);
     }
 
-    public List<InwardTransactions> getAllTransactions() {
-        return inwardRepo.findAll();
+    public List<InwardTransactionDTO> getAllTransactions() {
+        return inwardRepo.findAll().stream()
+                .map(InwardTransactionDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    public InwardTransactions getTransaction(Long id) {
-        return inwardRepo.findById(id)
+    public InwardTransactionDTO getTransaction(Long id) {
+        InwardTransactions entity = inwardRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Inward transaction not found with id: " + id));
+        return InwardTransactionDTO.fromEntity(entity);
     }
 
     @Transactional
-    public InwardTransactions updateTransaction(Long id, InwardTransactions updated) {
-        InwardTransactions existing = getTransaction(id);
+    public InwardTransactionDTO updateTransaction(Long id, InwardTransactionDTO dto) {
+        InwardTransactions existing = inwardRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Inward transaction not found with id: " + id));
 
-        existing.setInvoiceNumber(updated.getInvoiceNumber());
-        existing.setVendor(updated.getVendor());
-        existing.setReceivedDate(updated.getReceivedDate());
-        existing.setReceivedBy(updated.getReceivedBy());
-        existing.setProduct(updated.getProduct());
-        existing.setQuantity(updated.getQuantity());
-        existing.setBatchNumber(updated.getBatchNumber());
-        existing.setWarrantyPeriod(updated.getWarrantyPeriod());
-        existing.setProductCondition(updated.getProductCondition());
-        existing.setRemark(updated.getRemark());
+        Vendor vendor = vendorRepo.findById(dto.vendorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
+        Product product = productRepo.findById(dto.productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        ProductCategory category = productCategoryRepo.findById(dto.productCategoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-        if (updated.getSerialNumbers() != null && !updated.getSerialNumbers().isEmpty()) {
-            validateAndAttachSerials(updated);
-            existing.setSerialNumbers(updated.getSerialNumbers());
+        // update fields
+        existing.setInvoiceNumber(dto.invoiceNumber);
+        existing.setVendor(vendor);
+        existing.setReceivedDate(dto.receivedDate);
+        existing.setReceivedBy(dto.receivedBy);
+        existing.setProduct(product);
+        existing.setProductCategory(category);
+        existing.setQuantity(dto.quantity);
+        existing.setBatchNumber(dto.batchNumber);
+        existing.setWarrantyPeriod(dto.warrantyPeriod);
+        existing.setProductCondition(dto.productCondition);
+        existing.setRemark(dto.remark);
+
+        if (dto.serialNumbers != null) {
+            List<ProductSerialNumbers> serials = dto.serialNumbers.stream()
+                    .map(sn -> sn.toEntity(existing, product))
+                    .collect(Collectors.toList());
+            existing.setProductSerialNumbers(serials);
+            validateAndAttachSerials(existing);
         }
 
-        return inwardRepo.save(existing);
+        InwardTransactions saved = inwardRepo.save(existing);
+        return InwardTransactionDTO.fromEntity(saved);
     }
 
     @Transactional
     public void deleteTransaction(Long id) {
-        InwardTransactions inward = getTransaction(id);
+        InwardTransactions inward = inwardRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Inward transaction not found with id: " + id));
         inwardRepo.delete(inward);
     }
 
     private void validateAndAttachSerials(InwardTransactions inward) {
-        for (ProductSerialNumbers sn : inward.getSerialNumbers()) {
+        if (inward.getProductSerialNumbers() == null) return;
+        for (ProductSerialNumbers sn : inward.getProductSerialNumbers()) {
             if (serialRepo.existsBySid(sn.getSid())) {
                 throw new DuplicateResourceException("SID already exists: " + sn.getSid());
             }
