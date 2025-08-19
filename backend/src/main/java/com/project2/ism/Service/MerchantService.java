@@ -279,6 +279,7 @@ public class MerchantService {
         merchantRepository.delete(merchant);
     }
 
+
     public List<MerchantListDTO> getMerchantsByFranchise(Long franchiseId) {
         List<Merchant> merchants = merchantRepository.findByFranchiseId(franchiseId);
         return merchants.stream()
@@ -314,5 +315,6 @@ public class MerchantService {
                 merchant.getStatus() != null ? merchant.getStatus() : "ACTIVE",
                 merchant.getCreatedAt()
         );
+
     }
 }
