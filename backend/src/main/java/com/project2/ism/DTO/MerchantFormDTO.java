@@ -33,12 +33,9 @@ public class MerchantFormDTO {
     private MultipartFile bankProof;
     private MultipartFile franchiseAgreement;
 
-    private boolean isApproved;
-
 
     //constructor
-    public MerchantFormDTO(boolean isApproved,Long franchiseId,String businessName, String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, MultipartFile panCardDocument, MultipartFile gstCertificate, MultipartFile addressProof, MultipartFile bankProof, MultipartFile franchiseAgreement) {
-        this.isApproved = isApproved;
+    public MerchantFormDTO(Long franchiseId,String businessName, String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, MultipartFile panCardDocument, MultipartFile gstCertificate, MultipartFile addressProof, MultipartFile bankProof, MultipartFile franchiseAgreement) {
         this.franchiseId = franchiseId;
         this.businessName = businessName;
         this.legalName = legalName;
@@ -66,15 +63,6 @@ public class MerchantFormDTO {
     }
 
     //setter getter
-
-
-    public boolean isApproved() {
-        return isApproved;
-    }
-
-    public void setApproved(boolean approved) {
-        isApproved = approved;
-    }
 
     public Long getFranchiseId() {
         return franchiseId;

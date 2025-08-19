@@ -19,7 +19,6 @@ public class MerchantListDTO {
     private String status;
     private LocalDateTime createdAt;
 
-
     // Constructors
     public MerchantListDTO() {}
 

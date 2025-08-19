@@ -221,15 +221,11 @@ public class MerchantService {
         merchantRepository.save(merchant);
 
         // Create login credentials
-       if(dto.isApproved()){
-           merchant.setApproved(true);
-           userService.createAndSendCredentials(
-                   dto.getPrimaryContactEmail(),
-                   "MERCHANT",
-                   null
-           );
-       }
-
+        userService.createAndSendCredentials(
+                dto.getPrimaryContactEmail(),
+                "MERCHANT",
+                null
+        );
     }
 
     public List<MerchantListDTO> getAllMerchantsForList() {
@@ -319,35 +315,4 @@ public class MerchantService {
                 merchant.getCreatedAt()
         );
     }
-
-    // 1. Get all unapproved merchants
-    public List<Merchant> getUnapprovedMerchants() {
-        return merchantRepository.findByIsApprovedFalse();
-    }
-
-    // 2. Approve a merchant
-    @Transactional
-    public Merchant approveMerchant(Long id) {
-        Merchant merchant = getMerchantById(id);
-        merchant.setApproved(true);
-        merchant.setUpdatedAt(LocalDateTime.now());
-        merchantRepository.save(merchant);
-
-        // Create user login credentials when approved
-        userService.createAndSendCredentials(
-                merchant.getContactPerson().getEmail(),
-                "MERCHANT",
-                null
-        );
-
-        return merchant;
-    }
-
-    // 3. Reject a merchant
-    @Transactional
-    public void rejectMerchant(Long id) {
-        Merchant merchant = getMerchantById(id);
-        merchantRepository.delete(merchant);
-    }
-
 }
