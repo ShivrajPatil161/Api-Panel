@@ -450,7 +450,7 @@ const SerialNumberGrid = ({ quantity, onGridChange }) => {
 
 // ==================== INWARD FORM MODAL COMPONENT ====================
 
-export const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
+const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
   const [serialGridData, setSerialGridData] = useState([])
 
   const {
