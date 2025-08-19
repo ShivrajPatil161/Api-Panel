@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -23,8 +25,18 @@ public class User {
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
-    @Column(unique  = true)
+
     private String resetToken;
+    @Column
+    private LocalDateTime resetTokenExpiry;
+
+    public LocalDateTime getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
+    }
 
     @NotBlank(message = "Role is required")
     @Column(nullable = false)

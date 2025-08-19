@@ -1,5 +1,6 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.Users.User;
 import com.project2.ism.Repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -9,8 +10,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -91,4 +94,53 @@ public class UserService {
         }
         return sb.toString();
     }
+
+    public void generateResetToken(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String token = UUID.randomUUID().toString();
+
+            user.setResetToken(token);
+            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(30)); // 30 min expiry
+            userRepository.save(user);
+
+            String resetLink = "http://localhost:5173/reset-password?token=" + token;
+            mailService.sendEmail(
+                    List.of(user.getEmail()),
+                    "Password Reset Request",
+                    "Click here to reset password: " + resetLink
+            );
+        } else {
+            throw new ResourceNotFoundException("No user found with this email");
+        }
+    }
+    public enum ResetStatus {
+        SUCCESS,
+        EXPIRED,
+        INVALID
+    }
+
+    @Transactional
+    public ResetStatus resetPassword(String token, String newPassword) {
+        Optional<User> userOptional = userRepository.findByResetToken(token);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            if (user.getResetTokenExpiry() == null || user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+                return ResetStatus.EXPIRED;
+            }
+
+            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setResetToken(null);
+            user.setResetTokenExpiry(null);
+            userRepository.save(user);
+            return ResetStatus.SUCCESS;
+        }
+
+        return ResetStatus.INVALID;
+    }
+
+
 }
