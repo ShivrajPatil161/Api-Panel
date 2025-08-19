@@ -1,12 +1,11 @@
 package com.project2.ism.Model.Vendor;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.project2.ism.Model.PricingScheme.CardRate;
 import com.project2.ism.Model.Product;
-import com.project2.ism.Model.Vendor.Vendor;
-import com.project2.ism.Model.Vendor.VendorCardRates;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -20,16 +19,11 @@ public class VendorRates {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @NotBlank(message = "Product code required")
-    private String productCode;
-
     @NotNull(message = "effective date is required")
     private LocalDate effectiveDate;
 
     @NotNull(message = "expiry date required")
     private LocalDate expiryDate;
-
 
     @NotNull(message = "card rate required ")
     @DecimalMin(value = "0.0", inclusive = false, message = "Rent must be greater than zero")
@@ -43,12 +37,12 @@ public class VendorRates {
 
     @NotNull
     @OneToOne
+    @JoinColumn(name = "product_id",nullable = false)
     private Product product;
 
     @OneToMany(mappedBy = "vendorRates", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<VendorCardRates> vendorCardRates = new ArrayList<>();
-
-
 
     private String remark;
 
@@ -60,6 +54,17 @@ public class VendorRates {
                 throw new IllegalArgumentException("Expiry date must be after effective date");
             }
         }
+    }
+
+    public void addVendorCardRate(VendorCardRates vendorCardRate) {
+        vendorCardRates.add(vendorCardRate);
+        vendorCardRate.setVendorRates(this);
+    }
+
+    // Helper method to remove card rate
+    public void removeCardRate(VendorCardRates vendorCardRate) {
+        vendorCardRates.remove(vendorCardRate);
+        vendorCardRate.setVendorRates(null);
     }
 
 
@@ -109,6 +114,9 @@ public class VendorRates {
 
     public void setVendorCardRates(List<VendorCardRates> vendorCardRates) {
         this.vendorCardRates = vendorCardRates;
+        if (vendorCardRates != null) {
+            vendorCardRates.forEach(cardRate -> cardRate.setVendorRates(this));
+        }
     }
 
     public String getRemark() {
@@ -117,15 +125,6 @@ public class VendorRates {
 
     public void setRemark(String remark) {
         this.remark = remark;
-    }
-
-
-    public String getProductCode() {
-        return productCode;
-    }
-
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
     }
 
     public Product getProduct() {

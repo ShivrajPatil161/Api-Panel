@@ -1,5 +1,6 @@
 package com.project2.ism.Model.Vendor;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -25,6 +26,7 @@ public class VendorCardRates {
 
     @ManyToOne
     @JoinColumn(name = "vendor_rate_id", nullable = false)
+    @JsonBackReference
     private VendorRates vendorRates;
 
     public VendorCardRates() {

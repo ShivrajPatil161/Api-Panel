@@ -4,6 +4,7 @@ import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Repository.OutwardTransactionRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 public class OutwardTransactionService {
 
     private final OutwardTransactionRepository repository;
+
 
     public OutwardTransactionService(OutwardTransactionRepository repository) {
         this.repository = repository;
@@ -26,6 +28,7 @@ public class OutwardTransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
     }
 
+    @Transactional
     public OutwardTransactions create(OutwardTransactions outwardTransactions) {
         if (repository.existsByDeliveryNumber(outwardTransactions.getDeliveryNumber())) {
             throw new DuplicateResourceException("Delivery number already exists: " + outwardTransactions.getDeliveryNumber());
@@ -33,6 +36,7 @@ public class OutwardTransactionService {
         return repository.save(outwardTransactions);
     }
 
+    @Transactional
     public OutwardTransactions update(Long id, OutwardTransactions outwardTransactions) {
         OutwardTransactions existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
@@ -59,6 +63,7 @@ public class OutwardTransactionService {
         return repository.save(existing);
     }
 
+    @Transactional
     public void delete(Long id) {
         OutwardTransactions existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
