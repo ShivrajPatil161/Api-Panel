@@ -13,7 +13,7 @@ public class CardRate {
 
     @Column(name = "card_name", nullable = false)
     private String cardName;
-//fdgfdy
+
     @Column(name = "rate")
     private Double rate;
 

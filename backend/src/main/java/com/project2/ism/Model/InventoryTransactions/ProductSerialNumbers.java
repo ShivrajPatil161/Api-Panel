@@ -91,13 +91,6 @@ public class ProductSerialNumbers {
         this.mobNumber = mobNumber;
     }
 
-    public InwardTransactions getInwardTransaction() {
-        return inwardTransaction;
-    }
-
-    public void setInwardTransaction(InwardTransactions inwardTransaction) {
-        this.inwardTransaction = inwardTransaction;
-    }
 
     public Product getProduct() {
         return product;
