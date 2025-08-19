@@ -59,7 +59,7 @@ public class InwardTransactions {
     private String productCondition;
 
     @OneToMany(mappedBy = "inwardTransaction")
-    private List<SerialNumbers> serialNumbers;
+    private List<ProductSerialNumbers> productSerialNumbers;
 
     @Size(max = 1000)
     private String remark;
@@ -155,12 +155,12 @@ public class InwardTransactions {
         this.productCondition = productCondition;
     }
 
-    public List<SerialNumbers> getSerialNumbers() {
-        return serialNumbers;
+    public List<ProductSerialNumbers> getSerialNumbers() {
+        return productSerialNumbers;
     }
 
-    public void setSerialNumbers(List<SerialNumbers> serialNumbers) {
-        this.serialNumbers = serialNumbers;
+    public void setSerialNumbers(List<ProductSerialNumbers> productSerialNumbers) {
+        this.productSerialNumbers = productSerialNumbers;
     }
 
     public String getRemark() {

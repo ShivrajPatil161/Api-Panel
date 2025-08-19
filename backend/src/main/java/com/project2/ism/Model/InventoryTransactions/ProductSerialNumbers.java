@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Entity
-public class SerialNumbers {
+public class ProductSerialNumbers {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,7 +35,7 @@ public class SerialNumbers {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    public SerialNumbers() {
+    public ProductSerialNumbers() {
     }
 
     public Long getId() {
