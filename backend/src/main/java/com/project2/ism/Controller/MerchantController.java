@@ -191,4 +191,23 @@ public class MerchantController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
+    @GetMapping("/unapproved")
+    public List<Merchant> getUnapprovedMerchants() {
+        return merchantService.getUnapprovedMerchants();
+    }
+
+    // 2. Approve merchant
+    @PutMapping("/{id}/approve")
+    public Merchant approveMerchant(@PathVariable Long id) {
+        return merchantService.approveMerchant(id);
+    }
+
+    // 3. Reject merchant
+    @DeleteMapping("/{id}/reject")
+    public ResponseEntity<String> rejectMerchant(@PathVariable Long id) {
+        merchantService.rejectMerchant(id);
+        return ResponseEntity.ok("Merchant rejected and deleted successfully.");
+    }
 }

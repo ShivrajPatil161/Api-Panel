@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Package, Settings, FileText, ToggleRight, ToggleLeft } from 'lucide-react';
 import { z } from 'zod';
-import axiosInstance from '../../constants/API/axiosInstance';
+import api from '../../constants/API/axiosInstance';
 
 // Category Select with Add New Option Component
 const CategorySelectField = ({
@@ -304,8 +304,8 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
         setDataLoading(true);
 
         const [vendorsResponse, categoriesResponse] = await Promise.all([
-          axiosInstance.get('/vendors/id_name'),
-          axiosInstance.get('/product-categories')
+          api.get('/vendors/id_name'),
+          api.get('/product-categories')
         ]);
 
         setVendors(vendorsResponse.data.map(vendor => ({

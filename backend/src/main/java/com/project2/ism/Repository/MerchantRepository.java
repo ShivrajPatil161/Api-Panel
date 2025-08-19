@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     List<Merchant> findByFranchiseId(Long franchiseId); // For filtering by Franchise
+    List<Merchant> findByIsApprovedFalse();
 }
