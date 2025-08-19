@@ -27,7 +27,7 @@ const Input = ({ label, name, register, errors, required = false, type = "text",
 )
 
 // Reusable Select Component
-const Select = ({ label, name, register, errors, options, required = false, ...props }) => (
+const   Select = ({ label, name, register, errors, options, required = false, ...props }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -290,14 +290,20 @@ const CardRates = ({ control, register, errors, watch }) => {
 
 // ==================== PRICING SCHEME FORM MODAL ====================
 const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
+
+  const [category, setCategory] = useState([]);
+  const [loading, setLoading] = useState(true)
   const getDefaultValues = () => ({
     schemeCode: '',
     rentalByMonth: '',
     customerType: '',
     cardRates: [],
-    description: ''
+    description: '',
+    productCategoryName: '',
+    productCategoryId:''
   })
 
+  
   const {
     control,
     register,
@@ -307,14 +313,19 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
     reset,
     setValue
   } = useForm({
-    defaultValues: initialData || getDefaultValues()
+    defaultValues: initialData
+      ? { ...initialData, productCategoryId: String(initialData.productCategoryId) }
+      : getDefaultValues()
   })
+
 
   // Fetch scheme code on mount for new schemes
   useEffect(() => {
     if (!isEdit && !initialData) {
       fetchNewSchemeCode()
+      
     }
+    fetchCategory()
   }, [isEdit, initialData])
 
   const fetchNewSchemeCode = async () => {
@@ -329,25 +340,38 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
       // Fallback to manual entry if API fails
     }
   }
+  const fetchCategory = async () => {
+    try {
+      const response = await api.get("/product-categories")
+      setCategory(response.data.map(category => ({
+        value: String(category.id),
+        label: category.categoryName
+      })));
+
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const customerTypeOptions = [
     { value: 'franchise', label: 'Franchise' },
     { value: 'direct_merchant', label: 'Direct Merchant' }
   ]
 
-  const deviceOptions = [
-    { value: 'POS Machine', label: 'POS Machine' },
-    { value: 'QR Code', label: 'QR Code' }
-  ]
 
   const onFormSubmit = (data) => {
     const filteredData = {
       ...data,
+      productCategory: { id: Number(data.productCategoryId) },
       cardRates: data.cardRates.filter(rate => {
         if (data.customerType === 'franchise') {
-          return rate.franchiseRate && parseFloat(rate.franchiseRate) > 0 &&
+          return (
+            rate.franchiseRate && parseFloat(rate.franchiseRate) > 0 &&
             rate.merchantRate && parseFloat(rate.merchantRate) > 0 &&
             rate.cardName.trim()
+          )
         } else {
           return rate.rate && parseFloat(rate.rate) > 0 && rate.cardName.trim()
         }
@@ -396,14 +420,18 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
                   readOnly={!isEdit}
                   placeholder="Auto-generated"
                 />
-                <Select
-                  label="Product Type"
-                  name="customerType"
-                  register={register}
-                  errors={errors}
-                  options={deviceOptions}
-                  required
-                />
+                {loading ? (
+                  <div className="flex items-center">Loading categories...</div>
+                ) : (
+                  <Select
+                    label="Product Type"
+                    name="productCategoryId"
+                    register={register}
+                    errors={errors}
+                    options={category}
+                    required
+                  />
+                )}
                 <Input
                   label="Rental by Month (₹)"
                   name="rentalByMonth"
