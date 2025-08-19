@@ -203,7 +203,7 @@ const VendorProductDetails = ({ register, errors }) => {
       setProductsLoading(true)
       const response = await api.get(`/products/vendor/${vendorId}`)
       const productOptions = response.data.map(product => ({
-        value: product.id.toString(),
+        value: product.productCode,
         label: `${product.productCode} - ${product.productName}`,
         productCode: product.productCode,
         id: product.id
@@ -225,6 +225,7 @@ const VendorProductDetails = ({ register, errors }) => {
       fetchProductsByVendor(vendor.id)
     }
   }
+
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
@@ -443,8 +444,7 @@ const CardRates = ({ control, register, errors }) => {
 // ==================== VENDOR RATE FORM MODAL ====================
 const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
   const getDefaultValues = () => ({
-    vendorId: '',
-    productId: '',
+    vendor: '',
     productCode: '',
     effectiveDate: '',
     expiryDate: '',
@@ -463,8 +463,10 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
   })
 
   const onFormSubmit = (data) => {
+    console.log(data)
     const filteredData = {
       ...data,
+      vendor:{id: Number(data.vendor)},
       vendorCardRates: data.vendorCardRates.filter(rate => rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim())
     }
 

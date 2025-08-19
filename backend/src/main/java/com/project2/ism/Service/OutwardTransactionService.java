@@ -30,8 +30,8 @@ public class OutwardTransactionService {
 
     @Transactional
     public OutwardTransactions create(OutwardTransactions outwardTransactions) {
-        if (repository.existsByDeliveryNumber(outwardTransactions.getDelivery_number())) {
-            throw new DuplicateResourceException("Delivery number already exists: " + outwardTransactions.getDelivery_number());
+        if (repository.existsByDeliveryNumber(outwardTransactions.getDeliveryNumber())) {
+            throw new DuplicateResourceException("Delivery number already exists: " + outwardTransactions.getDeliveryNumber());
         }
         return repository.save(outwardTransactions);
     }
@@ -41,7 +41,7 @@ public class OutwardTransactionService {
         OutwardTransactions existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
 
-        existing.setDelivery_number(outwardTransactions.getDelivery_number());
+        existing.setDeliveryNumber(outwardTransactions.getDeliveryNumber());
         existing.setFranchise(outwardTransactions.getFranchise());
         existing.setMerchant(outwardTransactions.getMerchant());
         existing.setProduct(outwardTransactions.getProduct());
@@ -50,7 +50,7 @@ public class OutwardTransactionService {
         existing.setDispatchedBy(outwardTransactions.getDispatchedBy());
         existing.setQuantity(outwardTransactions.getQuantity());
         existing.setUnitPrice(outwardTransactions.getUnitPrice());
-        existing.setTotal_amount(outwardTransactions.getTotal_amount());
+        existing.setTotalAmount(outwardTransactions.getTotalAmount());
         existing.setDeliveryAddress(outwardTransactions.getDeliveryAddress());
         existing.setContactPerson(outwardTransactions.getContactPerson());
         existing.setContactPersonNumber(outwardTransactions.getContactPersonNumber());

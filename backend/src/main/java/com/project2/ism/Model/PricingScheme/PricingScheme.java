@@ -1,8 +1,11 @@
 package com.project2.ism.Model.PricingScheme;
 
 
+import com.project2.ism.Model.ProductCategory;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,11 @@ public class PricingScheme {
 
     @Column(name = "scheme_code", unique = true, nullable = false)
     private String schemeCode;
+
+    @NotNull(message = "Please select a category")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_category_id", nullable = false)
+    private ProductCategory productCategory;
 
     @Column(name = "rental_by_month", nullable = false)
     private Double rentalByMonth;
@@ -35,7 +43,7 @@ public class PricingScheme {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-//hgtgujfyi
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -57,6 +65,14 @@ public class PricingScheme {
     public void removeCardRate(CardRate cardRate) {
         cardRates.remove(cardRate);
         cardRate.setPricingScheme(null);
+    }
+
+    public ProductCategory getProductCategory() {
+        return productCategory;
+    }
+
+    public void setProductCategory(ProductCategory productCategory) {
+        this.productCategory = productCategory;
     }
 
     // Getters and Setters
