@@ -3,6 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button, FormInput } from '../Forms/Common/common';
 import { toast } from 'react-toastify';
+import api from "../../constants/API/axiosInstance";
 
 const ForgotPassword = () => {
     const {
@@ -16,11 +17,20 @@ const ForgotPassword = () => {
 
     const onSubmit = async (formData) => {
         try {
-            // For now, no backend — simulate success
-            toast.success(`Password reset link sent to ${formData.email}`);
+            const res = await api.post(
+                "/users/forgot-password",
+                null,
+                { params: { email: formData.email } }
+            );
+
+            toast.success(res.data || "Password reset link sent to your email.");
             reset();
         } catch (error) {
-            toast.error("Failed to send reset link. Please try again.");
+            if (error.response) {
+                toast.error(error.response.data || "Failed to send reset link.");
+            } else {
+                toast.error("Something went wrong. Please try again.");
+            }
         }
     };
 

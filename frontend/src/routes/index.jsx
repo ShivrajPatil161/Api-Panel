@@ -24,6 +24,8 @@ import ErrorPage from '../components/ErrorPage.jsx'
 import VendorProductUploadForm from '../components/Forms/FileUpload.jsx'
 import AdminApproval from '../components/Admin/AdminApproval.jsx'
 import ForgotPassword from '../components/Auth/ForgotPass.jsx'
+import InventoryManagement from '../components/Inventory/Inventory.jsx'
+import ResetPassword from '../components/Auth/ResetPassword.jsx'
 
 
 
@@ -54,6 +56,10 @@ export const router = createBrowserRouter([
       {
         path: "forgot-pass",
         element: <ForgotPassword />
+      },
+      {
+        path: "reset-password",
+        element: <ResetPassword />
       },
       // {
       //   path: "signup",
@@ -103,6 +109,10 @@ export const router = createBrowserRouter([
               {
                 path: "products-assign",
                 element: <ProductAssignment />
+              },
+              {
+                path: "inventory",
+                element: <InventoryManagement />
               },
               {
                 path: "inward",

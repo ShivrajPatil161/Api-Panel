@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import axios from 'axios';
 import { toast } from 'react-toastify'
 import { Button, FormInput } from '../Forms/Common/common';
+import api from '../../constants/API/axiosInstance';
 
 
 
@@ -21,8 +22,8 @@ const Login = () => {
 
   const onSubmit = async (formData) => {
     try {
-      const { data, status } = await axios.post(
-        "http://localhost:8081/api/users/login",
+      const { data, status } = await api.post(
+        "/users/login",
         formData
       );
 
@@ -31,9 +32,7 @@ const Login = () => {
       if (status === 200) {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("userType", data.role);
-        if (data.role.toLowerCase() === "franchise") {
-          localStorage.setItem("franchiseId", 1);
-        }
+        
         toast.success("Login successful!");
         reset();
         navigate("/dashboard");
