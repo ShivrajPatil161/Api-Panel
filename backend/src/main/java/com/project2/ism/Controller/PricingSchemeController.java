@@ -1,5 +1,6 @@
 package com.project2.ism.Controller;
 
+import com.project2.ism.DTO.PricingSchemeDTO;
 import com.project2.ism.Service.PricingSchemeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ public class PricingSchemeController {
     private static final Logger logger = LoggerFactory.getLogger(PricingSchemeController.class);
 
     private final PricingSchemeService pricingSchemeService;
+
 
     @Autowired
     public PricingSchemeController(PricingSchemeService pricingSchemeService) {
@@ -75,7 +77,7 @@ public class PricingSchemeController {
             Pageable pageable = PageRequest.of(page, size, sort);
             Page<PricingScheme> schemes = pricingSchemeService.getAllPricingSchemes(pageable);
 
-            return ResponseEntity.ok(schemes);
+            return ResponseEntity.ok(schemes.map(PricingSchemeDTO::fromEntity));
         } catch (Exception e) {
             logger.error("Error fetching pricing schemes: {}", e.getMessage());
             Map<String, String> error = new HashMap<>();
@@ -92,7 +94,7 @@ public class PricingSchemeController {
         try {
             logger.debug("REST request to get Pricing Scheme by ID: {}", id);
             PricingScheme scheme = pricingSchemeService.getPricingSchemeById(id);
-            return ResponseEntity.ok(scheme);
+            return ResponseEntity.ok(PricingSchemeDTO.fromEntity(scheme));
         } catch (RuntimeException e) {
             logger.error("Pricing scheme not found: {}", e.getMessage());
             Map<String, String> error = new HashMap<>();
@@ -114,7 +116,7 @@ public class PricingSchemeController {
         try {
             logger.debug("REST request to get Pricing Scheme by code: {}", schemeCode);
             PricingScheme scheme = pricingSchemeService.getPricingSchemeByCode(schemeCode);
-            return ResponseEntity.ok(scheme);
+            return ResponseEntity.ok(PricingSchemeDTO.fromEntity(scheme));
         } catch (RuntimeException e) {
             logger.error("Pricing scheme not found: {}", e.getMessage());
             Map<String, String> error = new HashMap<>();
@@ -137,7 +139,7 @@ public class PricingSchemeController {
         try {
             logger.info("REST request to update Pricing Scheme ID: {}", id);
             PricingScheme updatedScheme = pricingSchemeService.updatePricingScheme(id, pricingSchemeDetails);
-            return ResponseEntity.ok(updatedScheme);
+            return ResponseEntity.ok(PricingSchemeDTO.fromEntity(updatedScheme));
         } catch (RuntimeException e) {
             logger.error("Error updating pricing scheme: {}", e.getMessage());
             Map<String, String> error = new HashMap<>();

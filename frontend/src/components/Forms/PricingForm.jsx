@@ -27,7 +27,7 @@ const Input = ({ label, name, register, errors, required = false, type = "text",
 )
 
 // Reusable Select Component
-const Select = ({ label, name, register, errors, options, required = false, ...props }) => (
+const   Select = ({ label, name, register, errors, options, required = false, ...props }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -298,6 +298,7 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
     description: ''
   })
 
+  const [category, setCategory] = useState([]);
   const {
     control,
     register,
@@ -314,6 +315,7 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
   useEffect(() => {
     if (!isEdit && !initialData) {
       fetchNewSchemeCode()
+      fetchCategory()
     }
   }, [isEdit, initialData])
 
@@ -329,25 +331,36 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
       // Fallback to manual entry if API fails
     }
   }
+  const fetchCategory = async () => {
+    try {
+      const response = await api.get("/product-categories")
+      setCategory(response.data.map(category => ({
+        value: category.id,
+        label: category.categoryName
+      })));
+
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   const customerTypeOptions = [
     { value: 'franchise', label: 'Franchise' },
     { value: 'direct_merchant', label: 'Direct Merchant' }
   ]
 
-  const deviceOptions = [
-    { value: 'POS Machine', label: 'POS Machine' },
-    { value: 'QR Code', label: 'QR Code' }
-  ]
 
   const onFormSubmit = (data) => {
     const filteredData = {
       ...data,
+      productCategory: { id: Number(data.productCategoryId) },
       cardRates: data.cardRates.filter(rate => {
         if (data.customerType === 'franchise') {
-          return rate.franchiseRate && parseFloat(rate.franchiseRate) > 0 &&
+          return (
+            rate.franchiseRate && parseFloat(rate.franchiseRate) > 0 &&
             rate.merchantRate && parseFloat(rate.merchantRate) > 0 &&
             rate.cardName.trim()
+          )
         } else {
           return rate.rate && parseFloat(rate.rate) > 0 && rate.cardName.trim()
         }
@@ -398,10 +411,10 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
                 />
                 <Select
                   label="Product Type"
-                  name="customerType"
+                  name="productCategoryId"
                   register={register}
                   errors={errors}
-                  options={deviceOptions}
+                  options={category}
                   required
                 />
                 <Input
