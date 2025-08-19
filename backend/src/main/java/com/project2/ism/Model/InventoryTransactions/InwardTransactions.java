@@ -34,14 +34,14 @@ public class InwardTransactions {
     @Column(nullable = false, length = 100)
     private String receivedBy;
 
-    @NotNull(message = "Product is required")
+    @NotNull
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id")
     private Product product;
 
-    @NotNull(message = "Product Category is required")
+    @NotNull
     @ManyToOne
-    @JoinColumn(name = "product_category_id", nullable = false)
+    @JoinColumn(name = "product_category_id")
     private ProductCategory productCategory;
 
     @NotNull(message = "Product Quantity is required")
@@ -113,14 +113,6 @@ public class InwardTransactions {
 
     public void setProduct(Product product) {
         this.product = product;
-    }
-
-    public ProductCategory getProductCategory() {
-        return productCategory;
-    }
-
-    public void setProductCategory(ProductCategory productCategory) {
-        this.productCategory = productCategory;
     }
 
     public Integer getQuantity() {

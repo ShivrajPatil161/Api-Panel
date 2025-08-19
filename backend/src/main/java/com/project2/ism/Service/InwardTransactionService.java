@@ -47,7 +47,6 @@ public class InwardTransactionService {
         existing.setReceivedDate(updated.getReceivedDate());
         existing.setReceivedBy(updated.getReceivedBy());
         existing.setProduct(updated.getProduct());
-        existing.setProductCategory(updated.getProductCategory());
         existing.setQuantity(updated.getQuantity());
         existing.setBatchNumber(updated.getBatchNumber());
         existing.setWarrantyPeriod(updated.getWarrantyPeriod());
