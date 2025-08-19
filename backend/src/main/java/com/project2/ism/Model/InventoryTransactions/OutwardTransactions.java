@@ -20,7 +20,7 @@ public class OutwardTransactions {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String delivery_number;
+    private String deliveryNumber;
 
     @ManyToOne
     @JoinColumn(name = "franchise_id")
@@ -47,7 +47,7 @@ public class OutwardTransactions {
 
     private BigDecimal unitPrice;
 
-    private BigDecimal total_amount;
+    private BigDecimal totalAmount;
 
     private String deliveryAddress;
 
@@ -67,7 +67,7 @@ public class OutwardTransactions {
 
     private LocalDate expectedDeliveryDate;
 
-    @OneToMany(mappedBy = "inwardTransaction")
+    @OneToMany(mappedBy = "outwardTransaction")
     private List<ProductSerialNumbers> productSerialNumbers;
 
     private String remarks;
@@ -83,13 +83,7 @@ public class OutwardTransactions {
         this.id = id;
     }
 
-    public String getDelivery_number() {
-        return delivery_number;
-    }
 
-    public void setDelivery_number(String delivery_number) {
-        this.delivery_number = delivery_number;
-    }
 
     public Franchise getFranchise() {
         return franchise;
@@ -155,14 +149,6 @@ public class OutwardTransactions {
         this.unitPrice = unitPrice;
     }
 
-    public BigDecimal getTotal_amount() {
-        return total_amount;
-    }
-
-    public void setTotal_amount(BigDecimal total_amount) {
-        this.total_amount = total_amount;
-    }
-
     public String getDeliveryAddress() {
         return deliveryAddress;
     }
@@ -225,5 +211,21 @@ public class OutwardTransactions {
 
     public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public String getDeliveryNumber() {
+        return deliveryNumber;
+    }
+
+    public void setDeliveryNumber(String deliveryNumber) {
+        this.deliveryNumber = deliveryNumber;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 }
