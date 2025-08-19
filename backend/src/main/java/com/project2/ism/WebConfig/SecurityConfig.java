@@ -102,7 +102,7 @@ public class SecurityConfig {
                 // Remove securityMatchers - this was limiting the scope
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers("/users/login", "/users/signup").permitAll()
+                        .requestMatchers("/users/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll() // Health check
 
                         // Admin only endpoints

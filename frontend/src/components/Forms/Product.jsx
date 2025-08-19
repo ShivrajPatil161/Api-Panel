@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Package, Settings, FileText, ToggleRight, ToggleLeft } from 'lucide-react';
 import { z } from 'zod';
 import axiosInstance from '../../constants/API/axiosInstance';
+import api from '../../constants/API/axiosInstance';
 
 // Category Select with Add New Option Component
 const CategorySelectField = ({
@@ -71,8 +72,11 @@ const CategorySelectField = ({
 // Validation Schema
 const productSchema = z.object({
   productName: z.string().min(2, 'Product name must be at least 2 characters'),
-  vendorId: z.number().min(1, 'Please select a vendor'),
-  productCategoryId: z.number().min(1, 'Please select a category'),
+  vendorId: z.coerce.number().min(1, 'Please select a vendor'),
+  productCategoryId: z.union([
+    z.coerce.number().min(1, 'Please select a category'),
+    z.literal("new") // allow "new" string for add category
+  ]),
   newCategoryName: z.string().optional(),
   model: z.string().min(2, 'Model is required'),
   brand: z.string().min(2, 'Brand is required'),
@@ -304,20 +308,20 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
         setDataLoading(true);
 
         const [vendorsResponse, categoriesResponse] = await Promise.all([
-          axiosInstance.get('/vendors/id_name'),
-          axiosInstance.get('/product-categories')
+          api.get('/vendors/id_name'),
+          api.get('/product-categories')
         ]);
 
         setVendors(vendorsResponse.data.map(vendor => ({
-          value: vendor.id.toString(),
-          label: `${vendor.name} - ${vendor.id}`
+          value: vendor.id,
+          label: vendor.name
         })));
 
         setCategories(categoriesResponse.data.map(category => ({
-          value: category.id.toString(),
+          value: category.id,
           label: category.categoryName
         })));
-
+        
       } catch (error) {
         console.error('Error loading data:', error);
         setError('Failed to load vendors and categories. Please refresh the page.');
@@ -328,6 +332,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
 
     loadData();
   }, []);
+
 
   // Handle form submission
   const handleFormSubmit = async (data) => {
@@ -349,8 +354,8 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
       // Transform data to match backend expectations
       const transformedData = {
         productName: data.productName,
-        vendor: { id: parseInt(data.vendorId) },
-        productCategory: { id:categoryId,categoryName: categoryName },
+        vendor: { id: Number(data.vendorId) },
+        productCategory: { id: Number(categoryId),categoryName: categoryName },
         model: data.model,
         brand: data.brand,
         description: data.description,
@@ -363,7 +368,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
         remarks: data.remarks || null
       };
 
-
+console.log(transformedData)
       onSubmit(transformedData);
 
     } catch (error) {

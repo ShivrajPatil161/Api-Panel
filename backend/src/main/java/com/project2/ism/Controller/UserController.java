@@ -1,5 +1,6 @@
 package com.project2.ism.Controller;
 
+import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.Users.User;
 import com.project2.ism.Service.JwtService;
 import com.project2.ism.Service.UserService;
@@ -54,6 +55,32 @@ public class UserController {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "User already exists"));
+        }
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        try {
+            userService.generateResetToken(email);
+            return ResponseEntity.ok("Password reset link sent to your email.");
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with this email.");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong.");
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+        try {
+            UserService.ResetStatus status = userService.resetPassword(token, newPassword);
+
+            return switch (status) {
+                case SUCCESS -> ResponseEntity.ok("Password reset successful.");
+                case EXPIRED -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Reset token expired.");
+                case INVALID -> ResponseEntity.badRequest().body("Invalid reset token.");
+            };
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong.");
         }
     }
 
