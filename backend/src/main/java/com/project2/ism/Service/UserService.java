@@ -66,7 +66,7 @@ public class UserService {
         userRepository.save(user);
 
         // 4. Send email
-        String loginUrl = "http://localhost:5173/login";
+        String loginUrl = "http://localhost:5175/login";
         String message = """
                 Hello,
                 
@@ -102,10 +102,10 @@ public class UserService {
             String token = UUID.randomUUID().toString();
 
             user.setResetToken(token);
-            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(30)); // 30 min expiry
+            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(5)); // 30 min expiry
             userRepository.save(user);
 
-            String resetLink = "http://localhost:5173/reset-password?token=" + token;
+            String resetLink = "http://localhost:5175/reset-password?token=" + token;
             mailService.sendEmail(
                     List.of(user.getEmail()),
                     "Password Reset Request",
