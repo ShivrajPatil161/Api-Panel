@@ -130,8 +130,7 @@ public class SecurityConfig {
 
         // Use environment-specific origins in production
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "http://localhost:3000"
+                "http://localhost:5175"
                 // Add production origins here
         ));
 
