@@ -15,10 +15,15 @@ public class InwardTransactionDTO {
     public Long id;
     public String invoiceNumber;
     public Long vendorId;
+    public String vendorName;
     public LocalDate receivedDate;
     public String receivedBy;
     public Long productId;
+
+    public String productCode;
+    public String productName;
     public Long productCategoryId;
+    public String productCategoryName;
     public Integer quantity;
     public String batchNumber;
     public Integer warrantyPeriod;
@@ -63,10 +68,14 @@ public class InwardTransactionDTO {
         dto.id = entity.getId();
         dto.invoiceNumber = entity.getInvoiceNumber();
         dto.vendorId = entity.getVendor() != null ? entity.getVendor().getId() : null;
+        dto.vendorName = entity.getVendor() != null ? entity.getVendor().getName() : null;
         dto.receivedDate = entity.getReceivedDate();
         dto.receivedBy = entity.getReceivedBy();
         dto.productId = entity.getProduct() != null ? entity.getProduct().getId() : null;
+        dto.productCode = entity.getProduct() != null ? entity.getProduct().getProductCode() : null;
+        dto.productName = entity.getProduct() != null ? entity.getProduct().getProductName() : null;
         dto.productCategoryId = entity.getProductCategory() != null ? entity.getProductCategory().getId() : null;
+        dto.productCategoryName = entity.getProductCategory() != null ? entity.getProductCategory().getCategoryName() : null;
         dto.quantity = entity.getQuantity();
         dto.batchNumber = entity.getBatchNumber();
         dto.warrantyPeriod = entity.getWarrantyPeriod();

@@ -1,5 +1,6 @@
 package com.project2.ism.Model.InventoryTransactions;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.project2.ism.Model.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
@@ -12,27 +13,33 @@ public class ProductSerialNumbers {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Size(max = 50, message = "TID cannot exceed 50 characters")
+    @Size(max = 50, message = "SID cannot exceed 50 characters")
+    @Column(unique = true)
     private String sid;
 
-    @Size(max = 50, message = "TID cannot exceed 50 characters")
+    @Size(max = 50, message = "MID cannot exceed 50 characters")
+    @Column(unique = true)
     private String mid;
 
     @Size(max = 50, message = "TID cannot exceed 50 characters")
+    @Column(unique = true)
     private String tid;
 
+    @Size(max = 50, message = "VPAID cannot exceed 50 characters")
+    @Column(unique = true)
     private String vpaid;
-    @Size(max = 50, message = "TID cannot exceed 50 characters")
+
 
     @Pattern(regexp = "^[6-9]\\d{9}$", message = "Invalid mobile number")
     private String mobNumber;
 
     @ManyToOne
     @JoinColumn(name = "inward_transaction_id", nullable = false)
+    @JsonBackReference
     private InwardTransactions inwardTransaction;
 
     @ManyToOne
-    @JoinColumn(name = "outward_transaction_id", nullable = false)
+    @JoinColumn(name = "outward_transaction_id")
     private OutwardTransactions outwardTransaction;
 
 
