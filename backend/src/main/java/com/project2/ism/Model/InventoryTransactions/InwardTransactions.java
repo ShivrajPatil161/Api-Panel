@@ -1,5 +1,7 @@
 package com.project2.ism.Model.InventoryTransactions;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.project2.ism.Model.PricingScheme.CardRate;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.ProductCategory;
 import com.project2.ism.Model.Vendor.Vendor;
@@ -7,6 +9,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -58,11 +61,24 @@ public class InwardTransactions {
     @Column(nullable = false)
     private String productCondition;
 
-    @OneToMany(mappedBy = "inwardTransaction")
-    private List<ProductSerialNumbers> productSerialNumbers;
+    @OneToMany(mappedBy = "inwardTransaction", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ProductSerialNumbers> productSerialNumbers = new ArrayList<>();
 
     @Size(max = 1000)
     private String remark;
+
+    // Helper method to add card rate
+    public void addProductSerialNumbers(ProductSerialNumbers psn) {
+        productSerialNumbers.add(psn);
+        psn.setInwardTransaction(this);
+    }
+
+    // Helper method to remove card rate
+    public void removeProductSerialNumbers(ProductSerialNumbers psn) {
+        productSerialNumbers.remove(psn);
+        psn.setInwardTransaction(null);
+    }
 
     public InwardTransactions() {
     }
