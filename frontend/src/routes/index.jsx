@@ -115,10 +115,6 @@ export const router = createBrowserRouter([
                 element: <InventoryManagement />
               },
               {
-                path: "inward",
-                element: <Inward />
-              },
-              {
                 path: "outward",
                 element: <Outward />
               },
