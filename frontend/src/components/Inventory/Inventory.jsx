@@ -5,7 +5,7 @@ import InwardTable from './InwardTable'
 import OutwardTable from './OutwardTable' 
 import ReturnTable from './ReturnTable' 
 import InwardFormModal from '../Forms/Inward'
-import OutwardForm from '../Forms/Outward'
+import OutwardFormModal from '../Forms/Outward'
 import ReturnsForm from '../Forms/Return'
 import inwardAPI from '../../constants/API/inwardApi'
 
@@ -28,6 +28,9 @@ const InventoryManagement = () => {
     const [returnData, setReturnData] = useState([])
     const [loading, setLoading] = useState(false)
     const [editingInward, setEditingInward] = useState(null)
+    const [editingOutward, setEditingOutward] = useState(null)
+
+
     const tabs = [
         { id: 'inventory', label: 'Inventory', count: inventoryData.length },
         { id: 'inward', label: 'Inward Entry', count: inwardData.length },
@@ -112,6 +115,12 @@ const InventoryManagement = () => {
             }
         }
     }
+
+    const handleEditOutward = (inwardEntry) => {
+        setEditingInward(inwardEntry)
+        setIsInwardModalOpen(true)
+    }
+
 
     const handleOutwardSubmit = (data) => {
         setOutwardData(prev => [...prev, { ...data, id: Date.now() }])
@@ -248,9 +257,15 @@ const InventoryManagement = () => {
                 {isOutwardModalOpen && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
                         <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-                            <OutwardForm
+                            {/* Outward Form Modal */}
+                            <OutwardFormModal
+                                isOpen={isOutwardModalOpen}
+                                onClose={() => {
+                                    setIsOutwardModalOpen(false)
+                                    setEditingOutward(null)
+                                }}
                                 onSubmit={handleOutwardSubmit}
-                                onCancel={() => setIsOutwardModalOpen(false)}
+                                editData={editingOutward}
                             />
                         </div>
                     </div>

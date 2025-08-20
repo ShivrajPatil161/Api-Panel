@@ -17,11 +17,144 @@ import {
     Eye,
     Edit,
     Trash2,
+    CreditCard,
+    X,
 } from 'lucide-react'
+
+const DetailRow = ({ label, value }) => {
+    if (!value) return null;
+    return (
+        <div className="flex justify-between py-2">
+            <span className="font-medium text-gray-600">{label}:</span>
+            <span className="text-gray-900">{value}</span>
+        </div>
+    );
+};
+
+const ViewInwardEntry = ({ inwardData, onClose, isOpen }) => {
+    if (!isOpen || !inwardData) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+                    <div className="flex items-center space-x-3">
+                        <CreditCard className="h-6 w-6 text-blue-600" />
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            Inward Entry – {inwardData.invoiceNumber}
+                        </h2>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                        <X className="h-5 w-5 text-gray-500" />
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-6">
+                    {/* Vendor & Invoice Section */}
+                    <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                            Vendor & Invoice Details
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-20">
+                            <div className="">
+                                <DetailRow label="Invoice Number" value={inwardData.invoiceNumber} />
+                                <DetailRow label="Vendor Name" value={inwardData.vendorName} />
+                            </div>
+                            <div className="">
+                                <DetailRow label="Received By" value={inwardData.receivedBy} />
+                                <DetailRow label="Received Date" value={inwardData.receivedDate} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Product Section */}
+                    <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                            Product Details
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-20 ">
+                            <div className="">
+                                <DetailRow label="Product Code" value={inwardData.productCode} />
+                                <DetailRow label="Batch Number" value={inwardData.batchNumber} />
+                                <DetailRow label="Condition" value={inwardData.productCondition} />
+                            </div>
+                            <div className="">
+                                <DetailRow label="Product Name" value={inwardData.productName} />
+                                <DetailRow
+                                    label="Warranty Period"
+                                    value={
+                                        inwardData.warrantyPeriod
+                                            ? inwardData.warrantyPeriod + " months"
+                                            : null
+                                    }
+                                />
+                                <DetailRow label="Quantity" value={inwardData.quantity} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Serial Numbers */}
+                    {inwardData.serialNumbers?.length > 0 && (
+                        <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                                Serial Numbers
+                            </h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full border border-gray-200 rounded-lg">
+                                    <thead className="bg-gray-100 text-left">
+                                        <tr>
+                                            <th className="p-2 border">TID</th>
+                                            <th className="p-2 border">SID</th>
+                                            <th className="p-2 border">MID</th>
+                                            <th className="p-2 border">VPAID</th>
+                                            <th className="p-2 border">Mobile</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {inwardData.serialNumbers.map((s, index) => (
+                                            <tr key={index} className="hover:bg-gray-50">
+                                                <td className="p-2 border">{s.tid || "-"}</td>
+                                                <td className="p-2 border">{s.sid || "-"}</td>
+                                                <td className="p-2 border">{s.mid || "-"}</td>
+                                                <td className="p-2 border">{s.vpaid || "-"}</td>
+                                                <td className="p-2 border">{s.mobNumber || "-"}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Remarks */}
+                    <DetailRow label="Remarks" value={inwardData.remark} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 const InwardTable = ({ data, onEdit, onView, onDelete }) => {
     const [globalFilter, setGlobalFilter] = useState('')
     const [sorting, setSorting] = useState([])
+    const [viewData, setViewData] = useState(null)
+    const [isViewOpen, setIsViewOpen] = useState(false);
+
+    const handleView = (vendorData) => {
+        setViewData(vendorData)
+        setIsViewOpen(true)
+    }
+
+    const handleViewClose = () => {
+        setViewData(null)
+        setIsViewOpen(false)
+    }
 
     const columns = useMemo(() => [
         {
@@ -56,23 +189,9 @@ const InwardTable = ({ data, onEdit, onView, onDelete }) => {
             header: 'Product Name',
         },
         {
-            accessorKey: 'productType',
-            header: 'Product Type',
-            cell: ({ row }) => {
-                const productTypeLabels = {
-                    pos_machine: 'POS Machine',
-                    qr_scanner: 'QR Scanner',
-                    card_reader: 'Card Reader',
-                    printer: 'Thermal Printer',
-                    accessories: 'Accessories',
-                    other: 'Other'
-                }
-                return (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                        {productTypeLabels[row.getValue('productType')] || row.getValue('productType')}
-                    </span>
-                )
-            },
+            accessorKey: 'productCategoryName',
+            header: 'Product Category',
+           
         },
         {
             accessorKey: 'quantity',
@@ -108,30 +227,14 @@ const InwardTable = ({ data, onEdit, onView, onDelete }) => {
             accessorKey: 'receivedBy',
             header: 'Received By',
         },
-        {
-            accessorKey: 'status',
-            header: 'Status',
-            cell: ({ row }) => {
-                const status = row.getValue('status')
-                return (
-                    <span
-                        className={`px-2 py-1 text-xs rounded-full ${status === 'Received'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}
-                    >
-                        {status}
-                    </span>
-                )
-            },
-        },
+       
         {
             id: 'actions',
             header: 'Actions',
             cell: ({ row }) => (
                 <div className="flex items-center space-x-2">
                     <button
-                        onClick={() => onView?.(row.original)}
+                        onClick={() => handleView(row.original)}
                         className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
                         title="View Details"
                     >
@@ -283,6 +386,13 @@ const InwardTable = ({ data, onEdit, onView, onDelete }) => {
                     </div>
                 </div>
             </div>
+            {isViewOpen && (
+                <ViewInwardEntry
+                    inwardData={viewData}
+                    onClose={handleViewClose}
+                    isOpen={isViewOpen}
+                />
+            )}
         </div>
     )
 }

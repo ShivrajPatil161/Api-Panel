@@ -30,47 +30,54 @@ const inwardSchema = z.object({
 const SerialNumberGrid = ({ quantity, onGridChange, initialData = [] }) => {
   const [serialGrid, setSerialGrid] = useState([])
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
-
+console.log(initialData)
   const serialFields = ['MID', 'SID', 'TID', 'VpID']
 
   useEffect(() => {
-    const qty = parseInt(quantity) || 0
-    if (qty > 0) {
-      if (initialData.length > 0 && initialData.length === qty) {
-        // Use initial data if provided and matches quantity (for editing)
-        setSerialGrid(initialData)
-      } else {
-        // Create new grid or adjust size
-        const newGrid = Array.from({ length: qty }, (_, index) => {
-          // Try to preserve existing data if available
-          const existingRow = serialGrid[index] || initialData[index]
-          return {
-            id: index + 1,
-            MID: existingRow?.MID || '',
-            SID: existingRow?.SID || '',
-            TID: existingRow?.TID || '',
-            VpID: existingRow?.VpID || '',
-            selectedFields: existingRow?.selectedFields || {
-              MID: false,
-              SID: false,
-              TID: false,
-              VpID: false
-            }
-          }
-        })
-        setSerialGrid(newGrid)
-      }
-    } else {
-      setSerialGrid([])
-    }
-  }, [quantity]) // Removed initialData from dependencies to prevent infinite loops
+    const qty = parseInt(quantity) || 0;
 
-  // Only set initial data on first load
-  useEffect(() => {
-    if (initialData.length > 0 && serialGrid.length === 0) {
-      setSerialGrid(initialData)
+    if (qty > 0) {
+      let gridData = [];
+
+      if (initialData.length > 0) {
+        // Always normalize backend serialNumbers into grid format
+        gridData = initialData.map((row, index) => ({
+          id: index + 1,
+          MID: row.mid || '',
+          SID: row.sid || '',
+          TID: row.tid || '',
+          VpID: row.vpaid || '',
+          selectedFields: {
+            MID: !!row.mid,
+            SID: !!row.sid,
+            TID: !!row.tid,
+            VpID: !!row.vpaid,
+          },
+        }));
+      }
+
+      // If qty is bigger than initialData, pad new rows
+      if (gridData.length < qty) {
+        const paddedRows = Array.from(
+          { length: qty - gridData.length },
+          (_, i) => ({
+            id: gridData.length + i + 1,
+            MID: '',
+            SID: '',
+            TID: '',
+            VpID: '',
+            selectedFields: { MID: false, SID: false, TID: false, VpID: false },
+          })
+        );
+        gridData = [...gridData, ...paddedRows];
+      }
+
+      setSerialGrid(gridData);
+    } else {
+      setSerialGrid([]);
     }
-  }, [initialData])
+  }, [quantity, initialData]);
+
 
   useEffect(() => {
     onGridChange && onGridChange(serialGrid)
@@ -207,7 +214,7 @@ const SerialNumberGrid = ({ quantity, onGridChange, initialData = [] }) => {
       </div>
     )
   }
-
+console.log(serialGrid)
   return (
     <div className="mt-4">
       <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -512,23 +519,56 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
   }, [selectedVendorId])
 
   // Load edit data
+  // Load edit data into form when editing
   useEffect(() => {
     if (editData && isOpen) {
+      // set basic fields (except dropdowns/serials)
       Object.keys(editData).forEach(key => {
-        if (key !== 'serialNumberGrid') {
+        if (!['serialNumbers', 'vendorId', 'productId', 'productCategoryId'].includes(key)) {
           setValue(key, editData[key])
         }
       })
 
-      // Set serial grid data for editing
-      if (editData.serialNumberGrid) {
-        setSerialGridData(editData.serialNumberGrid)
+      // vendor + category will be set after data loads
+      if (editData.vendorId) {
+        setValue("vendorId", editData.vendorId.toString())
+        fetchProductsByVendor(editData.vendorId)
+      }
+      if (editData.productCategoryId) {
+        setValue("productCategoryId", editData.productCategoryId.toString())
+      }
+
+      // serials
+      if (editData.serialNumbers) {
+        setSerialGridData(editData.serialNumbers)
       }
     } else if (isOpen && !editData) {
-      // Reset for new entry
+      // reset on add new
       setSerialGridData([])
     }
-  }, [editData, setValue, isOpen])
+  }, [editData, isOpen])
+
+  // Once products are loaded, set productId
+  useEffect(() => {
+    if (products.length > 0 && editData?.productId) {
+      setValue("productId", editData.productId.toString())
+    }
+  }, [products, editData, setValue])
+
+  // Once vendors are loaded, set vendorId
+  useEffect(() => {
+    if (vendors.length > 0 && editData?.vendorId) {
+      setValue("vendorId", editData.vendorId.toString())
+    }
+  }, [vendors, editData, setValue])
+
+  // Once categories are loaded, set productCategoryId
+  useEffect(() => {
+    if (categories.length > 0 && editData?.productCategoryId) {
+      setValue("productCategoryId", editData.productCategoryId.toString())
+    }
+  }, [categories, editData, setValue])
+
 
   const conditionOptions = [
     { value: 'new', label: 'New' },
@@ -839,7 +879,7 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
               <SerialNumberGrid
                 quantity={quantity}
                 onGridChange={setSerialGridData}
-                initialData={editData?.serialNumberGrid || []}
+                initialData={editData?.serialNumbers || []}
               />
 
               <div className="mt-4">

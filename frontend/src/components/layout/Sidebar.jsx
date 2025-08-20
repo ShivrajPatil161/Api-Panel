@@ -175,10 +175,10 @@ const getMenuItems = (userType) => {
         iconColor: '',
         children: [
           { title: 'Product List', path: '/dashboard/inventory', icon: Package },
-          { title: 'Product Pricing', path: '/dashboard/inventory/pricing', icon: Calculator },
-          { title: 'Product Assign', path: '/dashboard/inventory/products-assign', icon: Calculator },
+          { title: 'Pricing Scheme', path: '/dashboard/inventory/pricing', icon: Calculator },
+          { title: 'Product Scheme Assign', path: '/dashboard/inventory/products-assign', icon: Calculator },
           { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: ArrowDown },
-          { title: 'Inward Entry', path: '/dashboard/inventory/inward', icon: ArrowDown },
+         
           { title: 'Outward Entry', path: '/dashboard/inventory/outward', icon: ArrowUp },
           { title: 'Returns', path: '/dashboard/inventory/returns', icon: RotateCcw }
         ]
