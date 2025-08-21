@@ -24,16 +24,14 @@ public class InwardTransactionService {
     private final VendorRepository vendorRepo;
 
     private final ProductRepository productRepo;
-    private final ProductCategoryRepository productCategoryRepo;
 
 
 
-    public InwardTransactionService(InwardTransactionRepository inwardRepo, ProductSerialsRepository serialRepo, VendorRepository vendorRepo, ProductRepository productRepo, ProductCategoryRepository productCategoryRepo) {
+    public InwardTransactionService(InwardTransactionRepository inwardRepo, ProductSerialsRepository serialRepo, VendorRepository vendorRepo, ProductRepository productRepo) {
         this.inwardRepo = inwardRepo;
         this.serialRepo = serialRepo;
         this.vendorRepo = vendorRepo;
         this.productRepo = productRepo;
-        this.productCategoryRepo = productCategoryRepo;
     }
 
     @Transactional
@@ -42,10 +40,8 @@ public class InwardTransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
         Product product = productRepo.findById(dto.productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        ProductCategory category = productCategoryRepo.findById(dto.productCategoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-        InwardTransactions inward = dto.toEntity(vendor, product, category);
+        InwardTransactions inward = dto.toEntity(vendor, product);
 
         // Validate serials before save
         validateAndAttachSerials(inward);
@@ -75,16 +71,12 @@ public class InwardTransactionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
         Product product = productRepo.findById(dto.productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        ProductCategory category = productCategoryRepo.findById(dto.productCategoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
-
         // update fields
         existing.setInvoiceNumber(dto.invoiceNumber);
         existing.setVendor(vendor);
         existing.setReceivedDate(dto.receivedDate);
         existing.setReceivedBy(dto.receivedBy);
         existing.setProduct(product);
-        existing.setProductCategory(category);
         existing.setQuantity(dto.quantity);
         existing.setBatchNumber(dto.batchNumber);
         existing.setWarrantyPeriod(dto.warrantyPeriod);

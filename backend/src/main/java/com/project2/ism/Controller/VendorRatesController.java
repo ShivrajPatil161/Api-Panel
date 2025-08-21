@@ -54,4 +54,11 @@ public class VendorRatesController {
         vendorRatesService.deleteVendorRates(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<VendorRatesDTO> getByProductId(@PathVariable Long productId) {
+        VendorRates found = vendorRatesService.getRatesByProductId(productId);
+        return ResponseEntity.ok(VendorRatesDTO.fromEntity(found));
+    }
+
 }

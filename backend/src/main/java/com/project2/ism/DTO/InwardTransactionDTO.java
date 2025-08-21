@@ -3,7 +3,6 @@ package com.project2.ism.DTO;
 import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.Product;
-import com.project2.ism.Model.ProductCategory;
 import com.project2.ism.Model.Vendor.Vendor;
 
 import java.time.LocalDate;
@@ -22,8 +21,7 @@ public class InwardTransactionDTO {
 
     public String productCode;
     public String productName;
-    public Long productCategoryId;
-    public String productCategoryName;
+
     public Integer quantity;
     public String batchNumber;
     public Integer warrantyPeriod;
@@ -74,8 +72,6 @@ public class InwardTransactionDTO {
         dto.productId = entity.getProduct() != null ? entity.getProduct().getId() : null;
         dto.productCode = entity.getProduct() != null ? entity.getProduct().getProductCode() : null;
         dto.productName = entity.getProduct() != null ? entity.getProduct().getProductName() : null;
-        dto.productCategoryId = entity.getProductCategory() != null ? entity.getProductCategory().getId() : null;
-        dto.productCategoryName = entity.getProductCategory() != null ? entity.getProductCategory().getCategoryName() : null;
         dto.quantity = entity.getQuantity();
         dto.batchNumber = entity.getBatchNumber();
         dto.warrantyPeriod = entity.getWarrantyPeriod();
@@ -90,7 +86,7 @@ public class InwardTransactionDTO {
         return dto;
     }
 
-    public InwardTransactions toEntity(Vendor vendor, Product product, ProductCategory category) {
+    public InwardTransactions toEntity(Vendor vendor, Product product) {
         InwardTransactions inward = new InwardTransactions();
         inward.setId(this.id);
         inward.setInvoiceNumber(this.invoiceNumber);
@@ -98,7 +94,6 @@ public class InwardTransactionDTO {
         inward.setReceivedDate(this.receivedDate);
         inward.setReceivedBy(this.receivedBy);
         inward.setProduct(product);
-        inward.setProductCategory(category);
         inward.setQuantity(this.quantity);
         inward.setBatchNumber(this.batchNumber);
         inward.setWarrantyPeriod(this.warrantyPeriod);
