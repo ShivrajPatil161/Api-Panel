@@ -1,7 +1,7 @@
 // Updated InwardFormModal component in frontend/src/components/Forms/Inward.jsx
 // Replace the existing InwardFormModal with this updated version
 // Updated InwardFormModal with API integration for dropdowns
-import { useState, useEffect } from 'react'
+import { useState, useEffect,useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -16,7 +16,6 @@ const inwardSchema = z.object({
   receivedDate: z.string().min(1, 'Received date is required'),
   receivedBy: z.string().min(1, 'Received by is required'),
   productId: z.string().min(1, 'Product is required'),
-  productCategoryId: z.string().min(1, 'Product category is required'),
   quantity: z.string().min(1, 'Quantity is required').refine(val => parseInt(val) > 0, 'Quantity must be positive'),
   batchNumber: z.string().optional(),
   warrantyPeriod: z.string().optional(),
@@ -25,12 +24,11 @@ const inwardSchema = z.object({
 })
 
 
-
 // Fixed SerialNumberGrid - Working checkboxes for manual entry
 const SerialNumberGrid = ({ quantity, onGridChange, initialData = [] }) => {
   const [serialGrid, setSerialGrid] = useState([])
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
-console.log(initialData)
+
   const serialFields = ['MID', 'SID', 'TID', 'VpID']
 
   useEffect(() => {
@@ -78,10 +76,18 @@ console.log(initialData)
     }
   }, [quantity, initialData]);
 
+  // Use useRef to track the previous grid data and only call onGridChange when data actually changes
+  const prevGridRef = useRef()
 
   useEffect(() => {
-    onGridChange && onGridChange(serialGrid)
-  }, [serialGrid, onGridChange])
+    if (onGridChange && serialGrid.length > 0) {
+      // Only call onGridChange if the data has actually changed
+      if (JSON.stringify(prevGridRef.current) !== JSON.stringify(serialGrid)) {
+        onGridChange(serialGrid)
+        prevGridRef.current = serialGrid
+      }
+    }
+  }, [serialGrid]) // Remove onGridChange from dependencies to prevent infinite loop
 
   const handleSerialNumberChange = (rowId, field, value) => {
     const updatedGrid = serialGrid.map(row =>
@@ -214,7 +220,7 @@ console.log(initialData)
       </div>
     )
   }
-console.log(serialGrid)
+
   return (
     <div className="mt-4">
       <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -320,8 +326,8 @@ console.log(serialGrid)
                           onChange={(e) => handleSerialNumberChange(row.id, field, e.target.value)}
                           disabled={!row.selectedFields[field]}
                           className={`w-full px-2 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-all ${!row.selectedFields[field]
-                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                              : 'bg-white text-gray-900 border-gray-300 hover:border-blue-300'
+                            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                            : 'bg-white text-gray-900 border-gray-300 hover:border-blue-300'
                             }`}
                           placeholder={row.selectedFields[field] ? `Enter ${field}` : 'Disabled'}
                         />
@@ -406,6 +412,7 @@ console.log(serialGrid)
 }
 
 
+
 // Updated InwardFormModal with backend integration
 const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
   const [serialGridData, setSerialGridData] = useState([])
@@ -414,12 +421,10 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
   // Dropdown states
   const [vendors, setVendors] = useState([])
   const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState([])
 
   // Loading states
   const [vendorsLoading, setVendorsLoading] = useState(false)
   const [productsLoading, setProductsLoading] = useState(false)
-  const [categoriesLoading, setCategoriesLoading] = useState(false)
 
   const {
     register,
@@ -486,28 +491,12 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
     }
   }
 
-  const fetchCategories = async () => {
-    try {
-      setCategoriesLoading(true)
-      const response = await api.get('/product-categories')
-      const categoryOptions = response.data.map(category => ({
-        value: category.id.toString(),
-        label: category.categoryName
-      }))
-      setCategories(categoryOptions)
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-      alert('Error loading categories. Please try again.')
-    } finally {
-      setCategoriesLoading(false)
-    }
-  }
+
 
   // Load data on mount
   useEffect(() => {
     if (isOpen) {
       fetchVendors()
-      fetchCategories()
     }
   }, [isOpen])
 
@@ -524,19 +513,17 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
     if (editData && isOpen) {
       // set basic fields (except dropdowns/serials)
       Object.keys(editData).forEach(key => {
-        if (!['serialNumbers', 'vendorId', 'productId', 'productCategoryId'].includes(key)) {
+        if (!['serialNumbers', 'vendorId', 'productId'].includes(key)) {
           setValue(key, editData[key])
         }
       })
 
-      // vendor + category will be set after data loads
+      // vendor will be set after data loads
       if (editData.vendorId) {
         setValue("vendorId", editData.vendorId.toString())
         fetchProductsByVendor(editData.vendorId)
       }
-      if (editData.productCategoryId) {
-        setValue("productCategoryId", editData.productCategoryId.toString())
-      }
+      
 
       // serials
       if (editData.serialNumbers) {
@@ -562,12 +549,7 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
     }
   }, [vendors, editData, setValue])
 
-  // Once categories are loaded, set productCategoryId
-  useEffect(() => {
-    if (categories.length > 0 && editData?.productCategoryId) {
-      setValue("productCategoryId", editData.productCategoryId.toString())
-    }
-  }, [categories, editData, setValue])
+
 
 
   const conditionOptions = [
@@ -698,22 +680,7 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Received By <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      {...register('receivedBy')}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.receivedBy ? 'border-red-500' : ''
-                        }`}
-                      placeholder="Enter receiver name"
-                      disabled={isSubmitting}
-                    />
-                    {errors.receivedBy && (
-                      <p className="mt-1 text-sm text-red-600">{errors.receivedBy.message}</p>
-                    )}
-                  </div>
+                 
                 </div>
               </div>
 
@@ -762,38 +729,6 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Product Category <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        {...register('productCategoryId')}
-                        className={`w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${errors.productCategoryId ? 'border-red-500' : ''
-                          } ${categoriesLoading ? 'opacity-50' : ''}`}
-                        disabled={isSubmitting || categoriesLoading}
-                      >
-                        <option value="">
-                          {categoriesLoading ? 'Loading categories...' : 'Select category'}
-                        </option>
-                        {categories.map(category => (
-                          <option key={category.value} value={category.value}>
-                            {category.label}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                        {categoriesLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-                    {errors.productCategoryId && (
-                      <p className="mt-1 text-sm text-red-600">{errors.productCategoryId.message}</p>
-                    )}
-                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -810,6 +745,23 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
                     />
                     {errors.quantity && (
                       <p className="mt-1 text-sm text-red-600">{errors.quantity.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Received By <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      {...register('receivedBy')}
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.receivedBy ? 'border-red-500' : ''
+                        }`}
+                      placeholder="Enter receiver name"
+                      disabled={isSubmitting}
+                    />
+                    {errors.receivedBy && (
+                      <p className="mt-1 text-sm text-red-600">{errors.receivedBy.message}</p>
                     )}
                   </div>
                 </div>

@@ -188,11 +188,7 @@ const InwardTable = ({ data, onEdit, onView, onDelete }) => {
             accessorKey: 'productName',
             header: 'Product Name',
         },
-        {
-            accessorKey: 'productCategoryName',
-            header: 'Product Category',
-           
-        },
+        
         {
             accessorKey: 'quantity',
             header: ({ column }) => (
