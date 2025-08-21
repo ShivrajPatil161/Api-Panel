@@ -121,5 +121,10 @@ public class InwardTransactionService {
             sn.setProduct(inward.getProduct());
         }
     }
+
+
+    public List<?> getSerialNumbersByProductId(Long productId){
+        return serialRepo.findByProduct_IdAndMerchantIsNull(productId);
+    }
 }
 

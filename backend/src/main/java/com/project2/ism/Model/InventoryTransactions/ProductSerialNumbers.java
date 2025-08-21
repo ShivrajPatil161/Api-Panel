@@ -2,6 +2,8 @@ package com.project2.ism.Model.InventoryTransactions;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.project2.ism.Model.Product;
+import com.project2.ism.Model.Users.Franchise;
+import com.project2.ism.Model.Users.Merchant;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -42,10 +44,19 @@ public class ProductSerialNumbers {
     @JoinColumn(name = "outward_transaction_id")
     private OutwardTransactions outwardTransaction;
 
+    @ManyToOne
+    @JoinColumn(name = "return_transaction_id")
+    private ReturnTransactions returnTransaction;
+
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "merchant_id")
+    private Merchant merchant;
+
 
     public ProductSerialNumbers() {
     }
@@ -121,5 +132,21 @@ public class ProductSerialNumbers {
 
     public void setOutwardTransaction(OutwardTransactions outwardTransaction) {
         this.outwardTransaction = outwardTransaction;
+    }
+
+    public ReturnTransactions getReturnTransaction() {
+        return returnTransaction;
+    }
+
+    public void setReturnTransaction(ReturnTransactions returnTransaction) {
+        this.returnTransaction = returnTransaction;
+    }
+
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
     }
 }

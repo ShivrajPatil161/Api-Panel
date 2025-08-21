@@ -1,9 +1,7 @@
 package com.project2.ism.Model.InventoryTransactions;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.project2.ism.Model.PricingScheme.CardRate;
 import com.project2.ism.Model.Product;
-import com.project2.ism.Model.ProductCategory;
 import com.project2.ism.Model.Vendor.Vendor;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -41,8 +39,6 @@ public class InwardTransactions {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
-
-
 
     @NotNull(message = "Product Quantity is required")
     @Positive(message = "Quantity must be greater than zero")

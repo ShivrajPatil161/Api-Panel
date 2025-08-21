@@ -47,9 +47,7 @@ public class Product {
     @Column(name = "brand", nullable = false, length = 100)
     private String brand;
 
-    @NotBlank(message = "Description must be at least 10 characters")
-    @Size(min = 10, message = "Description must be at least 10 characters")
-    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Min(value = 0, message = "Warranty period must be 0 or more months")
@@ -192,9 +190,6 @@ public class Product {
         this.description = description;
     }
 
-
-
-
     public Integer getWarrantyPeriod() {
         return warrantyPeriod;
     }
@@ -202,8 +197,6 @@ public class Product {
     public void setWarrantyPeriod(Integer warrantyPeriod) {
         this.warrantyPeriod = warrantyPeriod;
     }
-
-
 
     public String getHsn() {
         return hsn;
