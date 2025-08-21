@@ -51,4 +51,10 @@ public class VendorRatesService {
         VendorRates existingRates = getVendorRatesById(id);
         vendorRatesRepository.delete(existingRates);
     }
+    public VendorRates getRatesByProductId(Long productId) {
+        return vendorRatesRepository.findByProductId(productId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Vendor rates not found for product ID: " + productId
+                ));
+    }
 }

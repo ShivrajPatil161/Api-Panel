@@ -42,10 +42,7 @@ public class InwardTransactions {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "product_category_id")
-    private ProductCategory productCategory;
+
 
     @NotNull(message = "Product Quantity is required")
     @Positive(message = "Quantity must be greater than zero")
@@ -179,13 +176,6 @@ public class InwardTransactions {
         this.remark = remark;
     }
 
-    public ProductCategory getProductCategory() {
-        return productCategory;
-    }
-
-    public void setProductCategory(ProductCategory productCategory) {
-        this.productCategory = productCategory;
-    }
 
     public List<ProductSerialNumbers> getProductSerialNumbers() {
         return productSerialNumbers;
