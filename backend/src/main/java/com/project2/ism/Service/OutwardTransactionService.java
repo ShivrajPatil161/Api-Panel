@@ -45,7 +45,6 @@ public class OutwardTransactionService {
         existing.setFranchise(outwardTransactions.getFranchise());
         existing.setMerchant(outwardTransactions.getMerchant());
         existing.setProduct(outwardTransactions.getProduct());
-        existing.setProductCategory(outwardTransactions.getProductCategory());
         existing.setDispatchDate(outwardTransactions.getDispatchDate());
         existing.setDispatchedBy(outwardTransactions.getDispatchedBy());
         existing.setQuantity(outwardTransactions.getQuantity());

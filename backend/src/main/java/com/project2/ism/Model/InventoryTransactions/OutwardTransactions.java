@@ -1,7 +1,6 @@
 package com.project2.ism.Model.InventoryTransactions;
 
 import com.project2.ism.Model.Product;
-import com.project2.ism.Model.ProductCategory;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import jakarta.persistence.*;
@@ -34,10 +33,6 @@ public class OutwardTransactions {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @ManyToOne
-    @JoinColumn(name = "product_category_id")
-    private ProductCategory productCategory;
-
     private LocalDate dispatchDate;
 
     private String dispatchedBy;
@@ -58,7 +53,6 @@ public class OutwardTransactions {
     @NotBlank(message = "phone number is required")
     @Pattern(regexp = "^[6-9]\\d{9}$", message = "Phone number must be 10 digits starting with 6-9")
     private String contactPersonNumber;
-
 
     @Size( max = 20, message = "Name must be between 2 and 50 characters")
     private String deliveryMethod;
@@ -83,8 +77,6 @@ public class OutwardTransactions {
         this.id = id;
     }
 
-
-
     public Franchise getFranchise() {
         return franchise;
     }
@@ -107,14 +99,6 @@ public class OutwardTransactions {
 
     public void setProduct(Product product) {
         this.product = product;
-    }
-
-    public ProductCategory getProductCategory() {
-        return productCategory;
-    }
-
-    public void setProductCategory(ProductCategory productCategory) {
-        this.productCategory = productCategory;
     }
 
     public LocalDate getDispatchDate() {

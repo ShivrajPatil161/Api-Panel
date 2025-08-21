@@ -2,7 +2,11 @@ package com.project2.ism.Repository;
 
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface ProductSerialsRepository extends JpaRepository<ProductSerialNumbers,Long> {
@@ -11,4 +15,7 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
     boolean existsByTid(String tid);
     boolean existsByVpaid(String vpaid);
     boolean existsByMobNumber(String mobNumber);
+
+    List<?> findByProduct_IdAndMerchantIsNull(Long productId);
+
 }

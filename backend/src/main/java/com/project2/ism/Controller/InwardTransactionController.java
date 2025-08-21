@@ -15,6 +15,8 @@ public class InwardTransactionController {
 
     private final InwardTransactionService inwardService;
 
+
+
     public InwardTransactionController(InwardTransactionService inwardService) {
         this.inwardService = inwardService;
     }
@@ -45,5 +47,10 @@ public class InwardTransactionController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         inwardService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/serial-number/{id}")
+    public ResponseEntity<?> getByProductId(@PathVariable Long id){
+        return ResponseEntity.ok(inwardService.getSerialNumbersByProductId(id));
     }
 }
