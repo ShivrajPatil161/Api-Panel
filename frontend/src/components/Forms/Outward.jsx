@@ -469,6 +469,31 @@ const OutwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
                     )}
                   </div>
 
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Customer Type <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        {...register('customerType')}
+                        className={`w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${errors.customerType ? 'border-red-500' : ''}`}
+                        disabled={isSubmitting}
+                      >
+                        <option value="">Select customer type</option>
+                        {customerTypeOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute inset-y-0 right-2 flex items-center pointer-events-none h-4 w-4 text-gray-400" />
+                    </div>
+                    {errors.customerType && (
+                      <p className="mt-1 text-sm text-red-600">{errors.customerType.message}</p>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Customer <span className="text-red-500">*</span>
@@ -501,30 +526,7 @@ const OutwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Customer Type <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        {...register('customerType')}
-                        className={`w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${errors.customerType ? 'border-red-500' : ''}`}
-                        disabled={isSubmitting}
-                      >
-                        <option value="">Select customer type</option>
-                        {customerTypeOptions.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute inset-y-0 right-2 flex items-center pointer-events-none h-4 w-4 text-gray-400" />
-                    </div>
-                    {errors.customerType && (
-                      <p className="mt-1 text-sm text-red-600">{errors.customerType.message}</p>
-                    )}
-                  </div>
-
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Dispatch Date <span className="text-red-500">*</span>
@@ -795,114 +797,6 @@ const OutwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
           </div>
         </form>
       </div>
-    </div>
-  )
-}
-
-// Main Outward component with modal integration
-const Outward = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editData, setEditData] = useState(null)
-  const [outwardEntries, setOutwardEntries] = useState([])
-
-  const handleSubmit = async (data) => {
-    try {
-      console.log('Outward Entry Data:', data)
-      // TODO: Replace with actual API call when backend is ready
-      // await api.post('/outward', data)
-
-      // Mock success for now
-      if (editData) {
-        // Update existing entry
-        setOutwardEntries(prev =>
-          prev.map(entry => entry.id === data.id ? data : entry)
-        )
-        alert('Outward entry updated successfully!')
-      } else {
-        // Add new entry
-        setOutwardEntries(prev => [...prev, data])
-        alert('Outward entry processed successfully!')
-      }
-
-      setEditData(null)
-    } catch (error) {
-      console.error('Error processing outward:', error)
-      throw error
-    }
-  }
-
-  const handleEdit = (entry) => {
-    setEditData(entry)
-    setIsModalOpen(true)
-  }
-
-  const handleAdd = () => {
-    setEditData(null)
-    setIsModalOpen(true)
-  }
-
-  const handleClose = () => {
-    setIsModalOpen(false)
-    setEditData(null)
-  }
-
-  return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Outward Management</h1>
-        <button
-          onClick={handleAdd}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-        >
-          Add Outward Entry
-        </button>
-      </div>
-
-      {/* Outward entries list (placeholder) */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">Recent Outward Entries</h2>
-        </div>
-        <div className="p-4">
-          {outwardEntries.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No outward entries yet. Click "Add Outward Entry" to get started.</p>
-          ) : (
-            <div className="space-y-4">
-              {outwardEntries.map((entry, index) => (
-                <div key={entry.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-900">
-                        Delivery #{entry.deliveryNumber}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Customer: {entry.customerId} | Quantity: {entry.quantity} | Amount: ₹{entry.totalAmount}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Dispatch Date: {entry.dispatchDate}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleEdit(entry)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Outward Form Modal */}
-      <OutwardFormModal
-        isOpen={isModalOpen}
-        onClose={handleClose}
-        onSubmit={handleSubmit}
-        editData={editData}
-      />
     </div>
   )
 }

@@ -95,17 +95,10 @@ const transformToBackendFormat = (frontendData) => {
   // Backend expected format based on your model
   const backendData = {
     invoiceNumber: frontendData.invoiceNumber,
-    vendor: {
-      id: parseInt(frontendData.vendorId)
-    },
+    vendorId: parseInt(frontendData.vendorId),
     receivedDate: frontendData.receivedDate,
     receivedBy: frontendData.receivedBy,
-    product: {
-      id: parseInt(frontendData.productId)
-    },
-    productCategory: {
-      id: parseInt(frontendData.productCategoryId || frontendData.productId) // Adjust as needed
-    },
+    productId: parseInt(frontendData.productId),
     quantity: parseInt(frontendData.quantity),
     batchNumber: frontendData.batchNumber || null,
     warrantyPeriod: frontendData.warrantyPeriod ? parseInt(frontendData.warrantyPeriod) : null,
