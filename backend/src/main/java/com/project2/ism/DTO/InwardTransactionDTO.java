@@ -1,7 +1,6 @@
 package com.project2.ism.DTO;
 
 import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
-import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Vendor.Vendor;
 
@@ -28,37 +27,6 @@ public class InwardTransactionDTO {
     public String productCondition;
     public List<ProductSerialDTO> serialNumbers;
     public String remark;
-
-    // --- Nested DTO for Serial Numbers ---
-    public static class ProductSerialDTO {
-        public String sid;
-        public String mid;
-        public String tid;
-        public String vpaid;
-        public String mobNumber;
-
-        public static ProductSerialDTO fromEntity(ProductSerialNumbers entity) {
-            ProductSerialDTO dto = new ProductSerialDTO();
-            dto.sid = entity.getSid();
-            dto.mid = entity.getMid();
-            dto.tid = entity.getTid();
-            dto.vpaid = entity.getVpaid();
-            dto.mobNumber = entity.getMobNumber();
-            return dto;
-        }
-
-        public ProductSerialNumbers toEntity(InwardTransactions inward, Product product) {
-            ProductSerialNumbers sn = new ProductSerialNumbers();
-            sn.setSid(this.sid);
-            sn.setMid(this.mid);
-            sn.setTid(this.tid);
-            sn.setVpaid(this.vpaid);
-            sn.setMobNumber(this.mobNumber);
-            sn.setInwardTransaction(inward);
-            sn.setProduct(product);
-            return sn;
-        }
-    }
 
     // --- Mapper Methods ---
     public static InwardTransactionDTO fromEntity(InwardTransactions entity) {
@@ -101,12 +69,12 @@ public class InwardTransactionDTO {
         inward.setRemark(this.remark);
 
         if (this.serialNumbers != null) {
-            List<ProductSerialNumbers> serials = this.serialNumbers.stream()
-                    .map(sn -> sn.toEntity(inward, product))
-                    .collect(Collectors.toList());
-            inward.setProductSerialNumbers(serials);
+            inward.setProductSerialNumbers(
+                    this.serialNumbers.stream()
+                            .map(sn -> sn.toInwardEntity(inward, product))
+                            .collect(Collectors.toList())
+            );
         }
-
         return inward;
     }
 }

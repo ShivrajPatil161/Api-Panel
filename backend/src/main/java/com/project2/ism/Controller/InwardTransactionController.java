@@ -2,6 +2,7 @@ package com.project2.ism.Controller;
 
 
 import com.project2.ism.DTO.InwardTransactionDTO;
+import com.project2.ism.DTO.ProductSerialDTO;
 import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
 import com.project2.ism.Service.InwardTransactionService;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +51,7 @@ public class InwardTransactionController {
     }
 
     @GetMapping("/serial-number/{id}")
-    public ResponseEntity<?> getByProductId(@PathVariable Long id){
+    public ResponseEntity<List<ProductSerialDTO>> getByProductId(@PathVariable Long id){
         return ResponseEntity.ok(inwardService.getSerialNumbersByProductId(id));
     }
 }

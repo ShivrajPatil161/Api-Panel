@@ -1,71 +1,126 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.DTO.OutwardTransactionDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
+import com.project2.ism.Model.Product;
+import com.project2.ism.Model.Users.Franchise;
+import com.project2.ism.Model.Users.Merchant;
+import com.project2.ism.Repository.FranchiseRepository;
+import com.project2.ism.Repository.MerchantRepository;
 import com.project2.ism.Repository.OutwardTransactionRepository;
+import com.project2.ism.Repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OutwardTransactionService {
 
-    private final OutwardTransactionRepository repository;
+        private final OutwardTransactionRepository repository;
+        private final FranchiseRepository franchiseRepo;
+        private final MerchantRepository merchantRepo;
+        private final ProductRepository productRepo;
 
-
-    public OutwardTransactionService(OutwardTransactionRepository repository) {
-        this.repository = repository;
-    }
-
-    public List<OutwardTransactions> getAll() {
-        return repository.findAll();
-    }
-
-    public OutwardTransactions getById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
-    }
-
-    @Transactional
-    public OutwardTransactions create(OutwardTransactions outwardTransactions) {
-        if (repository.existsByDeliveryNumber(outwardTransactions.getDeliveryNumber())) {
-            throw new DuplicateResourceException("Delivery number already exists: " + outwardTransactions.getDeliveryNumber());
+        public OutwardTransactionService(
+                OutwardTransactionRepository repository,
+                FranchiseRepository franchiseRepo,
+                MerchantRepository merchantRepo,
+                ProductRepository productRepo
+        ) {
+            this.repository = repository;
+            this.franchiseRepo = franchiseRepo;
+            this.merchantRepo = merchantRepo;
+            this.productRepo = productRepo;
         }
-        return repository.save(outwardTransactions);
+
+        public List<OutwardTransactions> getAll() {
+            return repository.findAll();
+        }
+
+        public OutwardTransactions getById(Long id) {
+            return repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
+        }
+
+        @Transactional
+        public OutwardTransactions createFromDTO(OutwardTransactionDTO dto) {
+            if (repository.existsByDeliveryNumber(dto.deliveryNumber)) {
+                throw new DuplicateResourceException("Delivery number already exists: " + dto.deliveryNumber);
+            }
+
+            Franchise franchise = dto.franchiseId != null
+                    ? franchiseRepo.findById(dto.franchiseId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Franchise not found"))
+                    : null;
+
+            Merchant merchant = dto.merchantId != null
+                    ? merchantRepo.findById(dto.merchantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"))
+                    : null;
+
+            Product product = dto.productId != null
+                    ? productRepo.findById(dto.productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"))
+                    : null;
+
+            OutwardTransactions outward = dto.toEntity(franchise, merchant, product);
+            return repository.save(outward);
+        }
+
+        @Transactional
+        public OutwardTransactions updateFromDTO(Long id, OutwardTransactionDTO dto) {
+            OutwardTransactions existing = getById(id);
+
+            Franchise franchise = dto.franchiseId != null
+                    ? franchiseRepo.findById(dto.franchiseId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Franchise not found"))
+                    : null;
+
+            Merchant merchant = dto.merchantId != null
+                    ? merchantRepo.findById(dto.merchantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"))
+                    : null;
+
+            Product product = dto.productId != null
+                    ? productRepo.findById(dto.productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"))
+                    : null;
+
+            // map DTO → existing entity
+            existing.setDeliveryNumber(dto.deliveryNumber);
+            existing.setFranchise(franchise);
+            existing.setMerchant(merchant);
+            existing.setProduct(product);
+            existing.setDispatchDate(dto.dispatchDate);
+            existing.setDispatchedBy(dto.dispatchedBy);
+            existing.setQuantity(dto.quantity);
+            existing.setDeliveryAddress(dto.deliveryAddress);
+            existing.setContactPerson(dto.contactPerson);
+            existing.setContactPersonNumber(dto.contactPersonNumber);
+            existing.setDeliveryMethod(dto.deliveryMethod);
+            existing.setTrackingNumber(dto.trackingNumber);
+            existing.setExpectedDeliveryDate(dto.expectedDeliveryDate);
+            existing.setRemarks(dto.remarks);
+
+            if (dto.serialNumbers != null) {
+                existing.setProductSerialNumbers(
+                        dto.serialNumbers.stream()
+                                .map(sn -> sn.toOutwardEntity(existing, product))
+                                .collect(Collectors.toList())
+                );
+            }
+
+            return repository.save(existing);
+        }
+
+        @Transactional
+        public void delete(Long id) {
+            OutwardTransactions existing = getById(id);
+            repository.delete(existing);
+        }
     }
 
-    @Transactional
-    public OutwardTransactions update(Long id, OutwardTransactions outwardTransactions) {
-        OutwardTransactions existing = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
-
-        existing.setDeliveryNumber(outwardTransactions.getDeliveryNumber());
-        existing.setFranchise(outwardTransactions.getFranchise());
-        existing.setMerchant(outwardTransactions.getMerchant());
-        existing.setProduct(outwardTransactions.getProduct());
-        existing.setDispatchDate(outwardTransactions.getDispatchDate());
-        existing.setDispatchedBy(outwardTransactions.getDispatchedBy());
-        existing.setQuantity(outwardTransactions.getQuantity());
-        existing.setUnitPrice(outwardTransactions.getUnitPrice());
-        existing.setTotalAmount(outwardTransactions.getTotalAmount());
-        existing.setDeliveryAddress(outwardTransactions.getDeliveryAddress());
-        existing.setContactPerson(outwardTransactions.getContactPerson());
-        existing.setContactPersonNumber(outwardTransactions.getContactPersonNumber());
-        existing.setDeliveryMethod(outwardTransactions.getDeliveryMethod());
-        existing.setTrackingNumber(outwardTransactions.getTrackingNumber());
-        existing.setExpectedDeliveryDate(outwardTransactions.getExpectedDeliveryDate());
-        existing.setProductSerialNumbers(outwardTransactions.getProductSerialNumbers());
-        existing.setRemarks(outwardTransactions.getRemarks());
-
-        return repository.save(existing);
-    }
-
-    @Transactional
-    public void delete(Long id) {
-        OutwardTransactions existing = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
-        repository.delete(existing);
-    }
-}
