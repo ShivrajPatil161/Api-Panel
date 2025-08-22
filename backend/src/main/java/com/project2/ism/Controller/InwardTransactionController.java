@@ -2,7 +2,6 @@ package com.project2.ism.Controller;
 
 
 import com.project2.ism.DTO.InwardTransactionDTO;
-import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
 import com.project2.ism.Service.InwardTransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +13,6 @@ import java.util.List;
 public class InwardTransactionController {
 
     private final InwardTransactionService inwardService;
-
 
 
     public InwardTransactionController(InwardTransactionService inwardService) {
