@@ -1,6 +1,7 @@
 package com.project2.ism.Controller;
 
 
+import com.project2.ism.DTO.OutwardTransactionDTO;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Service.OutwardTransactionService;
 import jakarta.validation.Valid;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/outward-transactions")
@@ -20,24 +22,33 @@ public class OutwardTransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OutwardTransactions>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<List<OutwardTransactionDTO>> getAll() {
+        List<OutwardTransactions> entities = service.getAll();
+        List<OutwardTransactionDTO> dtoList = entities.stream()
+                .map(OutwardTransactionDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OutwardTransactions> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getById(id));
+    public ResponseEntity<OutwardTransactionDTO> getById(@PathVariable Long id) {
+        OutwardTransactions entity = service.getById(id);
+        return ResponseEntity.ok(OutwardTransactionDTO.fromEntity(entity));
     }
 
     @PostMapping
-    public ResponseEntity<OutwardTransactions> create(@Valid @RequestBody OutwardTransactions outwardTransactions) {
-        return ResponseEntity.ok(service.create(outwardTransactions));
+    public ResponseEntity<OutwardTransactionDTO> create(@Valid @RequestBody OutwardTransactionDTO outwardDTO) {
+        OutwardTransactions savedEntity = service.createFromDTO(outwardDTO);
+        return ResponseEntity.ok(OutwardTransactionDTO.fromEntity(savedEntity));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OutwardTransactions> update(@PathVariable Long id,
-                                                      @Valid @RequestBody OutwardTransactions outwardTransactions) {
-        return ResponseEntity.ok(service.update(id, outwardTransactions));
+    public ResponseEntity<OutwardTransactionDTO> update(
+            @PathVariable Long id,
+            @Valid @RequestBody OutwardTransactionDTO outwardDTO
+    ) {
+        OutwardTransactions updatedEntity = service.updateFromDTO(id, outwardDTO);
+        return ResponseEntity.ok(OutwardTransactionDTO.fromEntity(updatedEntity));
     }
 
     @DeleteMapping("/{id}")
