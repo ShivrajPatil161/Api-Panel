@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { Navigate } from 'react-router';
 
 const api = axios.create({
   baseURL: 'http://localhost:8081/api',
@@ -27,7 +26,7 @@ api.interceptors.response.use(
       if (error.response.data.message?.toLowerCase().includes("expired")) {
         localStorage.removeItem("authToken");
         window.location.href = "/login";
-        Navigate
+       
       }
     }
     return Promise.reject(error);

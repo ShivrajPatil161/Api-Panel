@@ -71,7 +71,7 @@ const SerialNumberGrid = ({ availableSerials = [], quantity, onSelectionChange, 
 
   // Notify parent
   useEffect(() => {
-    const selectedItems = availableSerials.filter(serial => selectedSerials.has(serial.smid))
+    const selectedItems = availableSerials.filter(serial => selectedSerials.has(serial.id))
     onSelectionChange?.(selectedItems)
   }, [selectedSerials, availableSerials, onSelectionChange])
 
@@ -91,7 +91,7 @@ const SerialNumberGrid = ({ availableSerials = [], quantity, onSelectionChange, 
   )
 
   const handleSelectAll = () => {
-    const toSelect = availableSerials.slice(0, maxQuantity).map(s => s.smid)
+    const toSelect = availableSerials.slice(0, maxQuantity).map(s => s.id)
     setSelectedSerials(new Set(toSelect))
   }
 
@@ -161,7 +161,7 @@ const SerialNumberGrid = ({ availableSerials = [], quantity, onSelectionChange, 
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {availableSerials.map((serial, index) => {
-                const isSelected = selectedSerials.has(serial.smid)
+                const isSelected = selectedSerials.has(serial.id)
                 const isDisabled = !isSelected && selectedSerials.size >= maxQuantity
 
                 return (
@@ -174,7 +174,7 @@ const SerialNumberGrid = ({ availableSerials = [], quantity, onSelectionChange, 
                         type="checkbox"
                         checked={isSelected}
                         disabled={isDisabled}
-                        onChange={() => toggleSelection(serial.smid)}
+                        onChange={() => toggleSelection(serial.id)}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
@@ -209,18 +209,7 @@ const SerialNumberGrid = ({ availableSerials = [], quantity, onSelectionChange, 
 
 
 // Modular Form Select Component
-const FormSelect = ({
-  label,
-  name,
-  register,
-  errors,
-  options,
-  loading,
-  placeholder,
-  required = false,
-  disabled = false,
-  onChange
-}) => {
+const FormSelect = ({  label,  name,  register,  errors,  options,  loading,  placeholder,  required = false,  disabled = false, onChange}) => {
   const { onChange: registerOnChange, ...registerRest } = register(name);
 
   const handleChange = (e) => {
@@ -513,17 +502,9 @@ const OutwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
     try {
       const submissionData = {
         ...data,
-        selectedSerialIds: selectedSerials.map(serial => serial.smid),
+        selectedSerialIds: selectedSerials.map(serial => serial.id),
         productSerialNumbers: selectedSerials
       }
-
-      // API submission
-      if (editData) {
-        await api.put(`/outward-transactions/${editData.id}`, submissionData)
-      } else {
-        await api.post('/outward-transactions', submissionData)
-      }
-
       await onSubmit(submissionData)
       handleClose()
     } catch (error) {
