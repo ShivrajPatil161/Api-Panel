@@ -1,6 +1,7 @@
 package com.project2.ism.Model.Users;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.persistence.PrePersist;
@@ -17,6 +18,7 @@ public class Merchant extends CustomerBase {
 
     @ManyToOne
     @JoinColumn(name = "franchise_id", nullable = true)
+    @JsonManagedReference
     private Franchise franchise;
 
     @NotBlank(message = "Business name required")

@@ -10,8 +10,7 @@ import Login from '../components/Auth/Login.jsx'
 import Dashboard from '../components/Dashborad.jsx'
 import CustomerOnboarding from '../components/Forms/CustomerOnborading.jsx'
 import VendorListPage from '../components/Tables/VendorTable.jsx'
-import Inward from '../components/Forms/Inward.jsx'
-import Outward from '../components/Forms/Outward.jsx'
+
 import Returns from '../components/Forms/Return.jsx'
 import ProductList from '../components/Tables/ProductList.jsx'
 import VendorRatesManagement from '../components/Tables/VendorRatesTable.jsx'
@@ -33,7 +32,7 @@ import ResetPassword from '../components/Auth/ResetPassword.jsx'
 const RootRedirect = () => {
   // Check if user is authenticated (you'll implement this logic)
   const isAuthenticated = localStorage.getItem('authToken') // or your auth logic
-  
+
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />
   }
@@ -85,12 +84,12 @@ export const router = createBrowserRouter([
                 index: true,
                 element: <VendorListPage />
               },
-              
+
               {
                 path: "rates",
                 element: <VendorRatesManagement />
               }
-              
+
             ]
           },
           // Inventory routes
@@ -113,10 +112,6 @@ export const router = createBrowserRouter([
               {
                 path: "inventory",
                 element: <InventoryManagement />
-              },
-              {
-                path: "outward",
-                element: <Outward />
               },
               {
                 path: "returns",
@@ -144,7 +139,7 @@ export const router = createBrowserRouter([
                 path: "products-distribution",
                 element: <ProductDistribution />
               },
-              
+
             ]
           },
           // Transaction routes
