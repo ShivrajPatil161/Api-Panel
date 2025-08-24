@@ -176,4 +176,17 @@ public class FranchiseController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> profile(@RequestParam String email) {
+        Franchise franchise = franchiseService.getFranchiseByEmail(email);
+        FranchiseListDTO dto = new FranchiseListDTO(
+                franchise.getId(),
+                franchise.getFranchiseName(),
+                franchise.getContactPerson().getEmail(),
+                franchise.getWalletBalance()
+        );
+        return ResponseEntity.ok(dto);
+    }
+
 }

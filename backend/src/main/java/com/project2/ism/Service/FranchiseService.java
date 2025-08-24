@@ -273,4 +273,10 @@ public class FranchiseService {
                 franchise.getCreatedAt()
         );
     }
+
+
+    public Franchise getFranchiseByEmail(String email) {
+        return franchiseRepository.findByContactPerson_Email(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Franchise not found with email " + email));
+    }
 }
