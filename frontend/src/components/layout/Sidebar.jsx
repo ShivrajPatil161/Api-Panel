@@ -232,7 +232,7 @@ const getMenuItems = (userType) => {
         icon: Package,
         iconColor: '',
         children: [
-          { title: 'Product List', path: '/dashboard/inventory', icon: Package },
+          { title: 'Product List', path: '/dashboard/inventory/customer-products', icon: Package },
           { title: 'Product Distribution', path: '/dashboard/customers/products-distribution', icon: Package }
         ]
       },
@@ -256,7 +256,7 @@ const getMenuItems = (userType) => {
         icon: Package,
         iconColor: '',
         children: [
-          { title: 'Product List', path: '/dashboard/inventory', icon: Package }
+          { title: 'Product List', path: '/dashboard/inventory/customer-products', icon: Package }
         ]
       },
       {
