@@ -236,13 +236,13 @@ const InwardTable = ({ data, onEdit, onView, onDelete }) => {
                     >
                         <Eye className="h-4 w-4" />
                     </button>
-                    <button
+                    {/* <button
                         onClick={() => onEdit?.(row.original)}
                         className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
                         title="Edit Entry"
                     >
                         <Edit className="h-4 w-4" />
-                    </button>
+                    </button> */}
                     <button
                         onClick={() => onDelete?.(row.original.id)}
                         className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"

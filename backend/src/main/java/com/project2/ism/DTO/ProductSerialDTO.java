@@ -1,9 +1,11 @@
 package com.project2.ism.DTO;
 
+import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.Product;
+import com.project2.ism.Repository.ProductSerialsRepository;
 
 public class ProductSerialDTO {
 
@@ -41,16 +43,24 @@ public class ProductSerialDTO {
     }
 
     // ✅ Mapping from DTO → Entity (for OutwardTransactions)
-    public ProductSerialNumbers toOutwardEntity(OutwardTransactions outward, Product product) {
-        ProductSerialNumbers sn = new ProductSerialNumbers();
-        sn.setId(this.id);
-        sn.setSid(this.sid);
-        sn.setMid(this.mid);
-        sn.setTid(this.tid);
-        sn.setVpaid(this.vpaid);
-        sn.setMobNumber(this.mobNumber);
-        sn.setOutwardTransaction(outward);
-        sn.setProduct(product);
-        return sn;
+    public ProductSerialNumbers toOutwardEntity(OutwardTransactions outward, ProductSerialsRepository serialRepo) {
+        ProductSerialNumbers existingSerial = serialRepo.findById(this.id)
+                .orElseThrow(() -> new ResourceNotFoundException("Serial number not found with id: " + this.id));
+
+        // Validate it's not already assigned to another outward transaction
+        if (existingSerial.getOutwardTransaction() != null) {
+            throw new IllegalStateException("Serial number already assigned: " + existingSerial.getSid());
+        }
+
+        // Update only the outward transaction reference
+        existingSerial.setOutwardTransaction(outward);
+
+        // Set merchant if this is a merchant transaction
+        if (outward.getMerchant() != null) {
+            existingSerial.setMerchant(outward.getMerchant());
+        }
+
+        // Keep all other fields unchanged (inward transaction, product, etc.)
+        return existingSerial;
     }
 }

@@ -7,10 +7,7 @@ import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
-import com.project2.ism.Repository.FranchiseRepository;
-import com.project2.ism.Repository.MerchantRepository;
-import com.project2.ism.Repository.OutwardTransactionRepository;
-import com.project2.ism.Repository.ProductRepository;
+import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -24,17 +21,19 @@ public class OutwardTransactionService {
         private final FranchiseRepository franchiseRepo;
         private final MerchantRepository merchantRepo;
         private final ProductRepository productRepo;
+        private final ProductSerialsRepository serialRepo;
 
         public OutwardTransactionService(
                 OutwardTransactionRepository repository,
                 FranchiseRepository franchiseRepo,
                 MerchantRepository merchantRepo,
-                ProductRepository productRepo
-        ) {
+                ProductRepository productRepo,
+                ProductSerialsRepository serialRepo) {
             this.repository = repository;
             this.franchiseRepo = franchiseRepo;
             this.merchantRepo = merchantRepo;
             this.productRepo = productRepo;
+            this.serialRepo = serialRepo;
         }
 
         public List<OutwardTransactions> getAll() {
@@ -47,7 +46,8 @@ public class OutwardTransactionService {
         }
 
         @Transactional
-        public OutwardTransactions createFromDTO(OutwardTransactionDTO dto) {
+        public OutwardTransactions
+        createFromDTO(OutwardTransactionDTO dto) {
             if (repository.existsByDeliveryNumber(dto.deliveryNumber)) {
                 throw new DuplicateResourceException("Delivery number already exists: " + dto.deliveryNumber);
             }
@@ -67,7 +67,7 @@ public class OutwardTransactionService {
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found"))
                     : null;
 
-            OutwardTransactions outward = dto.toEntity(franchise, merchant, product);
+            OutwardTransactions outward = dto.toEntity(franchise, merchant, product,serialRepo);
             return repository.save(outward);
         }
 
@@ -109,7 +109,7 @@ public class OutwardTransactionService {
             if (dto.serialNumbers != null) {
                 existing.setProductSerialNumbers(
                         dto.serialNumbers.stream()
-                                .map(sn -> sn.toOutwardEntity(existing, product))
+                                .map(sn -> sn.toOutwardEntity(existing, serialRepo))
                                 .collect(Collectors.toList())
                 );
             }

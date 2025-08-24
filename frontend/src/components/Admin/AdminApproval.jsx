@@ -165,7 +165,7 @@ const MerchantDetailsModal = ({ merchant, isOpen, onClose, onApprove, onReject }
                                 <InfoRow label="Business Name" value={merchant.businessName} />
                                 <InfoRow label="Legal Entity Name" value={merchant.legalName} />
                                 <InfoRow label="Business Type" value={businessTypeMap[merchant.businessType] || merchant.businessType} />
-                                <InfoRow label="Franchise" value={merchant.franchise?.name || 'N/A'} />
+                                <InfoRow label="Franchise" value={merchant.franchise?.legalName || 'N/A'} />
                                 <InfoRow label="GST Number" value={merchant.gstNumber} />
                                 <InfoRow label="PAN Number" value={merchant.panNumber} />
                                 <InfoRow label="Registration Number" value={merchant.registrationNumber} />
@@ -360,7 +360,7 @@ const AdminApproval = () => {
             header: 'Franchise',
             cell: ({ row }) => (
                 <div>
-                    <div className="font-medium">{row.original.franchise?.name || 'N/A'}</div>
+                    <div className="font-medium">{row.original.franchise?.legalName || 'N/A'}</div>
                     {row.original.franchise?.id && (
                         <div className="text-sm text-gray-500">ID: {row.original.franchise.id}</div>
                     )}

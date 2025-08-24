@@ -4,6 +4,7 @@ import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
+import com.project2.ism.Repository.ProductSerialsRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -64,7 +65,7 @@ public class OutwardTransactionDTO {
         return dto;
     }
 
-    public OutwardTransactions toEntity(Franchise franchise, Merchant merchant, Product product) {
+    public OutwardTransactions toEntity(Franchise franchise, Merchant merchant, Product product, ProductSerialsRepository serialRepo) {
         OutwardTransactions outward = new OutwardTransactions();
         outward.setId(this.id);
         outward.setDeliveryNumber(this.deliveryNumber);
@@ -82,10 +83,11 @@ public class OutwardTransactionDTO {
         outward.setExpectedDeliveryDate(this.expectedDeliveryDate);
         outward.setRemarks(this.remarks);
 
+        // ✅ UPDATED - Now updates existing serials
         if (this.serialNumbers != null) {
             outward.setProductSerialNumbers(
                     this.serialNumbers.stream()
-                            .map(sn -> sn.toOutwardEntity(outward, product))
+                            .map(sn -> sn.toOutwardEntity(outward, serialRepo))
                             .collect(Collectors.toList())
             );
         }
