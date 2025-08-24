@@ -25,6 +25,7 @@ import AdminApproval from '../components/Admin/AdminApproval.jsx'
 import ForgotPassword from '../components/Auth/ForgotPass.jsx'
 import InventoryManagement from '../components/Inventory/Inventory.jsx'
 import ResetPassword from '../components/Auth/ResetPassword.jsx'
+import CustomerProductsList from '../components/Tables/CustomerProducts/CustomerProductsList.jsx'
 
 
 
@@ -116,6 +117,10 @@ export const router = createBrowserRouter([
               {
                 path: "returns",
                 element: <Returns />
+              },
+              {
+                path: "customer-products",
+                element: <CustomerProductsList />
               }
             ]
           },
