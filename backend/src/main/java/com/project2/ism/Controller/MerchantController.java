@@ -223,4 +223,10 @@ public class MerchantController {
         );
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/products/{id}")
+    public ResponseEntity<?> merchantProducts(@PathVariable Long id){
+        List<?> products = merchantService.getProductsOfMerchant(id);
+        return ResponseEntity.ok(products);
+    }
 }

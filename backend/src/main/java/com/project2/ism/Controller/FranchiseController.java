@@ -61,6 +61,8 @@ package com.project2.ism.Controller;
 
 import com.project2.ism.DTO.FranchiseFormDTO;
 import com.project2.ism.DTO.FranchiseListDTO;
+import com.project2.ism.DTO.FranchiseProductSummaryDTO;
+import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Service.FileStorageService;
 import com.project2.ism.Service.FranchiseService;
@@ -187,6 +189,12 @@ public class FranchiseController {
                 franchise.getWalletBalance()
         );
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/products/{id}")
+    public ResponseEntity<?> franchiseProducts(@PathVariable Long id){
+        List<?> products = franchiseService.getProductsOfFranchise(id);
+        return ResponseEntity.ok(products);
     }
 
 }
