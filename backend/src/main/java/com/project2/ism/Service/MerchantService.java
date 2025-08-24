@@ -121,19 +121,23 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.MerchantFormDTO;
 import com.project2.ism.DTO.MerchantListDTO;
+import com.project2.ism.DTO.MerchantProductSummaryDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
+import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.FranchiseRepository;
 import com.project2.ism.Repository.MerchantRepository;
+import com.project2.ism.Repository.OutwardTransactionRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -146,14 +150,17 @@ public class MerchantService {
     private final FileStorageService fileStorageService;
     private final UserService userService;
 
+    private final OutwardTransactionRepository outwardRepo;
+
     public MerchantService(MerchantRepository merchantRepository,
                            FranchiseRepository franchiseRepository,
                            FileStorageService fileStorageService,
-                           UserService userService) {
+                           UserService userService, OutwardTransactionRepository outwardRepo) {
         this.merchantRepository = merchantRepository;
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
+        this.outwardRepo = outwardRepo;
     }
 
     public void createMerchant(MerchantFormDTO dto) {
@@ -351,4 +358,23 @@ public class MerchantService {
         return merchantRepository.findByContactPerson_Email(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with email " + email));
     }
+
+    public List<MerchantProductSummaryDTO> getProductsOfMerchant(Long merchantId) {
+        List<OutwardTransactions> outwardList = outwardRepo.findByMerchantId(merchantId);
+
+        List<MerchantProductSummaryDTO> result = new ArrayList<>();
+        for (OutwardTransactions o : outwardList) {
+            int totalQty = o.getQuantity();
+
+            result.add(new MerchantProductSummaryDTO(
+                    o.getProduct().getId(),
+                    o.getProduct().getProductName(),
+                    o.getProduct().getProductCode(),
+                    o.getProduct().getProductCategory().getCategoryName(),
+                    totalQty
+            ));
+        }
+        return result;
+    }
+
 }

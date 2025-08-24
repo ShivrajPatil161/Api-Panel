@@ -122,5 +122,7 @@ public class OutwardTransactionService {
             OutwardTransactions existing = getById(id);
             repository.delete(existing);
         }
+
+
     }
 
