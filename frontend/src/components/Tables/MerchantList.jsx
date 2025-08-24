@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -26,6 +26,9 @@ import {
 import CustomerOnboarding from '../Forms/CustomerOnborading';
 
 import { merchantData } from '../../constants/merchantlistData';
+
+import api from '../../constants/API/axiosInstance';
+import ViewMerchantEntry from '../View/ViewMerchantEntry';
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children }) => {
@@ -117,7 +120,33 @@ const TableHeader = ({ title, count, searchValue, onSearchChange, onAddMerchant 
 const MerchantListComponent = () => {
     const [globalFilter, setGlobalFilter] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const customerId = localStorage.getItem("customerId");
 
+    const [viewData, setViewData] = useState(null);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+
+   
+    const [merchantData, setMerchantData] = useState([]);
+
+    const fetchMerchants = async () => {
+        const response = await api.get(`/merchants/franchise/4`);
+        console.log(response);
+        setMerchantData(response.data || []);
+    }
+
+    useEffect(() => {
+       fetchMerchants() 
+    }, [])
+    
+    const handleView = (merchantData) => {
+        setViewData(merchantData);
+        setIsViewOpen(true);
+    };
+
+    const handleViewClose = () => {
+        setViewData(null);
+        setIsViewOpen(false);
+    };
     // Column Helper
     const columnHelper = createColumnHelper();
 
@@ -130,7 +159,7 @@ const MerchantListComponent = () => {
             ),
             size: 80,
         }),
-        columnHelper.accessor('name', {
+        columnHelper.accessor('businessName', {
             header: 'Merchant Name',
             cell: (info) => (
                 <div className="flex items-center space-x-3">
@@ -145,20 +174,20 @@ const MerchantListComponent = () => {
             ),
             size: 250,
         }),
-        columnHelper.accessor('contactPerson', {
+        columnHelper.accessor('contactPersonName', {
             header: 'Contact Person',
             cell: (info) => (
                 <div>
                     <div className="font-medium text-gray-900">{info.getValue()}</div>
                     <div className="text-sm text-gray-500 flex items-center space-x-1">
                         <Mail className="w-3 h-3" />
-                        <span>{info.row.original.email}</span>
+                        <span>{info.row.original.contactPersonEmail}</span>
                     </div>
                 </div>
             ),
             size: 200,
         }),
-        columnHelper.accessor('location', {
+        columnHelper.accessor('address', {
             header: 'Location',
             cell: (info) => (
                 <div className="flex items-center space-x-2">
@@ -208,9 +237,9 @@ const MerchantListComponent = () => {
             header: 'Actions',
             cell: ({ row }) => (
                 <div className="flex items-center space-x-1">
-                    <ActionButton icon={Eye} onClick={() => console.log('View', row.original.id)} />
-                    <ActionButton icon={Edit} onClick={() => console.log('Edit', row.original.id)} />
-                    <ActionButton icon={Trash2} onClick={() => console.log('Delete', row.original.id)} variant="danger" />
+                    <ActionButton icon={Eye} onClick={() => handleView(row.original)} />
+                    {/* <ActionButton icon={Edit} onClick={() => console.log('Edit', row.original.id)} /> */}
+                    {/* <ActionButton icon={Trash2} onClick={() => console.log('Delete', row.original.id)} variant="danger" /> */}
                 </div>
             ),
             size: 120,
@@ -377,6 +406,13 @@ const MerchantListComponent = () => {
                     <CustomerOnboarding onClose={handleCloseModal} isFranchiseContext={true} isModal={true } />
                 </Modal>
             </div>
+            {isViewOpen && (
+                <ViewMerchantEntry
+                    merchantData={viewData}
+                    onClose={handleViewClose}
+                    isOpen={isViewOpen}
+                />
+            )}
         </div>
     );
 };

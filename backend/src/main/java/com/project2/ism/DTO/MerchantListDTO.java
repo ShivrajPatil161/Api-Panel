@@ -1,8 +1,11 @@
 package com.project2.ism.DTO;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerchantListDTO {
     private Long id;
     private String businessName;
@@ -41,6 +44,12 @@ public class MerchantListDTO {
         this.monthlyRevenue = monthlyRevenue;
         this.status = status;
         this.createdAt = createdAt;
+    }
+    public MerchantListDTO(Long id,String businessName,String contactPersonEmail,BigDecimal walletBalance){
+        this.id = id;
+        this.businessName = businessName;
+        this.contactPersonEmail = contactPersonEmail;
+        this.walletBalance = walletBalance;
     }
 
     // Getters and Setters

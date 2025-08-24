@@ -32,6 +32,7 @@ const Login = () => {
       if (status === 200) {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("userType", data.role);
+        localStorage.setItem("userEmail", data.email);
         
         toast.success("Login successful!");
         reset();

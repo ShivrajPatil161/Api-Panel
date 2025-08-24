@@ -347,4 +347,8 @@ public class MerchantService {
         merchantRepository.delete(merchant);
     }
 
+    public Merchant getMerchantByEmail(String email) {
+        return merchantRepository.findByContactPerson_Email(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with email " + email));
+    }
 }

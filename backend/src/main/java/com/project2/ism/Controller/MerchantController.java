@@ -64,8 +64,10 @@
 
 package com.project2.ism.Controller;
 
+import com.project2.ism.DTO.FranchiseListDTO;
 import com.project2.ism.DTO.MerchantFormDTO;
 import com.project2.ism.DTO.MerchantListDTO;
+import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Service.FileStorageService;
 import com.project2.ism.Service.MerchantService;
@@ -208,5 +210,17 @@ public class MerchantController {
     public ResponseEntity<String> rejectMerchant(@PathVariable Long id) {
         merchantService.rejectMerchant(id);
         return ResponseEntity.ok("Merchant rejected and deleted successfully.");
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> profile(@RequestParam String email) {
+        Merchant merchant = merchantService.getMerchantByEmail(email);
+        MerchantListDTO dto = new MerchantListDTO(
+                merchant.getId(),
+                merchant.getBusinessName(),
+                merchant.getContactPerson().getEmail(),
+                merchant.getWalletBalance()
+        );
+        return ResponseEntity.ok(dto);
     }
 }
