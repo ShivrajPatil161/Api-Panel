@@ -1,528 +1,383 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  useReactTable,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  flexRender
-} from '@tanstack/react-table';
-import {
-  Package,
-  Users,
-  Building2,
-  Plus,
-  Minus,
-  Search,
-  AlertCircle,
-  CheckCircle,
-  Trash2,
-  Store,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Package, CheckCircle, Search } from 'lucide-react';
+import distributionApi from "../../constants/API/distributionsAPI"
 
-// Zod validation schemas
-const baseDistributionSchema = z.object({
-  product: z.string().min(1, "Please select a product"),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
-  merchant: z.string().min(1, "Please select a merchant"),
-  selectedDevices: z.array(z.string()).min(1, "Please select at least one device")
-});
-
-const adminDistributionSchema = baseDistributionSchema.extend({
-  franchise: z.string().min(1, "Please select a franchise")
-});
-
-// Reusable Form Field Component
-const FormField = ({ label, error, required = false, children }) => (
-  <div className="space-y-2">
-    <label className="block text-sm font-medium text-gray-700">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    {children}
-    {error && (
-      <div className="flex items-center space-x-1 text-red-600 text-sm">
-        <AlertCircle className="w-4 h-4" />
-        <span>{error.message}</span>
-      </div>
-    )}
-  </div>
-);
-
-// Reusable Select Component
-const Select = ({ placeholder, options, value, onChange, error }) => (
-  <select
-    value={value}
-    onChange={onChange}
-    className={`w-full px-4 py-3 border-2 rounded-xl bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-100 ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'
-      }`}
-  >
-    <option value="">{placeholder}</option>
-    {options.map((option) => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ))}
-  </select>
-);
-
-// Device Selection Table Component
-const DeviceSelectionTable = ({ devices, selectedDevices, onSelectionChange, quantity }) => {
-  const [globalFilter, setGlobalFilter] = useState('');
-  const [sorting, setSorting] = useState([]);
-
-  const columns = useMemo(() => [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <input
-          type="checkbox"
-          checked={table.getIsAllPageRowsSelected()}
-          onChange={(e) => {
-            if (e.target.checked && selectedDevices.length < quantity) {
-              const remainingSlots = quantity - selectedDevices.length;
-              const unselectedRows = table.getRowModel().rows
-                .filter(row => !selectedDevices.includes(row.original.id))
-                .slice(0, remainingSlots);
-              
-              const newSelections = [...selectedDevices, ...unselectedRows.map(row => row.original.id)];
-              onSelectionChange(newSelections);
-            } else if (!e.target.checked) {
-              const pageRowIds = table.getRowModel().rows.map(row => row.original.id);
-              const newSelections = selectedDevices.filter(id => !pageRowIds.includes(id));
-              onSelectionChange(newSelections);
-            }
-          }}
-          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-      ),
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          checked={selectedDevices.includes(row.original.id)}
-          onChange={(e) => {
-            if (e.target.checked && selectedDevices.length < quantity) {
-              onSelectionChange([...selectedDevices, row.original.id]);
-            } else if (!e.target.checked) {
-              onSelectionChange(selectedDevices.filter(id => id !== row.original.id));
-            }
-          }}
-          disabled={!selectedDevices.includes(row.original.id) && selectedDevices.length >= quantity}
-          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
-        />
-      ),
-    },
-    {
-      accessorKey: 'sid',
-      header: 'SID',
-      cell: ({ row }) => (
-        <div className="font-mono text-sm">{row.getValue('sid')}</div>
-      ),
-    },
-    {
-      accessorKey: 'mid',
-      header: 'MID',
-      cell: ({ row }) => (
-        <div className="font-mono text-sm">{row.getValue('mid')}</div>
-      ),
-    },
-    {
-      accessorKey: 'tid',
-      header: 'TID',
-      cell: ({ row }) => (
-        <div className="font-mono text-sm">{row.getValue('tid')}</div>
-      ),
-    },
-    {
-      accessorKey: 'vpaid',
-      header: 'VPA ID',
-      cell: ({ row }) => (
-        <div className="font-mono text-sm">{row.getValue('vpaid')}</div>
-      ),
-    },
-    {
-      accessorKey: 'mobileNo',
-      header: 'Mobile No',
-      cell: ({ row }) => (
-        <div className="font-mono text-sm">{row.getValue('mobileNo')}</div>
-      ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          row.getValue('status') === 'available'
-            ? 'bg-green-100 text-green-800'
-            : 'bg-yellow-100 text-yellow-800'
-        }`}>
-          {row.getValue('status')}
-        </span>
-      ),
-    },
-  ], [selectedDevices, onSelectionChange, quantity]);
-
-  const table = useReactTable({
-    data: devices,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    state: {
-      sorting,
-      globalFilter,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
-  });
-
-  return (
-    <div className="space-y-4">
-      {/* Table Controls */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <input
-            value={globalFilter ?? ''}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Search devices..."
-          />
-        </div>
-        <div className="text-sm text-gray-600">
-          Selected: {selectedDevices.length} / {quantity}
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className="flex items-center gap-2">
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.getIsSorted() && (
-                        <span className="text-blue-600">
-                          {header.column.getIsSorted() === 'desc' ? '↓' : '↑'}
-                        </span>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="p-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="p-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-        <div className="text-sm text-gray-600">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Main Product Distribution Component
 const ProductDistribution = () => {
-  const [userType, setUserType] = useState('merchant');
-  const [selectedDevices, setSelectedDevices] = useState([]);
-  const [availableDevices, setAvailableDevices] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  // User context
+  const userType = localStorage.getItem("userType")?.toLowerCase();
+  const customerId = localStorage.getItem("customerId");
 
-  // Get user type from localStorage
-  useEffect(() => {
-    const storedUserType = localStorage.getItem('userType') || 'merchant';
-    setUserType(storedUserType);
-  }, []);
-
-  // Mock data
-  const franchises = [
-    { value: 'franchise-1', label: 'ABC Retail Franchise' },
-    { value: 'franchise-2', label: 'XYZ Electronics Franchise' },
-    { value: 'franchise-3', label: 'Tech Solutions Franchise' }
-  ];
-
-  const products = [
-    { value: 'pos-device', label: 'POS Device', availableQuantity: 50 },
-    { value: 'qr-scanner', label: 'QR Scanner', availableQuantity: 30 },
-    { value: 'soundbox', label: 'Soundbox', availableQuantity: 25 }
-  ];
-
-  const merchants = [
-    { id: 'merchant-1', name: 'Store Alpha', location: 'Mumbai', franchiseId: 'franchise-1' },
-    { id: 'merchant-2', name: 'Store Beta', location: 'Delhi', franchiseId: 'franchise-1' },
-    { id: 'merchant-3', name: 'Store Gamma', location: 'Pune', franchiseId: 'franchise-1' },
-    { id: 'merchant-4', name: 'Tech Store 1', location: 'Bangalore', franchiseId: 'franchise-2' },
-    { id: 'merchant-5', name: 'Tech Store 2', location: 'Chennai', franchiseId: 'franchise-2' }
-  ];
-
-  // Mock function to generate device data based on product and quantity
-  const generateDeviceData = (productType, quantity) => {
-    const devices = [];
-    for (let i = 1; i <= quantity + 10; i++) { // Generate more devices than needed
-      devices.push({
-        id: `${productType}-${i.toString().padStart(3, '0')}`,
-        sid: `SID${Math.random().toString().substr(2, 8)}`,
-        mid: `MID${Math.random().toString().substr(2, 8)}`,
-        tid: `TID${Math.random().toString().substr(2, 8)}`,
-        vpaid: `VPA${Math.random().toString().substr(2, 8)}`,
-        mobileNo: `+91${Math.floor(Math.random() * 9000000000) + 1000000000}`,
-        status: Math.random() > 0.2 ? 'available' : 'reserved'
-      });
-    }
-    return devices.filter(device => device.status === 'available');
-  };
-
-  // Form setup
-  const schema = userType === 'admin' ? adminDistributionSchema : baseDistributionSchema;
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting },
-    reset
-  } = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      franchise: '',
-      product: '',
-      quantity: 0,
-      merchant: '',
-      selectedDevices: []
-    }
+  // State management
+  const [loading, setLoading] = useState({
+    franchises: false,
+    products: false,
+    merchants: false,
+    devices: false,
+    submitting: false
   });
 
-  const watchedValues = watch();
-  const selectedProduct = products.find(p => p.value === watchedValues.product);
-  const selectedFranchise = watchedValues.franchise;
+  const [data, setData] = useState({
+    franchises: [],
+    products: [],
+    merchants: [],
+    devices: []
+  });
 
-  // Filter merchants based on franchise selection (for admin)
-  const availableMerchants = userType === 'admin'
-    ? merchants.filter(m => m.franchiseId === selectedFranchise)
-    : merchants.filter(m => m.franchiseId === 'franchise-1'); // Default franchise for franchise user
+  const [formData, setFormData] = useState({
+    franchise: userType === 'franchise' ? customerId || '' : '',
+    product: '',
+    quantity: '',
+    merchant: ''
+  });
 
-  // Filter merchants based on search
-  const filteredMerchants = availableMerchants.filter(merchant =>
-    merchant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    merchant.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [selectedDevices, setSelectedDevices] = useState([]);
+  const [deviceSearch, setDeviceSearch] = useState('');
+  const [errors, setErrors] = useState({});
 
-  // Generate devices when product and quantity change
+  // Load initial data
   useEffect(() => {
-    if (watchedValues.product && watchedValues.quantity > 0) {
-      const devices = generateDeviceData(watchedValues.product, watchedValues.quantity);
-      setAvailableDevices(devices);
-      setSelectedDevices([]);
-      setValue('selectedDevices', []);
+    if (userType === 'admin') {
+      loadFranchises();
+    } else if (userType === 'franchise' && customerId) {
+      loadFranchiseData(customerId);
     }
-  }, [watchedValues.product, watchedValues.quantity, setValue]);
+  }, [userType, customerId]);
 
-  // Handle device selection
-  const handleDeviceSelection = (deviceIds) => {
-    setSelectedDevices(deviceIds);
-    setValue('selectedDevices', deviceIds);
+  // Load franchise data when franchise changes
+  useEffect(() => {
+    if (formData.franchise && formData.franchise !== (userType === 'franchise' ? customerId : '')) {
+      loadFranchiseData(formData.franchise);
+    }
+  }, [formData.franchise, userType, customerId]);
+
+  // Load devices when product and quantity are selected
+  useEffect(() => {
+    if (formData.product && formData.quantity > 0) {
+      const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+      if (selectedProduct) {
+        loadDevices(selectedProduct.outwardId);
+      }
+    } else {
+      setData(prev => ({ ...prev, devices: [] }));
+      setSelectedDevices([]);
+    }
+  }, [formData.product, formData.quantity, data.products]);
+
+  // API calls
+  const loadFranchises = async () => {
+    setLoading(prev => ({ ...prev, franchises: true }));
+    try {
+      const franchises = await distributionApi.getAllFranchises();
+      setData(prev => ({ ...prev, franchises }));
+    } catch (error) {
+      console.error('Load franchises error:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, franchises: false }));
+    }
   };
 
-  // Form submission
-  const onSubmit = async (data) => {
+  const loadFranchiseData = async (franchiseId) => {
+    setLoading(prev => ({ ...prev, products: true, merchants: true }));
     try {
-      console.log('Distribution Data:', data);
+      const [products, merchants] = await Promise.all([
+        distributionApi.getFranchiseProducts(franchiseId),
+        distributionApi.getMerchantsByFranchise(franchiseId)
+      ]);
+      setData(prev => ({ ...prev, products, merchants }));
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Reset dependent fields
+      setFormData(prev => ({ ...prev, product: '', quantity: '', merchant: '' }));
+      setSelectedDevices([]);
+    } catch (error) {
+      console.error('Load franchise data error:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, products: false, merchants: false }));
+    }
+  };
 
-      const selectedMerchant = merchants.find(m => m.id === data.merchant);
-      alert(`Successfully distributed ${data.quantity} ${selectedProduct?.label} to ${selectedMerchant?.name}!`);
+  const loadDevices = async (outwardId) => {
+    setLoading(prev => ({ ...prev, devices: true }));
+    try {
+      const devices = await distributionApi.getSerialNumbersToDispatch(outwardId);
+      setData(prev => ({ ...prev, devices }));
+      setSelectedDevices([]);
+    } catch (error) {
+      console.error('Load devices error:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, devices: false }));
+    }
+  };
+
+  // Event handlers
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleDeviceToggle = (deviceId) => {
+    const quantity = parseInt(formData.quantity);
+    setSelectedDevices(prev => {
+      const isSelected = prev.includes(deviceId);
+      if (isSelected) {
+        return prev.filter(id => id !== deviceId);
+      } else if (prev.length < quantity) {
+        return [...prev, deviceId];
+      }
+      return prev;
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (userType === 'admin' && !formData.franchise) {
+      newErrors.franchise = 'Please select a franchise';
+    }
+    if (!formData.product) {
+      newErrors.product = 'Please select a product';
+    }
+    if (!formData.quantity || formData.quantity <= 0) {
+      newErrors.quantity = 'Please enter a valid quantity';
+    }
+    if (!formData.merchant) {
+      newErrors.merchant = 'Please select a merchant';
+    }
+    if (selectedDevices.length !== parseInt(formData.quantity)) {
+      newErrors.devices = `Please select exactly ${formData.quantity} devices`;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setLoading(prev => ({ ...prev, submitting: true }));
+    try {
+      const distributionData = {
+        merchantId: formData.merchant,
+        selectedDeviceIds: selectedDevices,
+        quantity: parseInt(formData.quantity)
+      };
+
+      await distributionApi.submitDistribution(distributionData);
+
+      alert('Distribution completed successfully!');
 
       // Reset form
-      reset();
+      setFormData({
+        franchise: userType === 'franchise' ? customerId || '' : '',
+        product: '',
+        quantity: '',
+        merchant: ''
+      });
       setSelectedDevices([]);
-      setAvailableDevices([]);
-      setSearchTerm('');
-
+      setData(prev => ({ ...prev, devices: [] }));
     } catch (error) {
       alert('Distribution failed. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, submitting: false }));
     }
   };
 
+  // Get filtered devices for display
+  const filteredDevices = data.devices.filter(device =>
+    deviceSearch === '' ||
+    device.sid.toLowerCase().includes(deviceSearch.toLowerCase()) ||
+    device.mid.toLowerCase().includes(deviceSearch.toLowerCase()) ||
+    device.tid.toLowerCase().includes(deviceSearch.toLowerCase())
+  );
+
+  const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+
   return (
-    <div className="max-w-8xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center space-x-3 mb-2">
-          <div className="p-3 bg-blue-100 rounded-lg">
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
             <Package className="w-6 h-6 text-blue-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Product Distribution</h1>
             <p className="text-gray-600">
-              {userType === 'admin'
-                ? 'Distribute products to a franchise merchant'
-                : 'Distribute products to a merchant'
-              }
+              {userType === 'admin' ? 'Distribute products to franchise merchants' : 'Distribute products to merchants'}
             </p>
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center space-x-2 mt-4">
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${userType === 'admin'
-              ? 'bg-red-100 text-red-700'
-              : 'bg-blue-100 text-blue-700'
-            }`}>
-            {userType === 'admin' ? 'Admin Panel' : 'Franchise Panel'}
+      {/* Form */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Franchise Selection (Admin only) */}
+          {userType === 'admin' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Franchise <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.franchise}
+                onChange={(e) => handleInputChange('franchise', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                disabled={loading.franchises}
+              >
+                <option value="">{loading.franchises ? 'Loading...' : 'Select Franchise'}</option>
+                {data.franchises.map(franchise => (
+                  <option key={franchise.id} value={franchise.id}>
+                    {franchise.franchiseName}
+                  </option>
+                ))}
+              </select>
+              {errors.franchise && <p className="text-red-600 text-sm mt-1">{errors.franchise}</p>}
+            </div>
+          )}
+
+          {/* Product Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Product <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.product}
+              onChange={(e) => handleInputChange('product', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              disabled={loading.products || (userType === 'admin' && !formData.franchise)}
+            >
+              <option value="">{loading.products ? 'Loading...' : 'Select Product'}</option>
+              {data.products.map(product => (
+                <option key={product.outwardId} value={product.outwardId}>
+                  {product.productName} (Available: {product.remainingQuantity})
+                </option>
+              ))}
+            </select>
+            {errors.product && <p className="text-red-600 text-sm mt-1">{errors.product}</p>}
+          </div>
+
+          {/* Quantity */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quantity <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              min="1"
+              max={selectedProduct?.remainingQuantity || 999}
+              value={formData.quantity}
+              onChange={(e) => handleInputChange('quantity', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter quantity"
+              disabled={!formData.product}
+            />
+            {errors.quantity && <p className="text-red-600 text-sm mt-1">{errors.quantity}</p>}
+            {selectedProduct && (
+              <p className="text-sm text-gray-500 mt-1">Available: {selectedProduct.remainingQuantity}</p>
+            )}
+          </div>
+
+          {/* Merchant Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Merchant <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.merchant}
+              onChange={(e) => handleInputChange('merchant', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              disabled={loading.merchants || (userType === 'admin' && !formData.franchise)}
+            >
+              <option value="">{loading.merchants ? 'Loading...' : 'Select Merchant'}</option>
+              {data.merchants.map(merchant => (
+                <option key={merchant.id} value={merchant.id}>
+                  {merchant.businessName} - {merchant.contactPersonEmail}
+                </option>
+              ))}
+            </select>
+            {errors.merchant && <p className="text-red-600 text-sm mt-1">{errors.merchant}</p>}
           </div>
         </div>
       </div>
 
-      {/* Form Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Distribution Details</h2>
-
-        <div className="space-y-6 grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Franchise Selection (Admin only) */}
-          {userType === 'admin' && (
-            <FormField label="Select Franchise" error={errors.franchise} required>
-              <Select
-                placeholder="Choose franchise"
-                options={franchises}
-                value={watchedValues.franchise}
-                onChange={(e) => setValue('franchise', e.target.value)}
-                error={errors.franchise}
+      {/* Device Selection */}
+      {data.devices.length > 0 && formData.quantity > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              Select Devices ({selectedDevices.length}/{formData.quantity})
+            </h3>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search devices..."
+                value={deviceSearch}
+                onChange={(e) => setDeviceSearch(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
-            </FormField>
+            </div>
+          </div>
+
+          {loading.devices ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              {filteredDevices.map(device => (
+                <div
+                  key={device.id}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedDevices.includes(device.id)
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                    } ${!selectedDevices.includes(device.id) && selectedDevices.length >= parseInt(formData.quantity)
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                    }`}
+                  onClick={() => handleDeviceToggle(device.id)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">SID: {device.sid}</div>
+                      <div className="text-sm text-gray-600">MID: {device.mid}</div>
+                      <div className="text-sm text-gray-600">TID: {device.tid}</div>
+                      <div className="text-sm text-gray-600">VPA: {device.vpaid}</div>
+                    </div>
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedDevices.includes(device.id)
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
+                      }`}>
+                      {selectedDevices.includes(device.id) && (
+                        <CheckCircle className="w-3 h-3 text-white" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
-          {/* Product Selection */}
-          <FormField label="Select Product" error={errors.product} required>
-            <Select
-              placeholder="Choose product"
-              options={products.map(p => ({ value: p.value, label: `${p.label} (Available: ${p.availableQuantity})` }))}
-              value={watchedValues.product}
-              onChange={(e) => setValue('product', e.target.value)}
-              error={errors.product}
-            />
-          </FormField>
-
-          {/* Quantity */}
-          
-            <FormField label="Quantity to Distribute" error={errors.quantity} required>
-              <input
-                type="number"
-                min="1"
-                max={selectedProduct?.availableQuantity}
-                {...register('quantity', { valueAsNumber: true })}
-                className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-100 ${errors.quantity ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'
-                  }`}
-                placeholder="Enter quantity"
-              />
-              <p className="text-sm text-gray-600">
-                Available: {selectedProduct?.availableQuantity}
-              </p>
-            </FormField>
-          
-
-          {/* Merchant Selection */}
-          
-            <FormField label="Select Merchant" error={errors.merchant} required>
-              <Select
-                placeholder="Choose merchant"
-                options={availableMerchants.map(m => ({ value: m.id, label: `${m.name} - ${m.location}` }))}
-                value={watchedValues.merchant}
-                onChange={(e) => setValue('merchant', e.target.value)}
-                error={errors.merchant}
-              />
-            </FormField>
-          
-        </div>
-      </div>
-
-      {/* Device Selection Section */}
-      {availableDevices.length > 0 && watchedValues.quantity > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">
-            Select Devices ({selectedDevices.length}/{watchedValues.quantity})
-          </h2>
-          
-          <DeviceSelectionTable
-            devices={availableDevices}
-            selectedDevices={selectedDevices}
-            onSelectionChange={handleDeviceSelection}
-            quantity={watchedValues.quantity}
-          />
+          {errors.devices && <p className="text-red-600 text-sm mt-4">{errors.devices}</p>}
         </div>
       )}
 
       {/* Submit Button */}
-      {selectedDevices.length === watchedValues.quantity && watchedValues.merchant && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      {formData.merchant && formData.quantity && selectedDevices.length === parseInt(formData.quantity) && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
           <button
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-4 rounded-xl font-semibold transition-all duration-200 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSubmit}
+            disabled={loading.submitting}
+            className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? (
+            {loading.submitting ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
             ) : (
               <CheckCircle className="w-5 h-5" />
             )}
-            <span>
-              {isSubmitting ? 'Distributing...' : 'Distribute Products'}
-            </span>
+            <span>{loading.submitting ? 'Distributing...' : 'Distribute Products'}</span>
           </button>
-
-          {selectedDevices.length !== watchedValues.quantity && (
-            <p className="text-sm text-orange-600 text-center mt-2">
-              Please select exactly {watchedValues.quantity} devices before submitting
-            </p>
-          )}
         </div>
       )}
     </div>

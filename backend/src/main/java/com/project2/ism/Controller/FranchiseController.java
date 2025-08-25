@@ -62,6 +62,7 @@ package com.project2.ism.Controller;
 import com.project2.ism.DTO.FranchiseFormDTO;
 import com.project2.ism.DTO.FranchiseListDTO;
 import com.project2.ism.DTO.FranchiseProductSummaryDTO;
+import com.project2.ism.DTO.ProductSerialDTO;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Service.FileStorageService;
@@ -196,5 +197,18 @@ public class FranchiseController {
         List<?> products = franchiseService.getProductsOfFranchise(id);
         return ResponseEntity.ok(products);
     }
+
+    @GetMapping("/serial-num-to-dispatch/{id}") // outwardId
+    public ResponseEntity<List<ProductSerialDTO>> getSerialNums(@PathVariable Long id) {
+        List<ProductSerialDTO> serialNums = franchiseService.getPSN(id)
+                .stream()
+                .map(ProductSerialDTO::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(serialNums);
+    }
+
+
+
 
 }

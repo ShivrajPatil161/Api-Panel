@@ -680,7 +680,7 @@ const CustomerOnboarding = ({
       bankName: customerData?.bankDetails?.bankName || '',
       accountHolderName: customerData?.bankDetails?.accountHolderName || '',
       accountNumber: customerData?.bankDetails?.accountNumber || '',
-      ifscCode: customerData?.bankDetails?.ifscCode || '',
+      ifscCode: customerData?.bankDetails?.ifsc || '',
       branchName: customerData?.bankDetails?.branchName || '',
       accountType: customerData?.bankDetails?.accountType || ''
     } : {}

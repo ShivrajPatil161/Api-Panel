@@ -1,121 +1,31 @@
-import React, { useState, useCallback } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
-import {
-  Upload,
-  FileSpreadsheet,
-  Eye,
-  X,
-  AlertCircle,
-  CheckCircle,
-  Download,
-  Building2,
-  Package,
-  Trash2
-} from 'lucide-react';
+import { Upload, FileSpreadsheet, Eye, X, AlertCircle, Trash2, ChevronDown } from 'lucide-react';
+import api from '../../constants/API/axiosInstance';
 
-// Zod validation schema
-const formSchema = z.object({
-  vendor: z.string().min(1, "Please select a vendor"),
-  product: z.string().min(1, "Please select a product"),
-  file: z.any().optional().refine((file) => {
-    if (!file || file.length === 0) return false;
-    const validTypes = [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel',
-      'text/csv'
-    ];
-    return validTypes.includes(file[0]?.type);
-  }, "Please upload a valid Excel file (.xlsx, .xls, .csv)")
-});
 
-// Mock vendor data with their products
-const vendorsData = [
-  {
-    id: 'vendor-1',
-    name: 'TechFlow Solutions',
-    email: 'contact@techflow.com',
-    products: [
-      { id: 'prod-1', name: 'POS Terminal Pro', category: 'Hardware', price: 15000 },
-      { id: 'prod-2', name: 'QR Scanner Deluxe', category: 'Hardware', price: 8500 },
-      { id: 'prod-3', name: 'Payment Gateway License', category: 'Software', price: 25000 }
-    ]
-  },
-  {
-    id: 'vendor-2',
-    name: 'FinTech Devices Ltd',
-    email: 'sales@fintechdevices.com',
-    products: [
-      { id: 'prod-4', name: 'Mobile Card Reader', category: 'Hardware', price: 5500 },
-      { id: 'prod-5', name: 'Bluetooth Soundbox', category: 'Hardware', price: 3200 },
-      { id: 'prod-6', name: 'Digital Receipt Printer', category: 'Hardware', price: 12000 }
-    ]
-  },
-  {
-    id: 'vendor-3',
-    name: 'Smart Payment Systems',
-    email: 'info@smartpayments.com',
-    products: [
-      { id: 'prod-7', name: 'NFC Payment Device', category: 'Hardware', price: 18000 },
-      { id: 'prod-8', name: 'Inventory Management Software', category: 'Software', price: 35000 },
-      { id: 'prod-9', name: 'Analytics Dashboard License', category: 'Software', price: 28000 }
-    ]
-  },
-  {
-    id: 'vendor-4',
-    name: 'Digital Commerce Hub',
-    email: 'support@digitalcommerce.com',
-    products: [
-      { id: 'prod-10', name: 'All-in-One POS System', category: 'Hardware', price: 45000 },
-      { id: 'prod-11', name: 'Barcode Scanner Pro', category: 'Hardware', price: 7800 },
-      { id: 'prod-12', name: 'Cloud Storage Service', category: 'Software', price: 15000 }
-    ]
-  }
+
+// Priority columns for preview (from your original code)
+const PRIORITY_HEADERS = [
+  "Date", "Mode", "Amount", "Auth Code", "Card", "Card Type", "Brand Type",
+  "Card Classification", "Merchant", "Category", "MID", "TID","EMI"
 ];
 
-// Reusable Form Field Component
-const FormField = ({ label, error, required = false, children }) => (
-  <div className="space-y-2">
-    <label className="block text-sm font-medium text-gray-700">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    {children}
-    {error && (
-      <div className="flex items-center space-x-1 text-red-600 text-sm">
-        <AlertCircle className="w-4 h-4" />
-        <span>{error.message}</span>
-      </div>
-    )}
-  </div>
-);
+// Utility functions
+function normalizeHeader(h) {
+  return String(h).trim();
+}
 
-// Reusable Select Component
-const Select = ({ placeholder, options, value, onChange, error, disabled = false }) => (
-  <select
-    value={value}
-    onChange={onChange}
-    disabled={disabled}
-    className={`w-full px-4 py-3 border-2 rounded-xl bg-white transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-100 ${error
-      ? 'border-red-300 focus:border-red-500'
-      : 'border-gray-200 focus:border-blue-500'
-      } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-  >
-    <option value="">{placeholder}</option>
-    {options.map((option) => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ))}
-  </select>
-);
+function deriveEmiFlag(row) {
+  const labels = row["Labels"] || row["Txn Type"] || "";
+  return /emi/i.test(labels) ? "Yes" : "No";
+}
 
 // File Upload Component
 const FileUpload = ({ onFileSelect, selectedFile, error }) => {
   const [dragActive, setDragActive] = useState(false);
 
-  const handleDrag = useCallback((e) => {
+  const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -123,9 +33,9 @@ const FileUpload = ({ onFileSelect, selectedFile, error }) => {
     } else if (e.type === "dragleave") {
       setDragActive(false);
     }
-  }, []);
+  };
 
-  const handleDrop = useCallback((e) => {
+  const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -134,7 +44,7 @@ const FileUpload = ({ onFileSelect, selectedFile, error }) => {
       const file = e.dataTransfer.files[0];
       onFileSelect(file);
     }
-  }, [onFileSelect]);
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -150,7 +60,7 @@ const FileUpload = ({ onFileSelect, selectedFile, error }) => {
     <div className="space-y-4">
       {!selectedFile ? (
         <div
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${dragActive
+          className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${dragActive
             ? 'border-blue-500 bg-blue-50'
             : error
               ? 'border-red-300 hover:border-red-400'
@@ -178,13 +88,13 @@ const FileUpload = ({ onFileSelect, selectedFile, error }) => {
                 Drop your Excel file here, or <span className="text-blue-600">browse</span>
               </p>
               <p className="text-sm text-gray-500">
-                Supports .xlsx, .xls, and .csv files up to 10MB
+                Supports .xlsx, .xls, and .csv files
               </p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-green-100 rounded-lg">
@@ -211,14 +121,11 @@ const FileUpload = ({ onFileSelect, selectedFile, error }) => {
   );
 };
 
-// Excel Preview Component with SheetJS
-const ExcelPreview = ({ file }) => {
+// File Preview Component
+const FilePreview = ({ file }) => {
   const [previewData, setPreviewData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [sheetNames, setSheetNames] = useState([]);
-  const [selectedSheet, setSelectedSheet] = useState('');
-  const [fileStats, setFileStats] = useState(null);
 
   const handlePreview = async () => {
     if (!file) return;
@@ -229,88 +136,45 @@ const ExcelPreview = ({ file }) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
-      // Get sheet names
-      const sheets = workbook.SheetNames;
-      setSheetNames(sheets);
+      // Normalize headers and add EMI data
+      const normalized = jsonData.map((obj) => {
+        const out = {};
+        Object.keys(obj).forEach((k) => (out[normalizeHeader(k)] = obj[k]));
+        // Add EMI flag to each row
+        out["EMI"] = deriveEmiFlag(out);
+        return out;
+      });
 
-      // Use first sheet by default
-      const firstSheetName = sheets[0];
-      setSelectedSheet(firstSheetName);
+      // Get only first 10 rows for preview
+      const previewRows = normalized.slice(0, 10);
 
-      // Convert sheet to JSON
-      const worksheet = workbook.Sheets[firstSheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-      if (jsonData.length === 0) {
-        setError('The Excel file appears to be empty.');
-        return;
+      if (previewRows.length === 0) {
+        throw new Error('No data found in the file');
       }
 
-      // Extract headers and rows
-      const headers = jsonData[0] || [];
-      const rows = jsonData.slice(1).filter(row => row.some(cell => cell !== undefined && cell !== null && cell !== ''));
+      // Get all available headers from the first row
+      const allHeaders = Object.keys(previewRows[0]);
 
-      // Limit preview to first 10 rows for performance
-      const previewRows = rows.slice(0, 10);
+      // Separate priority headers that exist in the data from other headers
+      const availablePriorityHeaders = PRIORITY_HEADERS.filter(h => allHeaders.includes(h));
+      const otherHeaders = allHeaders.filter(h => !PRIORITY_HEADERS.includes(h));
 
-      // File statistics
-      const stats = {
-        totalSheets: sheets.length,
-        totalRows: rows.length,
-        totalColumns: headers.length,
-        previewRows: previewRows.length
-      };
+      // Combine priority headers first, then other headers
+      const orderedHeaders = [...availablePriorityHeaders, ...otherHeaders];
 
-      setFileStats(stats);
       setPreviewData({
-        headers: headers.map(h => h?.toString() || ''),
-        rows: previewRows.map(row =>
-          headers.map((_, index) => row[index]?.toString() || '')
-        )
+        headers: orderedHeaders,
+        priorityHeaders: availablePriorityHeaders,
+        rows: previewRows,
+        totalRows: normalized.length
       });
 
     } catch (err) {
-      console.error('Excel parsing error:', err);
-      setError('Failed to parse Excel file. Please ensure it\'s a valid Excel file (.xlsx, .xls, .csv).');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSheetChange = async (sheetName) => {
-    if (!file || !sheetName) return;
-
-    setLoading(true);
-    setSelectedSheet(sheetName);
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-      const headers = jsonData[0] || [];
-      const rows = jsonData.slice(1).filter(row => row.some(cell => cell !== undefined && cell !== null && cell !== ''));
-      const previewRows = rows.slice(0, 10);
-
-      const stats = {
-        totalSheets: workbook.SheetNames.length,
-        totalRows: rows.length,
-        totalColumns: headers.length,
-        previewRows: previewRows.length
-      };
-
-      setFileStats(stats);
-      setPreviewData({
-        headers: headers.map(h => h?.toString() || ''),
-        rows: previewRows.map(row =>
-          headers.map((_, index) => row[index]?.toString() || '')
-        )
-      });
-
-    } catch (err) {
-      setError('Failed to load the selected sheet.');
+      console.error('Preview error:', err);
+      setError('Failed to preview file. Please ensure it\'s a valid Excel file with data.');
     } finally {
       setLoading(false);
     }
@@ -319,115 +183,36 @@ const ExcelPreview = ({ file }) => {
   const closePreview = () => {
     setPreviewData(null);
     setError(null);
-    setSheetNames([]);
-    setSelectedSheet('');
-    setFileStats(null);
-  };
-
-  const downloadJSON = () => {
-    if (!previewData) return;
-
-    const data = previewData.rows.map(row => {
-      const obj = {};
-      previewData.headers.forEach((header, index) => {
-        obj[header || `Column_${index + 1}`] = row[index] || '';
-      });
-      return obj;
-    });
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${file.name.split('.')[0]}_preview.json`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-3">
+        <button
+          type="button"
+          onClick={handlePreview}
+          disabled={!file || loading}
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          ) : (
+            <Eye className="w-4 h-4" />
+          )}
+          <span>{loading ? 'Loading...' : 'Preview File'}</span>
+        </button>
+
+        {previewData && (
           <button
             type="button"
-            onClick={handlePreview}
-            disabled={!file || loading}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            onClick={closePreview}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
           >
-            {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
-            <span>{loading ? 'Loading...' : 'Preview File'}</span>
+            <X className="w-4 h-4" />
+            <span>Close Preview</span>
           </button>
-
-          {previewData && (
-            <>
-              <button
-                type="button"
-                onClick={closePreview}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <X className="w-4 h-4" />
-                <span>Close Preview</span>
-              </button>
-
-              {/* <button
-                type="button"
-                onClick={downloadJSON}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download JSON</span>
-              </button> */}
-            </>
-          )}
-        </div>
+        )}
       </div>
-
-      {/* File Statistics */}
-      {fileStats && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-medium text-blue-900 mb-2">File Statistics</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-blue-700 font-medium">Sheets:</span>
-              <span className="ml-1 text-blue-600">{fileStats.totalSheets}</span>
-            </div>
-            <div>
-              <span className="text-blue-700 font-medium">Rows:</span>
-              <span className="ml-1 text-blue-600">{fileStats.totalRows}</span>
-            </div>
-            <div>
-              <span className="text-blue-700 font-medium">Columns:</span>
-              <span className="ml-1 text-blue-600">{fileStats.totalColumns}</span>
-            </div>
-            <div>
-              <span className="text-blue-700 font-medium">Previewing:</span>
-              <span className="ml-1 text-blue-600">{fileStats.previewRows} rows</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sheet Selection */}
-      {sheetNames.length > 1 && (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Select Sheet</label>
-          <select
-            value={selectedSheet}
-            onChange={(e) => handleSheetChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {sheetNames.map((sheetName) => (
-              <option key={sheetName} value={sheetName}>
-                {sheetName}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -441,49 +226,46 @@ const ExcelPreview = ({ file }) => {
 
       {previewData && (
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-900">
-                File Preview {selectedSheet && `- ${selectedSheet}`}
-              </h3>
-              <p className="text-sm text-gray-600">
-                Showing first {previewData.rows.length} rows of {fileStats?.totalRows || 0} total rows
-              </p>
-            </div>
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 className="font-medium text-gray-900">File Preview</h3>
+            <p className="text-sm text-gray-600">
+              Showing first {previewData.rows.length} rows of {previewData.totalRows} total rows
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Priority columns shown first, followed by remaining columns
+            </p>
           </div>
 
           <div className="overflow-x-auto max-h-96 overflow-y-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    #
-                  </th>
-                  {previewData.headers.map((header, index) => (
+                  {previewData.headers.map((header) => (
                     <th
-                      key={index}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-24"
+                      key={header}
+                      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${previewData.priorityHeaders.includes(header)
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-gray-500'
+                        }`}
                     >
-                      {header || `Column ${index + 1}`}
+                      {header}
                     </th>
                   ))}
+                  
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {previewData.rows.map((row, rowIndex) => (
-                  <tr key={rowIndex} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
-                      {rowIndex + 1}
-                    </td>
-                    {row.map((cell, cellIndex) => (
+                {previewData.rows.map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    {previewData.headers.map((header) => (
                       <td
-                        key={cellIndex}
-                        className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate"
-                        title={cell}
+                        key={header}
+                        className="px-4 py-3 whitespace-nowrap text-sm text-gray-900"
                       >
-                        {cell || '-'}
+                        {String(row[header] || '')}
                       </td>
                     ))}
+                   
                   </tr>
                 ))}
               </tbody>
@@ -495,171 +277,248 @@ const ExcelPreview = ({ file }) => {
   );
 };
 
-// Main Form Component
-const VendorProductUploadForm = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [selectedVendor, setSelectedVendor] = useState('');
+// Main Component
+const TransactionUpload = () => {
+  const [file, setFile] = useState(null);
+  const [vendorId, setVendorId] = useState("");
+  const [productId, setProductId] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [vendors, setVendors] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loadingVendors, setLoadingVendors] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting },
-    reset
-  } = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      vendor: '',
-      product: '',
-      file: null
-    }
-  });
-
-  const watchedVendor = watch('vendor');
-
-  // Get products for selected vendor
-  const selectedVendorData = vendorsData.find(v => v.id === watchedVendor);
-  const availableProducts = selectedVendorData?.products || [];
-
-  // Handle vendor change
-  const handleVendorChange = (e) => {
-    const vendorId = e.target.value;
-    setValue('vendor', vendorId);
-    setValue('product', ''); // Reset product when vendor changes
-    setSelectedVendor(vendorId);
-  };
-
-  // Handle file selection
-  const handleFileSelect = (file) => {
-    setSelectedFile(file);
-    setValue('file', file ? [file] : []);
-  };
-
-  // Form submission
-  const onSubmit = async (data) => {
+  // Fetch vendors on component mount
+  const fetchVendors = async () => {
+    setLoadingVendors(true);
     try {
-      console.log('Form Data:', {
-        vendor: selectedVendorData,
-        product: availableProducts.find(p => p.id === data.product),
-        file: selectedFile
+      const response = await api.get('/vendors');
+      setVendors(response.data);
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      alert('Failed to load vendors');
+    } finally {
+      setLoadingVendors(false);
+    }
+  };
+
+  // Fetch products when vendor is selected
+  const fetchProducts = async (vendorId) => {
+    setLoadingProducts(true);
+    try {
+      const response = await api.get(`/products/vendor/${vendorId}`);
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      alert('Failed to load products');
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  // Load vendors on component mount
+  React.useEffect(() => {
+    fetchVendors();
+  }, []);
+
+  // Handle vendor selection
+  const handleVendorChange = (e) => {
+    const selectedVendorId = e.target.value;
+    setVendorId(selectedVendorId);
+    setProductId(""); // Reset product selection
+    setProducts([]); // Clear products
+
+    if (selectedVendorId) {
+      fetchProducts(selectedVendorId);
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!vendorId) {
+      newErrors.vendor = "Please select a vendor";
+    }
+
+    if (!productId) {
+      newErrors.product = "Please select a product";
+    }
+
+    if (!file) {
+      newErrors.file = "Please select a file";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("vendorId", vendorId);
+      formData.append("productId", productId);
+      formData.append("file", file);
+
+      // Replace with your actual API endpoint
+      const response = await fetch("/api/transactions/upload", {
+        method: "POST",
+        body: formData,
       });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
 
-      alert('Form submitted successfully!');
+      alert("File uploaded successfully!");
 
       // Reset form
-      reset();
-      setSelectedFile(null);
-      setSelectedVendor('');
+      setFile(null);
+      setVendorId("");
+      setProductId("");
+      setProducts([]);
+      setErrors({});
 
     } catch (error) {
-      alert('Submission failed. Please try again.');
+      console.error("Upload error:", error);
+      alert("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
     }
   };
 
+  const selectedVendor = vendors.find(v => v.id === parseInt(vendorId));
+  const selectedProduct = products.find(p => p.id === parseInt(productId));
+
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <FileSpreadsheet className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Vendor Product Upload</h1>
-            <p className="text-gray-600">Upload product data for selected vendor with Excel preview</p>
-          </div>
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Upload Razorpay Transactions</h1>
+          <p className="text-gray-600">Upload transaction data with vendor and product information</p>
         </div>
-      </div>
 
-      {/* Form */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="space-y-8">
-          {/* Vendor Selection */}
-          <FormField label="Select Vendor" error={errors.vendor} required>
-            <Select
-              placeholder="Choose a vendor"
-              options={vendorsData.map(vendor => ({
-                value: vendor.id,
-                label: `${vendor.name} (${vendor.email})`
-              }))}
-              value={watchedVendor}
-              onChange={handleVendorChange}
-              error={errors.vendor}
-            />
-          </FormField>
+        <div className="space-y-6">
+          {/* Form Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Vendor Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Vendor <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={vendorId}
+                  onChange={handleVendorChange}
+                  disabled={loadingVendors}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10 ${errors.vendor ? 'border-red-300' : 'border-gray-300'
+                    } ${loadingVendors ? 'bg-gray-100' : 'bg-white'}`}
+                >
+                  <option value="">
+                    {loadingVendors ? 'Loading vendors...' : 'Select a vendor'}
+                  </option>
+                  {vendors.map((vendor) => (
+                    <option key={vendor.id} value={vendor.id}>
+                      {vendor.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              {errors.vendor && (
+                <p className="text-red-600 text-sm mt-1">{errors.vendor}</p>
+              )}
+            </div>
 
-          {/* Product Selection */}
-          <FormField label="Select Product" error={errors.product} required>
-            <Select
-              placeholder={selectedVendor ? "Choose a product" : "Select vendor first"}
-              options={availableProducts.map(product => ({
-                value: product.id,
-                label: `${product.name} - ₹${product.price.toLocaleString()} (${product.category})`
-              }))}
-              value={watch('product')}
-              onChange={(e) => setValue('product', e.target.value)}
-              error={errors.product}
-              disabled={!selectedVendor}
-            />
-          </FormField>
+            {/* Product Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Product <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={productId}
+                  onChange={(e) => setProductId(e.target.value)}
+                  disabled={!vendorId || loadingProducts}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10 ${errors.product ? 'border-red-300' : 'border-gray-300'
+                    } ${(!vendorId || loadingProducts) ? 'bg-gray-100' : 'bg-white'}`}
+                >
+                  <option value="">
+                    {!vendorId
+                      ? 'Select vendor first'
+                      : loadingProducts
+                        ? 'Loading products...'
+                        : 'Select a product'
+                    }
+                  </option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.productName}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              {errors.product && (
+                <p className="text-red-600 text-sm mt-1">{errors.product}</p>
+              )}
+            </div>
+          </div>
 
-          {/* Selected Product Info */}
-          {watch('product') && (
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-blue-900">
-                    {availableProducts.find(p => p.id === watch('product'))?.name}
-                  </h3>
-                  <p className="text-sm text-blue-700">
-                    Category: {availableProducts.find(p => p.id === watch('product'))?.category} |
-                    Price: ₹{availableProducts.find(p => p.id === watch('product'))?.price.toLocaleString()}
-                  </p>
-                </div>
+          {/* Selected Values Display */}
+          {(selectedVendor || selectedProduct) && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-medium text-blue-900 mb-2">Selected Configuration</h3>
+              <div className="text-sm text-blue-700">
+                {selectedVendor && <p><strong>Vendor:</strong> {selectedVendor.name}</p>}
+                {selectedProduct && <p><strong>Product:</strong> {selectedProduct.productName}</p>}
               </div>
             </div>
           )}
 
           {/* File Upload */}
-          <FormField label="Upload Excel File" error={errors.file} required>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Transaction File <span className="text-red-500">*</span>
+            </label>
             <FileUpload
-              onFileSelect={handleFileSelect}
-              selectedFile={selectedFile}
+              onFileSelect={setFile}
+              selectedFile={file}
               error={errors.file}
             />
-          </FormField>
+            {errors.file && (
+              <p className="text-red-600 text-sm mt-1">{errors.file}</p>
+            )}
+          </div>
 
           {/* File Preview */}
-          {selectedFile && (
+          {file && (
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">File Preview & Analysis</h3>
-              <ExcelPreview file={selectedFile} />
+              <h3 className="text-lg font-medium text-gray-900 mb-4">File Preview</h3>
+              <FilePreview file={file} />
             </div>
           )}
 
           {/* Submit Button */}
-          <div className="pt-6 border-t border-gray-200">
+          <div className="pt-4">
             <button
-              onClick={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
-              className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-4 rounded-xl font-semibold transition-all duration-200 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleSubmit}
+              disabled={uploading}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              {uploading ? (
+                <span className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Uploading...</span>
+                </span>
               ) : (
-                <CheckCircle className="w-5 h-5" />
+                'Upload File'
               )}
-              <span>
-                {isSubmitting ? 'Uploading...' : 'Submit Form'}
-              </span>
             </button>
           </div>
         </div>
@@ -668,4 +527,4 @@ const VendorProductUploadForm = () => {
   );
 };
 
-export default VendorProductUploadForm;
+export default TransactionUpload;

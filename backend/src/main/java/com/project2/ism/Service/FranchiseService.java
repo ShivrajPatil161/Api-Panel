@@ -307,6 +307,7 @@ public class FranchiseService {
             int remainingQty = getPSN(o.getId()).size();
 
             result.add(new FranchiseProductSummaryDTO(
+                    o.getId(),
                     o.getProduct().getId(),
                     o.getProduct().getProductName(),
                     o.getProduct().getProductCode(),

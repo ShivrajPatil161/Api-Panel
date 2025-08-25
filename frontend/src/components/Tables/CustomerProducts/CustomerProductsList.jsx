@@ -237,7 +237,7 @@ const CustomerProductsList = () => {
         const storedUserId = localStorage.getItem('customerId');
 
         setUserType(storedUserType);
-        setUserId(4);
+        setUserId(storedUserId);
     }, []);
 
     // Fetch products based on user type

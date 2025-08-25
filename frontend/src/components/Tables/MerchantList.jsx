@@ -129,7 +129,7 @@ const MerchantListComponent = () => {
     const [merchantData, setMerchantData] = useState([]);
 
     const fetchMerchants = async () => {
-        const response = await api.get(`/merchants/franchise/4`);
+        const response = await api.get(`/merchants/franchise/${customerId}`);
         console.log(response);
         setMerchantData(response.data || []);
     }

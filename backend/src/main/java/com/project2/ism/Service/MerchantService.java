@@ -125,6 +125,8 @@ import com.project2.ism.DTO.MerchantProductSummaryDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
+import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
+import com.project2.ism.Model.Product;
 import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
@@ -132,6 +134,7 @@ import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.FranchiseRepository;
 import com.project2.ism.Repository.MerchantRepository;
 import com.project2.ism.Repository.OutwardTransactionRepository;
+import com.project2.ism.Repository.ProductSerialsRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -139,6 +142,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -152,15 +156,18 @@ public class MerchantService {
 
     private final OutwardTransactionRepository outwardRepo;
 
+    private final ProductSerialsRepository serialRepo;
+
     public MerchantService(MerchantRepository merchantRepository,
                            FranchiseRepository franchiseRepository,
                            FileStorageService fileStorageService,
-                           UserService userService, OutwardTransactionRepository outwardRepo) {
+                           UserService userService, OutwardTransactionRepository outwardRepo, ProductSerialsRepository serialRepo) {
         this.merchantRepository = merchantRepository;
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.outwardRepo = outwardRepo;
+        this.serialRepo = serialRepo;
     }
 
     public void createMerchant(MerchantFormDTO dto) {
@@ -228,11 +235,11 @@ public class MerchantService {
         merchantRepository.save(merchant);
 
         // Create login credentials
-        userService.createAndSendCredentials(
-                dto.getPrimaryContactEmail(),
-                "MERCHANT",
-                null
-        );
+//        userService.createAndSendCredentials(
+//                dto.getPrimaryContactEmail(),
+//                "MERCHANT",
+//                null
+//        );
     }
 
     public List<MerchantListDTO> getAllMerchantsForList() {
@@ -360,21 +367,57 @@ public class MerchantService {
     }
 
     public List<MerchantProductSummaryDTO> getProductsOfMerchant(Long merchantId) {
-        List<OutwardTransactions> outwardList = outwardRepo.findByMerchantId(merchantId);
+        // ✅ Step 1: Check if merchant belongs to a franchise
+        boolean belongsToFranchise = merchantRepository.findFranchiseByMerchantId(merchantId).isPresent();
 
         List<MerchantProductSummaryDTO> result = new ArrayList<>();
-        for (OutwardTransactions o : outwardList) {
-            int totalQty = o.getQuantity();
 
-            result.add(new MerchantProductSummaryDTO(
-                    o.getProduct().getId(),
-                    o.getProduct().getProductName(),
-                    o.getProduct().getProductCode(),
-                    o.getProduct().getProductCategory().getCategoryName(),
-                    totalQty
-            ));
+        if (!belongsToFranchise) {
+            // ✅ Case 1: Independent Merchant → use outward transactions
+            List<OutwardTransactions> outwardList = outwardRepo.findByMerchantId(merchantId);
+
+            for (OutwardTransactions o : outwardList) {
+                int totalQty = o.getQuantity();
+
+                result.add(new MerchantProductSummaryDTO(
+                        o.getProduct().getId(),
+                        o.getProduct().getProductName(),
+                        o.getProduct().getProductCode(),
+                        o.getProduct().getProductCategory().getCategoryName(),
+                        totalQty
+                ));
+            }
+
+        } else {
+            // ✅ Case 2: Merchant under a Franchise → use product serial numbers
+            List<ProductSerialNumbers> serials = serialRepo.findByMerchant_Id(merchantId);
+
+            // Group by product
+            Map<Product, Long> grouped = serials.stream()
+                    .collect(Collectors.groupingBy(ProductSerialNumbers::getProduct, Collectors.counting()));
+
+            for (Map.Entry<Product, Long> entry : grouped.entrySet()) {
+                Product p = entry.getKey();
+                long qty = entry.getValue();
+
+                result.add(new MerchantProductSummaryDTO(
+                        p.getId(),
+                        p.getProductName(),
+                        p.getProductCode(),
+                        p.getProductCategory().getCategoryName(),
+                        (int) qty
+                ));
+            }
         }
+
         return result;
     }
 
+
+    public List<MerchantListDTO> getAllDirectMerchantsForList() {
+        return merchantRepository.findByFranchiseIsNull()
+                .stream()
+                .map(this::mapToListDTO)
+                .collect(Collectors.toList());
+    }
 }

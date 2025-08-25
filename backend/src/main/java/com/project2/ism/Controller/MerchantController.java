@@ -229,4 +229,14 @@ public class MerchantController {
         List<?> products = merchantService.getProductsOfMerchant(id);
         return ResponseEntity.ok(products);
     }
+
+    @GetMapping("/direct-merchant")
+    public ResponseEntity<List<MerchantListDTO>> directMerchant() {
+        try {
+            List<MerchantListDTO> merchants = merchantService.getAllDirectMerchantsForList();
+            return ResponseEntity.ok(merchants);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

@@ -5,8 +5,8 @@ import { router } from './routes/index.jsx'
 import './index.css'
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>
-  //<RouterProvider router={router} />
+  // <StrictMode>
+  //   <RouterProvider router={router} />
+  // </StrictMode>
+  <RouterProvider router={router} />
 )

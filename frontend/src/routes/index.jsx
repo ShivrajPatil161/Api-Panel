@@ -26,6 +26,7 @@ import ForgotPassword from '../components/Auth/ForgotPass.jsx'
 import InventoryManagement from '../components/Inventory/Inventory.jsx'
 import ResetPassword from '../components/Auth/ResetPassword.jsx'
 import CustomerProductsList from '../components/Tables/CustomerProducts/CustomerProductsList.jsx'
+import TransactionUpload from '../components/Forms/FileUpload.jsx'
 
 
 
@@ -153,7 +154,7 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: "upload",
-                element: <VendorProductUploadForm />
+                element: <TransactionUpload />
               },
               // {
               //   path: "charges",
