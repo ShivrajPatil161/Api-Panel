@@ -20,5 +20,5 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
 
 
     List<ProductSerialNumbers> findByOutwardTransaction_IdAndMerchantIsNull(Long outwardID);
-    List<ProductSerialNumbers> findByOutwardTransaction_Id(Long outwardID);
+   // List<ProductSerialNumbers> findByOutwardTransaction_Id(Long outwardID, Long franchiseId);
 }

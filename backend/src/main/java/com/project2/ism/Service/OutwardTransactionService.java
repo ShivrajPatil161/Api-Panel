@@ -4,6 +4,7 @@ import com.project2.ism.DTO.OutwardTransactionDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
+import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
@@ -103,7 +104,7 @@ public class OutwardTransactionService {
             existing.setContactPersonNumber(dto.contactPersonNumber);
             existing.setDeliveryMethod(dto.deliveryMethod);
             existing.setTrackingNumber(dto.trackingNumber);
-            existing.setExpectedDeliveryDate(dto.expectedDeliveryDate);
+            existing.setExpectedDeliveryDate(dto.expectedDelivery);
             existing.setRemarks(dto.remarks);
 
             if (dto.serialNumbers != null) {
@@ -120,6 +121,10 @@ public class OutwardTransactionService {
         @Transactional
         public void delete(Long id) {
             OutwardTransactions existing = getById(id);
+            // Break relationship manually
+//            for (ProductSerialNumbers psn : existing.getProductSerialNumbers()) {
+//                psn.setOutwardTransaction(null);
+//            }
             repository.delete(existing);
         }
 
