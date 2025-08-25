@@ -30,7 +30,7 @@ public class OutwardTransactionDTO {
     public String contactPersonNumber;
     public String deliveryMethod;
     public String trackingNumber;
-    public LocalDate expectedDeliveryDate;
+    public LocalDate expectedDelivery;
     public List<ProductSerialDTO> serialNumbers;
     public String remarks;
 
@@ -54,7 +54,7 @@ public class OutwardTransactionDTO {
         dto.contactPersonNumber = entity.getContactPersonNumber();
         dto.deliveryMethod = entity.getDeliveryMethod();
         dto.trackingNumber = entity.getTrackingNumber();
-        dto.expectedDeliveryDate = entity.getExpectedDeliveryDate();
+        dto.expectedDelivery = entity.getExpectedDeliveryDate();
         dto.remarks = entity.getRemarks();
 
         if (entity.getProductSerialNumbers() != null) {
@@ -80,7 +80,7 @@ public class OutwardTransactionDTO {
         outward.setContactPersonNumber(this.contactPersonNumber);
         outward.setDeliveryMethod(this.deliveryMethod);
         outward.setTrackingNumber(this.trackingNumber);
-        outward.setExpectedDeliveryDate(this.expectedDeliveryDate);
+        outward.setExpectedDeliveryDate(this.expectedDelivery);
         outward.setRemarks(this.remarks);
 
         // ✅ UPDATED - Now updates existing serials

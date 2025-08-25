@@ -500,8 +500,13 @@ const OutwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
     try {
       const submissionData = {
         ...data,
+        ...(data.customerType === "franchise"
+          ? { franchiseId: data.customerId }
+          : data.customerType === "merchant"
+            ? { merchantId: data.customerId }
+            : {}),
         selectedSerialIds: selectedSerials.map(serial => serial.id),
-        productSerialNumbers: selectedSerials
+        serialNumbers: selectedSerials
       }
       await onSubmit(submissionData)
       handleClose()
