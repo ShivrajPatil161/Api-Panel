@@ -358,7 +358,7 @@ const OutwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
     setCustomersLoading(true)
     setError(null)
     try {
-      const endpoint = customerType === 'franchise' ? '/franchise' : '/merchants'
+      const endpoint = customerType === 'franchise' ? '/franchise' : '/merchants/direct-merchant'
       const response = await api.get(endpoint)
 
       if (response.data && Array.isArray(response.data)) {
