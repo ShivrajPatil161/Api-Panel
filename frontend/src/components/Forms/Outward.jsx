@@ -206,8 +206,6 @@ const SerialNumberGrid = ({ availableSerials = [], quantity, onSelectionChange, 
 }
 
 
-
-
 // Modular Form Select Component
 const FormSelect = ({  label,  name,  register,  errors,  options,  loading,  placeholder,  required = false,  disabled = false, onChange}) => {
   const { onChange: registerOnChange, ...registerRest } = register(name);
