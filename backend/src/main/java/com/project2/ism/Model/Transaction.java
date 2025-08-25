@@ -12,11 +12,11 @@ public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long internal_id;
 
     @NotBlank(message = "Transaction ID is required")
-    @Column(name = "transaction_ID", nullable = false, unique = true)
-    private String transactionId;
+    @Column(name = "ID", nullable = false, unique = true)
+    private String transactionReferenceId;
 
     @NotNull(message = "Date is required")
     @Column(name = "Date", nullable = false)
@@ -88,7 +88,7 @@ public class Transaction {
     private String rrn;
 
     @Column(name = "Invoice#")
-    private String invoiceNo;
+    private String invoiceNumber;
 
     @Column(name = "Device Serial")
     private String deviceSerial;
@@ -115,7 +115,7 @@ public class Transaction {
     private String tid;
 
     @Column(name = "Batch#")
-    private String batchNo;
+    private String batchNumber;
 
     @Column(name = "Ref#")
     private String ref;
@@ -183,20 +183,20 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Long getId() {
-        return id;
+    public Long getInternal_id() {
+        return internal_id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setInternal_id(Long internal_id) {
+        this.internal_id = internal_id;
     }
 
-    public String getTransactionId() {
-        return transactionId;
+    public String getTransactionReferenceId() {
+        return transactionReferenceId;
     }
 
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
+    public void setTransactionReferenceId(String transactionReferenceId) {
+        this.transactionReferenceId = transactionReferenceId;
     }
 
     public LocalDateTime getDate() {
@@ -351,12 +351,12 @@ public class Transaction {
         this.rrn = rrn;
     }
 
-    public String getInvoiceNo() {
-        return invoiceNo;
+    public String getInvoiceNumber() {
+        return invoiceNumber;
     }
 
-    public void setInvoiceNo(String invoiceNo) {
-        this.invoiceNo = invoiceNo;
+    public void setInvoiceNumber(String invoiceNumber) {
+        this.invoiceNumber = invoiceNumber;
     }
 
     public String getDeviceSerial() {
@@ -423,12 +423,12 @@ public class Transaction {
         this.mid = mid;
     }
 
-    public String getBatchNo() {
-        return batchNo;
+    public String getBatchNumber() {
+        return batchNumber;
     }
 
-    public void setBatchNo(String batchNo) {
-        this.batchNo = batchNo;
+    public void setBatchNumber(String batchNumber) {
+        this.batchNumber = batchNumber;
     }
 
     public String getRef() {
