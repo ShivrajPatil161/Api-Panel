@@ -1,6 +1,7 @@
 package com.project2.ism.Model.Users;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
@@ -37,6 +38,7 @@ public class Franchise extends CustomerBase {
 
 
     @OneToMany(mappedBy = "franchise", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<Merchant> merchants = new ArrayList<>();
 
     public Franchise() {

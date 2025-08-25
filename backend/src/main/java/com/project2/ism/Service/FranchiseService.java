@@ -101,17 +101,23 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.FranchiseFormDTO;
 import com.project2.ism.DTO.FranchiseListDTO;
+import com.project2.ism.DTO.FranchiseProductSummaryDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
+import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
+import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Repository.FranchiseRepository;
+import com.project2.ism.Repository.OutwardTransactionRepository;
+import com.project2.ism.Repository.ProductSerialsRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -123,12 +129,17 @@ public class FranchiseService {
     private final FileStorageService fileStorageService;
     private final UserService userService;
 
+    private final ProductSerialsRepository serialRepo;
+    private final OutwardTransactionRepository outwardRepo;
+
     public FranchiseService(FranchiseRepository franchiseRepository,
                             FileStorageService fileStorageService,
-                            UserService userService) {
+                            UserService userService, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo) {
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
+        this.serialRepo = serialRepo;
+        this.outwardRepo = outwardRepo;
     }
 
     public void createFranchise(FranchiseFormDTO dto) {
@@ -273,4 +284,38 @@ public class FranchiseService {
                 franchise.getCreatedAt()
         );
     }
+
+
+    public Franchise getFranchiseByEmail(String email) {
+        return franchiseRepository.findByContactPerson_Email(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Franchise not found with email " + email));
+    }
+
+
+    public List<ProductSerialNumbers> getPSN(Long outwardID){
+        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNull(outwardID);
+
+    }
+
+
+    public List<FranchiseProductSummaryDTO> getProductsOfFranchise(Long franchiseId) {
+        List<OutwardTransactions> outwardList = outwardRepo.findByFranchiseId(franchiseId);
+
+        List<FranchiseProductSummaryDTO> result = new ArrayList<>();
+        for (OutwardTransactions o : outwardList) {
+            int totalQty = o.getQuantity();
+            int remainingQty = getPSN(o.getId()).size();
+
+            result.add(new FranchiseProductSummaryDTO(
+                    o.getProduct().getId(),
+                    o.getProduct().getProductName(),
+                    o.getProduct().getProductCode(),
+                    o.getProduct().getProductCategory().getCategoryName(), // assuming you have category relation
+                    totalQty,
+                    remainingQty
+            ));
+        }
+        return result;
+    }
+
 }

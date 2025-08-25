@@ -30,6 +30,7 @@ export const inwardAPI = {
     try {
       // Transform frontend data to backend format
       const transformedData = transformToBackendFormat(inwardData);
+      console.log(transformedData)
       const response = await api.post('/inward-transactions', transformedData);
       return response.data;
     } catch (error) {
@@ -64,54 +65,14 @@ export const inwardAPI = {
 
 // Transform frontend form data to backend expected format
 const transformToBackendFormat = (frontendData) => {
-  // Extract serial numbers from grid data
-  const serialNumbers = [];
-  
-  if (frontendData.serialNumberGrid && frontendData.serialNumberGrid.length > 0) {
-    frontendData.serialNumberGrid.forEach(gridRow => {
-      // Only add serial numbers for selected fields
-      const serialEntry = {};
-      
-      if (gridRow.selectedFields?.MID && gridRow.MID) {
-        serialEntry.mid = gridRow.MID;
-      }
-      if (gridRow.selectedFields?.SID && gridRow.SID) {
-        serialEntry.sid = gridRow.SID;
-      }
-      if (gridRow.selectedFields?.TID && gridRow.TID) {
-        serialEntry.tid = gridRow.TID;
-      }
-      if (gridRow.selectedFields?.VpID && gridRow.VpID) {
-        serialEntry.vpaid = gridRow.VpID;
-      }
-
-      // Only add if at least one field is selected
-      if (Object.keys(serialEntry).length > 0) {
-        serialNumbers.push(serialEntry);
-      }
-    });
-  }
 
   // Backend expected format based on your model
   const backendData = {
-    invoiceNumber: frontendData.invoiceNumber,
-    vendor: {
-      id: parseInt(frontendData.vendorId)
-    },
-    receivedDate: frontendData.receivedDate,
-    receivedBy: frontendData.receivedBy,
-    product: {
-      id: parseInt(frontendData.productId)
-    },
-    productCategory: {
-      id: parseInt(frontendData.productCategoryId || frontendData.productId) // Adjust as needed
-    },
+    ...frontendData,
+    vendorId: parseInt(frontendData.vendorId),
+    productId: parseInt(frontendData.productId),
     quantity: parseInt(frontendData.quantity),
-    batchNumber: frontendData.batchNumber || null,
     warrantyPeriod: frontendData.warrantyPeriod ? parseInt(frontendData.warrantyPeriod) : null,
-    productCondition: frontendData.condition,
-    serialNumbers: serialNumbers,
-    remark: frontendData.remarks || null
   };
 
   return backendData;

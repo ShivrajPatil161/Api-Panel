@@ -178,8 +178,6 @@ const getMenuItems = (userType) => {
           { title: 'Pricing Scheme', path: '/dashboard/inventory/pricing', icon: Calculator },
           { title: 'Product Scheme Assign', path: '/dashboard/inventory/products-assign', icon: Calculator },
           { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: ArrowDown },
-         
-          { title: 'Outward Entry', path: '/dashboard/inventory/outward', icon: ArrowUp },
           { title: 'Returns', path: '/dashboard/inventory/returns', icon: RotateCcw }
         ]
       },
@@ -234,7 +232,7 @@ const getMenuItems = (userType) => {
         icon: Package,
         iconColor: '',
         children: [
-          { title: 'Product List', path: '/dashboard/inventory', icon: Package },
+          { title: 'Product List', path: '/dashboard/inventory/customer-products', icon: Package },
           { title: 'Product Distribution', path: '/dashboard/customers/products-distribution', icon: Package }
         ]
       },
@@ -258,7 +256,7 @@ const getMenuItems = (userType) => {
         icon: Package,
         iconColor: '',
         children: [
-          { title: 'Product List', path: '/dashboard/inventory', icon: Package }
+          { title: 'Product List', path: '/dashboard/inventory/customer-products', icon: Package }
         ]
       },
       {

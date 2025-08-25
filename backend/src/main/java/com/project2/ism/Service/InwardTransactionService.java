@@ -1,6 +1,7 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.DTO.InwardTransactionDTO;
+import com.project2.ism.DTO.ProductSerialDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
@@ -85,7 +86,7 @@ public class InwardTransactionService {
 
         if (dto.serialNumbers != null) {
             List<ProductSerialNumbers> serials = dto.serialNumbers.stream()
-                    .map(sn -> sn.toEntity(existing, product))
+                    .map(sn -> sn.toInwardEntity(existing, product))
                     .collect(Collectors.toList());
             existing.setProductSerialNumbers(serials);
             validateAndAttachSerials(existing);
@@ -123,8 +124,11 @@ public class InwardTransactionService {
     }
 
 
-    public List<?> getSerialNumbersByProductId(Long productId){
-        return serialRepo.findByProduct_IdAndMerchantIsNull(productId);
+    public List<ProductSerialDTO> getSerialNumbersByProductId(Long productId) {
+        return serialRepo.findByProduct_IdAndMerchantIsNullAndOutwardTransactionIsNull(productId).stream()
+                .map(ProductSerialDTO::fromEntity) // ✅ map to ProductSerialDTO
+                .collect(Collectors.toList());
     }
+
 }
 

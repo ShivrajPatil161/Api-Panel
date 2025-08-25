@@ -4,10 +4,12 @@ import InventoryTable from './InventoryTable'
 import InwardTable from './InwardTable' 
 import OutwardTable from './OutwardTable' 
 import ReturnTable from './ReturnTable' 
-import InwardFormModal from '../Forms/Inward'
+import InwardFormModal from '../Forms/Inward/Inward'
 import OutwardFormModal from '../Forms/Outward'
 import ReturnsForm from '../Forms/Return'
 import inwardAPI from '../../constants/API/inwardApi'
+import { createOutwardTransaction, deleteOutwardTransaction, getAllOutwardTransactions, updateOutwardTransaction } from '../../constants/API/OutwardTransAPI'
+import { toast } from 'react-toastify'
 
 
 const InventoryManagement = () => {
@@ -38,12 +40,78 @@ const InventoryManagement = () => {
         { id: 'returns', label: 'Returns', count: returnData.length }
     ]
 
+    const fetchOutwardData = async () => {
+        setLoading(true)
+        try {
+            const data = await getAllOutwardTransactions()
+            console.log(data)
+            setOutwardData(Array.isArray(data) ? data : [])
+        } catch (error) {
+            console.error("Error fetching outward data:", error)
+            toast.error("Error fetching outward transactions. Please try again.")
+        } finally {
+            setLoading(false)
+        }
+    }
 
+    const handleOutwardSubmit = async (data) => {
+        setLoading(true)
+        try {
+            if (editingOutward) {
+                await updateOutwardTransaction(editingOutward.id, data)
+                toast.success("Outward transaction updated successfully!")
+            } else {
+                await createOutwardTransaction(data)
+                toast.success("Outward transaction created successfully!")
+            }
+
+            await fetchOutwardData()
+            setIsOutwardModalOpen(false)
+            setEditingOutward(null)
+        } catch (error) {
+            console.error("Error saving outward transaction:", error)
+            toast.error("Error saving outward transaction. Please try again.")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleEditOutward = (outwardEntry) => {
+        setEditingOutward(outwardEntry)
+        setIsOutwardModalOpen(true)
+    }
+
+    const handleViewOutward = (outwardEntry) => {
+        console.log("View outward entry:", outwardEntry)
+    }
+
+    const handleDeleteOutward = async (id) => {
+        if (window.confirm("Are you sure you want to delete this outward transaction?")) {
+            setLoading(true)
+            try {
+                await deleteOutwardTransaction(id)
+                alert("Outward transaction deleted successfully!")
+                await fetchOutwardData()
+            } catch (error) {
+                console.error("Error deleting outward transaction:", error)
+                alert("Error deleting outward transaction. Please try again.")
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
+    // Update the useEffect to fetch outward data when tab changes
     useEffect(() => {
         if (activeTab === 'inward') {
             fetchInwardData()
+        } else if (activeTab === 'outward') {
+            fetchOutwardData()
         }
     }, [activeTab])
+
+   
+
 
 
    
@@ -52,13 +120,12 @@ const InventoryManagement = () => {
         setLoading(true)
         try {
             const response = await inwardAPI.getAllInwardTransactions()
-            // Transform backend data to frontend format
-            //const transformedData = response.map(item => transformToFrontendFormat(item))
+           
             console.log(response)
             setInwardData(response)
         } catch (error) {
             console.error('Error fetching inward data:', error)
-            alert('Error fetching inward transactions. Please try again.')
+            toast.error('Error fetching inward transactions. Please try again.')
         } finally {
             setLoading(false)
         }
@@ -67,24 +134,26 @@ const InventoryManagement = () => {
 
     const handleInwardSubmit = async (data) => {
         setLoading(true)
+        console.log("hi-1")
         try {
             if (editingInward) {
                 // Update existing entry
                 await inwardAPI.updateInwardTransaction(editingInward.id, data)
-                alert('Inward transaction updated successfully!')
+                toast.success('Inward transaction updated successfully!')
             } else {
+                console.log("hi-3")
                 // Create new entry
                 await inwardAPI.createInwardTransaction(data)
-                alert('Inward transaction created successfully!')
+                toast.success('Inward transaction created successfully!')
             }
-
+console.log("hi-3")
             // Refresh data
             await fetchInwardData()
             setIsInwardModalOpen(false)
             setEditingInward(null)
         } catch (error) {
             console.error('Error saving inward transaction:', error)
-            alert('Error saving inward transaction. Please try again.')
+            toast.error('Error saving inward transaction. Please try again.')
         } finally {
             setLoading(false)
         }
@@ -116,16 +185,7 @@ const InventoryManagement = () => {
         }
     }
 
-    const handleEditOutward = (inwardEntry) => {
-        setEditingInward(inwardEntry)
-        setIsInwardModalOpen(true)
-    }
-
-
-    const handleOutwardSubmit = (data) => {
-        setOutwardData(prev => [...prev, { ...data, id: Date.now() }])
-        setIsOutwardModalOpen(false)
-    }
+   
 
     const handleReturnSubmit = (data) => {
         setReturnData(prev => [...prev, { ...data, id: Date.now() }])
@@ -169,6 +229,7 @@ const InventoryManagement = () => {
         }
     }
 
+    // Update the renderActiveTable function to pass the new handlers for outward
     const renderActiveTable = () => {
         switch (activeTab) {
             case 'inventory':
@@ -184,7 +245,15 @@ const InventoryManagement = () => {
                     />
                 )
             case 'outward':
-                return <OutwardTable data={outwardData} />
+                return (
+                    <OutwardTable
+                        data={outwardData}
+                        onEdit={handleEditOutward}
+                        onView={handleViewOutward}
+                        onDelete={handleDeleteOutward}
+                        loading={loading}
+                    />
+                )
             case 'returns':
                 return <ReturnTable data={returnData} />
             default:
@@ -193,8 +262,8 @@ const InventoryManagement = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen ">
+            <div className="max-w-8xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="bg-white shadow-sm rounded-lg mb-6">
                     <div className="px-6 py-4">

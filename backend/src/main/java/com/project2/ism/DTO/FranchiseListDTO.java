@@ -1,9 +1,12 @@
 package com.project2.ism.DTO;
 
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FranchiseListDTO {
     private Long id;
     private String franchiseName;
@@ -35,6 +38,12 @@ public class FranchiseListDTO {
         this.createdAt = createdAt;
     }
 
+    public FranchiseListDTO(Long id,String franchiseName,String contactPersonEmail,BigDecimal walletBalance){
+        this.id = id;
+        this.franchiseName = franchiseName;
+        this.contactPersonEmail = contactPersonEmail;
+        this.walletBalance = walletBalance;
+    }
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

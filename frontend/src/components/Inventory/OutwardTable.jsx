@@ -18,10 +18,14 @@ import {
     Edit,
     Trash2,
 } from 'lucide-react'
+import ViewOutwardEntry from '../View/ViewOutwardEntry'
 
 const OutwardTable = ({ data, onEdit, onView, onDelete }) => {
     const [globalFilter, setGlobalFilter] = useState('')
     const [sorting, setSorting] = useState([])
+    const [viewData, setViewData] = useState(null)
+    const [isViewOpen, setIsViewOpen] = useState(false)
+
 
     const columns = useMemo(() => [
         {
@@ -50,30 +54,17 @@ const OutwardTable = ({ data, onEdit, onView, onDelete }) => {
                     <ArrowUpDown className="h-4 w-4" />
                 </button>
             ),
+            cell: ({ row }) => {
+                const data = row.original;
+                const customerName = data.franchiseName || data.merchantName || 'N/A';
+                return <div>{customerName}</div>;
+            },
         },
         {
             accessorKey: 'productName',
             header: 'Product Name',
         },
-        {
-            accessorKey: 'productType',
-            header: 'Product Type',
-            cell: ({ row }) => {
-                const productTypeLabels = {
-                    pos_machine: 'POS Machine',
-                    qr_scanner: 'QR Scanner',
-                    card_reader: 'Card Reader',
-                    printer: 'Thermal Printer',
-                    accessories: 'Accessories',
-                    other: 'Other'
-                }
-                return (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                        {productTypeLabels[row.getValue('productType')] || row.getValue('productType')}
-                    </span>
-                )
-            },
-        },
+       
         {
             accessorKey: 'quantity',
             header: ({ column }) => (
@@ -108,43 +99,31 @@ const OutwardTable = ({ data, onEdit, onView, onDelete }) => {
             accessorKey: 'customerType',
             header: 'Customer Type',
             cell: ({ row }) => {
+                const data = row.original;
+                const customerType = data.franchiseId ? 'franchise' : 'merchant';
                 const customerTypeLabels = {
                     franchise: 'Franchise',
-                    merchant: 'Merchant',
-                    direct_customer: 'Direct Customer'
-                }
+                    merchant: 'Direct Merchant'
+                };
                 return (
                     <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                        {customerTypeLabels[row.getValue('customerType')] || row.getValue('customerType')}
+                        {customerTypeLabels[customerType]}
                     </span>
-                )
+                );
             },
         },
-        {
-            accessorKey: 'totalAmount',
-            header: 'Total Amount',
-            cell: ({ row }) => (
-                <div className="font-semibold">₹{row.getValue('totalAmount')}</div>
-            ),
-        },
+        
         {
             id: 'actions',
             header: 'Actions',
             cell: ({ row }) => (
                 <div className="flex items-center space-x-2">
                     <button
-                        onClick={() => onView?.(row.original)}
+                        onClick={() => handleView(row.original)} // Change this line
                         className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
                         title="View Details"
                     >
                         <Eye className="h-4 w-4" />
-                    </button>
-                    <button
-                        onClick={() => onEdit?.(row.original)}
-                        className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
-                        title="Edit Entry"
-                    >
-                        <Edit className="h-4 w-4" />
                     </button>
                     <button
                         onClick={() => onDelete?.(row.original.id)}
@@ -173,6 +152,15 @@ const OutwardTable = ({ data, onEdit, onView, onDelete }) => {
         onGlobalFilterChange: setGlobalFilter,
     })
 
+    const handleView = (outwardData) => {
+        setViewData(outwardData)
+        setIsViewOpen(true)
+    }
+
+    const handleViewClose = () => {
+        setViewData(null)
+        setIsViewOpen(false)
+    }
     if (!data || data.length === 0) {
         return (
             <div className="p-6 text-center">
@@ -285,6 +273,13 @@ const OutwardTable = ({ data, onEdit, onView, onDelete }) => {
                     </div>
                 </div>
             </div>
+            {isViewOpen && (
+                <ViewOutwardEntry
+                    outwardData={viewData}
+                    onClose={handleViewClose}
+                    isOpen={isViewOpen}
+                />
+            )}
         </div>
     )
 }
