@@ -125,7 +125,7 @@ public class InwardTransactionService {
 
 
     public List<ProductSerialDTO> getSerialNumbersByProductId(Long productId) {
-        return serialRepo.findByProduct_IdAndMerchantIsNull(productId).stream()
+        return serialRepo.findByProduct_IdAndMerchantIsNullAndOutwardTransactionIsNull(productId).stream()
                 .map(ProductSerialDTO::fromEntity) // ✅ map to ProductSerialDTO
                 .collect(Collectors.toList());
     }
