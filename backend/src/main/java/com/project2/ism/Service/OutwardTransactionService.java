@@ -122,9 +122,9 @@ public class OutwardTransactionService {
         public void delete(Long id) {
             OutwardTransactions existing = getById(id);
             // Break relationship manually
-//            for (ProductSerialNumbers psn : existing.getProductSerialNumbers()) {
-//                psn.setOutwardTransaction(null);
-//            }
+            for (ProductSerialNumbers psn : existing.getProductSerialNumbers()) {
+                psn.setOutwardTransaction(null);
+            }
             repository.delete(existing);
         }
 
