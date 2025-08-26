@@ -55,4 +55,6 @@ public interface ProductCategoryRepository extends JpaRepository<ProductCategory
     List<ProductCategory> findEmptyCategories();
 
     boolean existsByCategoryName(String categoryName);
+
+    Optional<ProductCategory> findByCategoryName(String productCategory);
 }

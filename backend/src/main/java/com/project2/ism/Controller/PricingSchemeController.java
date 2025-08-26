@@ -280,4 +280,11 @@ public class PricingSchemeController {
 
 
     }
+
+
+    @GetMapping("/valid-pricing-scheme")
+    public ResponseEntity<?> validPricingScheme(@RequestParam Long productId, String productCategory,String customerType){
+        List<?> validScheme = pricingSchemeService.getValidPricingScheme(productId,productCategory,customerType);
+        return ResponseEntity.ok(validScheme);
+    }
 }

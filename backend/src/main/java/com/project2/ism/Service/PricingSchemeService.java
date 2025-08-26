@@ -1,16 +1,25 @@
     package com.project2.ism.Service;
 
+    import com.project2.ism.Exception.ResourceNotFoundException;
     import com.project2.ism.Model.PricingScheme.PricingScheme;
+    import com.project2.ism.Model.ProductCategory;
+    import com.project2.ism.Model.Vendor.VendorRates;
+    import com.project2.ism.Model.Vendor.VendorCardRates;
     import com.project2.ism.Model.PricingScheme.CardRate;
     import com.project2.ism.Repository.PricingSchemeRepository;
-    import org.springframework.beans.factory.annotation.Autowired;
+    import com.project2.ism.Repository.ProductCategoryRepository;
+    import com.project2.ism.Repository.ProductRepository;
     import org.springframework.data.domain.Page;
     import org.springframework.data.domain.Pageable;
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
 
+    import java.math.BigDecimal;
+    import java.util.ArrayList;
     import java.util.List;
+    import java.util.Map;
     import java.util.Optional;
+    import java.util.stream.Collectors;
 
     @Service
     @Transactional
@@ -18,9 +27,17 @@
 
         private final PricingSchemeRepository pricingSchemeRepository;
 
-        @Autowired
-        public PricingSchemeService(PricingSchemeRepository pricingSchemeRepository) {
+        private final ProductRepository productRepository;
+
+        private final ProductCategoryRepository productCategoryRepository;
+
+        private final VendorRatesService vendorRatesService;
+
+        public PricingSchemeService(PricingSchemeRepository pricingSchemeRepository, ProductRepository productRepository, ProductCategoryRepository productCategoryRepository, VendorRatesService vendorRatesService) {
             this.pricingSchemeRepository = pricingSchemeRepository;
+            this.productRepository = productRepository;
+            this.productCategoryRepository = productCategoryRepository;
+            this.vendorRatesService = vendorRatesService;
         }
 
         public PricingScheme createPricingScheme(PricingScheme pricingScheme) {
@@ -142,4 +159,64 @@
             // If no existing scheme or parsing failed, return default
             return "SCHEME_001";
         }
+
+        public List<PricingScheme> getValidPricingScheme(Long productId, String productCategory, String customerType) {
+            // ✅ Step 1: validate product + category
+            if (!productRepository.existsById(productId)) {
+                throw new ResourceNotFoundException("Product not found with id " + productId);
+            }
+            ProductCategory category = productCategoryRepository.findByCategoryName(productCategory)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product category not found: " + productCategory));
+
+            Long productCategoryId = category.getId();
+
+
+
+            // ✅ Step 2: get vendor rates for product
+            VendorRates vendorRates = vendorRatesService.getRatesByProductId(productId);
+            if (vendorRates == null) {
+                throw new ResourceNotFoundException("Vendor rates not found for product id " + productId);
+            }
+
+            // ✅ Step 3: fetch all pricing schemes for that category + customer type
+            List<PricingScheme> schemes = pricingSchemeRepository
+                    .findByProductCategory_IdAndCustomerType(productCategoryId, customerType);
+
+            List<PricingScheme> validSchemes = new ArrayList<>();
+
+            for (PricingScheme scheme : schemes) {
+                boolean valid = true;
+
+                // Check rental by month
+                if (scheme.getRentalByMonth() < vendorRates.getMonthlyRent().doubleValue()) {
+                    valid = false;
+                }
+
+                // Map vendor card rates by card type for quick lookup
+                Map<String, BigDecimal> vendorCardRateMap = vendorRates.getVendorCardRates()
+                        .stream()
+                        .collect(Collectors.toMap(VendorCardRates::getCardType, VendorCardRates::getRate));
+
+                // Check card rates (franchise/merchant specific if applicable)
+                for (CardRate cardRate : scheme.getCardRates()) {
+                    BigDecimal vendorRate = vendorCardRateMap.get(cardRate.getCardName());
+                    if (vendorRate != null) {
+                        double effectiveRate = cardRate.getRate() != null ? cardRate.getRate() :
+                                (customerType.equalsIgnoreCase("FRANCHISE") ? cardRate.getFranchiseRate() : cardRate.getMerchantRate());
+
+                        if (effectiveRate < vendorRate.doubleValue()) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (valid) {
+                    validSchemes.add(scheme);
+                }
+            }
+
+            return validSchemes;
+        }
+
     }
