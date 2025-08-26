@@ -1,5 +1,6 @@
 package com.project2.ism.Model;
 
+import com.project2.ism.Model.Vendor.Vendor;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -7,8 +8,12 @@ import java.time.LocalDateTime;
 public class UploadRecord {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String vendorName;
-    private String product;
+    @ManyToOne
+    @JoinColumn(name = "vendor_id",nullable = false)
+    private Vendor vendor;
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
     private String fileName;
     private LocalDateTime uploadedAt = LocalDateTime.now();
 
@@ -23,19 +28,19 @@ public class UploadRecord {
         this.id = id;
     }
 
-    public String getVendorName() {
-        return vendorName;
+    public Vendor getVendor() {
+        return vendor;
     }
 
-    public void setVendorName(String vendorName) {
-        this.vendorName = vendorName;
+    public void setVendor(Vendor vendor) {
+        this.vendor = vendor;
     }
 
-    public String getProduct() {
+    public Product getProduct() {
         return product;
     }
 
-    public void setProduct(String product) {
+    public void setProduct(Product product) {
         this.product = product;
     }
 

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -42,4 +43,7 @@ public interface PricingSchemeRepository extends JpaRepository<PricingScheme, Lo
                                         @Param("customerType") String customerType);
 
     Optional<PricingScheme> findTopByOrderBySchemeCodeDesc();
+
+
+    List<PricingScheme> findByProductCategory_IdAndCustomerType(Long productCategoryId, String customerType);
 }

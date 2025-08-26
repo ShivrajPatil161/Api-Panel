@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/upload")
+@RequestMapping("/upload")
 public class UploadRecordController {
 
     private final UploadRecordService service;
@@ -16,12 +16,12 @@ public class UploadRecordController {
 
     @PostMapping
     public ResponseEntity<?> upload(
-            @RequestParam String vendorName,
-            @RequestParam String product,
+            @RequestParam Long vendorId,
+            @RequestParam Long productId,
             @RequestParam MultipartFile file
     ) {
         try {
-            UploadRecord rec = service.handleFileUpload(vendorName, product, file);
+            String rec = service.handleFileUpload(vendorId, productId, file);
             return ResponseEntity.ok(rec);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed: " + e.getMessage());

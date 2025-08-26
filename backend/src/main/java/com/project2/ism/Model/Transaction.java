@@ -14,16 +14,16 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long internal_id;
 
-    @NotBlank(message = "Transaction ID is required")
+    //@NotBlank(message = "Transaction ID is required")
     @Column(name = "ID", nullable = false, unique = true)
     private String transactionReferenceId;
 
-    @NotNull(message = "Date is required")
-    @Column(name = "Date", nullable = false)
+    //@NotNull(message = "Date is required")
+    @Column(name = "Date")
     private LocalDateTime date;
 
-    @NotBlank(message = "Mobile number is required")
-    @Pattern(regexp = "\\d{10,15}", message = "Mobile must be numeric and 10-15 digits")
+    //@NotBlank(message = "Mobile number is required")
+    //@Pattern(regexp = "\\d{10,15}", message = "Mobile must be numeric and 10-15 digits")
     @Column(name = "Mobile")
     private String mobile;
 
@@ -31,32 +31,32 @@ public class Transaction {
     @Column(name = "Email")
     private String email;
 
-    @NotBlank(message = "Consumer is required")
+    //@NotBlank(message = "Consumer is required")
     @Column(name = "Consumer")
     private String consumer;
 
-    @NotBlank(message = "Username is required")
+    //@NotBlank(message = "Username is required")
     @Column(name = "Username")
     private String username;
 
-    @NotBlank(message = "Type is required")
+    //@NotBlank(message = "Type is required")
     @Column(name = "Type")
     private String type;
 
-    @NotBlank(message = "Mode is required")
+    //@NotBlank(message = "Mode is required")
     @Column(name = "Mode")
     private String mode;
 
-    @NotNull(message = "Amount is required")
+    //@NotNull(message = "Amount is required")
     @PositiveOrZero(message = "Amount must be zero or positive")
     @Column(name = "Amount")
     private BigDecimal amount;
 
-    @PositiveOrZero(message = "Tip must be zero or positive")
+    //@PositiveOrZero(message = "Tip must be zero or positive")
     @Column(name = "Tip")
     private BigDecimal tip;
 
-    @PositiveOrZero(message = "Cash at POS must be zero or positive")
+    //@PositiveOrZero(message = "Cash at POS must be zero or positive")
     @Column(name = "Cash at POS")
     private BigDecimal cashAtPos;
 

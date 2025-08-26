@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { Upload, FileSpreadsheet, Eye, X, AlertCircle, Trash2, ChevronDown } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
+import { toast } from 'react-toastify';
 
 
 
@@ -360,22 +361,20 @@ const TransactionUpload = () => {
     setUploading(true);
 
     try {
-      const formData = new FormData();
+      const formData = new FormData(); 
+      
       formData.append("vendorId", vendorId);
       formData.append("productId", productId);
       formData.append("file", file);
 
       // Replace with your actual API endpoint
-      const response = await fetch("/api/transactions/upload", {
-        method: "POST",
-        body: formData,
+      const response = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
 
-      if (!response.ok) {
-        throw new Error("Upload failed");
+      if (response.status === 200) {
+        toast.success("File uploaded successfully!");
       }
-
-      alert("File uploaded successfully!");
 
       // Reset form
       setFile(null);
@@ -386,7 +385,7 @@ const TransactionUpload = () => {
 
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Upload failed. Please try again.");
+      toast.error("Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -458,7 +457,7 @@ const TransactionUpload = () => {
                   </option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
-                      {product.productName}
+                      {product.productName}- {product.productCode}
                     </option>
                   ))}
                 </select>
@@ -476,7 +475,7 @@ const TransactionUpload = () => {
               <h3 className="font-medium text-blue-900 mb-2">Selected Configuration</h3>
               <div className="text-sm text-blue-700">
                 {selectedVendor && <p><strong>Vendor:</strong> {selectedVendor.name}</p>}
-                {selectedProduct && <p><strong>Product:</strong> {selectedProduct.productName}</p>}
+                {selectedProduct && <p><strong>Product:</strong> {selectedProduct.productName}-{selectedProduct.productCode}</p>}
               </div>
             </div>
           )}
