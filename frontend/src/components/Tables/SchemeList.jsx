@@ -426,6 +426,15 @@ const SchemeList = () => {
             ),
         },
         {
+            accessorKey: 'productCategoryName',
+            header: 'Product Category',
+            cell: ({ row }) => (
+                <div className="text-gray-900">
+                    {row.getValue('productCategoryName')}
+                </div>
+            ),
+        },
+        {
             accessorKey: 'rentalByMonth',
             header: 'Monthly Rental',
             cell: ({ row }) => (

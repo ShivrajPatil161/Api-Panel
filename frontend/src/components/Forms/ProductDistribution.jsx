@@ -191,7 +191,7 @@ const ProductDistribution = () => {
     device.tid.toLowerCase().includes(deviceSearch.toLowerCase())
   );
 
-  const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+  const selectedProduct = data.products.find(p => p?.outwardId?.toString() === formData.product);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
