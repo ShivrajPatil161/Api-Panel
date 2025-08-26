@@ -232,6 +232,10 @@ public class MerchantService {
         merchant.setCreatedAt(LocalDateTime.now());
         merchant.setUpdatedAt(LocalDateTime.now());
 
+        if(dto.isApproved()){
+            merchant.setApproved(dto.isApproved());
+        }
+
         merchantRepository.save(merchant);
 
         // Create login credentials

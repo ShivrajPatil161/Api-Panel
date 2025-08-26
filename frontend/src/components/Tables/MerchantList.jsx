@@ -23,7 +23,7 @@ import {
     Plus,
     X
 } from 'lucide-react';
-import CustomerOnboarding from '../Forms/CustomerOnborading';
+import CustomerOnboarding from '../Forms/CustomerOnboarding/CustomerOnborading';
 
 import { merchantData } from '../../constants/merchantlistData';
 
