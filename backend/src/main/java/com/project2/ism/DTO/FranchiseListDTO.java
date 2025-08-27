@@ -14,7 +14,7 @@ public class FranchiseListDTO {
     private String contactPersonEmail;
     private String contactPersonPhone;
     private String address;
-    private Integer merchantCount;
+    private Long merchantCount;
     private BigDecimal walletBalance;
     private String status;
     private LocalDateTime createdAt;
@@ -24,7 +24,7 @@ public class FranchiseListDTO {
 
     public FranchiseListDTO(Long id, String franchiseName, String contactPersonName,
                             String contactPersonEmail, String contactPersonPhone,
-                            String address, Integer merchantCount, BigDecimal walletBalance,
+                            String address, Long merchantCount, BigDecimal walletBalance,
                             String status, LocalDateTime createdAt) {
         this.id = id;
         this.franchiseName = franchiseName;
@@ -63,8 +63,8 @@ public class FranchiseListDTO {
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
 
-    public Integer getMerchantCount() { return merchantCount; }
-    public void setMerchantCount(Integer merchantCount) { this.merchantCount = merchantCount; }
+    public Long getMerchantCount() { return merchantCount; }
+    public void setMerchantCount(Long merchantCount) { this.merchantCount = merchantCount; }
 
     public BigDecimal getWalletBalance() { return walletBalance; }
     public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }

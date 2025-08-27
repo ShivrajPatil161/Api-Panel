@@ -19,4 +19,6 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     Optional<Merchant> findByContactPerson_Email(String email);
     @Query("SELECT m.franchise FROM Merchant m WHERE m.id = :merchantId")
     Optional<Franchise> findFranchiseByMerchantId(@Param("merchantId") Long merchantId);
+
+    Long countByFranchiseId(Long id);
 }

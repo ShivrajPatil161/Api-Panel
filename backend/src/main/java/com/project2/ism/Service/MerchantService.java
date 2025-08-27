@@ -234,16 +234,17 @@ public class MerchantService {
 
         if(dto.isApproved()){
             merchant.setApproved(dto.isApproved());
+//             Create login credentials
+        userService.createAndSendCredentials(
+                dto.getPrimaryContactEmail(),
+                "MERCHANT",
+                null
+        );
         }
 
         merchantRepository.save(merchant);
 
-        // Create login credentials
-//        userService.createAndSendCredentials(
-//                dto.getPrimaryContactEmail(),
-//                "MERCHANT",
-//                null
-//        );
+
     }
 
     public List<MerchantListDTO> getAllMerchantsForList() {

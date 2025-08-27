@@ -59,14 +59,13 @@
 
 package com.project2.ism.Controller;
 
-import com.project2.ism.DTO.FranchiseFormDTO;
-import com.project2.ism.DTO.FranchiseListDTO;
-import com.project2.ism.DTO.FranchiseProductSummaryDTO;
-import com.project2.ism.DTO.ProductSerialDTO;
-import com.project2.ism.Model.Product;
+
+import com.project2.ism.DTO.*;
+
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Service.FileStorageService;
 import com.project2.ism.Service.FranchiseService;
+import com.project2.ism.Service.MerchantService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
@@ -83,10 +82,12 @@ import java.util.Map;
 public class FranchiseController {
 
     private final FranchiseService franchiseService;
+    private final MerchantService merchantService;
     private final FileStorageService fileStorageService;
 
-    public FranchiseController(FranchiseService franchiseService, FileStorageService fileStorageService) {
+    public FranchiseController(FranchiseService franchiseService, MerchantService merchantService, FileStorageService fileStorageService) {
         this.franchiseService = franchiseService;
+        this.merchantService = merchantService;
         this.fileStorageService = fileStorageService;
     }
 
@@ -109,7 +110,7 @@ public class FranchiseController {
     @GetMapping
     public ResponseEntity<List<FranchiseListDTO>> getAllFranchises() {
         try {
-            List<FranchiseListDTO> franchises = franchiseService.getAllFranchisesForList();
+            List<FranchiseListDTO> franchises = franchiseService.getAllFranchisesWithMerchantCount();
             return ResponseEntity.ok(franchises);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -117,10 +118,12 @@ public class FranchiseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Franchise> getFranchiseById(@PathVariable Long id) {
+    public ResponseEntity<FranchiseDetailsDTO> getFranchiseById(@PathVariable Long id) {
         try {
             Franchise franchise = franchiseService.getFranchiseById(id);
-            return ResponseEntity.ok(franchise);
+            List<MerchantListDTO> merchants = merchantService.getMerchantsByFranchise(id);
+            FranchiseDetailsDTO response = new FranchiseDetailsDTO(franchise, merchants);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
