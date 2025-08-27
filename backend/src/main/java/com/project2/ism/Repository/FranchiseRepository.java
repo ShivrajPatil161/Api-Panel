@@ -1,6 +1,7 @@
 package com.project2.ism.Repository;
 
 
+import com.project2.ism.DTO.FranchiseListDTO;
 import com.project2.ism.Model.Users.Franchise;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +16,26 @@ public interface FranchiseRepository extends JpaRepository<Franchise, Long> {
 
     Optional<Franchise> findByContactPerson_Email(String email);
 
+    @Query("""
+    SELECT new com.project2.ism.DTO.FranchiseListDTO(
+        f.id,
+        f.franchiseName,
+        cp.name,
+        cp.email,
+        cp.phoneNumber,
+        f.address,
+        COUNT(m.id),
+        COALESCE(f.walletBalance, 0),
+        COALESCE(f.status, 'ACTIVE'),
+        f.createdAt
+    )
+    FROM Franchise f
+    LEFT JOIN f.contactPerson cp
+    LEFT JOIN f.merchants m
+    GROUP BY f.id, f.franchiseName, cp.name, cp.email, cp.phoneNumber, 
+             f.address, f.walletBalance, f.status, f.createdAt
+""")
+    List<FranchiseListDTO> findAllWithMerchantCount();
 
 
 }

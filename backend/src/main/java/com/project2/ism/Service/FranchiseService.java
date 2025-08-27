@@ -109,7 +109,9 @@ import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
+import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.FranchiseRepository;
+import com.project2.ism.Repository.MerchantRepository;
 import com.project2.ism.Repository.OutwardTransactionRepository;
 import com.project2.ism.Repository.ProductSerialsRepository;
 import jakarta.transaction.Transactional;
@@ -128,16 +130,18 @@ public class FranchiseService {
     private final FranchiseRepository franchiseRepository;
     private final FileStorageService fileStorageService;
     private final UserService userService;
+    private final MerchantRepository merchantRepository;
 
     private final ProductSerialsRepository serialRepo;
     private final OutwardTransactionRepository outwardRepo;
 
     public FranchiseService(FranchiseRepository franchiseRepository,
                             FileStorageService fileStorageService,
-                            UserService userService, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo) {
+                            UserService userService, MerchantRepository merchantRepository, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo) {
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
+        this.merchantRepository = merchantRepository;
         this.serialRepo = serialRepo;
         this.outwardRepo = outwardRepo;
     }
@@ -211,11 +215,20 @@ public class FranchiseService {
     public List<FranchiseListDTO> getAllFranchisesForList() {
         return franchiseRepository.findAll()
                 .stream()
-                .map(this::mapToListDTO)
+                .map(franchise -> {
+                    Long merchantCount = merchantRepository.countByFranchiseId(franchise.getId());
+                    return mapToListDTO(franchise, merchantCount);
+                })
                 .collect(Collectors.toList());
     }
 
+    public List<FranchiseListDTO> getAllFranchisesWithMerchantCount() {
+        return franchiseRepository.findAllWithMerchantCount();
+    }
+
+
     public Franchise getFranchiseById(Long id) {
+
         return franchiseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Franchise not found with ID: " + id));
     }
@@ -270,7 +283,7 @@ public class FranchiseService {
         }
     }
 
-    private FranchiseListDTO mapToListDTO(Franchise franchise) {
+    private FranchiseListDTO mapToListDTO(Franchise franchise, Long merchantCount) {
         return new FranchiseListDTO(
                 franchise.getId(),
                 franchise.getFranchiseName(),
@@ -278,7 +291,7 @@ public class FranchiseService {
                 franchise.getContactPerson() != null ? franchise.getContactPerson().getEmail() : null,
                 franchise.getContactPerson() != null ? franchise.getContactPerson().getPhoneNumber() : null,
                 franchise.getAddress(),
-                franchise.getMerchants() != null ? franchise.getMerchants().size() : 0,
+                merchantCount,
                 franchise.getWalletBalance() != null ? franchise.getWalletBalance() : BigDecimal.ZERO,
                 franchise.getStatus() != null ? franchise.getStatus() : "ACTIVE",
                 franchise.getCreatedAt()

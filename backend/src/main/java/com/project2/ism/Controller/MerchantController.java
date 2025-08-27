@@ -64,10 +64,10 @@
 
 package com.project2.ism.Controller;
 
-import com.project2.ism.DTO.FranchiseListDTO;
+
 import com.project2.ism.DTO.MerchantFormDTO;
 import com.project2.ism.DTO.MerchantListDTO;
-import com.project2.ism.Model.Users.Franchise;
+
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Service.FileStorageService;
 import com.project2.ism.Service.MerchantService;
