@@ -1,10 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
     useReactTable,
     getCoreRowModel,
     getSortedRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
     flexRender,
 } from '@tanstack/react-table'
 import {
@@ -14,11 +12,24 @@ import {
     ChevronRight,
     ChevronsLeft,
     ChevronsRight,
+    Loader2,
 } from 'lucide-react'
+import api
+    from '../../constants/API/axiosInstance'
 
-const InventoryTable = ({ data }) => {
+const InventoryTable = () => {
+    const [data, setData] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
     const [globalFilter, setGlobalFilter] = useState('')
+    const [searchInput, setSearchInput] = useState('')
     const [sorting, setSorting] = useState([])
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize: 10,
+    })
+    const [totalPages, setTotalPages] = useState(0)
+    const [totalElements, setTotalElements] = useState(0)
 
     const columns = useMemo(() => [
         {
@@ -38,10 +49,18 @@ const InventoryTable = ({ data }) => {
         },
         {
             accessorKey: 'productName',
-            header: 'Product Name',
+            header: ({ column }) => (
+                <button
+                    className="flex items-center space-x-1 hover:text-blue-600"
+                    onClick={() => column.toggleSorting()}
+                >
+                    <span>Product Name</span>
+                    <ArrowUpDown className="h-4 w-4" />
+                </button>
+            ),
         },
         {
-            accessorKey: 'quantity',
+            accessorKey: 'totalQuantity',
             header: ({ column }) => (
                 <button
                     className="flex items-center space-x-1 hover:text-blue-600"
@@ -52,7 +71,7 @@ const InventoryTable = ({ data }) => {
                 </button>
             ),
             cell: ({ row }) => (
-                <div className="text-center font-semibold">{row.getValue('quantity')}</div>
+                <div className="text-center font-semibold">{row.getValue('totalQuantity')}</div>
             ),
         },
         {
@@ -74,8 +93,8 @@ const InventoryTable = ({ data }) => {
             header: 'Status',
             cell: ({ row }) => {
                 const available = row.getValue('available')
-                const total = row.getValue('quantity')
-                const percentage = (available / total) * 100
+                const total = row.getValue('totalQuantity')
+                const percentage = total > 0 ? (available / total) * 100 : 0
 
                 let status = 'In Stock'
                 let colorClass = 'bg-green-100 text-green-800'
@@ -97,20 +116,76 @@ const InventoryTable = ({ data }) => {
         },
     ], [])
 
+    const fetchInventory = async () => {
+        setLoading(true)
+        setError(null)
+
+        try {
+            const sortBy = sorting.length > 0 ? sorting[0].id : 'productName'
+            const sortDir = sorting.length > 0 && sorting[0].desc ? 'desc' : 'asc'
+
+            const params = {
+                page: pagination.pageIndex,
+                size: pagination.pageSize,
+                sortBy,
+                sortDir,
+            }
+
+            if (globalFilter && globalFilter.trim()) {
+                params.search = globalFilter.trim()
+            }
+
+            const response = await api.get('/inventory', { params })
+
+            setData(response.data.content)
+            setTotalPages(response.data.totalPages)
+            setTotalElements(response.data.totalElements)
+        } catch (err) {
+            setError('Failed to fetch inventory data')
+            console.error('Inventory fetch error:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Fetch data on component mount and when pagination/sorting/search changes
+    useEffect(() => {
+        fetchInventory()
+    }, [pagination.pageIndex, pagination.pageSize, sorting, globalFilter])
+
+    const handleSearchKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            setGlobalFilter(searchInput.trim())
+            setPagination(prev => ({ ...prev, pageIndex: 0 }))
+        }
+    }
+
+    const handleSearchClear = () => {
+        setSearchInput('')
+        setGlobalFilter('')
+        setPagination(prev => ({ ...prev, pageIndex: 0 }))
+    }
+
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        manualPagination: true,
+        manualSorting: true,
+        pageCount: totalPages,
         state: {
             sorting,
             globalFilter,
+            pagination,
         },
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
+        onPaginationChange: setPagination,
     })
+
+    const canPreviousPage = pagination.pageIndex > 0
+    const canNextPage = pagination.pageIndex < totalPages - 1
 
     return (
         <div className="space-y-4 p-6">
@@ -120,13 +195,32 @@ const InventoryTable = ({ data }) => {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <input
                         type="text"
-                        placeholder="Search inventory..."
-                        value={globalFilter ?? ''}
-                        onChange={(e) => setGlobalFilter(e.target.value)}
+                        placeholder="Search inventory (Press Enter to search)..."
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        onKeyPress={handleSearchKeyPress}
                         className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                     />
+                    {searchInput && (
+                        <button
+                            onClick={handleSearchClear}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            ×
+                        </button>
+                    )}
                 </div>
+                {loading && (
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                )}
             </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                    {error}
+                </div>
+            )}
 
             {/* Table */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -149,15 +243,32 @@ const InventoryTable = ({ data }) => {
                             ))}
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {table.getRowModel().rows.map(row => (
-                                <tr key={row.id} className="hover:bg-gray-50">
-                                    {row.getVisibleCells().map(cell => (
-                                        <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
-                                    ))}
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={columns.length} className="px-6 py-12 text-center">
+                                        <div className="flex items-center justify-center space-x-2">
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                            <span className="text-gray-500">Loading inventory...</span>
+                                        </div>
+                                    </td>
                                 </tr>
-                            ))}
+                            ) : data.length === 0 ? (
+                                <tr>
+                                    <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-500">
+                                        No inventory items found
+                                    </td>
+                                </tr>
+                            ) : (
+                                table.getRowModel().rows.map(row => (
+                                    <tr key={row.id} className="hover:bg-gray-50">
+                                        {row.getVisibleCells().map(cell => (
+                                            <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -167,12 +278,18 @@ const InventoryTable = ({ data }) => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                             <span className="text-sm text-gray-700">
-                                Page {table.getState().pagination.pageIndex + 1} of{' '}
-                                {table.getPageCount()}
+                                Page {pagination.pageIndex + 1} of {totalPages || 1}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                                ({totalElements} total items)
                             </span>
                             <select
-                                value={table.getState().pagination.pageSize}
-                                onChange={(e) => table.setPageSize(Number(e.target.value))}
+                                value={pagination.pageSize}
+                                onChange={(e) => setPagination(prev => ({
+                                    ...prev,
+                                    pageSize: Number(e.target.value),
+                                    pageIndex: 0
+                                }))}
                                 className="border border-gray-300 rounded px-2 py-1 text-sm"
                             >
                                 {[10, 20, 30, 40, 50].map(pageSize => (
@@ -185,29 +302,29 @@ const InventoryTable = ({ data }) => {
 
                         <div className="flex items-center space-x-2">
                             <button
-                                onClick={() => table.setPageIndex(0)}
-                                disabled={!table.getCanPreviousPage()}
+                                onClick={() => setPagination(prev => ({ ...prev, pageIndex: 0 }))}
+                                disabled={!canPreviousPage || loading}
                                 className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             >
                                 <ChevronsLeft className="h-4 w-4" />
                             </button>
                             <button
-                                onClick={() => table.previousPage()}
-                                disabled={!table.getCanPreviousPage()}
+                                onClick={() => setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex - 1 }))}
+                                disabled={!canPreviousPage || loading}
                                 className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </button>
                             <button
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
+                                onClick={() => setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
+                                disabled={!canNextPage || loading}
                                 className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                             <button
-                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                disabled={!table.getCanNextPage()}
+                                onClick={() => setPagination(prev => ({ ...prev, pageIndex: totalPages - 1 }))}
+                                disabled={!canNextPage || loading}
                                 className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             >
                                 <ChevronsRight className="h-4 w-4" />
