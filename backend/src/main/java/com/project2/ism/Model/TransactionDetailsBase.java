@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-
+@MappedSuperclass
 public abstract class TransactionDetailsBase {
 
     @Column(name = "action_on_balance")
@@ -86,7 +86,7 @@ public abstract class TransactionDetailsBase {
     private String tranStatus;
 
     @Column(name = "transaction_id")
-    private String transactionId;
+    private Long transactionId;
 
     @Column(name = "transaction_type")
     private String transactionType;
@@ -303,11 +303,11 @@ public abstract class TransactionDetailsBase {
         this.tranStatus = tranStatus;
     }
 
-    public String getTransactionId() {
+    public Long getTransactionId() {
         return transactionId;
     }
 
-    public void setTransactionId(String transactionId) {
+    public void setTransactionId(Long transactionId) {
         this.transactionId = transactionId;
     }
 
