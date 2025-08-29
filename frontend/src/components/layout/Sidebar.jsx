@@ -178,7 +178,7 @@ const getMenuItems = (userType) => {
           { title: 'Pricing Scheme', path: '/dashboard/inventory/pricing', icon: Calculator },
           { title: 'Product Scheme Assign', path: '/dashboard/inventory/products-assign', icon: Calculator },
           { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: ArrowDown },
-          { title: 'Returns', path: '/dashboard/inventory/returns', icon: RotateCcw }
+          
         ]
       },
       {
