@@ -385,6 +385,7 @@ public class MerchantService {
                 int totalQty = o.getQuantity();
 
                 result.add(new MerchantProductSummaryDTO(
+                        o.getId(),
                         o.getProduct().getId(),
                         o.getProduct().getProductName(),
                         o.getProduct().getProductCode(),
@@ -406,6 +407,7 @@ public class MerchantService {
                 long qty = entry.getValue();
 
                 result.add(new MerchantProductSummaryDTO(
+
                         p.getId(),
                         p.getProductName(),
                         p.getProductCode(),

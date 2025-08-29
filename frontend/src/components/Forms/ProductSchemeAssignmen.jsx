@@ -1,6 +1,7 @@
-
 import { useForm } from 'react-hook-form'
-import {  X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import api from "../../constants/API/axiosInstance"
 
 // ==================== FORM COMPONENTS ====================
 
@@ -50,6 +51,13 @@ const Select = ({ label, name, register, errors, options, required = false, ...p
 
 // ==================== PRODUCT ASSIGNMENT FORM MODAL ====================
 const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
+    const [franchises, setFranchises] = useState([])
+    const [merchants, setMerchants] = useState([])
+    const [franchiseProducts, setFranchiseProducts] = useState([])
+    const [merchantProducts, setMerchantProducts] = useState([])
+    const [pricingSchemes, setPricingSchemes] = useState([])
+    const [loading, setLoading] = useState(false)
+
     const getDefaultValues = () => ({
         assignedTo: '',
         assignedType: '', // franchise or merchant
@@ -64,36 +72,187 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         handleSubmit,
         formState: { errors },
         watch,
-        reset
+        reset,
+        setValue
     } = useForm({
         defaultValues: initialData || getDefaultValues()
     })
+
+    const watchedFields = watch(['assignedType', 'assignedTo', 'product'])
+
+    // Fetch franchises or merchants when assigned type is selected
+    useEffect(() => {
+        const fetchAssignedToOptions = async () => {
+            if (!watchedFields[0]) return
+
+            try {
+                setLoading(true)
+                if (watchedFields[0] === 'franchise') {
+                    const response = await api.get('/franchise')
+                    setFranchises(response.data)
+                    setMerchants([]) // Clear merchants
+                } else if (watchedFields[0] === 'merchant') {
+                    const response = await api.get('/merchants/direct-merchant')
+                    setMerchants(response.data)
+                    setFranchises([]) // Clear franchises
+                }
+            } catch (error) {
+                console.error(`Error fetching ${watchedFields[0]}s:`, error)
+                if (watchedFields[0] === 'franchise') {
+                    setFranchises([])
+                } else {
+                    setMerchants([])
+                }
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchAssignedToOptions()
+    }, [watchedFields[0]])
+
+    // Fetch franchise products when franchise is selected
+    useEffect(() => {
+        const fetchFranchiseProducts = async () => {
+            if (watchedFields[0] === 'franchise' && watchedFields[1]) {
+                try {
+                    setLoading(true)
+                    const response = await api.get(`/franchise/products/${watchedFields[1]}`)
+                    setFranchiseProducts(response.data)
+                } catch (error) {
+                    console.error('Error fetching franchise products:', error)
+                    setFranchiseProducts([])
+                } finally {
+                    setLoading(false)
+                }
+            }
+        }
+        fetchFranchiseProducts()
+    }, [watchedFields[0], watchedFields[1]])
+
+    // Fetch merchant products when merchant is selected
+    useEffect(() => {
+        const fetchMerchantProducts = async () => {
+            if (watchedFields[0] === 'merchant' && watchedFields[1]) {
+                try {
+                    setLoading(true)
+                    const response = await api.get(`/merchants/products/${watchedFields[1]}`)
+                    setMerchantProducts(response.data)
+                } catch (error) {
+                    console.error('Error fetching merchant products:', error)
+                    setMerchantProducts([])
+                } finally {
+                    setLoading(false)
+                }
+            }
+        }
+        fetchMerchantProducts()
+    }, [watchedFields[0], watchedFields[1]])
+
+    // Fetch pricing schemes when product is selected
+    useEffect(() => {
+        const fetchPricingSchemes = async () => {
+            if (watchedFields[2] && watchedFields[0]) {
+                try {
+                    setLoading(true)
+                    const selectedProduct = watchedFields[0] === 'franchise'
+                        ? franchiseProducts.find(p => p.productId.toString() === watchedFields[2])
+                        : merchantProducts.find(p => p.productId.toString() === watchedFields[2])
+
+                    if (selectedProduct) {
+                        const customerType = watchedFields[0] === 'franchise' ? 'franchise' : 'direct_merchant'
+                        const response = await api.get(
+                            `/pricing-schemes/valid-pricing-scheme?productId=${selectedProduct.productId}&productCategory=${selectedProduct.productCategory}&customerType=${customerType}`
+                        )
+                        setPricingSchemes(response.data)
+                    }
+                } catch (error) {
+                    console.error('Error fetching pricing schemes:', error)
+                    setPricingSchemes([])
+                } finally {
+                    setLoading(false)
+                }
+            }
+        }
+        fetchPricingSchemes()
+    }, [watchedFields[2], watchedFields[0], franchiseProducts, merchantProducts])
+
+    // Reset dependent fields when assigned type changes
+    useEffect(() => {
+        if (watchedFields[0]) {
+            setValue('assignedTo', '')
+            setValue('product', '')
+            setValue('scheme', '')
+            setFranchiseProducts([])
+            setMerchantProducts([])
+            setPricingSchemes([])
+        }
+    }, [watchedFields[0], setValue])
 
     const assignedTypeOptions = [
         { value: 'franchise', label: 'Franchise' },
         { value: 'merchant', label: 'Merchant' }
     ]
 
-    const productOptions = [
-        { value: 'pos_machine', label: 'POS Machine' },
-        { value: 'soundbox', label: 'Soundbox' },
-        { value: 'qr_scanner', label: 'QR Scanner' },
-        { value: 'card_reader', label: 'Card Reader' }
-    ]
+    // Dynamic options based on assigned type
+    const getAssignedToOptions = () => {
+        if (watchedFields[0] === 'franchise') {
+            return franchises.map(franchise => ({
+                value: franchise.id.toString(),
+                label: `${franchise.franchiseName} (ID: ${franchise.id})`
+            }))
+        } else if (watchedFields[0] === 'merchant') {
+            return merchants.map(merchant => ({
+                value: merchant.id.toString(),
+                label: `${merchant.businessName} (ID: ${merchant.id})`
+            }))
+        }
+        return []
+    }
 
-    const schemeOptions = [
-        { value: 'SCH_001', label: 'SCH_001 - Standard Franchise' },
-        { value: 'SCH_002', label: 'SCH_002 - Direct Merchant Basic' },
-        { value: 'SCH_003', label: 'SCH_003 - Premium Franchise' },
-        { value: 'SCH_004', label: 'SCH_004 - Mixed Card Scheme' },
-        { value: 'SCH_005', label: 'SCH_005 - Comprehensive Scheme' },
-        { value: 'SCH_006', label: 'SCH_006 - Budget Debit' },
-        { value: 'SCH_007', label: 'SCH_007 - Premium Multi-card' }
-    ]
+    const getProductOptions = () => {
+        const products = watchedFields[0] === 'franchise' ? franchiseProducts : merchantProducts
+        return products.map(product => ({
+            value: product.productId.toString(),
+            label: `${product.productName} (${product.productCode}) - Qty: ${product.totalQuantity}`
+        }))
+    }
 
-    const onFormSubmit = (data) => {
-        onSubmit(data)
-        onCancel()
+    const getSchemeOptions = () => {
+        return pricingSchemes.map(scheme => ({
+            value: scheme.id.toString(),
+            label: `${scheme.schemeCode} - ₹${scheme.rentalByMonth}/month`
+        }))
+    }
+
+    const onFormSubmit = async (data) => {
+        try {
+            setLoading(true)
+            const selectedProduct = watchedFields[0] === 'franchise'
+                ? franchiseProducts.find(p => p.productId.toString() === data.product)
+                : merchantProducts.find(p => p.productId.toString() === data.product)
+
+            const assignmentData = {
+                customerType: data.assignedType,
+                customerId: parseInt(data.assignedTo),
+                productId: parseInt(data.product),
+                schemeId: parseInt(data.scheme),
+                effectiveDate: data.effectiveDate,
+                remarks: data.remarks,
+                outwardId: selectedProduct?.outwardId || null // Use the outwardId from selected product
+            }
+            console.log('Assignment created:', assignmentData)
+            // Mock POST request
+            const response = await api.post('/outward-schemes', assignmentData)
+
+            
+            onSubmit(response.data)
+            onCancel()
+        } catch (error) {
+            console.error('Error creating assignment:', error)
+            // Handle error - show toast/notification
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleCancel = () => {
@@ -133,29 +292,32 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                                     options={assignedTypeOptions}
                                     required
                                 />
-                                <Input
-                                    label="Assigned To (ID/Name)"
+                                <Select
+                                    label="Assigned To"
                                     name="assignedTo"
                                     register={register}
                                     errors={errors}
+                                    options={getAssignedToOptions()}
                                     required
-                                    placeholder="Enter franchise/merchant ID or name"
+                                    disabled={!watchedFields[0]}
                                 />
                                 <Select
                                     label="Product"
                                     name="product"
                                     register={register}
                                     errors={errors}
-                                    options={productOptions}
+                                    options={getProductOptions()}
                                     required
+                                    disabled={!watchedFields[1] || loading}
                                 />
                                 <Select
                                     label="Pricing Scheme"
                                     name="scheme"
                                     register={register}
                                     errors={errors}
-                                    options={schemeOptions}
+                                    options={getSchemeOptions()}
                                     required
+                                    disabled={!watchedFields[2] || loading}
                                 />
                                 <Input
                                     label="Effective Date"
@@ -189,15 +351,17 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                                 type="button"
                                 onClick={handleCancel}
                                 className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                                disabled={loading}
                             >
                                 Cancel
                             </button>
                             <button
                                 type="button"
                                 onClick={handleSubmit(onFormSubmit)}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+                                disabled={loading}
                             >
-                                {isEdit ? 'Update Assignment' : 'Save Assignment'}
+                                {loading ? 'Processing...' : (isEdit ? 'Update Assignment' : 'Save Assignment')}
                             </button>
                         </div>
                     </div>
