@@ -8,8 +8,6 @@ import jakarta.validation.constraints.NotNull;
 @Table(name = "franchise_transaction_details")
 public class FranchiseTransactionDetails extends TransactionDetailsBase{
 
-
-
     @NotNull
     @ManyToOne
     @JoinColumn(name = "franchise_id",nullable = false)
@@ -17,8 +15,6 @@ public class FranchiseTransactionDetails extends TransactionDetailsBase{
 
     public FranchiseTransactionDetails() {
     }
-
-
 
     public Franchise getFranchise() {
         return franchise;
