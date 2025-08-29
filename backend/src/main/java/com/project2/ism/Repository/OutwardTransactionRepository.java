@@ -37,4 +37,12 @@ public interface OutwardTransactionRepository extends JpaRepository<OutwardTrans
                         row -> (Long) row[1]
                 ));
     }
+
+    // OutwardTransactionRepository
+    @Query("SELECT COUNT(ot) FROM OutwardTransactions ot WHERE ot.franchise.id = :franchiseId")
+    Long countByFranchiseId(@Param("franchiseId") Long franchiseId);
+
+    @Query("SELECT COUNT(ot) FROM OutwardTransactions ot WHERE ot.merchant.id = :merchantId")
+    Long countByMerchantId(@Param("merchantId") Long merchantId);
+
 }

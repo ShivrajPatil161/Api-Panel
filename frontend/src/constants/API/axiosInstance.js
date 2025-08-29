@@ -25,6 +25,8 @@ api.interceptors.response.use(
       // Optional: check if error message mentions token expiry
       if (error.response.data.message?.toLowerCase().includes("expired")) {
         localStorage.removeItem("authToken");
+        localStorage.removeItem("userType");
+        localStorage.removeItem("customerId");
         window.location.href = "/login";
        
       }

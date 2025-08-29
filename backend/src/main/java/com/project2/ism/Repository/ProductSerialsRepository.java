@@ -51,4 +51,9 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
                         row -> (Long) row[1]
                 ));
     }
+
+    // ProductSerialsRepository
+    @Query("SELECT COUNT(psn) FROM ProductSerialNumbers psn WHERE psn.merchant.id = :merchantId")
+    Long countByMerchantId(@Param("merchantId") Long merchantId);
+
 }
