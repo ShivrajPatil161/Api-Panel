@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
     useReactTable,
     getCoreRowModel,
@@ -7,157 +7,30 @@ import {
     getFilteredRowModel,
     flexRender
 } from '@tanstack/react-table'
-import { useForm } from 'react-hook-form'
 import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import ProductAssignmentFormModal from '../Forms/ProductSchemeAssignmen'
+import api from '../../constants/API/axiosInstance'
 
 
 
 // ==================== PRODUCT ASSIGNMENT LIST ====================
 const ProductAssignment = () => {
-    const [assignments, setAssignments] = useState([
-        {
-            id: 1,
-            assignedTo: 'FRANCHISE_001',
-            assignedType: 'franchise',
-            product: 'pos_machine',
-            scheme: 'SCH_001',
-            effectiveDate: '2024-01-15',
-            remarks: 'Initial POS machine assignment for new franchise'
-        },
-        {
-            id: 2,
-            assignedTo: 'MERCHANT_101',
-            assignedType: 'merchant',
-            product: 'soundbox',
-            scheme: 'SCH_002',
-            effectiveDate: '2024-01-20',
-            remarks: 'Soundbox deployment for direct merchant'
-        },
-        {
-            id: 3,
-            assignedTo: 'FRANCHISE_002',
-            assignedType: 'franchise',
-            product: 'qr_scanner',
-            scheme: 'SCH_003',
-            effectiveDate: '2024-02-01',
-            remarks: 'Premium QR scanner for high-volume franchise'
-        },
-        {
-            id: 4,
-            assignedTo: 'MERCHANT_102',
-            assignedType: 'merchant',
-            product: 'pos_machine',
-            scheme: 'SCH_004',
-            effectiveDate: '2024-02-05',
-            remarks: 'POS upgrade for existing merchant'
-        },
-        {
-            id: 5,
-            assignedTo: 'FRANCHISE_003',
-            assignedType: 'franchise',
-            product: 'soundbox',
-            scheme: 'SCH_005',
-            effectiveDate: '2024-02-10',
-            remarks: 'Secondary device assignment'
-        },
-        {
-            id: 6,
-            assignedTo: 'MERCHANT_103',
-            assignedType: 'merchant',
-            product: 'card_reader',
-            scheme: 'SCH_006',
-            effectiveDate: '2024-02-15',
-            remarks: 'Card reader for small merchant setup'
-        },
-        {
-            id: 7,
-            assignedTo: 'FRANCHISE_004',
-            assignedType: 'franchise',
-            product: 'pos_machine',
-            scheme: 'SCH_007',
-            effectiveDate: '2024-02-20',
-            remarks: 'Multi-location franchise setup'
-        },
-        {
-            id: 8,
-            assignedTo: 'MERCHANT_104',
-            assignedType: 'merchant',
-            product: 'soundbox',
-            scheme: 'SCH_002',
-            effectiveDate: '2024-02-25',
-            remarks: 'Replacement device for damaged unit'
-        },
-        {
-            id: 9,
-            assignedTo: 'FRANCHISE_005',
-            assignedType: 'franchise',
-            product: 'qr_scanner',
-            scheme: 'SCH_001',
-            effectiveDate: '2024-03-01',
-            remarks: 'Additional QR scanner for busy location'
-        },
-        {
-            id: 10,
-            assignedTo: 'MERCHANT_105',
-            assignedType: 'merchant',
-            product: 'pos_machine',
-            scheme: 'SCH_004',
-            effectiveDate: '2024-03-05',
-            remarks: 'New merchant onboarding'
-        },
-        {
-            id: 11,
-            assignedTo: 'FRANCHISE_006',
-            assignedType: 'franchise',
-            product: 'soundbox',
-            scheme: 'SCH_003',
-            effectiveDate: '2024-03-10',
-            remarks: 'Premium soundbox for high-end franchise'
-        },
-        {
-            id: 12,
-            assignedTo: 'MERCHANT_106',
-            assignedType: 'merchant',
-            product: 'card_reader',
-            scheme: 'SCH_006',
-            effectiveDate: '2024-03-12',
-            remarks: 'Basic card reader setup'
-        },
-        {
-            id: 13,
-            assignedTo: 'FRANCHISE_007',
-            assignedType: 'franchise',
-            product: 'pos_machine',
-            scheme: 'SCH_005',
-            effectiveDate: '2024-03-15',
-            remarks: 'Comprehensive setup with all features'
-        },
-        {
-            id: 14,
-            assignedTo: 'MERCHANT_107',
-            assignedType: 'merchant',
-            product: 'soundbox',
-            scheme: 'SCH_002',
-            effectiveDate: '2024-03-18',
-            remarks: 'Standard merchant soundbox deployment'
-        },
-        {
-            id: 15,
-            assignedTo: 'FRANCHISE_008',
-            assignedType: 'franchise',
-            product: 'qr_scanner',
-            scheme: 'SCH_007',
-            effectiveDate: '2024-03-20',
-            remarks: 'Enterprise-level QR scanner assignment'
-        }
-    ])
+    const [assignments, setAssignments] = useState([])
 
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingAssignment, setEditingAssignment] = useState(null)
     const [viewingAssignment, setViewingAssignment] = useState(null)
     const [globalFilter, setGlobalFilter] = useState('')
     const [sorting, setSorting] = useState([])
+
+    useEffect(() => {
+        fetchProductSchemeAssignment()
+    },[])
+
+    const fetchProductSchemeAssignment = async () => {
+        const response = await api.get("/outward-schemes")
+        setAssignments(response?.data)
+    }
 
     const getProductLabel = (product) => {
         const productMap = {
