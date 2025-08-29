@@ -3,6 +3,7 @@ package com.project2.ism.Model;
 import com.project2.ism.Helper.TransactionIdGenerator;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.ValueGenerationType;
 
 import java.math.BigDecimal;
@@ -14,9 +15,13 @@ import java.time.LocalTime;
 public abstract class TransactionDetailsBase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "txn_seq")
-    @SequenceGenerator(name = "txn_seq", sequenceName = "transaction_sequence", allocationSize = 1)
-    private String transactionId;
+    @GeneratedValue(generator = "transaction-id-generator")
+    @GenericGenerator(name = "transaction-id-generator",
+            type = TransactionIdGenerator.class)
+    @Column(name = "transaction_id", unique = true, nullable = false)
+    private Long transactionId;
+
+
 
     @Column(name = "action_on_balance")
     private String actionOnBalance;
@@ -310,11 +315,11 @@ public abstract class TransactionDetailsBase {
         this.tranStatus = tranStatus;
     }
 
-    public String getTransactionId() {
+    public Long getTransactionId() {
         return transactionId;
     }
 
-    public void setTransactionId(String transactionId) {
+    public void setTransactionId(Long transactionId) {
         this.transactionId = transactionId;
     }
 

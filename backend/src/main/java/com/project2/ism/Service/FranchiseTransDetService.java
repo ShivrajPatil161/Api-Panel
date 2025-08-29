@@ -24,7 +24,7 @@ public class FranchiseTransDetService {
         return franchiseTransDetRepository.findById(id);
     }
 
-    public Optional<FranchiseTransactionDetails> getFranchiseTransactionDetailsByTransactionDetailsId(String transactionId) {
+    public Optional<FranchiseTransactionDetails> getFranchiseTransactionDetailsByTransactionDetailsId(Long transactionId) {
         return franchiseTransDetRepository.findByTransactionId(transactionId);
     }
 

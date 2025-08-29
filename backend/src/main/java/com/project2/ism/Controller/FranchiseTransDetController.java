@@ -34,7 +34,7 @@ public class FranchiseTransDetController {
 
     // 🔹 Get transaction by transactionId
     @GetMapping("/by-transactionId/{transactionId}")
-    public ResponseEntity<FranchiseTransactionDetails> getFranchTransDetById(@PathVariable String transactionId) {
+    public ResponseEntity<FranchiseTransactionDetails> getFranchTransDetById(@PathVariable Long transactionId) {
         return franchiseTransDetService.getFranchiseTransactionDetailsByTransactionDetailsId(transactionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

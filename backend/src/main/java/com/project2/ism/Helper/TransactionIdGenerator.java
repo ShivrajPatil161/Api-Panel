@@ -3,6 +3,8 @@ package com.project2.ism.Helper;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.time.ZoneId;
@@ -13,28 +15,54 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransactionIdGenerator implements BeforeExecutionGenerator {
 
+    private static final Logger logger = LoggerFactory.getLogger(TransactionIdGenerator.class);
+
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("yyMMddHHmmss");
 
-    // Use AtomicInteger for better thread safety and performance
-    private static final AtomicInteger counter = new AtomicInteger(0);
+    // Thread-safe counter with better overflow handling
+    private static final AtomicInteger counter = new AtomicInteger(1);
 
-    // Consider making timezone configurable via properties
-    private static final ZoneId SYSTEM_TIMEZONE = ZoneId.systemDefault();
+    // Configurable timezone - could be moved to properties
+    private static final ZoneId TIMEZONE = ZoneId.systemDefault();
+
+    // Maximum counter value before reset (999 gives 3 digits)
+    private static final int MAX_COUNTER = 999;
 
     @Override
-    public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+    public Object generate(SharedSessionContractImplementor session, Object owner,
+                           Object currentValue, EventType eventType) {
+
+        // If value already exists, don't regenerate
         if (currentValue != null) {
             return currentValue;
         }
 
-        // Use ZonedDateTime for better timezone handling
-        String timestamp = ZonedDateTime.now(SYSTEM_TIMEZONE).format(DATE_FORMATTER);
+        try {
+            String timestamp = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
+            int nextCounter = getNextCounter();
 
-        // Get next counter value (1-999, then wraps to 1)
-        int nextCounter = counter.updateAndGet(current -> (current % 999) + 1);
+            String idString = timestamp + String.format("%03d", nextCounter);
+            Long transactionId = Long.parseLong(idString);
 
-        return timestamp + String.format("%03d", nextCounter);
+            logger.debug("Generated transaction ID: {}", transactionId);
+            return transactionId;
+
+        } catch (Exception e) {
+            logger.error("Failed to generate transaction ID", e);
+            // Fallback to timestamp only
+            return Long.parseLong(ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER) + "001");
+        }
+    }
+
+    /**
+     * Get next counter value with proper overflow handling
+     */
+    private int getNextCounter() {
+        return counter.updateAndGet(current -> {
+            int next = current + 1;
+            return next > MAX_COUNTER ? 1 : next;
+        });
     }
 
     @Override
@@ -42,13 +70,20 @@ public class TransactionIdGenerator implements BeforeExecutionGenerator {
         return EnumSet.of(EventType.INSERT);
     }
 
-    // Optional: Method to reset counter for testing purposes
+    // Testing and monitoring methods
     public static void resetCounter() {
-        counter.set(0);
+        counter.set(1);
+        logger.info("Transaction ID counter reset to 1");
     }
 
-    // Optional: Method to get current counter value for monitoring
     public static int getCurrentCounter() {
         return counter.get();
+    }
+
+    // Method to preview what the next ID would look like
+    public static Long previewNextId() {
+        String timestamp = ZonedDateTime.now(TIMEZONE).format(DATE_FORMATTER);
+        int nextCounter = counter.get() % MAX_COUNTER + 1;
+        return Long.parseLong(timestamp + String.format("%03d", nextCounter));
     }
 }

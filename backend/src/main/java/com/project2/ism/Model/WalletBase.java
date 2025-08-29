@@ -1,11 +1,13 @@
 package com.project2.ism.Model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@MappedSuperclass
 public abstract class WalletBase {
 
     @Column(nullable = false, columnDefinition = "DECIMAL(38,2) DEFAULT 0.00")
