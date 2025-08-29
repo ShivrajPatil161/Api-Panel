@@ -27,6 +27,7 @@ import InventoryManagement from '../components/Inventory/Inventory.jsx'
 import ResetPassword from '../components/Auth/ResetPassword.jsx'
 import CustomerProductsList from '../components/Tables/CustomerProducts/CustomerProductsList.jsx'
 import TransactionUpload from '../components/Forms/FileUpload.jsx'
+import TransactionSelectionForm from '../components/Forms/ChargeCalculation.jsx'
 
 
 
@@ -156,10 +157,10 @@ export const router = createBrowserRouter([
                 path: "upload",
                 element: <TransactionUpload />
               },
-              // {
-              //   path: "charges",
-              //   element: <ChargeCalculationForm />
-              // }
+              {
+                path: "charges",
+                element: <TransactionSelectionForm />
+              }
             ]
           }, {
             path: 'merchants',
