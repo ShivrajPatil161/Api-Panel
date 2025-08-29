@@ -101,6 +101,7 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.FranchiseFormDTO;
 import com.project2.ism.DTO.FranchiseListDTO;
+import com.project2.ism.DTO.FranchiseMerchantStatsDTO;
 import com.project2.ism.DTO.FranchiseProductSummaryDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
@@ -109,7 +110,7 @@ import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
-import com.project2.ism.Model.Users.Merchant;
+
 import com.project2.ism.Repository.FranchiseRepository;
 import com.project2.ism.Repository.MerchantRepository;
 import com.project2.ism.Repository.OutwardTransactionRepository;
@@ -332,4 +333,25 @@ public class FranchiseService {
         return result;
     }
 
+
+    public FranchiseMerchantStatsDTO getStats() {
+        FranchiseMerchantStatsDTO dto = new FranchiseMerchantStatsDTO();
+
+        dto.totalFranchises = franchiseRepository.count();
+        dto.totalMerchants = merchantRepository.count();
+        dto.totalDirectMerchants = merchantRepository.countDirectMerchants();
+        dto.totalFranchiseMerchants = merchantRepository.countFranchiseMerchants();
+
+        dto.totalFranchiseWalletBalance = franchiseRepository.sumWalletBalances();
+        dto.totalDirectMerchantWalletBalance = merchantRepository.sumDirectMerchantWallets();
+        dto.totalFranchiseMerchantWalletBalance = merchantRepository.sumFranchiseMerchantWallets();
+
+        dto.merchantsPerFranchise = merchantRepository.countByFranchise().stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        return dto;
+    }
 }

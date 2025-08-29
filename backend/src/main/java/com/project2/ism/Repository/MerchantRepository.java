@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +22,24 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     Optional<Franchise> findFranchiseByMerchantId(@Param("merchantId") Long merchantId);
 
     Long countByFranchiseId(Long id);
+
+
+    //stats
+
+    @Query("SELECT COUNT(m) FROM Merchant m WHERE m.franchise IS NULL")
+    Long countDirectMerchants();
+
+    @Query("SELECT COUNT(m) FROM Merchant m WHERE m.franchise IS NOT NULL")
+    Long countFranchiseMerchants();
+
+    @Query("SELECT m.franchise.id, COUNT(m) FROM Merchant m WHERE m.franchise IS NOT NULL GROUP BY m.franchise.id")
+    List<Object[]> countByFranchise();
+
+    // Sum wallet balance of direct merchants (franchise_id is null)
+    @Query("SELECT SUM(m.walletBalance) FROM Merchant m WHERE m.franchise IS NULL")
+    BigDecimal sumDirectMerchantWallets();
+
+    // Sum wallet balance of merchants under a franchise (franchise_id not null)
+    @Query("SELECT SUM(m.walletBalance) FROM Merchant m WHERE m.franchise IS NOT NULL")
+    BigDecimal sumFranchiseMerchantWallets();
 }

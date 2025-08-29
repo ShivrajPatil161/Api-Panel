@@ -2,11 +2,14 @@ package com.project2.ism.Repository;
 
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public interface OutwardTransactionRepository extends JpaRepository<OutwardTransactions, Long> {
@@ -17,4 +20,21 @@ public interface OutwardTransactionRepository extends JpaRepository<OutwardTrans
     List<OutwardTransactions> findByFranchiseId(@Param("franchiseId") Long franchiseId);
 
     List<OutwardTransactions> findByMerchantId(Long merchantId);
+
+    @Query("SELECT CASE " +
+            "WHEN ot.franchise.id IS NOT NULL THEN 'FRANCHISE' " +
+            "WHEN ot.merchant.id IS NOT NULL THEN 'MERCHANT' " +
+            "ELSE 'UNKNOWN' END, COUNT(ot) " +
+            "FROM OutwardTransactions ot GROUP BY " +
+            "CASE WHEN ot.franchise.id IS NOT NULL THEN 'FRANCHISE' " +
+            "WHEN ot.merchant.id IS NOT NULL THEN 'MERCHANT' ELSE 'UNKNOWN' END")
+    List<Object[]> groupByCustomerType();
+
+    default Map<String, Long> countByCustomerType() {
+        return groupByCustomerType().stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
 }

@@ -7,7 +7,7 @@ import Login from '../components/Auth/Login.jsx'
 
 
 
-import Dashboard from '../components/Dashborad.jsx'
+import Dashboard from '../components/DashBoards/Dashborad.jsx'
 import CustomerOnboarding from '../components/Forms/CustomerOnboarding/CustomerOnborading.jsx'
 import VendorListPage from '../components/Tables/VendorTable.jsx'
 

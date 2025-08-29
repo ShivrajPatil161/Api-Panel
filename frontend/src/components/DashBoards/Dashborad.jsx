@@ -18,6 +18,7 @@ import {
   History,
   Building2
 } from 'lucide-react';
+import AdminDashboard from './AdminDashboard';
 
 // Reusable Stat Card Component
 const StatCard = ({ label, value, icon: Icon, color = 'blue', onClick }) => (
@@ -351,8 +352,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {userType === 'admin' ? (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {renderAdminDashboard()}
+        <div className="">
+         <AdminDashboard />
         </div>
       ) : (
         renderUserDashboard()

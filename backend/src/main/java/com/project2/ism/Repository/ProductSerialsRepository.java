@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 public interface ProductSerialsRepository extends JpaRepository<ProductSerialNumbers,Long> {
@@ -29,4 +31,24 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
     @Transactional
     @Query("UPDATE ProductSerialNumbers psn SET psn.merchant.id = :merchantId WHERE psn.id IN :serialIds")
     int assignMerchantToSerials(@Param("merchantId") Long merchantId, @Param("serialIds") List<Long> serialIds);
+
+    @Query("SELECT " +
+            "CASE " +
+            "WHEN psn.returnTransaction IS NOT NULL THEN 'RETURNED' " +
+            "WHEN psn.outwardTransaction IS NOT NULL THEN 'ALLOCATED' " +
+            "ELSE 'AVAILABLE' END, COUNT(psn) " +
+            "FROM ProductSerialNumbers psn " +
+            "GROUP BY CASE " +
+            "WHEN psn.returnTransaction IS NOT NULL THEN 'RETURNED' " +
+            "WHEN psn.outwardTransaction IS NOT NULL THEN 'ALLOCATED' " +
+            "ELSE 'AVAILABLE' END")
+    List<Object[]> groupByStatus();
+
+    default Map<String, Long> countByStatus() {
+        return groupByStatus().stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
 }
