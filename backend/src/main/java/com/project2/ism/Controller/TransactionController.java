@@ -1,7 +1,7 @@
 package com.project2.ism.Controller;
 
 import com.project2.ism.DTO.TransactionUploadRequest;
-import com.project2.ism.Model.Transaction;
+import com.project2.ism.Model.VendorTransactions;
 import com.project2.ism.Service.TransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +20,8 @@ public class TransactionController {
 
     // Create transaction
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
-        return ResponseEntity.ok(transactionService.saveTransaction(transaction));
+    public ResponseEntity<VendorTransactions> createTransaction(@RequestBody VendorTransactions vendorTransactions) {
+        return ResponseEntity.ok(transactionService.saveTransaction(vendorTransactions));
     }
 
     @PostMapping("/bulk")
@@ -36,13 +36,13 @@ public class TransactionController {
 
     // Get all
     @GetMapping
-    public ResponseEntity<List<Transaction>> getAllTransactions() {
+    public ResponseEntity<List<VendorTransactions>> getAllTransactions() {
         return ResponseEntity.ok(transactionService.getAllTransactions());
     }
 
     // Get by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
+    public ResponseEntity<VendorTransactions> getTransactionById(@PathVariable Long id) {
         return transactionService.getTransactionById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

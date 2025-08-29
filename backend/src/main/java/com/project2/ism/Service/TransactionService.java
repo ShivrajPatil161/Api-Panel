@@ -1,7 +1,7 @@
 package com.project2.ism.Service;
 
 
-import com.project2.ism.Model.Transaction;
+import com.project2.ism.Model.VendorTransactions;
 import com.project2.ism.Repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,19 +17,19 @@ public class TransactionService {
         this.transactionRepository = transactionRepository;
     }
 
-    public Transaction saveTransaction(Transaction transaction) {
-        return transactionRepository.save(transaction);
+    public VendorTransactions saveTransaction(VendorTransactions vendorTransactions) {
+        return transactionRepository.save(vendorTransactions);
     }
 
-    public List<Transaction> saveAll(List<Transaction> transactions) {
-        return transactionRepository.saveAll(transactions);
+    public List<VendorTransactions> saveAll(List<VendorTransactions> vendorTransactions) {
+        return transactionRepository.saveAll(vendorTransactions);
     }
 
-    public List<Transaction> getAllTransactions() {
+    public List<VendorTransactions> getAllTransactions() {
         return transactionRepository.findAll();
     }
 
-    public Optional<Transaction> getTransactionById(Long id) {
+    public Optional<VendorTransactions> getTransactionById(Long id) {
         return transactionRepository.findById(id);
     }
 

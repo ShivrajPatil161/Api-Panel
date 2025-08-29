@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public abstract class AmountBase {
+public abstract class WalletBase {
 
     @Column(nullable = false, columnDefinition = "DECIMAL(38,2) DEFAULT 0.00")
     private BigDecimal availableBalance = BigDecimal.ZERO;
@@ -26,7 +26,7 @@ public abstract class AmountBase {
     @Column(nullable = false, columnDefinition = "DECIMAL(38,2) DEFAULT 0.00")
     private BigDecimal usedCash = BigDecimal.ZERO;
 
-    public AmountBase() {
+    public WalletBase() {
     }
 
     public BigDecimal getAvailableBalance() {

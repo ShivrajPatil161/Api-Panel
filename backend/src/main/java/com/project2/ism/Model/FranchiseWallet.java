@@ -2,15 +2,9 @@ package com.project2.ism.Model;
 
 import com.project2.ism.Model.Users.Franchise;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
-import java.sql.Time;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
-public class FranchiseAmount extends AmountBase {
+public class FranchiseWallet extends WalletBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +14,7 @@ public class FranchiseAmount extends AmountBase {
     @JoinColumn(name = "franchise_id",nullable = false)
     private Franchise franchise;
 
-    public FranchiseAmount() {
+    public FranchiseWallet() {
     }
 
     public Long getId() {
