@@ -79,15 +79,28 @@ const LoadingSpinner = () => (
     </div>
 )
 
-// View Modal Component
+// Enhanced View Modal Component
 const ViewModal = ({ customer, customerType, onClose }) => {
     const [documents, setDocuments] = useState({})
 
-    useEffect(() => {
-        if (customer?.uploadDocuments) {
-            setDocuments(customer.uploadDocuments)
+    // Helper function to get the correct data structure
+    const getCustomerData = () => {
+        if (customerType === 'franchise') {
+            // For franchise data, the main details are in the 'franchise' nested object
+            return customer?.franchise || customer
+        } else {
+            // For direct merchants, data is at root level
+            return customer
         }
-    }, [customer])
+    }
+
+    const customerData = getCustomerData()
+
+    useEffect(() => {
+        if (customerData?.uploadDocuments) {
+            setDocuments(customerData.uploadDocuments)
+        }
+    }, [customerData])
 
     const DocumentItem = ({ docKey, docPath, docName }) => {
         const [previewDoc, setPreviewDoc] = useState(null)
@@ -137,6 +150,33 @@ const ViewModal = ({ customer, customerType, onClose }) => {
         )
     }
 
+    // Helper function to get display name
+    const getDisplayName = () => {
+        if (customerType === 'franchise') {
+            return customerData?.franchiseName || customerData?.businessName || 'N/A'
+        } else {
+            return customerData?.businessName || 'N/A'
+        }
+    }
+
+    // Helper function to get contact person data
+    const getContactPerson = () => {
+        if (customerType === 'franchise') {
+            return customerData?.contactPerson
+        } else {
+            // For direct merchants, contact person data might be at root level
+            return customerData?.contactPerson || {
+                name: customerData?.contactPersonName,
+                phoneNumber: customerData?.contactPersonPhone,
+                email: customerData?.contactPersonEmail,
+                alternatePhoneNum: customerData?.alternatePhoneNum,
+                landlineNumber: customerData?.landlineNumber
+            }
+        }
+    }
+
+    const contactPerson = getContactPerson()
+
     if (!customer) return null
 
     return (
@@ -148,7 +188,7 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                         <h2 className="text-xl font-semibold">
                             {customerType === 'franchise' ? 'Franchise Details' : 'Merchant Details'}
                         </h2>
-                        <p className="text-gray-600">{customer.businessName || customer.franchiseName}</p>
+                        <p className="text-gray-600">{getDisplayName()}</p>
                     </div>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
                         <X className="w-6 h-6" />
@@ -162,25 +202,28 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                         <div>
                             <h3 className="font-semibold mb-3">Basic Information</h3>
                             <div className="space-y-2">
-                                <div><strong>Business Name:</strong> {customer.businessName || customer.franchiseName}</div>
-                                <div><strong>Legal Name:</strong> {customer.legalName}</div>
-                                <div><strong>Business Type:</strong> {customer.businessType}</div>
-                                <div><strong>GST Number:</strong> {customer.gstNumber}</div>
-                                <div><strong>PAN Number:</strong> {customer.panNumber}</div>
-                                <div><strong>Registration Number:</strong> {customer.registrationNumber}</div>
-                                <div><strong>Status:</strong> <StatusBadge status={customer.status || 'active'} /></div>
+                                <div><strong>Business Name:</strong> {getDisplayName()}</div>
+                                <div><strong>Legal Name:</strong> {customerData?.legalName || 'N/A'}</div>
+                                <div><strong>Business Type:</strong> {customerData?.businessType || 'N/A'}</div>
+                                <div><strong>GST Number:</strong> {customerData?.gstNumber || 'N/A'}</div>
+                                <div><strong>PAN Number:</strong> {customerData?.panNumber || 'N/A'}</div>
+                                <div><strong>Registration Number:</strong> {customerData?.registrationNumber || 'N/A'}</div>
+                                <div><strong>Status:</strong> <StatusBadge status={customerData?.status || customer?.status || 'active'} /></div>
+                                {customerType === 'merchant' && customer?.franchiseName && (
+                                    <div><strong>Franchise:</strong> {customer.franchiseName}</div>
+                                )}
                             </div>
                         </div>
 
                         <div>
                             <h3 className="font-semibold mb-3">Contact Information</h3>
                             <div className="space-y-2">
-                                <div><strong>Contact Person:</strong> {customer.contactPerson?.name}</div>
-                                <div><strong>Mobile:</strong> {customer.contactPerson?.phoneNumber}</div>
-                                <div><strong>Email:</strong> {customer.contactPerson?.email}</div>
-                                <div><strong>Alternate Mobile:</strong> {customer.contactPerson?.alternatePhoneNum}</div>
-                                <div><strong>Landline:</strong> {customer.contactPerson?.landlineNumber}</div>
-                                <div><strong>Address:</strong> {customer.address}</div>
+                                <div><strong>Contact Person:</strong> {contactPerson?.name || 'N/A'}</div>
+                                <div><strong>Mobile:</strong> {contactPerson?.phoneNumber || 'N/A'}</div>
+                                <div><strong>Email:</strong> {contactPerson?.email || 'N/A'}</div>
+                                <div><strong>Alternate Mobile:</strong> {contactPerson?.alternatePhoneNum || 'N/A'}</div>
+                                <div><strong>Landline:</strong> {contactPerson?.landlineNumber || 'N/A'}</div>
+                                <div><strong>Address:</strong> {customerData?.address || customer?.address || 'N/A'}</div>
                             </div>
                         </div>
                     </div>
@@ -189,12 +232,12 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                     <div>
                         <h3 className="font-semibold mb-3">Bank Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><strong>Bank Name:</strong> {customer.bankDetails?.bankName}</div>
-                            <div><strong>Account Holder:</strong> {customer.bankDetails?.accountHolderName}</div>
-                            <div><strong>Account Number:</strong> {customer.bankDetails?.accountNumber}</div>
-                            <div><strong>IFSC Code:</strong> {customer.bankDetails?.ifsc}</div>
-                            <div><strong>Branch:</strong> {customer.bankDetails?.branchName}</div>
-                            <div><strong>Account Type:</strong> {customer.bankDetails?.accountType}</div>
+                            <div><strong>Bank Name:</strong> {customerData?.bankDetails?.bankName || 'N/A'}</div>
+                            <div><strong>Account Holder:</strong> {customerData?.bankDetails?.accountHolderName || 'N/A'}</div>
+                            <div><strong>Account Number:</strong> {customerData?.bankDetails?.accountNumber || 'N/A'}</div>
+                            <div><strong>IFSC Code:</strong> {customerData?.bankDetails?.ifsc || 'N/A'}</div>
+                            <div><strong>Branch:</strong> {customerData?.bankDetails?.branchName || 'N/A'}</div>
+                            <div><strong>Account Type:</strong> {customerData?.bankDetails?.accountType || 'N/A'}</div>
                         </div>
                     </div>
 
@@ -213,26 +256,70 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                         </div>
                     </div>
 
+                    {/* Franchise Merchants Section - Only show for franchise */}
+                    {customerType === 'franchise' && customer?.merchants && customer.merchants.length > 0 && (
+                        <div>
+                            <h3 className="font-semibold mb-3">Associated Merchants ({customer.merchants.length})</h3>
+                            <div className="space-y-3">
+                                {customer.merchants.map((merchant) => (
+                                    <div key={merchant.id} className="p-4 bg-gray-50 rounded-lg">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <div className="font-medium">{merchant.businessName}</div>
+                                                <div className="text-sm text-gray-600">{merchant.businessType}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-sm"><strong>Contact:</strong> {merchant.contactPersonName}</div>
+                                                <div className="text-sm"><strong>Email:</strong> {merchant.contactPersonEmail}</div>
+                                                <div className="text-sm"><strong>Phone:</strong> {merchant.contactPersonPhone}</div>
+                                            </div>
+                                            <div>
+                                                <StatusBadge status={merchant.status} />
+                                                <div className="text-sm mt-1">Balance: ₹{merchant.walletBalance?.toLocaleString() || '0'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Additional Info */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
                         <div className="text-center">
                             <Wallet className="w-8 h-8 mx-auto text-green-600 mb-2" />
                             <div className="text-sm text-gray-600">Wallet Balance</div>
-                            <div className="font-semibold">₹{customer.walletBalance?.toLocaleString() || '0'}</div>
+                            <div className="font-semibold">₹{(customerData?.walletBalance || customer?.walletBalance || 0).toLocaleString()}</div>
                         </div>
-                        {customerType === 'merchant' && (
+                        {(customerType === 'merchant' || (customerType === 'franchise' && customerData?.monthlyRevenue !== undefined)) && (
                             <div className="text-center">
                                 <TrendingUp className="w-8 h-8 mx-auto text-blue-600 mb-2" />
                                 <div className="text-sm text-gray-600">Monthly Revenue</div>
-                                <div className="font-semibold">₹{customer.monthlyRevenue?.toLocaleString() || '0'}</div>
+                                <div className="font-semibold">₹{(customerData?.monthlyRevenue || customer?.monthlyRevenue || 0).toLocaleString()}</div>
                             </div>
                         )}
                         <div className="text-center">
                             <Calendar className="w-8 h-8 mx-auto text-purple-600 mb-2" />
                             <div className="text-sm text-gray-600">Created On</div>
-                            <div className="font-semibold">{customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : 'N/A'}</div>
+                            <div className="font-semibold">
+                                {(customerData?.createdAt || customer?.createdAt) ?
+                                    new Date(customerData?.createdAt || customer?.createdAt).toLocaleDateString() : 'N/A'}
+                            </div>
                         </div>
                     </div>
+
+                    {/* Approval Status for Direct Merchants */}
+                    {customerType === 'merchant' && customer?.approved !== undefined && (
+                        <div className="pt-4 border-t">
+                            <div className="flex items-center space-x-2">
+                                <strong>Approval Status:</strong>
+                                <span className={`px-2 py-1 rounded text-sm ${customer.approved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
+                                    {customer.approved ? 'Approved' : 'Pending Approval'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -470,7 +557,7 @@ const CustomerListComponent = () => {
         try {
             setLoading(true)
             setError(null)
-            const response = await api.get('/merchants')
+            const response = await api.get('/merchants/direct-merchant')
             setMerchants(response.data)
         } catch (err) {
             setError('Failed to load merchants')
@@ -555,12 +642,12 @@ const CustomerListComponent = () => {
                 </div>
             ),
         }),
-        columnHelper.accessor('merchants', {
+        columnHelper.accessor('merchantCount', {
             header: 'Merchants',
             cell: (info) => (
                 <div className="flex items-center space-x-2">
                     <Users className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">{info.getValue()?.length || 0}</span>
+                    <span className="font-medium">{info.getValue()}</span>
                 </div>
             ),
             size: 100,
@@ -627,15 +714,7 @@ const CustomerListComponent = () => {
             ),
             size: 250,
         }),
-        columnHelper.accessor('contactPerson.name', {
-            header: 'Contact Person',
-            cell: (info) => (
-                <div>
-                    <div className="font-medium text-gray-900">{info.getValue()}</div>
-                    <div className="text-sm text-gray-500">{info.row.original.contactPerson?.email}</div>
-                </div>
-            ),
-        }),
+        
         columnHelper.accessor('address', {
             header: 'Location',
             cell: (info) => (
