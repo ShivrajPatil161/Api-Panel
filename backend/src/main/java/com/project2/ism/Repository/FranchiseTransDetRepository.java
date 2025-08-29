@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTransactionDetails,Long> {
-    Optional<FranchiseTransactionDetails> findByTransactionId(Long transactionId);
+    Optional<FranchiseTransactionDetails> findByTransactionId(String transactionId);
 
 }

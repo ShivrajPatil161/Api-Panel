@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/transaction-details")
+@RequestMapping("/franchise-transaction-details")
 public class FranchiseTransDetController {
 
 
@@ -34,7 +34,7 @@ public class FranchiseTransDetController {
 
     // 🔹 Get transaction by transactionId
     @GetMapping("/by-transactionId/{transactionId}")
-    public ResponseEntity<FranchiseTransactionDetails> getFranchTransDetById(@PathVariable Long transactionId) {
+    public ResponseEntity<FranchiseTransactionDetails> getFranchTransDetById(@PathVariable String transactionId) {
         return franchiseTransDetService.getFranchiseTransactionDetailsByTransactionDetailsId(transactionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
