@@ -102,7 +102,7 @@ const VendorViewModal = ({ vendor, isOpen, onClose }) => {
                     {/* Contact Information */}
                     <InfoSection title="Contact Person Information" icon={User}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InfoField
+                            {/* <InfoField
                                 label="Contact Person"
                                 value={vendor.contactPerson?.name}
                             />
@@ -110,7 +110,7 @@ const VendorViewModal = ({ vendor, isOpen, onClose }) => {
                                 label="Phone Number"
                                 value={vendor.contactPerson?.phoneNumber}
                                 icon={Phone}
-                            />
+                            /> */}
                             <InfoField
                                 label="Email Address"
                                 value={vendor.contactPerson?.email}
