@@ -19,6 +19,7 @@ import {
   Building2
 } from 'lucide-react';
 import AdminDashboard from './AdminDashboard';
+import CustomerDashboard from './CustomerDashboard';
 
 // Reusable Stat Card Component
 const StatCard = ({ label, value, icon: Icon, color = 'blue', onClick }) => (
@@ -136,6 +137,7 @@ const ActivityCard = ({ transactions, title = "Recent Activity" }) => (
 // Main Dashboard Component
 const Dashboard = () => {
   const userType = localStorage.getItem("userType").toLowerCase()
+  const userId = localStorage.getItem("customerId")
   const [selectedMerchant, setSelectedMerchant] = useState('all');
 
 
@@ -356,7 +358,7 @@ const Dashboard = () => {
          <AdminDashboard />
         </div>
       ) : (
-        renderUserDashboard()
+          <CustomerDashboard userType={userType} userId = {userId} />
       )}
     </div>
   );
