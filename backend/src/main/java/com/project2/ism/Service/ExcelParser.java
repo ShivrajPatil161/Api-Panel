@@ -36,6 +36,12 @@ public class ExcelParser {
 
             while (it.hasNext()) {
                 Row r = it.next();
+
+                // ✅ Skip empty rows
+                if (isRowEmpty(r, fmt)) {
+                    continue;
+                }
+
                 VendorTransactions t = new VendorTransactions();
 
                 t.setTransactionReferenceId(get(r, colIndex, "ID", fmt));
@@ -90,6 +96,9 @@ public class ExcelParser {
                 t.setAcquiringBank(get(r, colIndex, "Acquiring Bank", fmt));
                 t.setIssuingBankAlt(get(r, colIndex, "Issuing Bank.1", fmt));
 
+                // ✅ optional safeguard: skip if *all* fields are null/blank
+                if (isTransactionEmpty(t)) continue;
+
                 list.add(t);
             }
         }
@@ -109,10 +118,31 @@ public class ExcelParser {
 
     private static LocalDateTime parseDate(String s) {
         if (s == null || s.isEmpty()) return null;
-        // Excel sometimes dumps as "01-08-2025 15:43"
         for (DateTimeFormatter f: DATE_PATTERNS) {
             try { return LocalDateTime.parse(s, f); } catch (Exception ignore) {}
         }
         return null;
+    }
+
+    // ✅ Check if row is completely empty
+    private static boolean isRowEmpty(Row row, DataFormatter fmt) {
+        if (row == null) return true;
+        for (Cell cell : row) {
+            String value = fmt.formatCellValue(cell).trim();
+            if (!value.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ✅ Check if mapped VendorTransactions has no useful data
+    private static boolean isTransactionEmpty(VendorTransactions t) {
+        return (t.getTransactionReferenceId() == null || t.getTransactionReferenceId().isEmpty())
+                && t.getDate() == null
+                && (t.getMobile() == null || t.getMobile().isEmpty())
+                && (t.getEmail() == null || t.getEmail().isEmpty())
+                && t.getAmount() == null;
+        // add more "must-have" fields here if needed
     }
 }
