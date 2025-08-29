@@ -8,9 +8,7 @@ import jakarta.validation.constraints.NotNull;
 @Table(name = "franchise_transaction_details")
 public class FranchiseTransactionDetails extends TransactionDetailsBase{
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+
 
     @NotNull
     @ManyToOne
@@ -20,13 +18,7 @@ public class FranchiseTransactionDetails extends TransactionDetailsBase{
     public FranchiseTransactionDetails() {
     }
 
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public Franchise getFranchise() {
         return franchise;
