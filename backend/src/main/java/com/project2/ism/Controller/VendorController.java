@@ -1,6 +1,7 @@
 package com.project2.ism.Controller;
 
 import com.project2.ism.DTO.VendorIDNameDTO;
+import com.project2.ism.DTO.VendorStatsDTO;
 import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Service.VendorService;
 import jakarta.persistence.EntityNotFoundException;
@@ -78,6 +79,11 @@ public class VendorController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while deleting vendor.");
         }
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<VendorStatsDTO> getVendorStats() {
+        return ResponseEntity.ok(vendorService.getVendorStats());
     }
 }
 

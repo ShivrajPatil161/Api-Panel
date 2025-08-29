@@ -1,20 +1,29 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.DTO.VendorIDNameDTO;
+import com.project2.ism.DTO.VendorStatsDTO;
 import com.project2.ism.Model.Vendor.Vendor;
+import com.project2.ism.Repository.VendorRatesRepository;
 import com.project2.ism.Repository.VendorRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class VendorService {
 
-    @Autowired
-    private VendorRepository vendorRepository;
+
+    private final VendorRepository vendorRepository;
+
+    private final VendorRatesRepository vendorRatesRepository;
+
+    public VendorService(VendorRepository vendorRepository, VendorRatesRepository vendorRatesRepository) {
+        this.vendorRepository = vendorRepository;
+        this.vendorRatesRepository = vendorRatesRepository;
+    }
 
     // Create or Save Vendor
     public Vendor createVendor(@Valid Vendor vendor) {
@@ -54,5 +63,27 @@ public class VendorService {
                 .stream()
                 .map(v -> new VendorIDNameDTO(v.getId(), v.getName()))
                 .toList();
+    }
+
+    public VendorStatsDTO getVendorStats() {
+        VendorStatsDTO dto = new VendorStatsDTO();
+
+        // Vendors
+        dto.totalVendors = vendorRepository.count();
+        dto.activeVendors = vendorRepository.countByStatus(true);
+        dto.inactiveVendors = vendorRepository.countByStatus(false);
+
+        // Vendor Rates
+        dto.totalVendorRates = vendorRatesRepository.count();
+        LocalDate today = LocalDate.now();
+        dto.activeVendorRates = vendorRatesRepository.countByEffectiveDateBeforeAndExpiryDateAfter(today, today);
+
+        // Total Monthly Rent
+        dto.totalMonthlyRent = vendorRatesRepository.sumActiveMonthlyRent(today, today);
+
+        // Card Type Distribution
+        dto.cardTypeDistribution = vendorRatesRepository.countGroupByCardType();
+
+        return dto;
     }
 }
