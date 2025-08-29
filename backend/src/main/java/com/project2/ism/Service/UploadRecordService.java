@@ -4,7 +4,7 @@ package com.project2.ism.Service;
 
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.Product;
-import com.project2.ism.Model.Transaction;
+import com.project2.ism.Model.VendorTransactions;
 import com.project2.ism.Model.UploadRecord;
 import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Repository.ProductRepository;
@@ -45,7 +45,7 @@ public class UploadRecordService {
         rec.setFileName(file.getOriginalFilename());
         uploadRecordRepository.save(rec);
 
-        List<Transaction> txs = ExcelParser.parse(file.getInputStream());
+        List<VendorTransactions> txs = ExcelParser.parse(file.getInputStream());
         transactionRepository.saveAll(txs);
         return "Success";
     }

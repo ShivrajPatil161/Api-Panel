@@ -2,15 +2,9 @@ package com.project2.ism.Model;
 
 import com.project2.ism.Model.Users.Merchant;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.groups.Default;
-import java.math.BigDecimal;
-import java.sql.Time;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
-public class MerchantAmount extends AmountBase {
+public class MerchantWallet extends WalletBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +14,7 @@ public class MerchantAmount extends AmountBase {
     @JoinColumn(name = "merchant_id",nullable = false)
     private Merchant merchant;
 
-    public MerchantAmount() {
+    public MerchantWallet() {
     }
 
     public Merchant getMerchant() {

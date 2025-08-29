@@ -1,6 +1,6 @@
 package com.project2.ism.Service;
 
-import com.project2.ism.Model.Transaction;
+import com.project2.ism.Model.VendorTransactions;
 import org.apache.poi.ss.usermodel.*;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -16,8 +16,8 @@ public class ExcelParser {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
     };
 
-    public static List<Transaction> parse(InputStream in) throws Exception {
-        List<Transaction> list = new ArrayList<>();
+    public static List<VendorTransactions> parse(InputStream in) throws Exception {
+        List<VendorTransactions> list = new ArrayList<>();
         try (Workbook wb = WorkbookFactory.create(in)) {
             Sheet sheet = wb.getSheetAt(0);
             if (sheet == null) return list;
@@ -36,7 +36,7 @@ public class ExcelParser {
 
             while (it.hasNext()) {
                 Row r = it.next();
-                Transaction t = new Transaction();
+                VendorTransactions t = new VendorTransactions();
 
                 t.setTransactionReferenceId(get(r, colIndex, "ID", fmt));
                 t.setDate(parseDate(get(r, colIndex, "Date", fmt)));

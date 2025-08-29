@@ -8,14 +8,14 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transactions")
-public class Transaction {
+public class VendorTransactions {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long internal_id;
 
     //@NotBlank(message = "Transaction ID is required")
-    @Column(name = "ID", nullable = false, unique = true)
+    @Column(name = "ID", nullable = false)
     private String transactionReferenceId;
 
     //@NotNull(message = "Date is required")
@@ -180,7 +180,7 @@ public class Transaction {
     @Column(name = "Issuing Bank.1")
     private String issuingBankAlt;
 
-    public Transaction() {
+    public VendorTransactions() {
     }
 
     public Long getInternal_id() {
