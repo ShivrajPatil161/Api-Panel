@@ -65,18 +65,18 @@ const VendorListPage = () => {
           </div>
         ),
       }),
-      columnHelper.accessor('contactPerson.name', {
-        header: 'Contact Person',
-        cell: info => (
-          <div>
-            <div className="font-medium text-gray-900">{info.getValue()}</div>
-            <div className="text-sm text-gray-500 flex items-center">
-              <Phone className="h-3 w-3 mr-1" />
-              {info.row.original.contactPerson?.phoneNumber}
-            </div>
-          </div>
-        ),
-      }),
+      // columnHelper.accessor('contactPerson.name', {
+      //   header: 'Contact Person',
+      //   cell: info => (
+      //     <div>
+      //       <div className="font-medium text-gray-900">{info.getValue()}</div>
+      //       <div className="text-sm text-gray-500 flex items-center">
+      //         <Phone className="h-3 w-3 mr-1" />
+      //         {info.row.original.contactPerson?.phoneNumber}
+      //       </div>
+      //     </div>
+      //   ),
+      // }),
       columnHelper.accessor('contactPerson.email', {
         header: 'Email',
         cell: info => (
