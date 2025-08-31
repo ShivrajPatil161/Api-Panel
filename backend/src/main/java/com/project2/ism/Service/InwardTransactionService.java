@@ -106,18 +106,19 @@ public class InwardTransactionService {
     private void validateAndAttachSerials(InwardTransactions inward) {
         if (inward.getProductSerialNumbers() == null) return;
         for (ProductSerialNumbers sn : inward.getProductSerialNumbers()) {
-            if (serialRepo.existsBySid(sn.getSid())) {
+            if (sn.getSid() != null && serialRepo.existsBySid(sn.getSid())) {
                 throw new DuplicateResourceException("SID already exists: " + sn.getSid());
             }
-            if (serialRepo.existsByMid(sn.getMid())) {
+            if (sn.getMid() != null && serialRepo.existsByMid(sn.getMid())) {
                 throw new DuplicateResourceException("MID already exists: " + sn.getMid());
             }
-            if (serialRepo.existsByTid(sn.getTid())) {
+            if (sn.getTid() != null && serialRepo.existsByTid(sn.getTid())) {
                 throw new DuplicateResourceException("TID already exists: " + sn.getTid());
             }
-            if (serialRepo.existsByVpaid(sn.getVpaid())) {
+            if (sn.getVpaid() != null && serialRepo.existsByVpaid(sn.getVpaid())) {
                 throw new DuplicateResourceException("VPAID already exists: " + sn.getVpaid());
             }
+
             sn.setInwardTransaction(inward);
             sn.setProduct(inward.getProduct());
         }
