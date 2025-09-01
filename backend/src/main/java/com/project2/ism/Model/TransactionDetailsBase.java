@@ -112,6 +112,8 @@ public abstract class TransactionDetailsBase {
     @Column(name = "vendor_transaction_id")
     private String vendorTransactionId;
 
+
+
     public TransactionDetailsBase() {
     }
 
@@ -354,4 +356,6 @@ public abstract class TransactionDetailsBase {
     public void setVendorTransactionId(String vendorTransactionId) {
         this.vendorTransactionId = vendorTransactionId;
     }
+
+
 }

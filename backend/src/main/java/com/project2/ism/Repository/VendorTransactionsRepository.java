@@ -1,0 +1,42 @@
+package com.project2.ism.Repository;
+
+import com.project2.ism.Model.VendorTransactions;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+public interface VendorTransactionsRepository extends JpaRepository<VendorTransactions, Long> {
+
+    @Query(value = """
+      SELECT * FROM vendor_transactions vt
+      WHERE vt.settled = 0
+        AND vt.date BETWEEN :from AND :to
+        AND (
+          ( :mids_size > 0 AND vt.mid IN (:mids) ) OR
+          ( :tids_size > 0 AND vt.tid IN (:tids) ) OR
+          ( :sids_size > 0 AND vt.`device serial` IN (:sids) )
+        )
+      """, nativeQuery = true)
+    List<VendorTransactions> findCandidates(
+            @Param("from") LocalDateTime from,
+            @Param("to")   LocalDateTime to,
+            @Param("mids") List<String> mids,   @Param("mids_size") int midsSize,
+            @Param("tids") List<String> tids,   @Param("tids_size") int tidsSize,
+            @Param("sids") List<String> sids,   @Param("sids_size") int sidsSize
+            //@Param("vp")   List<String> vpaids, @Param("vp_size")   int vpSize
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT vt FROM VendorTransactions vt WHERE vt.internalId = :id")
+    Optional<VendorTransactions> lockById(@Param("id") Long id);
+}
+
+
+//    OR
+//            ( :vp_size   > 0 AND vt.vpaid IN (:vp) )

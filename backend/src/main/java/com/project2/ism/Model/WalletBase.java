@@ -2,6 +2,7 @@ package com.project2.ism.Model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -27,6 +28,10 @@ public abstract class WalletBase {
 
     @Column(nullable = false, columnDefinition = "DECIMAL(38,2) DEFAULT 0.00")
     private BigDecimal usedCash = BigDecimal.ZERO;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 
     public WalletBase() {
     }
@@ -77,5 +82,13 @@ public abstract class WalletBase {
 
     public void setUsedCash(BigDecimal usedCash) {
         this.usedCash = usedCash;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }
