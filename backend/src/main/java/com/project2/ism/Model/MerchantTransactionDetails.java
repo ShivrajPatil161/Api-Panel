@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
+@Table(name = "merchant_transaction_details",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_mtd_vendor_tx", columnNames = {"vendor_transaction_id"})
+        })
 public class MerchantTransactionDetails extends TransactionDetailsBase{
 
     @NotNull

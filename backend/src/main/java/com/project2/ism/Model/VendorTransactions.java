@@ -7,12 +7,18 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "vendor_transactions")
+@Table(name = "vendor_transactions",
+        indexes = {
+                @Index(name = "idx_vt_mid", columnList = "mid"),
+                @Index(name = "idx_vt_tid", columnList = "tid"),
+                //@Index(name = "idx_vt_device_serial", columnList = "device_serial"),
+                @Index(name = "idx_vt_settled", columnList = "settled")
+        })
 public class VendorTransactions {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long internal_id;
+    private Long internalId;
 
     //@NotBlank(message = "Transaction ID is required")
     @Column(name = "ID", nullable = false)
@@ -180,15 +186,25 @@ public class VendorTransactions {
     @Column(name = "Issuing Bank.1")
     private String issuingBankAlt;
 
+
+    @Column(name = "settled", nullable = false)
+    private Boolean settled = Boolean.FALSE;
+
+    @Column(name = "settled_at")
+    private LocalDateTime settledAt;
+
+    @Column(name = "settlement_batch_id")
+    private Long settlementBatchId;
+
     public VendorTransactions() {
     }
 
-    public Long getInternal_id() {
-        return internal_id;
+    public Long getInternalId() {
+        return internalId;
     }
 
-    public void setInternal_id(Long internal_id) {
-        this.internal_id = internal_id;
+    public void setInternalId(Long internalId) {
+        this.internalId = internalId;
     }
 
     public String getTransactionReferenceId() {
@@ -597,5 +613,29 @@ public class VendorTransactions {
 
     public void setIssuingBankAlt(String issuingBankAlt) {
         this.issuingBankAlt = issuingBankAlt;
+    }
+
+    public Boolean getSettled() {
+        return settled;
+    }
+
+    public void setSettled(Boolean settled) {
+        this.settled = settled;
+    }
+
+    public LocalDateTime getSettledAt() {
+        return settledAt;
+    }
+
+    public void setSettledAt(LocalDateTime settledAt) {
+        this.settledAt = settledAt;
+    }
+
+    public Long getSettlementBatchId() {
+        return settlementBatchId;
+    }
+
+    public void setSettlementBatchId(Long settlementBatchId) {
+        this.settlementBatchId = settlementBatchId;
     }
 }

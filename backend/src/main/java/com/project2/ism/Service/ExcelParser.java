@@ -11,9 +11,19 @@ import java.util.*;
 public class ExcelParser {
 
     private static final DateTimeFormatter[] DATE_PATTERNS = new DateTimeFormatter[] {
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"),
+            DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm:ss"),
+            DateTimeFormatter.ofPattern("dd/MM/yy HH:mm:ss"),   // <── added (2-digit year + seconds)
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"),
+            DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm"),
+            DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"),      // <── added (2-digit year)
+            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"),
+            DateTimeFormatter.ofPattern("dd-MM-uuuu HH:mm:ss"),
+            DateTimeFormatter.ofPattern("dd-MM/yy HH:mm:ss"),   // <── added
+            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"),
             DateTimeFormatter.ofPattern("dd-MM-uuuu HH:mm"),
-            DateTimeFormatter.ofPattern("dd-MM-uuuu H:mm"),
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("dd-MM-yy HH:mm"),      // <── added
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     };
 
     public static List<VendorTransactions> parse(InputStream in) throws Exception {
@@ -45,6 +55,7 @@ public class ExcelParser {
                 VendorTransactions t = new VendorTransactions();
 
                 t.setTransactionReferenceId(get(r, colIndex, "ID", fmt));
+                System.out.println(((get(r, colIndex, "Date", fmt))));
                 t.setDate(parseDate(get(r, colIndex, "Date", fmt)));
                 t.setMobile(get(r, colIndex, "Mobile", fmt));
                 t.setEmail(get(r, colIndex, "Email", fmt));
@@ -118,11 +129,15 @@ public class ExcelParser {
 
     private static LocalDateTime parseDate(String s) {
         if (s == null || s.isEmpty()) return null;
-        for (DateTimeFormatter f: DATE_PATTERNS) {
-            try { return LocalDateTime.parse(s, f); } catch (Exception ignore) {}
+        s = s.trim();
+        for (DateTimeFormatter f : DATE_PATTERNS) {
+            try {
+                return LocalDateTime.parse(s, f);
+            } catch (Exception ignore) {}
         }
         return null;
     }
+
 
     // ✅ Check if row is completely empty
     private static boolean isRowEmpty(Row row, DataFormatter fmt) {
