@@ -1,6 +1,6 @@
 import { useState,useEffect,useRef } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
-import { X } from 'lucide-react'
+import { X,Plus } from 'lucide-react'
 import api from '../../constants/API/axiosInstance'
 
 // ==================== FORM COMPONENTS ====================
@@ -354,31 +354,151 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
   )
 }
 
-// Card Rates Component
+// // Card Rates Component
+// const CardRates = ({ control, register, errors }) => {
+//   const { fields, append, remove } = useFieldArray({
+//     control,
+//     name: "vendorCardRates"
+//   })
+
+//   const [selectedCardType, setSelectedCardType] = useState('')
+
+//   const predefinedCardTypes = [
+//     { value: 'Credit Card', label: 'Credit Card' },
+//     { value: 'Debit Card', label: 'Debit Card' },
+//     { value: 'American Express', label: 'American Express' }
+//   ]
+
+//   const addPredefinedCardRate = () => {
+//     if (selectedCardType) {
+//       append({ cardType: selectedCardType, rate: '' })
+//       setSelectedCardType('')
+//     }
+//   }
+
+//   const addCustomCardRate = () => {
+//     append({ cardType: '', rate: '' })
+//   }
+
+//   return (
+//     <div className="bg-gray-50 p-4 rounded-lg">
+//       <div className="flex justify-between items-center mb-4">
+//         <h3 className="text-lg font-semibold text-gray-700">Card Processing Rates</h3>
+//         <div className="flex gap-3">
+//           <div className="flex gap-2">
+//             <select
+//               value={selectedCardType}
+//               onChange={(e) => setSelectedCardType(e.target.value)}
+//               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+//             >
+//               <option value="">Select predefined type</option>
+//               {predefinedCardTypes.map(option => (
+//                 <option key={option.value} value={option.value}>
+//                   {option.label}
+//                 </option>
+//               ))}
+//             </select>
+//             <button
+//               type="button"
+//               onClick={addPredefinedCardRate}
+//               disabled={!selectedCardType}
+//               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+//             >
+//               Add Selected
+//             </button>
+//           </div>
+
+//           <button
+//             type="button"
+//             onClick={addCustomCardRate}
+//             className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+//           >
+//             Add Custom Type
+//           </button>
+//         </div>
+//       </div>
+
+//       <div className="space-y-3">
+//         {fields.map((field, index) => (
+//           <CardRateItem
+//             key={field.id}
+//             index={index}
+//             register={register}
+//             errors={errors}
+//             onRemove={() => remove(index)}
+//           />
+//         ))}
+//         {fields.length === 0 && (
+//           <div className="text-center py-8 text-gray-500">
+//             <p className="text-sm">No card types added yet.</p>
+//             <p className="text-xs mt-1">Use the buttons above to add predefined types or create custom ones.</p>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   )
+// }
+
+
+// Card Rates Component in vendor - rates  
 const CardRates = ({ control, register, errors }) => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "vendorCardRates"
-  })
+  });
 
-  const [selectedCardType, setSelectedCardType] = useState('')
+  const [selectedCardType, setSelectedCardType] = useState('');
+  const [cardTypes, setCardTypes] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCardTypeName, setNewCardTypeName] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const predefinedCardTypes = [
-    { value: 'Credit Card', label: 'Credit Card' },
-    { value: 'Debit Card', label: 'Debit Card' },
-    { value: 'American Express', label: 'American Express' }
-  ]
+  // Load card types from database
+  useEffect(() => {
+    const loadCardTypes = async () => {
+      try {
+        const response = await api.get('/card-types');
+        setCardTypes(response.data);
+      } catch (error) {
+        console.error('Failed to load card types:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCardTypes();
+  }, []);
 
-  const addPredefinedCardRate = () => {
+  const addDatabaseCardRate = () => {
     if (selectedCardType) {
-      append({ cardType: selectedCardType, rate: '' })
-      setSelectedCardType('')
+      append({ cardType: selectedCardType, rate: '' });
+      setSelectedCardType('');
     }
-  }
+  };
 
-  const addCustomCardRate = () => {
-    append({ cardType: '', rate: '' })
-  }
+
+  const handleAddNewCardType = async () => {
+    if (!newCardTypeName.trim()) return;
+
+    try {
+      const response = await api.post('/card-types', {
+        cardName: newCardTypeName.trim()
+      });
+
+      // Refresh card types list
+      const updatedResponse = await api.get('/card-types');
+      setCardTypes(updatedResponse.data);
+
+      // Add the new card type to form and select it
+      append({ cardType: response.data.cardName, rate: '' });
+
+      // Reset modal
+      setNewCardTypeName('');
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Failed to create card type:', error);
+      alert('Failed to create card type. It might already exist.');
+    }
+  };
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
@@ -390,18 +510,21 @@ const CardRates = ({ control, register, errors }) => {
               value={selectedCardType}
               onChange={(e) => setSelectedCardType(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
             >
-              <option value="">Select predefined type</option>
-              {predefinedCardTypes.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              <option value="">
+                {loading ? 'Loading...' : 'Select card type'}
+              </option>
+              {cardTypes.map(cardType => (
+                <option key={cardType.id} value={cardType.cardName}>
+                  {cardType.cardName}
                 </option>
               ))}
             </select>
             <button
               type="button"
-              onClick={addPredefinedCardRate}
-              disabled={!selectedCardType}
+              onClick={addDatabaseCardRate}
+              disabled={!selectedCardType || loading}
               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               Add Selected
@@ -410,10 +533,11 @@ const CardRates = ({ control, register, errors }) => {
 
           <button
             type="button"
-            onClick={addCustomCardRate}
-            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
           >
-            Add Custom Type
+            <Plus size={16} />
+            Add New Type
           </button>
         </div>
       </div>
@@ -431,13 +555,59 @@ const CardRates = ({ control, register, errors }) => {
         {fields.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <p className="text-sm">No card types added yet.</p>
-            <p className="text-xs mt-1">Use the buttons above to add predefined types or create custom ones.</p>
+            <p className="text-xs mt-1">Use the buttons above to add card types from database or create custom ones.</p>
           </div>
         )}
       </div>
+
+      {/* Add New Card Type Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">New Card Type</h3>
+              <input
+                type="text"
+                placeholder="Enter new card type"
+                value={newCardTypeName}
+                onChange={(e) => setNewCardTypeName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddNewCardType();
+                  if (e.key === 'Escape') {
+                    setShowAddModal(false);
+                    setNewCardTypeName('');
+                  }
+                }}
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setNewCardTypeName('');
+                  }}
+                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddNewCardType}
+                  disabled={!newCardTypeName.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  )
-}
+  );
+};
+
+//export default CardRates;
 
 // ==================== VENDOR RATE FORM MODAL ====================
 const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {

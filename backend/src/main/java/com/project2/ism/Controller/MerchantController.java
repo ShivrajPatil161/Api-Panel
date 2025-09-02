@@ -79,6 +79,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -215,11 +216,12 @@ public class MerchantController {
     @GetMapping("/profile")
     public ResponseEntity<?> profile(@RequestParam String email) {
         Merchant merchant = merchantService.getMerchantByEmail(email);
+        BigDecimal walletBalance = merchantService.getWalletBalance(merchant.getId());
         MerchantListDTO dto = new MerchantListDTO(
                 merchant.getId(),
                 merchant.getBusinessName(),
                 merchant.getContactPerson().getEmail(),
-                merchant.getWalletBalance()
+                walletBalance
         );
         return ResponseEntity.ok(dto);
     }

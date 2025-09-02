@@ -419,126 +419,207 @@ const settlementCycles = [
   { key: "T2", label: "T+2 (Two Days)" }
 ];
 
-const TransactionSelectionForm = () => {
+const EnhancedTransactionSelectionForm = () => {
   const { register, watch, handleSubmit, reset, setValue } = useForm({
     defaultValues: {
+      customerType: "",
+      franchiseId: "",
       merchantId: "",
+      productId: "",
       cycle: "",
       selectedTransactions: []
     }
   });
 
-  const [availableMerchants, setAvailableMerchants] = useState([]);
-  const [selectedMerchant, setSelectedMerchant] = useState(null);
+  const [availableFranchises, setAvailableFranchises] = useState([]);
+  const [availableDirectMerchants, setAvailableDirectMerchants] = useState([]);
+  const [availableFranchiseMerchants, setAvailableFranchiseMerchants] = useState([]);
+  const [availableProducts, setAvailableProducts] = useState([]);
+  const [selectedEntity, setSelectedEntity] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [settlementCandidates, setSettlementCandidates] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [loading, setLoading] = useState(false);
   const [processingBatch, setProcessingBatch] = useState(false);
   const [settlementResult, setSettlementResult] = useState(null);
+  const [currentBatch, setCurrentBatch] = useState(null);
 
+  const customerType = watch("customerType");
+  const franchiseId = watch("franchiseId");
   const merchantId = watch("merchantId");
+  const productId = watch("productId");
   const cycle = watch("cycle");
   const selectedTransactions = watch("selectedTransactions");
 
-  // Fetch merchants on component mount
+  // Fetch initial data
   useEffect(() => {
-    const fetchMerchants = async () => {
+    const fetchInitialData = async () => {
       setLoading(true);
       try {
-        const response = await api.get("/merchants");
-        setAvailableMerchants(response.data);
+        const [franchisesResponse, directMerchantsResponse] = await Promise.all([
+          api.get("/franchise"),
+          api.get("/merchants/direct-merchant")
+        ]);
+
+        setAvailableFranchises(franchisesResponse.data);
+        setAvailableDirectMerchants(directMerchantsResponse.data);
       } catch (error) {
-        console.error("Error fetching merchants:", error);
+        console.error("Error fetching initial data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMerchants();
+    fetchInitialData();
   }, []);
 
-  // Calculate date window based on cycle
-  const getDateWindow = (cycleKey) => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    switch (cycleKey) {
-      case "T0":
-        return {
-          from: today.toISOString(),
-          to: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString()
-        };
-      case "T1":
-        const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-        return {
-          from: yesterday.toISOString(),
-          to: today.toISOString()
-        };
-      case "T2":
-        const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
-        const oneDayAgo = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-        return {
-          from: twoDaysAgo.toISOString(),
-          to: oneDayAgo.toISOString()
-        };
-      default:
-        return { from: today.toISOString(), to: today.toISOString() };
-    }
-  };
-
-  // Fetch settlement candidates when merchant and cycle are selected
+  // Reset form when customer type changes
   useEffect(() => {
-    const fetchCandidates = async () => {
-      if (!merchantId || !cycle) {
-        setSettlementCandidates([]);
-        setValue("selectedTransactions", []);
-        setSelectAll(false);
+    if (customerType) {
+      setValue("franchiseId", "");
+      setValue("merchantId", "");
+      setValue("productId", "");
+      setValue("cycle", "");
+      setValue("selectedTransactions", []);
+      setAvailableFranchiseMerchants([]);
+      setAvailableProducts([]);
+      setSelectedEntity(null);
+      setSelectedProduct(null);
+      setSettlementCandidates([]);
+      setCurrentBatch(null);
+      setSettlementResult(null);
+    }
+  }, [customerType, setValue]);
+
+  // Fetch franchise merchants when franchise is selected
+  useEffect(() => {
+    const fetchFranchiseMerchants = async () => {
+      if (!franchiseId || customerType !== "franchise") return;
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/merchants/franchise/${franchiseId}`);
+        setAvailableFranchiseMerchants(response.data);
+
+        // Set selected franchise entity
+        const franchise = availableFranchises.find(f => f.id === parseInt(franchiseId));
+        setSelectedEntity(franchise);
+      } catch (error) {
+        console.error("Error fetching franchise merchants:", error);
+        setAvailableFranchiseMerchants([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFranchiseMerchants();
+  }, [franchiseId, customerType, availableFranchises]);
+
+  // Set selected entity for direct merchant
+  useEffect(() => {
+    if (customerType === "direct" && merchantId) {
+      const merchant = availableDirectMerchants.find(m => m.id === parseInt(merchantId));
+      setSelectedEntity(merchant);
+    }
+  }, [merchantId, customerType, availableDirectMerchants]);
+
+  // Fetch products when merchant is selected
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (!merchantId) {
+        setAvailableProducts([]);
         return;
       }
 
-      // Find selected merchant info
-      const merchant = availableMerchants.find(m => m.id === parseInt(merchantId));
-      setSelectedMerchant(merchant);
-
       setLoading(true);
       try {
-        const { from, to } = getDateWindow(cycle);
-        const response = await api.get(`/api/merchants/${merchantId}/settlement/candidates`, {
-          params: { from, to, cycle }
-        });
-        setSettlementCandidates(response.data);
-        setValue("selectedTransactions", []);
-        setSelectAll(false);
-        setSettlementResult(null);
+        let response;
+        if (customerType === "franchise") {
+          response = await api.get(`/franchise/products/${franchiseId}`);
+        } else {
+          response = await api.get(`/merchants/products/${merchantId}`);
+        }
+
+        setAvailableProducts(response.data);
       } catch (error) {
-        console.error("Error fetching settlement candidates:", error);
-        setSettlementCandidates([]);
+        console.error("Error fetching products:", error);
+        setAvailableProducts([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCandidates();
-  }, [merchantId, cycle, availableMerchants, setValue]);
+    fetchProducts();
+  }, [merchantId, customerType, franchiseId]);
+
+  // Set selected product
+  useEffect(() => {
+    if (productId) {
+      const product = availableProducts.find(p => p.productId === parseInt(productId));
+      setSelectedProduct(product);
+    }
+  }, [productId, availableProducts]);
+
+  // Create batch and fetch candidates when all required fields are selected
+  useEffect(() => {
+    const createBatchAndFetchCandidates = async () => {
+      if (!merchantId || !productId || !cycle) {
+        setSettlementCandidates([]);
+        setValue("selectedTransactions", []);
+        setSelectAll(false);
+        setCurrentBatch(null);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // Step 1: Create settlement batch with product ID
+        const batchResponse = await api.post(
+          `/merchants/${merchantId}/settlement/batches?cycleKey=${cycle}&createdBy=admin&productId=${productId}`
+        );
+
+        const batch = batchResponse.data;
+        setCurrentBatch(batch);
+
+        // Step 2: Fetch settlement candidates for this batch
+        const candidatesResponse = await api.get(
+          `/merchants/${merchantId}/settlement/batches/${batch.batchId}/candidates`
+        );
+
+        setSettlementCandidates(candidatesResponse.data);
+        setValue("selectedTransactions", []);
+        setSelectAll(false);
+        setSettlementResult(null);
+
+      } catch (error) {
+        console.error("Error creating batch or fetching candidates:", error);
+        setSettlementCandidates([]);
+        setCurrentBatch(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    createBatchAndFetchCandidates();
+  }, [merchantId, productId, cycle, setValue]);
 
   const handleSelectAll = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
 
     if (newSelectAll) {
-      const allCandidateIds = settlementCandidates.map(t => t.id.toString());
+      const allCandidateIds = settlementCandidates.map(t => t.transactionReferenceId);
       setValue("selectedTransactions", allCandidateIds);
     } else {
       setValue("selectedTransactions", []);
     }
   };
 
-  const handleTransactionToggle = (transactionId) => {
+  const handleTransactionToggle = (transactionReferenceId) => {
     const currentSelected = selectedTransactions || [];
-    const transactionIdStr = transactionId.toString();
-    const newSelected = currentSelected.includes(transactionIdStr)
-      ? currentSelected.filter(id => id !== transactionIdStr)
-      : [...currentSelected, transactionIdStr];
+    const newSelected = currentSelected.includes(transactionReferenceId)
+      ? currentSelected.filter(id => id !== transactionReferenceId)
+      : [...currentSelected, transactionReferenceId];
 
     setValue("selectedTransactions", newSelected);
     setSelectAll(newSelected.length === settlementCandidates.length);
@@ -550,32 +631,32 @@ const TransactionSelectionForm = () => {
       return;
     }
 
+    if (!currentBatch) {
+      alert("No active batch found. Please refresh and try again.");
+      return;
+    }
+
     setProcessingBatch(true);
     setSettlementResult(null);
 
     try {
-      // 1. Create settlement batch
-      const batchResponse = await api.post(`/api/merchants/${merchantId}/settlement/batches`);
-      const batchId = batchResponse.data.batchId;
-
-      // 2. Settle selected transactions
+      // Settle selected transactions using the current batch
       const settleResponse = await api.post(
-        `/api/merchants/${merchantId}/settlement/batches/${batchId}/settle`,
+        `/merchants/${merchantId}/settlement/batches/${currentBatch.batchId}/settle`,
         { vendorTxIds: data.selectedTransactions }
       );
 
       setSettlementResult({
         success: true,
-        batchId,
+        batchId: currentBatch.batchId,
         results: settleResponse.data
       });
 
-      // Refresh candidates to remove settled ones
-      const { from, to } = getDateWindow(cycle);
-      const refreshResponse = await api.get(`/api/merchants/${merchantId}/settlement/candidates`, {
-        params: { from, to, cycle }
-      });
-      setSettlementCandidates(refreshResponse.data);
+      // Remove settled transactions from the list without refetching
+      const remainingCandidates = settlementCandidates.filter(
+        candidate => !data.selectedTransactions.includes(candidate.transactionReferenceId)
+      );
+      setSettlementCandidates(remainingCandidates);
       setValue("selectedTransactions", []);
       setSelectAll(false);
 
@@ -592,27 +673,53 @@ const TransactionSelectionForm = () => {
 
   const resetForm = () => {
     reset();
-    setSelectedMerchant(null);
+    setSelectedEntity(null);
+    setSelectedProduct(null);
+    setAvailableFranchiseMerchants([]);
+    setAvailableProducts([]);
     setSettlementCandidates([]);
     setSelectAll(false);
     setSettlementResult(null);
+    setCurrentBatch(null);
   };
 
   const calculateTotals = () => {
     const selectedCandidates = settlementCandidates.filter(
-      t => selectedTransactions?.includes(t.id.toString())
+      t => selectedTransactions?.includes(t.transactionReferenceId)
     );
 
     const totalAmount = selectedCandidates.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalTip = selectedCandidates.reduce((sum, t) => sum + (t.tip || 0), 0);
+    const totalCashAtPos = selectedCandidates.reduce((sum, t) => sum + (t.cashAtPos || 0), 0);
 
-    // Simplified fee calculation (you'll get actual from backend)
     const estimatedFee = totalAmount * 0.025; // 2.5% estimate
     const estimatedNet = totalAmount - estimatedFee;
 
-    return { totalAmount, estimatedFee, estimatedNet, count: selectedCandidates.length };
+    return {
+      totalAmount,
+      totalTip,
+      totalCashAtPos,
+      estimatedFee,
+      estimatedNet,
+      count: selectedCandidates.length
+    };
   };
 
   const totals = calculateTotals();
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getMerchantsForSelection = () => {
+    return customerType === "franchise" ? availableFranchiseMerchants : availableDirectMerchants;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -620,68 +727,151 @@ const TransactionSelectionForm = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Settlement Management</h1>
-          <p className="text-gray-600">Process merchant transaction settlements by cycle</p>
+          <p className="text-gray-600">Process merchant transaction settlements by cycle and product</p>
         </div>
 
         <div className="space-y-6">
           {/* Selection Fields */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Settlement Parameters</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Merchant Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Customer Type Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Merchant</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Customer Type</label>
                 <select
-                  {...register("merchantId", { required: true })}
+                  {...register("customerType", { required: true })}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={loading}
                 >
-                  <option value="">Choose merchant...</option>
-                  {availableMerchants.map((merchant) => (
-                    <option key={merchant.id} value={merchant.id}>
-                      {merchant.businessName} - {merchant.contactPersonName}
-                    </option>
-                  ))}
+                  <option value="">Select type...</option>
+                  <option value="direct">Direct Merchant</option>
+                  <option value="franchise">Franchise</option>
                 </select>
               </div>
 
+              {/* Franchise Selection (only for franchise type) */}
+              {customerType === "franchise" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Franchise</label>
+                  <select
+                    {...register("franchiseId", { required: customerType === "franchise" })}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={loading}
+                  >
+                    <option value="">Choose franchise...</option>
+                    {availableFranchises.map((franchise) => (
+                      <option key={franchise.id} value={franchise.id}>
+                        {franchise.franchiseName} - {franchise.contactPersonName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Merchant Selection */}
+              {customerType && (customerType === "direct" || franchiseId) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Merchant</label>
+                  <select
+                    {...register("merchantId", { required: true })}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={loading}
+                  >
+                    <option value="">Choose merchant...</option>
+                    {getMerchantsForSelection().map((merchant) => (
+                      <option key={merchant.id} value={merchant.id}>
+                        {merchant.businessName} - {merchant.contactPersonName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Product Selection */}
+              {merchantId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Product</label>
+                  <select
+                    {...register("productId", { required: true })}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={loading}
+                  >
+                    <option value="">Choose product...</option>
+                    {availableProducts.map((product) => (
+                      <option key={product.productId} value={product.productId}>
+                        {product.productName} - {product.productCode}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Settlement Cycle */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Settlement Cycle</label>
-                <select
-                  {...register("cycle", { required: true })}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={loading}
-                >
-                  <option value="">Select cycle...</option>
-                  {settlementCycles.map((cycleOption) => (
-                    <option key={cycleOption.key} value={cycleOption.key}>
-                      {cycleOption.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {productId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Settlement Cycle</label>
+                  <select
+                    {...register("cycle", { required: true })}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={loading}
+                  >
+                    <option value="">Select cycle...</option>
+                    {settlementCycles.map((cycleOption) => (
+                      <option key={cycleOption.key} value={cycleOption.key}>
+                        {cycleOption.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Selected Merchant Details */}
-          {selectedMerchant && (
+          {/* Batch Information */}
+          {currentBatch && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Merchant Information</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Active Settlement Batch</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">Business Name:</span>
-                  <p className="font-medium">{selectedMerchant.businessName}</p>
+                  <span className="text-gray-500">Batch ID:</span>
+                  <p className="font-medium">{currentBatch.batchId}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Status:</span>
+                  <p className="font-medium text-blue-600">{currentBatch.status}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Window Start:</span>
+                  <p className="font-medium">{formatDate(currentBatch.windowStart)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Window End:</span>
+                  <p className="font-medium">{formatDate(currentBatch.windowEnd)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Selected Entity and Product Details */}
+          {selectedEntity && selectedProduct && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Settlement Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">
+                    {customerType === "franchise" ? "Franchise:" : "Business:"}
+                  </span>
+                  <p className="font-medium">
+                    {customerType === "franchise" ? selectedEntity.franchiseName : selectedEntity.businessName}
+                  </p>
                 </div>
                 <div>
                   <span className="text-gray-500">Contact Person:</span>
-                  <p className="font-medium">{selectedMerchant.contactPersonName}</p>
+                  <p className="font-medium">{selectedEntity.contactPersonName}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Current Balance:</span>
-                  <p className="font-medium text-green-600">
-                    ₹{(selectedMerchant.walletBalance || 0).toLocaleString('en-IN')}
-                  </p>
+                  <span className="text-gray-500">Product:</span>
+                  <p className="font-medium">{selectedProduct.productName}</p>
                 </div>
                 <div>
                   <span className="text-gray-500">Settlement Cycle:</span>
@@ -709,12 +899,14 @@ const TransactionSelectionForm = () => {
               </div>
 
               {/* Transaction Headers */}
-              <div className="hidden md:grid grid-cols-6 gap-4 p-3 bg-gray-50 rounded-md mb-2 text-sm font-medium text-gray-700">
-                <div>Date</div>
+              <div className="hidden lg:grid grid-cols-8 gap-3 p-3 bg-gray-50 rounded-md mb-2 text-sm font-medium text-gray-700">
+                <div>Date/Time</div>
                 <div>Amount</div>
-                <div>Card Type</div>
-                <div>MID/TID</div>
+                <div>Consumer</div>
+                <div>Card</div>
+                <div>Auth Code</div>
                 <div>Device Serial</div>
+                <div>Status</div>
                 <div>Select</div>
               </div>
 
@@ -722,33 +914,59 @@ const TransactionSelectionForm = () => {
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {settlementCandidates.map((transaction) => (
                   <label
-                    key={transaction.id}
-                    className={`flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors ${selectedTransactions?.includes(transaction.id.toString())
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200'
+                    key={transaction.transactionReferenceId}
+                    className={`flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors ${selectedTransactions?.includes(transaction.transactionReferenceId)
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200'
                       }`}
                   >
-                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4 w-full items-center">
-                      <div className="text-sm font-medium text-gray-900">
-                        {new Date(transaction.date).toLocaleDateString('en-IN')}
+                    <div className="grid grid-cols-1 lg:grid-cols-8 gap-3 w-full items-center">
+                      <div className="text-sm">
+                        <div className="font-medium text-gray-900">
+                          {formatDate(transaction.date)}
+                        </div>
+                        <div className="text-xs text-gray-500 lg:hidden">
+                          {transaction.transactionReferenceId}
+                        </div>
                       </div>
-                      <div className="text-sm font-bold text-gray-900">
-                        ₹{(transaction.amount || 0).toLocaleString('en-IN')}
+                      <div className="text-sm">
+                        <div className="font-bold text-gray-900">
+                          ₹{(transaction.amount || 0).toLocaleString('en-IN')}
+                        </div>
+                        {transaction.tip > 0 && (
+                          <div className="text-xs text-green-600">
+                            +₹{transaction.tip} tip
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600 truncate">
+                        {transaction.consumer || transaction.payer || 'N/A'}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {transaction.cardType || 'N/A'}
+                        <div>{transaction.card || 'N/A'}</div>
+                        <div className="text-xs text-gray-500">
+                          {transaction.cardType} {transaction.brandType}
+                        </div>
                       </div>
                       <div className="text-sm text-gray-600">
-                        {transaction.mid || transaction.tid || 'N/A'}
+                        {transaction.authCode || 'N/A'}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {transaction['device serial'] || 'N/A'}
+                        {transaction.deviceSerial || 'N/A'}
                       </div>
-                      <div className="flex justify-center md:justify-start">
+                      <div className="text-sm">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${transaction.status === 'SETTLED'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                          {transaction.status}
+                        </span>
+                      </div>
+                      <div className="flex justify-center lg:justify-start">
                         <input
                           type="checkbox"
-                          checked={selectedTransactions?.includes(transaction.id.toString()) || false}
-                          onChange={() => handleTransactionToggle(transaction.id)}
+                          checked={selectedTransactions?.includes(transaction.transactionReferenceId) || false}
+                          onChange={() => handleTransactionToggle(transaction.transactionReferenceId)}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           disabled={processingBatch}
                         />
@@ -761,13 +979,13 @@ const TransactionSelectionForm = () => {
               {/* Selection Summary */}
               {selectedTransactions?.length > 0 && (
                 <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Selected:</span>
                       <p className="font-bold text-gray-900">{totals.count} transactions</p>
                     </div>
                     <div>
-                      <span className="text-gray-600">Gross Amount:</span>
+                      <span className="text-gray-600">Total Amount:</span>
                       <p className="font-bold text-gray-900">₹{totals.totalAmount.toLocaleString('en-IN')}</p>
                     </div>
                     <div>
@@ -779,18 +997,24 @@ const TransactionSelectionForm = () => {
                       <p className="font-bold text-green-600">₹{totals.estimatedNet.toLocaleString('en-IN')}</p>
                     </div>
                   </div>
+                  {totals.totalTip > 0 && (
+                    <div className="mt-2 text-sm">
+                      <span className="text-gray-600">Total Tips:</span>
+                      <span className="font-medium text-green-600 ml-2">₹{totals.totalTip.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
 
           {/* No Candidates Message */}
-          {merchantId && cycle && !loading && settlementCandidates.length === 0 && (
+          {merchantId && productId && cycle && !loading && settlementCandidates.length === 0 && currentBatch && (
             <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
               <div className="text-gray-500">
                 <p className="text-lg">No settlement candidates found</p>
                 <p className="text-sm mt-2">
-                  No unsettled transactions found for {selectedMerchant?.businessName} in the {cycle} cycle window.
+                  No unsettled transactions found for the selected merchant and product in the {cycle} cycle window.
                 </p>
               </div>
             </div>
@@ -799,12 +1023,12 @@ const TransactionSelectionForm = () => {
           {/* Settlement Result */}
           {settlementResult && (
             <div className={`rounded-lg border p-6 ${settlementResult.success
-                ? 'bg-green-50 border-green-200'
-                : 'bg-red-50 border-red-200'
+              ? 'bg-green-50 border-green-200'
+              : 'bg-red-50 border-red-200'
               }`}>
               <h3 className={`text-lg font-medium mb-4 ${settlementResult.success ? 'text-green-800' : 'text-red-800'
                 }`}>
-                Settlement {settlementResult.success ? 'Completed' : 'Failed'}
+                Settlement {settlementResult.success ? 'Initiated' : 'Failed'}
               </h3>
 
               {settlementResult.success ? (
@@ -812,23 +1036,9 @@ const TransactionSelectionForm = () => {
                   <p className="text-sm text-green-700">
                     <strong>Batch ID:</strong> {settlementResult.batchId}
                   </p>
-
-                  {settlementResult.results && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="text-green-600">Successful:</span>
-                        <p className="font-bold">{settlementResult.results.successful || 0}</p>
-                      </div>
-                      <div>
-                        <span className="text-yellow-600">Already Settled:</span>
-                        <p className="font-bold">{settlementResult.results.alreadySettled || 0}</p>
-                      </div>
-                      <div>
-                        <span className="text-red-600">Failed:</span>
-                        <p className="font-bold">{settlementResult.results.failed || 0}</p>
-                      </div>
-                    </div>
-                  )}
+                  <p className="text-sm text-green-700">
+                    Settlement batch has been created and is being processed. Status: {settlementResult.results.status || 'PROCESSING'}
+                  </p>
                 </div>
               ) : (
                 <p className="text-red-700">{settlementResult.error}</p>
@@ -841,7 +1051,9 @@ const TransactionSelectionForm = () => {
             <div className="text-center py-8">
               <div className="inline-flex items-center">
                 <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mr-3"></div>
-                <span className="text-gray-600">Loading settlement candidates...</span>
+                <span className="text-gray-600">
+                  {currentBatch ? 'Loading settlement candidates...' : 'Creating settlement batch...'}
+                </span>
               </div>
             </div>
           )}
@@ -870,16 +1082,16 @@ const TransactionSelectionForm = () => {
               Reset
             </button>
 
-            <div className="flex space-x-4">
+            <div className="flex items-center space-x-4">
               {selectedTransactions?.length > 0 && (
-                <div className="text-sm text-gray-600 self-center">
+                <div className="text-sm text-gray-600">
                   {totals.count} selected • Est. net: ₹{totals.estimatedNet.toLocaleString('en-IN')}
                 </div>
               )}
 
               <button
                 type="button"
-                disabled={!selectedTransactions?.length || processingBatch}
+                disabled={!selectedTransactions?.length || processingBatch || !currentBatch}
                 onClick={handleSubmit(onSubmit)}
                 className="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
               >
@@ -893,4 +1105,4 @@ const TransactionSelectionForm = () => {
   );
 };
 
-export default TransactionSelectionForm;
+export default EnhancedTransactionSelectionForm;

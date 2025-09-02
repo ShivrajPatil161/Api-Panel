@@ -18,12 +18,13 @@ public interface ProductSchemeAssignmentRepository extends JpaRepository<Product
 
 
     @Query("""
-        SELECT a FROM ProductSchemeAssignment a
-        WHERE a.customerType = 'MERCHANT'
-          AND a.customerId = :merchantId
-          AND a.effectiveDate <= :onDate
-          AND (a.expiryDate IS NULL OR a.expiryDate >= :onDate)
-        """)
+    SELECT a FROM ProductSchemeAssignment a
+    WHERE a.customerType = 'merchant'
+      AND a.customerId = :merchantId
+      AND a.effectiveDate <= :onDate
+      AND (a.expiryDate IS NULL OR a.expiryDate >= :onDate)
+""")
     Optional<ProductSchemeAssignment> findActiveScheme(@Param("merchantId") Long merchantId,
                                                        @Param("onDate") LocalDate onDate);
+
 }

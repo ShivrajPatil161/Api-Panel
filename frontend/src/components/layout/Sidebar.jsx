@@ -20,7 +20,8 @@ import {
   CreditCard,
   Store,
   Banknote,
-  Coins
+  Coins,
+  Eye
 } from 'lucide-react';
 
 // Reusable Menu Item Component
@@ -200,7 +201,8 @@ const getMenuItems = (userType) => {
         iconColor: '',
         children: [
           { title: 'File Upload', path: '/dashboard/others/upload', icon: Upload },
-          { title: 'Charge Calculation', path: '/dashboard/others/charges', icon: Calculator }
+          { title: 'Charge Calculation', path: '/dashboard/others/charges', icon: Calculator },
+          { title: 'Batch Status', path: '/dashboard/others/batch-status', icon: Eye }
         ]
       },
       {

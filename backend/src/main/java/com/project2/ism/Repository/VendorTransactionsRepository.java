@@ -35,6 +35,17 @@ public interface VendorTransactionsRepository extends JpaRepository<VendorTransa
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT vt FROM VendorTransactions vt WHERE vt.internalId = :id")
     Optional<VendorTransactions> lockById(@Param("id") Long id);
+
+    Optional<VendorTransactions> findByTransactionReferenceId(String vendorTxPrimaryKey);
+
+    @Query("""
+    SELECT MIN(v.date)
+    FROM VendorTransactions v
+    WHERE v.settled = false AND v.mid IN :mids
+""")
+    Optional<LocalDateTime> findEarliestUnsettledDateByMids(@Param("mids") List<String> mids);
+
+
 }
 
 

@@ -177,46 +177,184 @@ const FranchiseCardRateItem = ({ index, register, errors, onRemove }) => {
   )
 }
 
-// Card Rates Component
+// // Card Rates Component
+// const CardRates = ({ control, register, errors, watch }) => {
+//   const { fields, append, remove } = useFieldArray({
+//     control,
+//     name: "cardRates"
+//   })
+
+//   const [selectedCardType, setSelectedCardType] = useState('')
+//   const customerType = watch('customerType')
+
+//   const predefinedCardTypes = [
+//     { value: 'visa_credit', label: 'Visa Credit Card' },
+//     { value: 'visa_debit', label: 'Visa Debit Card' },
+//     { value: 'mastercard_credit', label: 'Mastercard Credit' },
+//     { value: 'mastercard_debit', label: 'Mastercard Debit' },
+//     { value: 'american_express', label: 'American Express' },
+//     { value: 'rupay', label: 'RuPay' },
+//     { value: 'diners_club', label: 'Diners Club' }
+//   ]
+
+//   const addPredefinedCardRate = () => {
+//     if (selectedCardType) {
+//       const cardTypeLabel = predefinedCardTypes.find(type => type.value === selectedCardType)?.label || selectedCardType
+
+//       if (customerType === 'franchise') {
+//         append({ cardName: cardTypeLabel, franchiseRate: '', merchantRate: '' })
+//       } else {
+//         append({ cardName: cardTypeLabel, rate: '' })
+//       }
+//       setSelectedCardType('')
+//     }
+//   }
+
+//   const addCustomCardRate = () => {
+//     if (customerType === 'franchise') {
+//       append({ cardName: '', franchiseRate: '', merchantRate: '' })
+//     } else {
+//       append({ cardName: '', rate: '' })
+//     }
+//   }
+
+//   return (
+//     <div className="bg-gray-50 p-4 rounded-lg">
+//       <div className="flex justify-between items-center mb-4">
+//         <h3 className="text-lg font-semibold text-gray-700">Category Processing Rates</h3>
+//         <div className="flex gap-3">
+//           <div className="flex gap-2">
+//             <select
+//               value={selectedCardType}
+//               onChange={(e) => setSelectedCardType(e.target.value)}
+//               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+//             >
+//               <option value="">Select predefined type</option>
+//               {predefinedCardTypes.map(option => (
+//                 <option key={option.value} value={option.value}>
+//                   {option.label}
+//                 </option>
+//               ))}
+//             </select>
+//             <button
+//               type="button"
+//               onClick={addPredefinedCardRate}
+//               disabled={!selectedCardType}
+//               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+//             >
+//               Add Selected
+//             </button>
+//           </div>
+
+//           <button
+//             type="button"
+//             onClick={addCustomCardRate}
+//             className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+//           >
+//             <Plus size={16} />
+//             Add Custom Type
+//           </button>
+//         </div>
+//       </div>
+
+//       <div className="space-y-3">
+//         {fields.map((field, index) => (
+//           customerType === 'franchise' ? (
+//             <FranchiseCardRateItem
+//               key={field.id}
+//               index={index}
+//               register={register}
+//               errors={errors}
+//               onRemove={() => remove(index)}
+//             />
+//           ) : (
+//             <DirectMerchantCardRateItem
+//               key={field.id}
+//               index={index}
+//               register={register}
+//               errors={errors}
+//               onRemove={() => remove(index)}
+//             />
+//           )
+//         ))}
+//         {fields.length === 0 && (
+//           <div className="text-center py-8 text-gray-500">
+//             <p className="text-sm">No card types added yet.</p>
+//             <p className="text-xs mt-1">Use the buttons above to add predefined types or create custom ones.</p>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   )
+// }
+
+// Card Rates Component - pricing form 
 const CardRates = ({ control, register, errors, watch }) => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "cardRates"
-  })
+  });
 
-  const [selectedCardType, setSelectedCardType] = useState('')
-  const customerType = watch('customerType')
+  const [selectedCardType, setSelectedCardType] = useState('');
+  const [cardTypes, setCardTypes] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCardTypeName, setNewCardTypeName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const customerType = watch('customerType');
 
-  const predefinedCardTypes = [
-    { value: 'visa_credit', label: 'Visa Credit Card' },
-    { value: 'visa_debit', label: 'Visa Debit Card' },
-    { value: 'mastercard_credit', label: 'Mastercard Credit' },
-    { value: 'mastercard_debit', label: 'Mastercard Debit' },
-    { value: 'american_express', label: 'American Express' },
-    { value: 'rupay', label: 'RuPay' },
-    { value: 'diners_club', label: 'Diners Club' }
-  ]
-
-  const addPredefinedCardRate = () => {
-    if (selectedCardType) {
-      const cardTypeLabel = predefinedCardTypes.find(type => type.value === selectedCardType)?.label || selectedCardType
-
-      if (customerType === 'franchise') {
-        append({ cardName: cardTypeLabel, franchiseRate: '', merchantRate: '' })
-      } else {
-        append({ cardName: cardTypeLabel, rate: '' })
+  // Load card types from database
+  useEffect(() => {
+    const loadCardTypes = async () => {
+      try {
+        const response = await api.get('/card-types');
+        setCardTypes(response.data);
+      } catch (error) {
+        console.error('Failed to load card types:', error);
+      } finally {
+        setLoading(false);
       }
-      setSelectedCardType('')
-    }
-  }
+    };
+    loadCardTypes();
+  }, []);
 
-  const addCustomCardRate = () => {
-    if (customerType === 'franchise') {
-      append({ cardName: '', franchiseRate: '', merchantRate: '' })
-    } else {
-      append({ cardName: '', rate: '' })
+  const addDatabaseCardRate = () => {
+    if (selectedCardType) {
+      if (customerType === 'franchise') {
+        append({ cardName: selectedCardType, franchiseRate: '', merchantRate: '' });
+      } else {
+        append({ cardName: selectedCardType, rate: '' });
+      }
+      setSelectedCardType('');
     }
-  }
+  };
+
+  const handleAddNewCardType = async () => {
+    if (!newCardTypeName.trim()) return;
+
+    try {
+      const response = await api.post('/card-types', {
+        cardName: newCardTypeName.trim()
+      });
+
+      // Refresh card types list
+      const updatedResponse = await api.get('/card-types');
+      setCardTypes(updatedResponse.data);
+
+      // Add the new card type to form
+      if (customerType === 'franchise') {
+        append({ cardName: response.data.cardName, franchiseRate: '', merchantRate: '' });
+      } else {
+        append({ cardName: response.data.cardName, rate: '' });
+      }
+
+      // Reset modal
+      setNewCardTypeName('');
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Failed to create card type:', error);
+      alert('Failed to create card type. It might already exist.');
+    }
+  };
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
@@ -228,18 +366,21 @@ const CardRates = ({ control, register, errors, watch }) => {
               value={selectedCardType}
               onChange={(e) => setSelectedCardType(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
             >
-              <option value="">Select predefined type</option>
-              {predefinedCardTypes.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              <option value="">
+                {loading ? 'Loading...' : 'Select card type'}
+              </option>
+              {cardTypes.map(cardType => (
+                <option key={cardType.id} value={cardType.cardName}>
+                  {cardType.cardName}
                 </option>
               ))}
             </select>
             <button
               type="button"
-              onClick={addPredefinedCardRate}
-              disabled={!selectedCardType}
+              onClick={addDatabaseCardRate}
+              disabled={!selectedCardType || loading}
               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               Add Selected
@@ -248,12 +389,14 @@ const CardRates = ({ control, register, errors, watch }) => {
 
           <button
             type="button"
-            onClick={addCustomCardRate}
-            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
           >
             <Plus size={16} />
-            Add Custom Type
+            Add New Type
           </button>
+
+    
         </div>
       </div>
 
@@ -280,13 +423,58 @@ const CardRates = ({ control, register, errors, watch }) => {
         {fields.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <p className="text-sm">No card types added yet.</p>
-            <p className="text-xs mt-1">Use the buttons above to add predefined types or create custom ones.</p>
+            <p className="text-xs mt-1">Use the buttons above to add card types from database or create custom ones.</p>
           </div>
         )}
       </div>
+
+      {/* Add New Card Type Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">New Card Type</h3>
+              <input
+                type="text"
+                placeholder="Enter new card type"
+                value={newCardTypeName}
+                onChange={(e) => setNewCardTypeName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddNewCardType();
+                  if (e.key === 'Escape') {
+                    setShowAddModal(false);
+                    setNewCardTypeName('');
+                  }
+                }}
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setNewCardTypeName('');
+                  }}
+                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddNewCardType}
+                  disabled={!newCardTypeName.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  )
-}
+  );
+};
+
 
 // ==================== PRICING SCHEME FORM MODAL ====================
 const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
