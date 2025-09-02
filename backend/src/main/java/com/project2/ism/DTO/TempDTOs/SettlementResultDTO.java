@@ -11,9 +11,9 @@ public class SettlementResultDTO {
     private BigDecimal net;
 
     // ---- factory methods ----
-    public static SettlementResultDTO ok(Long vendorTxId, BigDecimal amount, BigDecimal fee, BigDecimal net, BigDecimal after) {
+    public static SettlementResultDTO ok(String vendorTxId, BigDecimal amount, BigDecimal fee, BigDecimal net, BigDecimal after) {
         SettlementResultDTO dto = new SettlementResultDTO();
-        dto.vendorTxId = vendorTxId.toString();
+        dto.vendorTxId = vendorTxId;
         dto.status = "OK";
         dto.message = "Settled successfully. Balance after: " + after;
         dto.amount = amount;
@@ -22,17 +22,17 @@ public class SettlementResultDTO {
         return dto;
     }
 
-    public static SettlementResultDTO alreadySettled(Long vendorTxId) {
+    public static SettlementResultDTO alreadySettled(String vendorTxId) {
         SettlementResultDTO dto = new SettlementResultDTO();
-        dto.vendorTxId = vendorTxId.toString();
+        dto.vendorTxId = vendorTxId;
         dto.status = "ALREADY_SETTLED";
         dto.message = "This transaction was already settled.";
         return dto;
     }
 
-    public static SettlementResultDTO failed(Long vendorTxId, String error) {
+    public static SettlementResultDTO failed(String vendorTxId, String error) {
         SettlementResultDTO dto = new SettlementResultDTO();
-        dto.vendorTxId = vendorTxId.toString();
+        dto.vendorTxId = vendorTxId;
         dto.status = "FAILED";
         dto.message = error;
         return dto;

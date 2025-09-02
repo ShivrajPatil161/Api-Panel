@@ -127,14 +127,12 @@ import com.project2.ism.Model.ContactPerson;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.Product;
+import com.project2.ism.Model.MerchantWallet;
 import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
-import com.project2.ism.Repository.FranchiseRepository;
-import com.project2.ism.Repository.MerchantRepository;
-import com.project2.ism.Repository.OutwardTransactionRepository;
-import com.project2.ism.Repository.ProductSerialsRepository;
+import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -158,16 +156,19 @@ public class MerchantService {
 
     private final ProductSerialsRepository serialRepo;
 
+    private final MerchantWalletRepository merchantWalletRepository;
+
     public MerchantService(MerchantRepository merchantRepository,
                            FranchiseRepository franchiseRepository,
                            FileStorageService fileStorageService,
-                           UserService userService, OutwardTransactionRepository outwardRepo, ProductSerialsRepository serialRepo) {
+                           UserService userService, OutwardTransactionRepository outwardRepo, ProductSerialsRepository serialRepo, MerchantWalletRepository merchantWalletRepository) {
         this.merchantRepository = merchantRepository;
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.outwardRepo = outwardRepo;
         this.serialRepo = serialRepo;
+        this.merchantWalletRepository = merchantWalletRepository;
     }
 
     public void createMerchant(MerchantFormDTO dto) {
@@ -371,6 +372,11 @@ public class MerchantService {
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with email " + email));
     }
 
+    public BigDecimal getWalletBalance(Long merchantId) {
+        return merchantWalletRepository.findByMerchantId(merchantId)
+                .map(MerchantWallet::getAvailableBalance)
+                .orElse(BigDecimal.ZERO); // if wallet row not present yet
+    }
     public List<MerchantProductSummaryDTO> getProductsOfMerchant(Long merchantId) {
         // ✅ Step 1: Check if merchant belongs to a franchise
         boolean belongsToFranchise = merchantRepository.findFranchiseByMerchantId(merchantId).isPresent();

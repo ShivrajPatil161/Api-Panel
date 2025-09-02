@@ -27,24 +27,40 @@ public class SettlementController {
         this.batchRepo = batchRepo;
     }
 
-    @GetMapping("/candidates")
+    @GetMapping("/batches/{batchId}/candidates")
     public ResponseEntity<List<VendorTransactions>> candidates(
             @PathVariable Long merchantId,
-            @RequestParam LocalDateTime from,
-            @RequestParam LocalDateTime to) {
-        return ResponseEntity.ok(settlementService.listSettlementCandidates(merchantId, from, to));
+            @PathVariable Long batchId) {
+        MerchantSettlementBatch batch = batchRepo.findById(batchId)
+                .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
+
+        return ResponseEntity.ok(
+                settlementService.listSettlementCandidates(merchantId, batch.getWindowStart(), batch.getWindowEnd())
+        );
+    }
+
+    @GetMapping("/batches")
+    public  ResponseEntity<List<MerchantSettlementBatch>> getBatches(@PathVariable Long merchantId){
+        List<MerchantSettlementBatch> batch = settlementService.getAllBatch(merchantId);
+        return ResponseEntity.ok(batch);
     }
 
     @PostMapping("/batches")
     public ResponseEntity<BatchCreatedResponse> createBatch(
             @PathVariable Long merchantId,
-            @RequestBody BatchCreateRequest req) {
-        MerchantSettlementBatch batch = settlementService.createBatch(merchantId, req.windowStart, req.windowEnd, req.cycleKey, req.createdBy);
+            @RequestParam String cycleKey,
+            @RequestParam String createdBy) {
+
+        MerchantSettlementBatch batch = settlementService.createBatch(merchantId, cycleKey, createdBy);
+
         BatchCreatedResponse resp = new BatchCreatedResponse();
         resp.batchId = batch.getId();
         resp.status = batch.getStatus();
+        resp.windowStart = batch.getWindowStart();
+        resp.windowEnd = batch.getWindowEnd();
         return ResponseEntity.ok(resp);
     }
+
 
     @PostMapping("/batches/{batchId}/settle")
     public ResponseEntity<Map<String,Object>> settleBatch(

@@ -167,9 +167,9 @@ const CustomerDashboard = ({ userType, userId }) => {
         return userType === 'franchise' ? Store : Users;
     };
 
-    const getWalletBalance = () => {
-        return `₹${dashboardData?.walletBalance?.toFixed(2) || '0.00'}`;
-    };
+    // const getWalletBalance = () => {
+    //     return `₹${dashboardData?.walletBalance?.toFixed(2) || '0.00'}`;
+    // };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -220,13 +220,13 @@ const CustomerDashboard = ({ userType, userId }) => {
                                 color="green"
                                 subtitle="Products distributed"
                             />
-                            <StatCard
+                            {/* <StatCard
                                 title="Wallet Balance"
                                 value={getWalletBalance()}
                                 icon={Wallet}
                                 color="purple"
                                 subtitle="Available funds"
-                            />
+                            /> */}
                             <StatCard
                                 title="Active Products"
                                 value={dashboardData?.products?.length || 0}
@@ -253,14 +253,14 @@ const CustomerDashboard = ({ userType, userId }) => {
                                 color="blue"
                                 subtitle="Products assigned"
                             />
-                            <StatCard
+                            {/* <StatCard
                                 title="Wallet Balance"
                                 value={getWalletBalance()}
                                 icon={Wallet}
                                 color="purple"
                                 subtitle="Available funds"
                                 bgGradient="bg-gradient-to-br from-purple-500 to-indigo-600"
-                            />
+                            /> */}
                             <StatCard
                                 title="Active Products"
                                 value={dashboardData?.products?.length || 0}
@@ -350,7 +350,7 @@ const CustomerDashboard = ({ userType, userId }) => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 shadow-md">
+                        {/* <div className="bg-white rounded-xl p-6 shadow-md">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-slate-600 mb-1">Wallet Balance</p>
@@ -358,7 +358,7 @@ const CustomerDashboard = ({ userType, userId }) => {
                                 </div>
                                 <Wallet className="w-8 h-8 text-green-600" />
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

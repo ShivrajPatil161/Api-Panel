@@ -28,6 +28,7 @@ import ResetPassword from '../components/Auth/ResetPassword.jsx'
 import CustomerProductsList from '../components/Tables/CustomerProducts/CustomerProductsList.jsx'
 import TransactionUpload from '../components/Forms/FileUpload.jsx'
 import TransactionSelectionForm from '../components/Forms/ChargeCalculation.jsx'
+import SettlementBatchStatusMonitor from '../components/Tables/SettlementBatchStatusMonitor.jsx'
 
 
 
@@ -160,6 +161,10 @@ export const router = createBrowserRouter([
               {
                 path: "charges",
                 element: <TransactionSelectionForm />
+              },
+              {
+                path: "batch-status",
+                element: <SettlementBatchStatusMonitor />
               }
             ]
           }, {

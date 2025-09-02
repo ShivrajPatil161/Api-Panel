@@ -9,17 +9,17 @@ public class MerchantStatsDTO {
     private Long outwardTransactions;
     private Long returnTransactions;
     private Long productsAllocated;
-    private BigDecimal walletBalance;
+ //   private BigDecimal walletBalance;
 
     private List<MerchantProductSummaryDTO> products;
 
     public MerchantStatsDTO(Long merchantId, Long outwardTransactions,
-                            Long productsAllocated, BigDecimal walletBalance,
+                            Long productsAllocated, //BigDecimal walletBalance,
                             List<MerchantProductSummaryDTO> products) {
         this.merchantId = merchantId;
         this.outwardTransactions = outwardTransactions;
         this.productsAllocated = productsAllocated;
-        this.walletBalance = walletBalance;
+        //this.walletBalance = walletBalance;
         this.products = products;
     }
 
@@ -57,13 +57,13 @@ public class MerchantStatsDTO {
         this.productsAllocated = productsAllocated;
     }
 
-    public BigDecimal getWalletBalance() {
-        return walletBalance;
-    }
-
-    public void setWalletBalance(BigDecimal walletBalance) {
-        this.walletBalance = walletBalance;
-    }
+//    public BigDecimal getWalletBalance() {
+//        return walletBalance;
+//    }
+//
+//    public void setWalletBalance(BigDecimal walletBalance) {
+//        this.walletBalance = walletBalance;
+//    }
 
     public List<MerchantProductSummaryDTO> getProducts() {
         return products;
