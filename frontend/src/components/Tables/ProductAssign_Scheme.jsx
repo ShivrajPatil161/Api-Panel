@@ -68,16 +68,7 @@ const ProductAssignment = () => {
         return scheme ? scheme.name : `Scheme ${schemeId}`
     }
 
-    const getProductLabel = (product) => {
-        const productMap = {
-            'pos_machine': 'POS Machine',
-            'soundbox': 'Soundbox',
-            'qr_scanner': 'QR Scanner',
-            'card_reader': 'Card Reader'
-        }
-        return productMap[product] || product
-    }
-
+   
     const columns = useMemo(() => [
         {
             accessorKey: 'customerId',

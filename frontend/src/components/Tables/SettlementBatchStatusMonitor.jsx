@@ -106,19 +106,19 @@ const SettlementBatchStatusMonitor = () => {
                 const batchDetailsPromises = response.data.map(async (batch) => {
                     try {
                         const statusResponse = await api.get(
-                            `/merchants/${merchantId}/settlement/batches/${batch.batchId}/status`
+                            `/merchants/${merchantId}/settlement/batches/${batch.id}/status`
                         );
-                        return { batchId: batch.batchId, details: statusResponse.data };
+                        return { id: batch.id, details: statusResponse.data };
                     } catch (error) {
-                        console.error(`Error fetching details for batch ${batch.batchId}:`, error);
-                        return { batchId: batch.batchId, details: null, error: true };
+                        console.error(`Error fetching details for batch ${batch.id}:`, error);
+                        return { id: batch.id, details: null, error: true };
                     }
                 });
 
                 const allBatchDetails = await Promise.all(batchDetailsPromises);
                 const batchDetailsMap = {};
-                allBatchDetails.forEach(({ batchId, details, error }) => {
-                    batchDetailsMap[batchId] = { details, error };
+                allBatchDetails.forEach(({ id, details, error }) => {
+                    batchDetailsMap[id] = { details, error };
                 });
                 setBatchDetails(batchDetailsMap);
 
@@ -165,19 +165,19 @@ const SettlementBatchStatusMonitor = () => {
             const batchDetailsPromises = settlementBatches.map(async (batch) => {
                 try {
                     const statusResponse = await api.get(
-                        `/merchants/${merchantId}/settlement/batches/${batch.batchId}/status`
+                        `/merchants/${merchantId}/settlement/batches/${batch.id}/status`
                     );
-                    return { batchId: batch.batchId, details: statusResponse.data };
+                    return { id: batch.id, details: statusResponse.data };
                 } catch (error) {
-                    console.error(`Error fetching details for batch ${batch.batchId}:`, error);
-                    return { batchId: batch.batchId, details: null, error: true };
+                    console.error(`Error fetching details for batch ${batch.id}:`, error);
+                    return { id: batch.id, details: null, error: true };
                 }
             });
 
             const allBatchDetails = await Promise.all(batchDetailsPromises);
             const batchDetailsMap = {};
-            allBatchDetails.forEach(({ batchId, details, error }) => {
-                batchDetailsMap[batchId] = { details, error };
+            allBatchDetails.forEach(({ id, details, error }) => {
+                batchDetailsMap[id] = { details, error };
             });
             setBatchDetails(batchDetailsMap);
         } catch (error) {
@@ -344,18 +344,18 @@ const SettlementBatchStatusMonitor = () => {
 
                             <div className="space-y-4">
                                 {settlementBatches.map((batch) => {
-                                    const batchDetail = batchDetails[batch.batchId];
+                                    const batchDetail = batchDetails[batch.id];
                                     const details = batchDetail?.details;
                                     const hasError = batchDetail?.error;
 
                                     return (
-                                        <div key={batch.batchId} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                        <div key={batch.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                                             {/* Batch Header */}
                                             <div className="flex justify-between items-start mb-4">
                                                 <div className="flex-1">
                                                     <div className="flex items-center space-x-3">
                                                         <h3 className="text-lg font-medium text-gray-900">
-                                                            Batch #{batch.batchId}
+                                                            Batch #{batch.id}
                                                         </h3>
                                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(batch.status)}`}>
                                                             {batch.status}
@@ -371,11 +371,11 @@ const SettlementBatchStatusMonitor = () => {
                                                     </p>
                                                 </div>
                                                 <button
-                                                    onClick={() => refreshBatchStatus(batch.batchId)}
-                                                    disabled={refreshing[batch.batchId]}
+                                                    onClick={() => refreshBatchStatus(batch.id)}
+                                                    disabled={refreshing[batch.id]}
                                                     className="px-3 py-1 text-sm text-blue-600 border border-blue-600 rounded hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    {refreshing[batch.batchId] ? "..." : "Refresh"}
+                                                    {refreshing[batch.id] ? "..." : "Refresh"}
                                                 </button>
                                             </div>
 

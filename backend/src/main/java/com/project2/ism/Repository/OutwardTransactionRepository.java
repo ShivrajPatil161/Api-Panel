@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 @Repository
 public interface OutwardTransactionRepository extends JpaRepository<OutwardTransactions, Long> {
-    Optional<OutwardTransactions> findByDeliveryNumber(String deliveryNumber);
 
     boolean existsByDeliveryNumber(String deliveryNumber);
 
