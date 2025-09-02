@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -60,4 +61,52 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
 
     @Query("select psn.mid, psn.tid, psn.sid, psn.vpaid from ProductSerialNumbers psn where psn.merchant.id = :merchantId")
     List<Object[]> findIdentifiersByMerchant(@Param("merchantId") Long merchantId);
+
+
+
+    /**
+     * Get device identifiers for a specific merchant
+     */
+    @Query("""
+        SELECT psn.mid, psn.tid, psn.sid , psn.vpaid
+        FROM ProductSerialNumbers psn 
+        WHERE psn.merchant.id = :merchantId 
+        AND psn.outwardTransaction IS NOT NULL
+        """)
+    List<Object[]> findDeviceIdentifiersByMerchant(@Param("merchantId") Long merchantId);
+
+    /**
+     * Find device by MID and TID combination (most reliable)
+     */
+//    @Query("""
+//        SELECT psn FROM ProductSerialNumbers psn
+//        WHERE psn.mid = :mid AND psn.tid = :tid
+//        AND psn.outwardTransaction IS NOT NULL
+//        """)
+//    Optional<ProductSerialNumbers> findByMidAndTid(@Param("mid") String mid, @Param("tid") String tid);
+
+    List<ProductSerialNumbers> findByMidAndTid(String mid, String tid);
+
+
+    /**
+     * Find device by MID only
+     */
+    @Query("""
+        SELECT psn FROM ProductSerialNumbers psn 
+        WHERE psn.mid = :mid 
+        AND psn.outwardTransaction IS NOT NULL
+        ORDER BY psn.id DESC
+        """)
+    Optional<ProductSerialNumbers> findByMid(@Param("mid") String mid);
+
+    /**
+     * Find device by TID only
+     */
+    @Query("""
+        SELECT psn FROM ProductSerialNumbers psn 
+        WHERE psn.tid = :tid 
+        AND psn.outwardTransaction IS NOT NULL
+        ORDER BY psn.id DESC
+        """)
+    Optional<ProductSerialNumbers> findByTid(@Param("tid") String tid);
 }

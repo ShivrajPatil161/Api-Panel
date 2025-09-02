@@ -36,4 +36,13 @@ public class ProductSchemeAssignmentController {
     ) {
         return ResponseEntity.ok(assignmentService.getAssignmentsByCustomer(id, type.toUpperCase()));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductSchemeAssignmentDTO> update(
+            @PathVariable Long id,
+            @RequestBody ProductSchemeAssignmentDTO dto
+    ) {
+        return ResponseEntity.ok(assignmentService.updateAssignment(id, dto));
+    }
+
 }
