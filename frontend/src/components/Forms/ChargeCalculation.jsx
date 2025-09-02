@@ -419,6 +419,31 @@ const settlementCycles = [
   { key: "T2", label: "T+2 (Two Days)" }
 ];
 
+// Toast Component
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+      }`}>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">{message}</span>
+        <button
+          onClick={onClose}
+          className="ml-3 text-white hover:text-gray-200"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const EnhancedTransactionSelectionForm = () => {
   const { register, watch, handleSubmit, reset, setValue } = useForm({
     defaultValues: {
@@ -441,8 +466,9 @@ const EnhancedTransactionSelectionForm = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [loading, setLoading] = useState(false);
   const [processingBatch, setProcessingBatch] = useState(false);
-  const [settlementResult, setSettlementResult] = useState(null);
+  const [creatingBatch, setCreatingBatch] = useState(false);
   const [currentBatch, setCurrentBatch] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const customerType = watch("customerType");
   const franchiseId = watch("franchiseId");
@@ -450,6 +476,14 @@ const EnhancedTransactionSelectionForm = () => {
   const productId = watch("productId");
   const cycle = watch("cycle");
   const selectedTransactions = watch("selectedTransactions");
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
+  const hideToast = () => {
+    setToast(null);
+  };
 
   // Fetch initial data
   useEffect(() => {
@@ -465,6 +499,7 @@ const EnhancedTransactionSelectionForm = () => {
         setAvailableDirectMerchants(directMerchantsResponse.data);
       } catch (error) {
         console.error("Error fetching initial data:", error);
+        showToast("Failed to load initial data", "error");
       } finally {
         setLoading(false);
       }
@@ -487,7 +522,7 @@ const EnhancedTransactionSelectionForm = () => {
       setSelectedProduct(null);
       setSettlementCandidates([]);
       setCurrentBatch(null);
-      setSettlementResult(null);
+      setSelectAll(false);
     }
   }, [customerType, setValue]);
 
@@ -501,12 +536,12 @@ const EnhancedTransactionSelectionForm = () => {
         const response = await api.get(`/merchants/franchise/${franchiseId}`);
         setAvailableFranchiseMerchants(response.data);
 
-        // Set selected franchise entity
         const franchise = availableFranchises.find(f => f.id === parseInt(franchiseId));
         setSelectedEntity(franchise);
       } catch (error) {
         console.error("Error fetching franchise merchants:", error);
         setAvailableFranchiseMerchants([]);
+        showToast("Failed to load franchise merchants", "error");
       } finally {
         setLoading(false);
       }
@@ -544,6 +579,7 @@ const EnhancedTransactionSelectionForm = () => {
       } catch (error) {
         console.error("Error fetching products:", error);
         setAvailableProducts([]);
+        showToast("Failed to load products", "error");
       } finally {
         setLoading(false);
       }
@@ -560,48 +596,42 @@ const EnhancedTransactionSelectionForm = () => {
     }
   }, [productId, availableProducts]);
 
-  // Create batch and fetch candidates when all required fields are selected
-  useEffect(() => {
-    const createBatchAndFetchCandidates = async () => {
-      if (!merchantId || !productId || !cycle) {
-        setSettlementCandidates([]);
-        setValue("selectedTransactions", []);
-        setSelectAll(false);
-        setCurrentBatch(null);
-        return;
-      }
+  const createBatch = async () => {
+    if (!merchantId || !productId || !cycle) {
+      showToast("Please select merchant, product, and cycle first", "error");
+      return;
+    }
 
-      setLoading(true);
-      try {
-        // Step 1: Create settlement batch with product ID
-        const batchResponse = await api.post(
-          `/merchants/${merchantId}/settlement/batches?cycleKey=${cycle}&createdBy=admin&productId=${productId}`
-        );
+    setCreatingBatch(true);
+    try {
+      // Create settlement batch
+      const batchResponse = await api.post(
+        `/merchants/${merchantId}/settlement/batches?cycleKey=${cycle}&createdBy=admin&productId=${productId}`
+      );
 
-        const batch = batchResponse.data;
-        setCurrentBatch(batch);
+      const batch = batchResponse.data;
+      setCurrentBatch(batch);
 
-        // Step 2: Fetch settlement candidates for this batch
-        const candidatesResponse = await api.get(
-          `/merchants/${merchantId}/settlement/batches/${batch.batchId}/candidates`
-        );
+      // Fetch settlement candidates
+      const candidatesResponse = await api.get(
+        `/merchants/${merchantId}/settlement/batches/${batch.batchId}/candidates`
+      );
 
-        setSettlementCandidates(candidatesResponse.data);
-        setValue("selectedTransactions", []);
-        setSelectAll(false);
-        setSettlementResult(null);
+      setSettlementCandidates(candidatesResponse.data);
+      setValue("selectedTransactions", []);
+      setSelectAll(false);
 
-      } catch (error) {
-        console.error("Error creating batch or fetching candidates:", error);
-        setSettlementCandidates([]);
-        setCurrentBatch(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+      showToast(`Batch created successfully! Found ${candidatesResponse.data.length} candidates`);
 
-    createBatchAndFetchCandidates();
-  }, [merchantId, productId, cycle, setValue]);
+    } catch (error) {
+      console.error("Error creating batch:", error);
+      showToast(error.response?.data?.message || "Failed to create batch", "error");
+      setCurrentBatch(null);
+      setSettlementCandidates([]);
+    } finally {
+      setCreatingBatch(false);
+    }
+  };
 
   const handleSelectAll = () => {
     const newSelectAll = !selectAll;
@@ -627,45 +657,31 @@ const EnhancedTransactionSelectionForm = () => {
 
   const onSubmit = async (data) => {
     if (!data.selectedTransactions?.length) {
-      alert("Please select at least one transaction to settle.");
+      showToast("Please select at least one transaction to settle", "error");
       return;
     }
 
     if (!currentBatch) {
-      alert("No active batch found. Please refresh and try again.");
+      showToast("No active batch found. Please create a batch first", "error");
       return;
     }
 
     setProcessingBatch(true);
-    setSettlementResult(null);
 
     try {
-      // Settle selected transactions using the current batch
       const settleResponse = await api.post(
         `/merchants/${merchantId}/settlement/batches/${currentBatch.batchId}/settle`,
         { vendorTxIds: data.selectedTransactions }
       );
 
-      setSettlementResult({
-        success: true,
-        batchId: currentBatch.batchId,
-        results: settleResponse.data
-      });
+      showToast(`Successfully settled ${data.selectedTransactions.length} transactions!`);
 
-      // Remove settled transactions from the list without refetching
-      const remainingCandidates = settlementCandidates.filter(
-        candidate => !data.selectedTransactions.includes(candidate.transactionReferenceId)
-      );
-      setSettlementCandidates(remainingCandidates);
-      setValue("selectedTransactions", []);
-      setSelectAll(false);
+      // Reset form after successful settlement
+      resetForm();
 
     } catch (error) {
       console.error("Error processing settlement:", error);
-      setSettlementResult({
-        success: false,
-        error: error.response?.data?.message || error.message
-      });
+      showToast(error.response?.data?.message || "Failed to process settlement", "error");
     } finally {
       setProcessingBatch(false);
     }
@@ -679,7 +695,6 @@ const EnhancedTransactionSelectionForm = () => {
     setAvailableProducts([]);
     setSettlementCandidates([]);
     setSelectAll(false);
-    setSettlementResult(null);
     setCurrentBatch(null);
   };
 
@@ -689,18 +704,13 @@ const EnhancedTransactionSelectionForm = () => {
     );
 
     const totalAmount = selectedCandidates.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const totalTip = selectedCandidates.reduce((sum, t) => sum + (t.tip || 0), 0);
-    const totalCashAtPos = selectedCandidates.reduce((sum, t) => sum + (t.cashAtPos || 0), 0);
-
-    const estimatedFee = totalAmount * 0.025; // 2.5% estimate
-    const estimatedNet = totalAmount - estimatedFee;
+    const totalFee = selectedCandidates.reduce((sum, t) => sum + (t.fee || 0), 0);
+    const totalNet = selectedCandidates.reduce((sum, t) => sum + (t.netAmount || 0), 0);
 
     return {
       totalAmount,
-      totalTip,
-      totalCashAtPos,
-      estimatedFee,
-      estimatedNet,
+      totalFee,
+      totalNet,
       count: selectedCandidates.length
     };
   };
@@ -721,10 +731,19 @@ const EnhancedTransactionSelectionForm = () => {
     return customerType === "franchise" ? availableFranchiseMerchants : availableDirectMerchants;
   };
 
+  const canCreateBatch = merchantId && productId && cycle && !currentBatch;
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
+
       <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Settlement Management</h1>
           <p className="text-gray-600">Process merchant transaction settlements by cycle and product</p>
@@ -741,7 +760,7 @@ const EnhancedTransactionSelectionForm = () => {
                 <select
                   {...register("customerType", { required: true })}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={loading}
+                  disabled={loading || currentBatch}
                 >
                   <option value="">Select type...</option>
                   <option value="direct">Direct Merchant</option>
@@ -749,14 +768,14 @@ const EnhancedTransactionSelectionForm = () => {
                 </select>
               </div>
 
-              {/* Franchise Selection (only for franchise type) */}
+              {/* Franchise Selection */}
               {customerType === "franchise" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Select Franchise</label>
                   <select
                     {...register("franchiseId", { required: customerType === "franchise" })}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    disabled={loading}
+                    disabled={loading || currentBatch}
                   >
                     <option value="">Choose franchise...</option>
                     {availableFranchises.map((franchise) => (
@@ -775,7 +794,7 @@ const EnhancedTransactionSelectionForm = () => {
                   <select
                     {...register("merchantId", { required: true })}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    disabled={loading}
+                    disabled={loading || currentBatch}
                   >
                     <option value="">Choose merchant...</option>
                     {getMerchantsForSelection().map((merchant) => (
@@ -794,7 +813,7 @@ const EnhancedTransactionSelectionForm = () => {
                   <select
                     {...register("productId", { required: true })}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    disabled={loading}
+                    disabled={loading || currentBatch}
                   >
                     <option value="">Choose product...</option>
                     {availableProducts.map((product) => (
@@ -813,7 +832,7 @@ const EnhancedTransactionSelectionForm = () => {
                   <select
                     {...register("cycle", { required: true })}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    disabled={loading}
+                    disabled={loading || currentBatch}
                   >
                     <option value="">Select cycle...</option>
                     {settlementCycles.map((cycleOption) => (
@@ -824,35 +843,59 @@ const EnhancedTransactionSelectionForm = () => {
                   </select>
                 </div>
               )}
+
+              {/* Create Batch Button */}
+              {canCreateBatch && (
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={createBatch}
+                    disabled={creatingBatch || !canCreateBatch}
+                    className="w-full px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors font-medium"
+                  >
+                    {creatingBatch ? 'Creating Batch...' : 'Create Settlement Batch'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Batch Information */}
           {currentBatch && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Active Settlement Batch</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+              <div className="flex justify-between items-start">
                 <div>
-                  <span className="text-gray-500">Batch ID:</span>
-                  <p className="font-medium">{currentBatch.batchId}</p>
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">Active Settlement Batch</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Batch ID:</span>
+                      <p className="font-medium">{currentBatch.batchId}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Status:</span>
+                      <p className="font-medium text-blue-600">{currentBatch.status}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Window Start:</span>
+                      <p className="font-medium">{formatDate(currentBatch.windowStart)}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Window End:</span>
+                      <p className="font-medium">{formatDate(currentBatch.windowEnd)}</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-gray-500">Status:</span>
-                  <p className="font-medium text-blue-600">{currentBatch.status}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Window Start:</span>
-                  <p className="font-medium">{formatDate(currentBatch.windowStart)}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Window End:</span>
-                  <p className="font-medium">{formatDate(currentBatch.windowEnd)}</p>
-                </div>
+                <button
+                  onClick={resetForm}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Cancel Batch
+                </button>
               </div>
             </div>
           )}
 
-          {/* Selected Entity and Product Details */}
+          {/* Selected Details */}
           {selectedEntity && selectedProduct && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Settlement Details</h2>
@@ -898,78 +941,69 @@ const EnhancedTransactionSelectionForm = () => {
                 </button>
               </div>
 
-              {/* Transaction Headers */}
-              <div className="hidden lg:grid grid-cols-8 gap-3 p-3 bg-gray-50 rounded-md mb-2 text-sm font-medium text-gray-700">
-                <div>Date/Time</div>
-                <div>Amount</div>
-                <div>Consumer</div>
-                <div>Card</div>
-                <div>Auth Code</div>
-                <div>Device Serial</div>
-                <div>Status</div>
-                <div>Select</div>
-              </div>
-
               {/* Transaction List */}
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {settlementCandidates.map((transaction) => (
                   <label
                     key={transaction.transactionReferenceId}
-                    className={`flex items-center p-3 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors ${selectedTransactions?.includes(transaction.transactionReferenceId)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200'
+                    className={`flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${selectedTransactions?.includes(transaction.transactionReferenceId)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200'
                       }`}
                   >
-                    <div className="grid grid-cols-1 lg:grid-cols-8 gap-3 w-full items-center">
-                      <div className="text-sm">
-                        <div className="font-medium text-gray-900">
+                    <input
+                      type="checkbox"
+                      checked={selectedTransactions?.includes(transaction.transactionReferenceId) || false}
+                      onChange={() => handleTransactionToggle(transaction.transactionReferenceId)}
+                      className="mr-4 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      disabled={processingBatch}
+                    />
+
+                    <div className="flex-1 grid grid-cols-1 lg:grid-cols-6 gap-4 items-center">
+                      <div className="lg:col-span-2">
+                        <div className="text-sm font-medium text-gray-900">
                           {formatDate(transaction.date)}
                         </div>
-                        <div className="text-xs text-gray-500 lg:hidden">
-                          {transaction.transactionReferenceId}
+                        <div className="text-xs text-gray-500 mt-1">
+                          ID: {transaction.transactionReferenceId}
                         </div>
                       </div>
-                      <div className="text-sm">
-                        <div className="font-bold text-gray-900">
+
+                      <div>
+                        <div className="text-sm font-bold text-gray-900">
                           ₹{(transaction.amount || 0).toLocaleString('en-IN')}
                         </div>
-                        {transaction.tip > 0 && (
-                          <div className="text-xs text-green-600">
-                            +₹{transaction.tip} tip
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-600 truncate">
-                        {transaction.consumer || transaction.payer || 'N/A'}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        <div>{transaction.card || 'N/A'}</div>
                         <div className="text-xs text-gray-500">
                           {transaction.cardType} {transaction.brandType}
                         </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {transaction.authCode || 'N/A'}
+
+                      <div>
+                        {transaction.fee > 0 ? (
+                          <>
+                            <div className="text-sm text-red-600">
+                              -₹{transaction.fee.toLocaleString('en-IN')}
+                            </div>
+                            <div className="text-xs text-gray-500">Fee ({transaction.appliedRate}%)</div>
+                          </>
+                        ) : (
+                          <div className="text-xs text-red-500">{transaction.error || 'No rate'}</div>
+                        )}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {transaction.deviceSerial || 'N/A'}
+
+                      <div>
+                        {transaction.netAmount > 0 ? (
+                          <div className="text-sm font-medium text-green-600">
+                            ₹{transaction.netAmount.toLocaleString('en-IN')}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-400">-</div>
+                        )}
+                        <div className="text-xs text-gray-500">Net Amount</div>
                       </div>
-                      <div className="text-sm">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${transaction.status === 'SETTLED'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                          {transaction.status}
-                        </span>
-                      </div>
-                      <div className="flex justify-center lg:justify-start">
-                        <input
-                          type="checkbox"
-                          checked={selectedTransactions?.includes(transaction.transactionReferenceId) || false}
-                          onChange={() => handleTransactionToggle(transaction.transactionReferenceId)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          disabled={processingBatch}
-                        />
+
+                      <div>
+                        <div className="text-xs text-gray-600">{transaction.cardName || 'Unknown Card'}</div>
                       </div>
                     </div>
                   </label>
@@ -978,7 +1012,7 @@ const EnhancedTransactionSelectionForm = () => {
 
               {/* Selection Summary */}
               {selectedTransactions?.length > 0 && (
-                <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Selected:</span>
@@ -989,84 +1023,54 @@ const EnhancedTransactionSelectionForm = () => {
                       <p className="font-bold text-gray-900">₹{totals.totalAmount.toLocaleString('en-IN')}</p>
                     </div>
                     <div>
-                      <span className="text-gray-600">Est. Fee (2.5%):</span>
-                      <p className="font-bold text-red-600">₹{totals.estimatedFee.toLocaleString('en-IN')}</p>
+                      <span className="text-gray-600">Total Fees:</span>
+                      <p className="font-bold text-red-600">₹{totals.totalFee.toLocaleString('en-IN')}</p>
                     </div>
                     <div>
-                      <span className="text-gray-600">Est. Net Amount:</span>
-                      <p className="font-bold text-green-600">₹{totals.estimatedNet.toLocaleString('en-IN')}</p>
+                      <span className="text-gray-600">Net Settlement:</span>
+                      <p className="font-bold text-green-600">₹{totals.totalNet.toLocaleString('en-IN')}</p>
                     </div>
                   </div>
-                  {totals.totalTip > 0 && (
-                    <div className="mt-2 text-sm">
-                      <span className="text-gray-600">Total Tips:</span>
-                      <span className="font-medium text-green-600 ml-2">₹{totals.totalTip.toLocaleString('en-IN')}</span>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
           )}
 
           {/* No Candidates Message */}
-          {merchantId && productId && cycle && !loading && settlementCandidates.length === 0 && currentBatch && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+          {currentBatch && !loading && settlementCandidates.length === 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
               <div className="text-gray-500">
-                <p className="text-lg">No settlement candidates found</p>
+                <p className="text-lg font-medium">No settlement candidates found</p>
                 <p className="text-sm mt-2">
-                  No unsettled transactions found for the selected merchant and product in the {cycle} cycle window.
+                  No transactions are available for settlement in the selected {cycle} cycle window.
                 </p>
               </div>
             </div>
           )}
 
-          {/* Settlement Result */}
-          {settlementResult && (
-            <div className={`rounded-lg border p-6 ${settlementResult.success
-              ? 'bg-green-50 border-green-200'
-              : 'bg-red-50 border-red-200'
-              }`}>
-              <h3 className={`text-lg font-medium mb-4 ${settlementResult.success ? 'text-green-800' : 'text-red-800'
-                }`}>
-                Settlement {settlementResult.success ? 'Initiated' : 'Failed'}
-              </h3>
-
-              {settlementResult.success ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-green-700">
-                    <strong>Batch ID:</strong> {settlementResult.batchId}
-                  </p>
-                  <p className="text-sm text-green-700">
-                    Settlement batch has been created and is being processed. Status: {settlementResult.results.status || 'PROCESSING'}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-red-700">{settlementResult.error}</p>
-              )}
-            </div>
-          )}
-
-          {/* Loading Indicator */}
-          {loading && (
+          {/* Loading Indicators */}
+          {(loading || creatingBatch) && (
             <div className="text-center py-8">
               <div className="inline-flex items-center">
                 <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mr-3"></div>
                 <span className="text-gray-600">
-                  {currentBatch ? 'Loading settlement candidates...' : 'Creating settlement batch...'}
+                  {creatingBatch ? 'Creating settlement batch...' : 'Loading...'}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Processing Indicator */}
+          {/* Processing Overlay */}
           {processingBatch && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-                <div className="flex items-center">
+                <div className="flex items-center mb-4">
                   <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mr-3"></div>
-                  <span className="text-gray-700">Processing settlement batch...</span>
+                  <span className="text-gray-700 font-medium">Processing Settlement</span>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">Please wait while we settle your transactions.</p>
+                <p className="text-sm text-gray-500">
+                  Settling {selectedTransactions?.length} transactions...
+                </p>
               </div>
             </div>
           )}
@@ -1079,13 +1083,13 @@ const EnhancedTransactionSelectionForm = () => {
               className="px-6 py-3 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               disabled={processingBatch}
             >
-              Reset
+              Reset All
             </button>
 
             <div className="flex items-center space-x-4">
               {selectedTransactions?.length > 0 && (
                 <div className="text-sm text-gray-600">
-                  {totals.count} selected • Est. net: ₹{totals.estimatedNet.toLocaleString('en-IN')}
+                  {totals.count} selected • Net: ₹{totals.totalNet.toLocaleString('en-IN')}
                 </div>
               )}
 
@@ -1095,7 +1099,10 @@ const EnhancedTransactionSelectionForm = () => {
                 onClick={handleSubmit(onSubmit)}
                 className="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors font-medium"
               >
-                {processingBatch ? 'Processing...' : `Settle ${selectedTransactions?.length || 0} Transactions`}
+                {processingBatch
+                  ? 'Processing...'
+                  : `Settle ${selectedTransactions?.length || 0} Transaction${selectedTransactions?.length === 1 ? '' : 's'}`
+                }
               </button>
             </div>
           </div>

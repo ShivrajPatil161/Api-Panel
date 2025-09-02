@@ -1,16 +1,16 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.DTO.TempDTOs.SettlementCandidateDTO;
 import com.project2.ism.DTO.TempDTOs.SettlementResultDTO;
 import com.project2.ism.Model.*;
 import com.project2.ism.Model.PricingScheme.CardRate;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Async;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.UnexpectedRollbackException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -18,11 +18,11 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 @Service
 public class SettlementService {
+
+    private static final Logger log = LoggerFactory.getLogger(SettlementService.class);
 
     private final ProductSerialsRepository serialRepo;
     private final VendorTransactionsRepository vendorRepo;
@@ -32,19 +32,15 @@ public class SettlementService {
     private final MerchantTransDetRepository merchantTxnRepo;
     private final ProductSchemeAssignmentRepository schemeAssignRepo;
     private final CardRateRepository cardRateRepo;
-    private final Executor taskExecutor; // configured bean for async
-    @Autowired
-    @Lazy
-    private SettlementAsyncService asyncService;
 
     public SettlementService(ProductSerialsRepository serialRepo,
                              VendorTransactionsRepository vendorRepo,
                              MerchantSettlementBatchRepository batchRepo,
                              MerchantWalletRepository walletRepo,
-                             MerchantRepository merchantRepository, MerchantTransDetRepository merchantTxnRepo,
+                             MerchantRepository merchantRepository,
+                             MerchantTransDetRepository merchantTxnRepo,
                              ProductSchemeAssignmentRepository schemeAssignRepo,
-                             CardRateRepository cardRateRepo,
-                             @Qualifier("settlementExecutor") Executor taskExecutor) {
+                             CardRateRepository cardRateRepo) {
         this.serialRepo = serialRepo;
         this.vendorRepo = vendorRepo;
         this.batchRepo = batchRepo;
@@ -53,67 +49,116 @@ public class SettlementService {
         this.merchantTxnRepo = merchantTxnRepo;
         this.schemeAssignRepo = schemeAssignRepo;
         this.cardRateRepo = cardRateRepo;
-        this.taskExecutor = taskExecutor;
     }
 
-    /* ---------- candidates listing ---------- */
-    public List<VendorTransactions> listSettlementCandidates(Long merchantId, LocalDateTime from, LocalDateTime to) {
+    /* ---------- candidates listing (unchanged) ---------- */
+//    public List<VendorTransactions> listSettlementCandidates(Long merchantId, LocalDateTime from, LocalDateTime to) {
+//        List<Object[]> rows = serialRepo.findIdentifiersByMerchant(merchantId);
+//        Set<String> mids = new HashSet<>(), tids = new HashSet<>(), sids = new HashSet<>();
+//        for (Object[] r : rows) {
+//            if (r[0] != null) mids.add((String) r[0]);
+//            if (r[1] != null) tids.add((String) r[1]);
+//            if (r[2] != null) sids.add((String) r[2]);
+//        }
+//        return vendorRepo.findCandidates(
+//                from, to,
+//                mids.isEmpty() ? List.of("") : new ArrayList<>(mids), mids.size(),
+//                tids.isEmpty() ? List.of("") : new ArrayList<>(tids), tids.size(),
+//                sids.isEmpty() ? List.of("") : new ArrayList<>(sids), sids.size()
+//        );
+//    }
+    public List<SettlementCandidateDTO> listSettlementCandidates(Long merchantId, LocalDateTime from, LocalDateTime to) {
         List<Object[]> rows = serialRepo.findIdentifiersByMerchant(merchantId);
-        Set<String> mids = new HashSet<>();
-        Set<String> tids = new HashSet<>();
-        Set<String> sids = new HashSet<>();
-
+        Set<String> mids = new HashSet<>(), tids = new HashSet<>(), sids = new HashSet<>();
         for (Object[] r : rows) {
             if (r[0] != null) mids.add((String) r[0]);
             if (r[1] != null) tids.add((String) r[1]);
             if (r[2] != null) sids.add((String) r[2]);
         }
 
-        return vendorRepo.findCandidates(
+        List<VendorTransactions> candidates = vendorRepo.findCandidates(
                 from, to,
-                mids.isEmpty() ? List.of("") : new ArrayList<>(mids),
-                mids.size(),
-                tids.isEmpty() ? List.of("") : new ArrayList<>(tids),
-                tids.size(),
-                sids.isEmpty() ? List.of("") : new ArrayList<>(sids),
-                sids.size()
+                mids.isEmpty() ? List.of("") : new ArrayList<>(mids), mids.size(),
+                tids.isEmpty() ? List.of("") : new ArrayList<>(tids), tids.size(),
+                sids.isEmpty() ? List.of("") : new ArrayList<>(sids), sids.size()
         );
+
+        return candidates.stream().map(vt -> {
+            try {
+                // determine scheme
+                LocalDate onDate = vt.getDate() != null ? vt.getDate().toLocalDate() : LocalDate.now();
+                Optional<ProductSchemeAssignment> optAssign = schemeAssignRepo.findActiveScheme(merchantId, onDate);
+                if (optAssign.isEmpty()) {
+                    log.warn("No active pricing scheme for merchant {} on {}", merchantId, onDate);
+                    return SettlementCandidateDTO.notFound(vt, "NO_ACTIVE_SCHEME");
+                }
+
+                String cardName = normalizeCardName(vt.getBrandType(), vt.getCardType());
+
+                Optional<CardRate> optCr = cardRateRepo.findByPricingScheme_IdAndCardNameIgnoreCase(
+                        optAssign.get().getScheme().getId(), cardName
+                ).or(() -> cardRateRepo.findByPricingScheme_IdAndCardNameIgnoreCase(
+                        optAssign.get().getScheme().getId(), "DEFAULT"
+                ));
+
+                if (optCr.isEmpty()) {
+                    log.warn("No card rate found for '{}' (or DEFAULT) in scheme {}", cardName, optAssign.get().getScheme().getId());
+                    return SettlementCandidateDTO.notFound(vt, "NO_CARD_RATE");
+                }
+
+                CardRate cr = optCr.get();
+
+                // money math
+                BigDecimal amount = vt.getAmount() == null ? BigDecimal.ZERO : vt.getAmount();
+                BigDecimal feePct = amount.signum() > 0
+                        ? BigDecimal.valueOf(cr.getRate()).movePointLeft(2)
+                        : BigDecimal.ZERO;
+                BigDecimal fee = amount.multiply(feePct).setScale(2, RoundingMode.HALF_UP);
+                if (fee.compareTo(amount.abs()) > 0) fee = amount.abs();
+                BigDecimal net = amount.subtract(fee).setScale(2, RoundingMode.HALF_UP);
+
+                return new SettlementCandidateDTO(
+                        vt.getInternalId(),
+                        vt.getTransactionReferenceId(),
+                        vt.getDate(),
+                        amount,
+                        vt.getCardType(),
+                        vt.getBrandType(),
+                        cardName,
+                        cr.getRate(),
+                        fee,
+                        net,
+                        null // no error
+                );
+            } catch (Exception ex) {
+                log.error("Unexpected error while mapping vendor transaction {}", vt.getInternalId(), ex);
+                return SettlementCandidateDTO.notFound(vt, "UNEXPECTED_ERROR");
+            }
+        }).toList();
     }
 
 
-    /* ---------- batch creation ---------- */
+    /* ---------- batch creation & status control ---------- */
     public MerchantSettlementBatch createBatch(Long merchantId, String cycleKey, String createdBy) {
-        // 1. Decide windowEnd based on cycleKey
-        LocalDateTime windowEnd;
-        if ("T0".equalsIgnoreCase(cycleKey)) {
-            windowEnd = LocalDateTime.now();
-        } else if ("T1".equalsIgnoreCase(cycleKey)) {
-            windowEnd = LocalDate.now().atTime(23, 59, 59);
-        } else if ("T2".equalsIgnoreCase(cycleKey)) {
-            windowEnd = LocalDate.now().plusDays(1).atTime(23, 59, 59);
-        } else {
-            throw new IllegalArgumentException("Unknown cycleKey: " + cycleKey);
-        }
+        LocalDateTime windowEnd = switch (cycleKey == null ? "" : cycleKey.toUpperCase()) {
+            case "T0" -> LocalDateTime.now();
+            case "T1" -> LocalDate.now().atTime(23, 59, 59);
+            case "T2" -> LocalDate.now().plusDays(1).atTime(23, 59, 59);
+            default -> throw new IllegalArgumentException("Unknown cycleKey: " + cycleKey);
+        };
 
-        // 2. Fetch all relevant MIDs for this merchant
         List<Object[]> rows = serialRepo.findIdentifiersByMerchant(merchantId);
         Set<String> mids = new HashSet<>();
-        for (Object[] r : rows) {
-            if (r[0] != null) mids.add((String) r[0]);
-        }
+        for (Object[] r : rows) if (r[0] != null) mids.add((String) r[0]);
 
-        // 3. Determine earliest unsettled transaction among these MIDs
-        LocalDateTime windowStart = mids.isEmpty()
-                ? merchantRepository.findById(merchantId)
+        LocalDateTime fallbackStart = merchantRepository.findById(merchantId)
                 .map(m -> m.getCreatedAt() != null ? m.getCreatedAt() : LocalDateTime.now())
-                .orElse(LocalDateTime.now())
-                : vendorRepo.findEarliestUnsettledDateByMids(new ArrayList<>(mids))
-                .orElseGet(() -> merchantRepository.findById(merchantId)
-                        .map(m -> m.getCreatedAt() != null ? m.getCreatedAt() : LocalDateTime.now())
-                        .orElse(LocalDateTime.now())
-                );
+                .orElse(LocalDateTime.now());
 
-        // 4. Create and save batch
+        LocalDateTime windowStart = mids.isEmpty()
+                ? fallbackStart
+                : vendorRepo.findEarliestUnsettledDateByMids(new ArrayList<>(mids)).orElse(fallbackStart);
+
         MerchantSettlementBatch batch = new MerchantSettlementBatch();
         batch.setMerchantId(merchantId);
         batch.setWindowStart(windowStart);
@@ -121,136 +166,114 @@ public class SettlementService {
         batch.setCycleKey(cycleKey);
         batch.setCreatedBy(createdBy);
         batch.setStatus("OPEN");
-
         return batchRepo.save(batch);
     }
 
-
-    /* ---------- async processing entrypoint ---------- */
-    public void processBatchAsync(Long batchId, List<String> vendorTxIds) {
-        for (String vendorTxId : vendorTxIds) {
-            try {
-                MerchantSettlementBatch batch = batchRepo.findById(batchId)
-                        .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
-
-                asyncService.settleOneAsync(batch.getMerchantId(), batchId, vendorTxId);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
+    @Transactional
+    public void markBatchProcessing(Long batchId) {
+        MerchantSettlementBatch b = batchRepo.findById(batchId)
+                .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
+        b.setStatus("PROCESSING");
+        batchRepo.save(b);
     }
 
-//    @Async("settlementExecutor")
-//    @Transactional
-//    public void settleOneAsync(Long merchantId, Long batchId, String vendorTxPrimaryKey) {
-//        settleOne(merchantId, batchId, vendorTxPrimaryKey);
-//    }
+    @Transactional
+    public void markBatchClosed(Long batchId) {
+        MerchantSettlementBatch b = batchRepo.findById(batchId)
+                .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
+        b.setStatus("CLOSED");
+        batchRepo.save(b);
+    }
 
+    public List<MerchantSettlementBatch> getAllBatches(Long merchantId) {
+        // NOTE: your repository should have a method like: List<MerchantSettlementBatch> findByMerchantId(Long merchantId)
+        return batchRepo.findByMerchantId(merchantId);
+    }
 
-//    /* ---------- batch processor (runs in background) ---------- */
-//    public void processBatch(Long batchId, List<String> vendorTxIds) {
-//        MerchantSettlementBatch batch = batchRepo.findById(batchId)
-//                .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
-//        batch.setStatus("PROCESSING");
-//        batchRepo.save(batch);
-//
-//        for (String vendorTxId : vendorTxIds) {
-//            try {
-//                SettlementResultDTO res = settleOne(batch.getMerchantId(), batchId, vendorTxId);
-//                // you might want to persist per-item results in DB for audit
-//            } catch (Exception ex) {
-//                // log and continue — optionally mark individual failure details
-//                ex.printStackTrace();
-//            }
-//        }
-//
-//        batch.setStatus("CLOSED");
-//        batchRepo.save(batch);
-//    }
-//
-//    /* ---------- single transaction settlement (atomic) ---------- */
-
+    /* ---------- single settlement (ATOMIC) ---------- */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public SettlementResultDTO settleOne(Long merchantId, Long batchId, String vendorTxPrimaryKey) {
-        // 1) locate and lock vendor transaction (PESSIMISTIC)
-//        Long vtId;
-//        try {
-//            vtId = Long.valueOf(vendorTxPrimaryKey);
-//        } catch (NumberFormatException e) {
-//            throw new IllegalArgumentException("Invalid vendorTx id: " + vendorTxPrimaryKey);
-//        }
+        if (vendorTxPrimaryKey == null || vendorTxPrimaryKey.isBlank()) {
+            throw new IllegalArgumentException("vendorTxPrimaryKey is blank");
+        }
 
         VendorTransactions vt = vendorRepo.findByTransactionReferenceId(vendorTxPrimaryKey)
                 .orElseThrow(() -> new IllegalStateException("Vendor tx not found: " + vendorTxPrimaryKey));
 
         if (Boolean.TRUE.equals(vt.getSettled())) {
+            log.info("Vendor tx {} already settled. Skipping.", vt.getTransactionReferenceId());
             return SettlementResultDTO.alreadySettled(vt.getTransactionReferenceId());
         }
 
-        // 2) determine active scheme for merchant (by current date or vt.date)
+        // Validate merchant existence (defensive)
+        merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new IllegalStateException("Merchant not found: " + merchantId));
+
         LocalDate onDate = vt.getDate() != null ? vt.getDate().toLocalDate() : LocalDate.now();
-        System.out.println(onDate);
+
         ProductSchemeAssignment assign = schemeAssignRepo.findActiveScheme(merchantId, onDate)
                 .orElseThrow(() -> new IllegalStateException("No active pricing scheme for merchant " + merchantId));
 
-        // 3) lookup card rate (fallback to DEFAULT)
-        String brand = Optional.ofNullable(vt.getBrandType()).orElse("");
-        String type = Optional.ofNullable(vt.getCardType()).orElse("");
-        String cardName = (brand + " " + type + " Card").trim(); // e.g., "Visa Credit Card"
-
-        System.out.println(cardName);
+        String cardName = normalizeCardName(vt.getBrandType(), vt.getCardType()); // e.g., "Visa Credit Card"
         CardRate cr = cardRateRepo.findByPricingScheme_IdAndCardNameIgnoreCase(assign.getScheme().getId(), cardName)
                 .or(() -> cardRateRepo.findByPricingScheme_IdAndCardNameIgnoreCase(assign.getScheme().getId(), "DEFAULT"))
-                .orElseThrow(() -> new IllegalStateException("No card rate found"));
+                .orElseThrow(() -> new IllegalStateException("No card rate found for '" + cardName + "' or DEFAULT"));
 
+        // Money math
         BigDecimal amount = vt.getAmount() == null ? BigDecimal.ZERO : vt.getAmount();
-        BigDecimal feePct = BigDecimal.valueOf(cr.getRate()).movePointLeft(2); // e.g., 2.5 -> 0.025
+        // If refunds/voids come as <= 0 amounts, do NOT take a fee
+        BigDecimal feePct = amount.signum() > 0
+                ? BigDecimal.valueOf(((CardRate) cr).getRate()).movePointLeft(2)
+                : BigDecimal.ZERO;
         BigDecimal fee = amount.multiply(feePct).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal net = amount.subtract(fee);
+        if (fee.compareTo(amount.abs()) > 0) fee = amount.abs(); // safety: fee never exceeds absolute amount
+        BigDecimal net = amount.subtract(fee).setScale(2, RoundingMode.HALF_UP);
 
-        // 4) update merchant wallet (pessimistic)
-        Merchant merchantRef = new Merchant();
-        merchantRef.setId(merchantId);
+        // Wallet update (row-level lock; requires active TX)
+        MerchantWallet wallet = walletRepo.findByMerchantIdForUpdate(merchantId).orElseGet(() -> {
+            MerchantWallet w = new MerchantWallet();
+            Merchant mRef = new Merchant();
+            mRef.setId(merchantId);
+            w.setMerchant(mRef);
+            w.setAvailableBalance(BigDecimal.ZERO);
+            w.setLastUpdatedAmount(BigDecimal.ZERO);
+            w.setLastUpdatedAt(LocalDateTime.now());
+            w.setTotalCash(BigDecimal.ZERO);
+            w.setCutOfAmount(BigDecimal.ZERO);
+            return walletRepo.save(w);
+        });
 
-
-        MerchantWallet wallet = walletRepo.findByMerchantIdForUpdate(merchantId)
-                .orElseGet(() -> {
-                    MerchantWallet w = new MerchantWallet();
-                    w.setMerchant(merchantRef);
-                    w.setAvailableBalance(BigDecimal.ZERO);
-                    w.setLastUpdatedAmount(BigDecimal.ZERO);   // prevent null
-                    w.setLastUpdatedAt(LocalDateTime.now());   // prevent null
-                    w.setTotalCash(BigDecimal.ZERO);           // safe init
-                    w.setCutOfAmount(BigDecimal.ZERO);         // safe init
-                    return walletRepo.save(w);
-                });
-
-
-        BigDecimal before = wallet.getAvailableBalance() == null ? BigDecimal.ZERO : wallet.getAvailableBalance();
-        BigDecimal after = before.add(net);
+        BigDecimal before = nvl(wallet.getAvailableBalance());
+        BigDecimal after  = before.add(net);
         wallet.setAvailableBalance(after);
         wallet.setLastUpdatedAmount(net);
         wallet.setLastUpdatedAt(LocalDateTime.now());
-        wallet.setTotalCash(wallet.getTotalCash() == null ? amount : wallet.getTotalCash().add(amount));
-        wallet.setCutOfAmount(wallet.getCutOfAmount() == null ? fee : wallet.getCutOfAmount().add(fee));
-        // version will be handled by @Version on save
+        wallet.setTotalCash(nvl(wallet.getTotalCash()).add(amount.max(BigDecimal.ZERO))); // add only positive sales
+
         walletRepo.save(wallet);
 
-        // 5) insert merchant transaction details (idempotent by vendor_transaction_id)
-        MerchantTransactionDetails mtd = new MerchantTransactionDetails();
-        mtd.setMerchant(merchantRef);
-        mtd.setVendorTransactionId(vt.getInternalId().toString()); // vendor primary key or external id
-        mtd.setDateAndTimeOfTransaction(vt.getDate());
-        mtd.setAmount(amount);
-        mtd.setFinalBalance(after);
-        mtd.setBalBeforeTran(before);
-        mtd.setBalAfterTran(after);
-        mtd.setCardType(vt.getCardType());
-        mtd.setTranStatus("SETTLED");
-        mtd.setRemarks("Batch " + batchId + " fee=" + fee);
-        // transactionId generator can be set or use DB auto-increment id
-        merchantTxnRepo.save(mtd);
+        // Idempotent merchant txn details
+        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
+            Merchant mRef = new Merchant();
+            mRef.setId(merchantId);
+            mtd.setMerchant(mRef);
+            mtd.setCharge(fee);
+            mtd.setVendorTransactionId(vt.getInternalId().toString());
+            mtd.setDateAndTimeOfTransaction(vt.getDate());
+            mtd.setAmount(amount);
+            mtd.setFinalBalance(after);
+            mtd.setBalBeforeTran(before);
+            mtd.setBalAfterTran(after);
+            mtd.setCardType(vt.getCardType());
+            mtd.setTranStatus("SETTLED");
+            mtd.setRemarks("Batch " + batchId + " fee=" + fee);
+            merchantTxnRepo.save(mtd);
+        } else {
+            log.info("MerchantTransactionDetails already exists for vendorTx internalId={}", vt.getInternalId());
+        }
 
-        // 6) mark vendor tx as settled
+        // Mark vendor transaction settled at the very end (idempotent)
         vt.setSettled(true);
         vt.setSettledAt(LocalDateTime.now());
         vt.setSettlementBatchId(batchId);
@@ -259,9 +282,17 @@ public class SettlementService {
         return SettlementResultDTO.ok(vt.getTransactionReferenceId(), amount, fee, net, after);
     }
 
-    public List<MerchantSettlementBatch> getAllBatch(Long merchantId) {
+    /* ---------- helpers ---------- */
 
-        return batchRepo.findAllById(merchantId);
+    private static String normalizeCardName(String brandType, String cardType) {
+        String brand = Optional.ofNullable(brandType).orElse("").trim();
+        String type  = Optional.ofNullable(cardType).orElse("").trim();
+        if (brand.isEmpty() && type.isEmpty()) return "DEFAULT";
+        // Your table uses “Visa Credit Card” style, query is ignoreCase, but we’ll format anyway.
+        return (brand + " " + type + " Card").trim();
+    }
+
+    private static BigDecimal nvl(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 }
-
