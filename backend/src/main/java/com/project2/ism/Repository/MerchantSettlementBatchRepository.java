@@ -12,5 +12,8 @@ public interface MerchantSettlementBatchRepository extends JpaRepository<Merchan
     List<MerchantSettlementBatch> findAllById(Long merchantId);
 
     Optional<MerchantSettlementBatch> findTopByMerchantIdAndStatusOrderByWindowEndDesc(Long merchantId, String status);
+
+    List<MerchantSettlementBatch> findByMerchantId(Long merchantId);
+
 }
 
