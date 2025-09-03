@@ -7,7 +7,11 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTransactionDetails,Long> {
+public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTransactionDetails, Long> {
+
+    boolean existsByVendorTransactionId(String vendorTransactionId);
+
     Optional<FranchiseTransactionDetails> findByTransactionId(Long transactionId);
 
+    Optional<FranchiseTransactionDetails> findByVendorTransactionId(String vendorTransactionId);
 }
