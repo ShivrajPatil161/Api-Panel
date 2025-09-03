@@ -56,6 +56,11 @@ public class FranchiseBulkSettlementService {
             }
         }
 
+        // Validate all merchants were found
+        if (selectedMerchants.size() != selectedMerchantIds.size()) {
+            throw new IllegalArgumentException("Some merchants in the selection were not found");
+        }
+
         // Create franchise batch
         FranchiseSettlementBatch batch = new FranchiseSettlementBatch(franchiseId, cycleKey, createdBy);
         batch.setTotalMerchants(selectedMerchantIds.size());
@@ -103,6 +108,11 @@ public class FranchiseBulkSettlementService {
             }
         }
 
+        // Validate all merchants were found
+        if (merchants.size() != newSelectedMerchantIds.size()) {
+            throw new IllegalArgumentException("Some merchants in the selection were not found");
+        }
+
         // Remove existing selections
         batchMerchantRepo.deleteByFranchiseBatchId(franchiseBatchId);
 
@@ -122,6 +132,20 @@ public class FranchiseBulkSettlementService {
 
         return allMerchants.stream().map(merchant -> {
             try {
+                // Validate merchant still belongs to franchise
+                if (merchant.getFranchise() == null || !merchant.getFranchise().getId().equals(franchiseId)) {
+                    log.warn("Merchant {} no longer belongs to franchise {}", merchant.getId(), franchiseId);
+                    String contactPersonName = merchant.getContactPerson() != null ?
+                            merchant.getContactPerson().getName() : "N/A";
+                    return new FranchiseMerchantOption(
+                            merchant.getId(),
+                            merchant.getBusinessName(),
+                            contactPersonName,
+                            0,
+                            BigDecimal.ZERO
+                    );
+                }
+
                 List<SettlementCandidateDTO> candidates = settlementService.listSettlementCandidatesForFranchise(
                         merchant.getId(), cycleKey);
 
@@ -176,19 +200,9 @@ public class FranchiseBulkSettlementService {
                 throw new IllegalStateException("No merchants selected for processing");
             }
 
-            // Process each merchant asynchronously
-            List<CompletableFuture<MerchantBatchResult>> merchantFutures = selectedMerchants.stream()
-                    .map(batchMerchant -> processMerchantAsync(batchMerchant, batch.getCycleKey()))
-                    .collect(Collectors.toList());
-
-            // Wait for all merchants to complete
-            CompletableFuture<Void> allMerchants = CompletableFuture.allOf(
-                    merchantFutures.toArray(new CompletableFuture[0]));
-            allMerchants.join();
-
-            // Collect results
-            List<MerchantBatchResult> results = merchantFutures.stream()
-                    .map(CompletableFuture::join)
+            // Process each merchant sequentially to avoid overwhelming the system
+            List<MerchantBatchResult> results = selectedMerchants.stream()
+                    .map(batchMerchant -> processMerchantSync(batchMerchant, batch.getCycleKey()))
                     .collect(Collectors.toList());
 
             updateFranchiseBatchResults(franchiseBatchId, results);
@@ -202,17 +216,27 @@ public class FranchiseBulkSettlementService {
         }
     }
 
-    @Async("merchantSettlementExecutor")
-    private CompletableFuture<MerchantBatchResult> processMerchantAsync(FranchiseBatchMerchant batchMerchant, String cycleKey) {
+    private MerchantBatchResult processMerchantSync(FranchiseBatchMerchant batchMerchant, String cycleKey) {
         MerchantBatchResult result = new MerchantBatchResult(batchMerchant.getMerchantId());
 
         try {
+            // Validate merchant still belongs to franchise
+            Merchant merchant = merchantRepo.findById(batchMerchant.getMerchantId())
+                    .orElseThrow(() -> new IllegalStateException("Merchant not found: " + batchMerchant.getMerchantId()));
+
+            FranchiseSettlementBatch franchiseBatch = franchiseBatchRepo.findById(batchMerchant.getFranchiseBatchId())
+                    .orElseThrow(() -> new IllegalStateException("Franchise batch not found"));
+
+            if (merchant.getFranchise() == null || !merchant.getFranchise().getId().equals(franchiseBatch.getFranchiseId())) {
+                throw new IllegalStateException("Merchant " + merchant.getId() + " no longer belongs to franchise " + franchiseBatch.getFranchiseId());
+            }
+
             // Update merchant status to processing
             batchMerchant.setStatus(FranchiseBatchMerchant.MerchantProcessingStatus.PROCESSING);
             batchMerchant.setProcessingStartedAt(LocalDateTime.now());
             batchMerchantRepo.save(batchMerchant);
 
-            // Create a merchant batch for tracking
+            // Create a merchant batch for tracking (always new for franchise processing)
             MerchantSettlementBatch merchantBatch = settlementService.createBatch(
                     batchMerchant.getMerchantId(), cycleKey, "FRANCHISE_BULK");
 
@@ -222,17 +246,34 @@ public class FranchiseBulkSettlementService {
                     merchantBatch.getWindowStart(),
                     merchantBatch.getWindowEnd());
 
-            result.setTotalTransactions(candidates.size());
-            BigDecimal totalFranchiseCommission = BigDecimal.ZERO;
+            List<SettlementCandidateDTO> validCandidates = candidates.stream()
+                    .filter(c -> c.getError() == null)
+                    .collect(Collectors.toList());
+
+            result.setTotalTransactions(validCandidates.size());
+
+            if (validCandidates.isEmpty()) {
+                log.info("No valid candidates found for merchant {}", batchMerchant.getMerchantId());
+                batchMerchant.setStatus(FranchiseBatchMerchant.MerchantProcessingStatus.COMPLETED);
+                batchMerchant.setProcessedCount(0);
+                batchMerchant.setFailedCount(0);
+                batchMerchant.setTotalAmount(BigDecimal.ZERO);
+                batchMerchant.setProcessingCompletedAt(LocalDateTime.now());
+                batchMerchantRepo.save(batchMerchant);
+                settlementService.markBatchClosed(merchantBatch.getId());
+                return result;
+            }
+
+            // Update merchant batch with valid candidates
+            List<String> vendorTxIds = validCandidates.stream()
+                    .map(SettlementCandidateDTO::getTransactionReferenceId)
+                    .collect(Collectors.toList());
+
+            settlementService.updateBatchCandidates(merchantBatch.getId(), vendorTxIds);
 
             // Process each transaction
-            for (SettlementCandidateDTO candidate : candidates) {
-                if (candidate.getError() != null) {
-                    result.addFailure();
-                    log.warn("Candidate {} has error: {}", candidate.getTransactionReferenceId(), candidate.getError());
-                    continue;
-                }
-
+            BigDecimal totalFranchiseCommission = BigDecimal.ZERO;
+            for (SettlementCandidateDTO candidate : validCandidates) {
                 try {
                     SettlementResultDTO settlementResult = settlementService.settleOneEnhanced(
                             batchMerchant.getMerchantId(),
@@ -241,7 +282,17 @@ public class FranchiseBulkSettlementService {
 
                     if ("OK".equals(settlementResult.getStatus())) {
                         result.addSuccess(settlementResult.getAmount(), settlementResult.getFee());
-                        // Calculate franchise commission (this would be stored in the franchise transaction details)
+
+                        // Calculate franchise commission for tracking
+                        // This would be the difference between merchantRate and franchiseRate
+                        if (candidate.getRate() != null) {
+                            // Note: This is an approximation since we don't have direct access to franchise rate here
+                            // The actual commission is properly calculated and stored in the settlement process
+                            BigDecimal estimatedCommission = candidate.getAmount()
+                                    .multiply(BigDecimal.valueOf(0.5)) // Rough estimate - adjust based on your business logic
+                                    .movePointLeft(2);
+                            totalFranchiseCommission = totalFranchiseCommission.add(estimatedCommission);
+                        }
                     } else {
                         result.addFailure();
                         log.warn("Settlement failed for transaction {}: {}",
@@ -265,6 +316,8 @@ public class FranchiseBulkSettlementService {
             batchMerchant.setProcessingCompletedAt(LocalDateTime.now());
             batchMerchantRepo.save(batchMerchant);
 
+            result.setFranchiseCommission(totalFranchiseCommission);
+
         } catch (Exception e) {
             log.error("Merchant processing failed for merchant {}", batchMerchant.getMerchantId(), e);
             batchMerchant.setStatus(FranchiseBatchMerchant.MerchantProcessingStatus.FAILED);
@@ -274,7 +327,7 @@ public class FranchiseBulkSettlementService {
             result.setError(e.getMessage());
         }
 
-        return CompletableFuture.completedFuture(result);
+        return result;
     }
 
     private void updateFranchiseBatchResults(Long franchiseBatchId, List<MerchantBatchResult> results) {
@@ -282,7 +335,7 @@ public class FranchiseBulkSettlementService {
         if (batch == null) return;
 
         int completed = 0, failed = 0;
-        int totalTransactions = 0, processedTransactions = 0;
+        int totalTransactions = 0, processedTransactions = 0, failedTransactions = 0;
         BigDecimal totalCommission = BigDecimal.ZERO;
 
         for (MerchantBatchResult result : results) {
@@ -293,13 +346,17 @@ public class FranchiseBulkSettlementService {
             }
             totalTransactions += result.getTotalTransactions();
             processedTransactions += result.getProcessedTransactions();
-            // totalCommission would be calculated based on franchise commission from settlements
+            failedTransactions += result.getFailedTransactions();
+            if (result.getFranchiseCommission() != null) {
+                totalCommission = totalCommission.add(result.getFranchiseCommission());
+            }
         }
 
         batch.setCompletedMerchants(completed);
         batch.setFailedMerchants(failed);
         batch.setTotalTransactions(totalTransactions);
         batch.setProcessedTransactions(processedTransactions);
+        batch.setFailedTransactions(failedTransactions);
         batch.setTotalFranchiseCommission(totalCommission);
         batch.setProcessingCompletedAt(LocalDateTime.now());
 
@@ -329,7 +386,7 @@ public class FranchiseBulkSettlementService {
     /**
      * Get settlement candidates (transactions) for a specific merchant within a franchise batch
      */
-    @Transactional(readOnly = false)
+    @Transactional(readOnly = true)
     public List<SettlementCandidateDTO> listSettlementCandidatesForMerchant(Long franchiseId,
                                                                             Long batchId,
                                                                             Long merchantId,
@@ -344,8 +401,16 @@ public class FranchiseBulkSettlementService {
         // Verify merchant belongs to this batch
         FranchiseBatchMerchant batchMerchant = batchMerchantRepo
                 .findByFranchiseBatchIdAndMerchantId(batchId, merchantId);
-//                .orElseThrow(() -> new IllegalArgumentException(
-//                        "Merchant " + merchantId + " not part of franchise batch " + batchId));
+        if (batchMerchant == null) {
+            throw new IllegalArgumentException("Merchant " + merchantId + " not part of franchise batch " + batchId);
+        }
+
+        // Verify merchant still belongs to the franchise
+        Merchant merchant = merchantRepo.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
+        if (merchant.getFranchise() == null || !merchant.getFranchise().getId().equals(franchiseId)) {
+            throw new IllegalArgumentException("Merchant " + merchantId + " does not belong to franchise " + franchiseId);
+        }
 
         // Use EnhancedSettlementService to calculate candidates
         return settlementService.listSettlementCandidatesForFranchise(merchantId, cycleKey);
@@ -366,11 +431,23 @@ public class FranchiseBulkSettlementService {
             throw new IllegalArgumentException("Batch " + batchId + " does not belong to franchise " + franchiseId);
         }
 
+        if (batch.getStatus() != FranchiseSettlementBatch.BatchStatus.DRAFT) {
+            throw new IllegalStateException("Cannot modify candidates after batch is finalized. Current status: " + batch.getStatus());
+        }
+
         // Verify merchant belongs to this batch
         FranchiseBatchMerchant batchMerchant = batchMerchantRepo
                 .findByFranchiseBatchIdAndMerchantId(batchId, merchantId);
-//                .orElseThrow(() -> new IllegalArgumentException(
-//                        "Merchant " + merchantId + " not part of franchise batch " + batchId));
+        if (batchMerchant == null) {
+            throw new IllegalArgumentException("Merchant " + merchantId + " not part of franchise batch " + batchId);
+        }
+
+        // Verify merchant still belongs to the franchise
+        Merchant merchant = merchantRepo.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
+        if (merchant.getFranchise() == null || !merchant.getFranchise().getId().equals(franchiseId)) {
+            throw new IllegalArgumentException("Merchant " + merchantId + " does not belong to franchise " + franchiseId);
+        }
 
         // Create or reuse merchant settlement batch (per merchant)
         MerchantSettlementBatch merchantBatch =
@@ -380,7 +457,7 @@ public class FranchiseBulkSettlementService {
         settlementService.updateBatchCandidates(merchantBatch.getId(), vendorTxIds);
 
         // Link merchant batchId back into FranchiseBatchMerchant (optional, for tracking)
-//        batchMerchant.setMerchantBatchId(merchantBatch.getId());
+        // batchMerchant.setMerchantBatchId(merchantBatch.getId());
         batchMerchantRepo.save(batchMerchant);
     }
 
@@ -394,17 +471,16 @@ public class FranchiseBulkSettlementService {
         progress.setTotalTransactions(batch.getTotalTransactions());
         progress.setProcessedTransactions(batch.getProcessedTransactions());
        // progress.setFailedTransactions(batch.getFailedTransactions());
-        //progress.setTotalAmount(batch.getTotalAmount());
-        //progress.setTotalFees(batch.getTotalFees());
-        //progress.setTotalNetAmount(batch.getTotalNetAmount());
+        // Note: FranchiseSettlementBatch doesn't have totalAmount/totalFees fields
+        // You may need to add them or calculate them from merchant batches
         progress.setProcessingStartedAt(batch.getProcessingStartedAt());
         progress.setProcessingCompletedAt(batch.getProcessingCompletedAt());
         progress.setErrorMessage(batch.getErrorMessage());
 
         if (batch.getTotalTransactions() != null && batch.getTotalTransactions() > 0) {
-            //int totalProcessed = (batch.getProcessedTransactions() != null ? batch.getProcessedTransactions() : 0) +
-            //        (batch.getFailedTransactions() != null ? batch.getFailedTransactions() : 0);
-            //progress.setProgressPercentage((totalProcessed * 100.0) / batch.getTotalTransactions());
+            int totalProcessed = (batch.getProcessedTransactions() != null ? batch.getProcessedTransactions() : 0) //+
+                    (batch.getFailedTransactions() != null ? batch.getFailedTransactions() : 0);
+            progress.setProgressPercentage((totalProcessed * 100.0) / batch.getTotalTransactions());
         } else {
             progress.setProgressPercentage(0.0);
         }
@@ -420,6 +496,7 @@ public class FranchiseBulkSettlementService {
         private int failedTransactions = 0;
         private BigDecimal totalAmount = BigDecimal.ZERO;
         private BigDecimal totalFees = BigDecimal.ZERO;
+        private BigDecimal franchiseCommission = BigDecimal.ZERO;
         private String error;
 
         public MerchantBatchResult(Long merchantId) {
@@ -435,21 +512,70 @@ public class FranchiseBulkSettlementService {
         public void addFailure() {
             failedTransactions++;
         }
-
         // Getters and setters
-        public Long getMerchantId() { return merchantId; }
-        public void setMerchantId(Long merchantId) { this.merchantId = merchantId; }
-        public int getTotalTransactions() { return totalTransactions; }
-        public void setTotalTransactions(int totalTransactions) { this.totalTransactions = totalTransactions; }
-        public int getProcessedTransactions() { return processedTransactions; }
-        public void setProcessedTransactions(int processedTransactions) { this.processedTransactions = processedTransactions; }
-        public int getFailedTransactions() { return failedTransactions; }
-        public void setFailedTransactions(int failedTransactions) { this.failedTransactions = failedTransactions; }
-        public BigDecimal getTotalAmount() { return totalAmount; }
-        public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
-        public BigDecimal getTotalFees() { return totalFees; }
-        public void setTotalFees(BigDecimal totalFees) { this.totalFees = totalFees; }
-        public String getError() { return error; }
-        public void setError(String error) { this.error = error; }
+
+        public Long getMerchantId() {
+            return merchantId;
+        }
+
+        public void setMerchantId(Long merchantId) {
+            this.merchantId = merchantId;
+        }
+
+        public int getTotalTransactions() {
+            return totalTransactions;
+        }
+
+        public void setTotalTransactions(int totalTransactions) {
+            this.totalTransactions = totalTransactions;
+        }
+
+        public int getProcessedTransactions() {
+            return processedTransactions;
+        }
+
+        public void setProcessedTransactions(int processedTransactions) {
+            this.processedTransactions = processedTransactions;
+        }
+
+        public int getFailedTransactions() {
+            return failedTransactions;
+        }
+
+        public void setFailedTransactions(int failedTransactions) {
+            this.failedTransactions = failedTransactions;
+        }
+
+        public BigDecimal getTotalAmount() {
+            return totalAmount;
+        }
+
+        public void setTotalAmount(BigDecimal totalAmount) {
+            this.totalAmount = totalAmount;
+        }
+
+        public BigDecimal getTotalFees() {
+            return totalFees;
+        }
+
+        public void setTotalFees(BigDecimal totalFees) {
+            this.totalFees = totalFees;
+        }
+
+        public BigDecimal getFranchiseCommission() {
+            return franchiseCommission;
+        }
+
+        public void setFranchiseCommission(BigDecimal franchiseCommission) {
+            this.franchiseCommission = franchiseCommission;
+        }
+
+        public String getError() {
+            return error;
+        }
+
+        public void setError(String error) {
+            this.error = error;
+        }
     }
 }

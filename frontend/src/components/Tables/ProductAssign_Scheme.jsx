@@ -25,8 +25,8 @@ const ProductAssignment = () => {
 
     useEffect(() => {
         fetchProductSchemeAssignment()
-        fetchCustomers()
-        fetchSchemes()
+   
+        
     }, [])
 
     const fetchProductSchemeAssignment = async () => {
@@ -38,25 +38,8 @@ const ProductAssignment = () => {
         }
     }
 
-    const fetchCustomers = async () => {
-        try {
-            // Assuming you have endpoints for customers
-            const response = await api.get("/customers")
-            setCustomers(response?.data)
-        } catch (error) {
-            console.error('Error fetching customers:', error)
-        }
-    }
+  
 
-    const fetchSchemes = async () => {
-        try {
-            // Assuming you have endpoints for schemes
-            const response = await api.get("/schemes")
-            setSchemes(response?.data)
-        } catch (error) {
-            console.error('Error fetching schemes:', error)
-        }
-    }
 
     const getCustomerName = (customerId) => {
         const customer = customers.find(c => c.id === customerId)
@@ -214,15 +197,7 @@ const ProductAssignment = () => {
 
     const handleSubmit = async (data) => {
         try {
-            if (editingAssignment) {
-                const response = await api.put(`/outward-schemes/${editingAssignment.id}`, data)
-                setAssignments(assignments.map(assignment =>
-                    assignment.id === editingAssignment.id ? response.data : assignment
-                ))
-            } else {
-                const response = await api.post('/outward-schemes', data)
-                setAssignments([...assignments, response.data])
-            }
+            
             setIsModalOpen(false)
             setEditingAssignment(null)
         } catch (error) {
