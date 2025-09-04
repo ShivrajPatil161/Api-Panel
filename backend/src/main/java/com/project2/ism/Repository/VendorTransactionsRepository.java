@@ -14,29 +14,38 @@ import java.util.Optional;
 public interface VendorTransactionsRepository extends JpaRepository<VendorTransactions, Long> {
 
     @Query(value = """
-      SELECT * FROM vendor_transactions vt
-      WHERE vt.settled = 0
-        AND vt.date BETWEEN :from AND :to
-        AND (
-          ( :mids_size > 0 AND vt.mid IN (:mids) ) OR
-          ( :tids_size > 0 AND vt.tid IN (:tids) ) OR
-          ( :sids_size > 0 AND vt.`device serial` IN (:sids) )
-        )
-      """, nativeQuery = true)
+    SELECT * FROM vendor_transactions vt
+    WHERE vt.settled = 0
+      AND vt.date BETWEEN :from AND :to
+      AND (
+        ( :#{#mids.size()} > 0 AND vt.mid IN (:mids) ) OR
+        ( :#{#tids.size()} > 0 AND vt.tid IN (:tids) )
+      )
+    """, nativeQuery = true)
     List<VendorTransactions> findCandidates(
             @Param("from") LocalDateTime from,
             @Param("to")   LocalDateTime to,
-            @Param("mids") List<String> mids,   @Param("mids_size") int midsSize,
-            @Param("tids") List<String> tids,   @Param("tids_size") int tidsSize,
-            @Param("sids") List<String> sids,   @Param("sids_size") int sidsSize
-            //@Param("vp")   List<String> vpaids, @Param("vp_size")   int vpSize
+            @Param("mids") List<String> mids,
+            @Param("tids") List<String> tids
+//            @Param("sids") List<String> sids
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT vt FROM VendorTransactions vt WHERE vt.internalId = :id")
     Optional<VendorTransactions> lockById(@Param("id") Long id);
+
+    Optional<VendorTransactions> findByTransactionReferenceId(String vendorTxPrimaryKey);
+
+    @Query("""
+    SELECT MIN(v.date)
+    FROM VendorTransactions v
+    WHERE v.settled = false AND v.mid IN :mids
+""")
+    Optional<LocalDateTime> findEarliestUnsettledDateByMids(@Param("mids") List<String> mids);
+
+
 }
 
-
-//    OR
-//            ( :vp_size   > 0 AND vt.vpaid IN (:vp) )
+//
+//OR
+////        ( :#{#sids.size()} > 0 AND vt.`device serial` IN (:sids)

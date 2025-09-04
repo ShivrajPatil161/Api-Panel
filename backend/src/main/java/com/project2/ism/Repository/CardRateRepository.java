@@ -9,5 +9,7 @@ import java.util.Optional;
 @Repository
 public interface CardRateRepository extends JpaRepository<CardRate, Long> {
     Optional<CardRate> findByPricingScheme_IdAndCardNameIgnoreCase(Long schemeId, String cardName);
+    Optional<CardRate> findByPricingScheme_IdAndCardNameContainingIgnoreCase(Long schemeId, String partOfCardName);
+
 
 }

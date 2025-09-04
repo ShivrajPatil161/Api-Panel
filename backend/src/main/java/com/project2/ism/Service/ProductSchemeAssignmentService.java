@@ -77,4 +77,28 @@ public class ProductSchemeAssignmentService {
                 .map(this::toDTO)
                 .toList();
     }
+
+
+    public ProductSchemeAssignmentDTO updateAssignment(Long id, ProductSchemeAssignmentDTO dto) {
+        ProductSchemeAssignment entity = assignmentRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found with id: " + id));
+
+        PricingScheme scheme = schemeRepo.findById(dto.schemeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Scheme not found"));
+        OutwardTransactions outward = outwardRepo.findById(dto.outwardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Outward transaction not found"));
+
+        // update existing entity
+        entity.setScheme(scheme);
+        entity.setOutwardTransaction(outward);
+        entity.setCustomerType(dto.customerType);
+        entity.setCustomerId(dto.customerId);
+        entity.setEffectiveDate(dto.effectiveDate);
+        entity.setExpiryDate(dto.expiryDate);
+        entity.setRemarks(dto.remarks);
+
+        ProductSchemeAssignment saved = assignmentRepo.save(entity);
+        return toDTO(saved);
+    }
+
 }

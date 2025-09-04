@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Repository
 public interface MerchantRepository extends JpaRepository<Merchant, Long> {
-    List<Merchant> findByFranchiseId(Long franchiseId); // For filtering by Franchise
+
     List<Merchant> findByFranchiseIsNull();
     List<Merchant> findByIsApprovedFalse();
 
@@ -23,6 +23,10 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
 
     Long countByFranchiseId(Long id);
 
+    List<Merchant> findByFranchiseId(Long franchiseId);
+
+    @Query("SELECT m FROM Merchant m WHERE m.franchise.id = :franchiseId AND m.status = 'ACTIVE'")
+    List<Merchant> findActiveMerchantsByFranchiseId(@Param("franchiseId") Long franchiseId);
 
     //stats
 

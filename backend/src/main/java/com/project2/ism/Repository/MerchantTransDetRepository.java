@@ -9,4 +9,7 @@ import java.util.Optional;
 @Repository
 public interface MerchantTransDetRepository extends JpaRepository<MerchantTransactionDetails,Long> {
     Optional<MerchantTransactionDetails> findByTransactionId(Long transactionId);
+
+    boolean existsByVendorTransactionId(String vendorTransactionId);
+
 }

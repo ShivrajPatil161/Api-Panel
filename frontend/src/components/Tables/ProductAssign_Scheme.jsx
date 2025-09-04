@@ -11,11 +11,11 @@ import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X } from 'lucide-re
 import ProductAssignmentFormModal from '../Forms/ProductSchemeAssignmen'
 import api from '../../constants/API/axiosInstance'
 
-
-
 // ==================== PRODUCT ASSIGNMENT LIST ====================
 const ProductAssignment = () => {
     const [assignments, setAssignments] = useState([])
+    const [customers, setCustomers] = useState([]) // To store customer data for lookup
+    const [schemes, setSchemes] = useState([]) // To store scheme data for lookup
 
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingAssignment, setEditingAssignment] = useState(null)
@@ -25,60 +25,70 @@ const ProductAssignment = () => {
 
     useEffect(() => {
         fetchProductSchemeAssignment()
-    },[])
+   
+        
+    }, [])
 
     const fetchProductSchemeAssignment = async () => {
-        const response = await api.get("/outward-schemes")
-        setAssignments(response?.data)
-    }
-
-    const getProductLabel = (product) => {
-        const productMap = {
-            'pos_machine': 'POS Machine',
-            'soundbox': 'Soundbox',
-            'qr_scanner': 'QR Scanner',
-            'card_reader': 'Card Reader'
+        try {
+            const response = await api.get("/outward-schemes")
+            setAssignments(response?.data)
+        } catch (error) {
+            console.error('Error fetching assignments:', error)
         }
-        return productMap[product] || product
     }
 
+  
+
+
+    const getCustomerName = (customerId) => {
+        const customer = customers.find(c => c.id === customerId)
+        return customer ? customer.name : `Customer ${customerId}`
+    }
+
+    const getSchemeName = (schemeId) => {
+        const scheme = schemes.find(s => s.id === schemeId)
+        return scheme ? scheme.name : `Scheme ${schemeId}`
+    }
+
+   
     const columns = useMemo(() => [
         {
-            accessorKey: 'assignedTo',
+            accessorKey: 'customerId',
             header: 'Assigned To',
             cell: ({ row }) => (
                 <div className="font-medium text-gray-900">
-                    {row.getValue('assignedTo')}
+                    {getCustomerName(row.getValue('customerId'))}
                 </div>
             ),
         },
         {
-            accessorKey: 'assignedType',
+            accessorKey: 'customerType',
             header: 'Type',
             cell: ({ row }) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.getValue('assignedType') === 'franchise'
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.getValue('customerType') === 'franchise'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
                     }`}>
-                    {row.getValue('assignedType') === 'franchise' ? 'Franchise' : 'Merchant'}
+                    {row.getValue('customerType') === 'franchise' ? 'Franchise' : 'Merchant'}
                 </span>
             ),
         },
         {
-            accessorKey: 'product',
-            header: 'Product',
+            accessorKey: 'outwardId',
+            header: 'Product/Outward',
             cell: ({ row }) => (
                 <div className="text-gray-900 font-medium">
-                    {getProductLabel(row.getValue('product'))}
+                    Outward ID: {row.getValue('outwardId')}
                 </div>
             ),
         },
         {
-            accessorKey: 'scheme',
+            accessorKey: 'schemeId',
             header: 'Scheme',
             cell: ({ row }) => (
                 <div className="text-gray-900 font-mono text-sm">
-                    {row.getValue('scheme')}
+                    {getSchemeName(row.getValue('schemeId'))}
                 </div>
             ),
         },
@@ -92,11 +102,20 @@ const ProductAssignment = () => {
             ),
         },
         {
+            accessorKey: 'expiryDate',
+            header: 'Expiry Date',
+            cell: ({ row }) => (
+                <div className="text-gray-600">
+                    {row.getValue('expiryDate') ? new Date(row.getValue('expiryDate')).toLocaleDateString() : 'No Expiry'}
+                </div>
+            ),
+        },
+        {
             accessorKey: 'remarks',
             header: 'Remarks',
             cell: ({ row }) => (
                 <div className="text-gray-600 max-w-xs truncate">
-                    {row.getValue('remarks')}
+                    {row.getValue('remarks') || '-'}
                 </div>
             ),
         },
@@ -129,7 +148,7 @@ const ProductAssignment = () => {
                 </div>
             ),
         },
-    ], [])
+    ], [customers, schemes])
 
     const table = useReactTable({
         data: assignments,
@@ -165,24 +184,25 @@ const ProductAssignment = () => {
         setViewingAssignment(assignment)
     }
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product assignment?')) {
-            setAssignments(assignments.filter(assignment => assignment.id !== id))
+            try {
+                await api.delete(`/outward-schemes/${id}`)
+                setAssignments(assignments.filter(assignment => assignment.id !== id))
+            } catch (error) {
+                console.error('Error deleting assignment:', error)
+            }
         }
     }
 
-    const handleSubmit = (data) => {
-        if (editingAssignment) {
-            setAssignments(assignments.map(assignment =>
-                assignment.id === editingAssignment.id
-                    ? { ...data, id: editingAssignment.id }
-                    : assignment
-            ))
-        } else {
-            setAssignments([...assignments, { ...data, id: Date.now() }])
+    const handleSubmit = async (data) => {
+        try {
+            
+            setIsModalOpen(false)
+            setEditingAssignment(null)
+        } catch (error) {
+            console.error('Error saving assignment:', error)
         }
-        setIsModalOpen(false)
-        setEditingAssignment(null)
     }
 
     const handleCancel = () => {
@@ -287,7 +307,6 @@ const ProductAssignment = () => {
                     <div className="text-sm text-gray-600">
                         Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
                     </div>
-                   
                 </div>
             </div>
 
@@ -318,23 +337,32 @@ const ProductAssignment = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
-                                    <p className="text-gray-900">{viewingAssignment.assignedTo}</p>
+                                    <p className="text-gray-900">{getCustomerName(viewingAssignment.customerId)}</p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                    <p className="text-gray-900 capitalize">{viewingAssignment.assignedType}</p>
+                                    <p className="text-gray-900 capitalize">{viewingAssignment.customerType}</p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
-                                    <p className="text-gray-900">{getProductLabel(viewingAssignment.product)}</p>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Outward ID</label>
+                                    <p className="text-gray-900">{viewingAssignment.outwardId}</p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Pricing Scheme</label>
-                                    <p className="text-gray-900">{viewingAssignment.scheme}</p>
+                                    <p className="text-gray-900">{getSchemeName(viewingAssignment.schemeId)}</p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
                                     <p className="text-gray-900">{new Date(viewingAssignment.effectiveDate).toLocaleDateString()}</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                                    <p className="text-gray-900">
+                                        {viewingAssignment.expiryDate
+                                            ? new Date(viewingAssignment.expiryDate).toLocaleDateString()
+                                            : 'No Expiry'
+                                        }
+                                    </p>
                                 </div>
                             </div>
 

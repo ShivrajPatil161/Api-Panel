@@ -238,22 +238,28 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 schemeId: parseInt(data.scheme),
                 effectiveDate: data.effectiveDate,
                 remarks: data.remarks,
-                outwardId: selectedProduct?.outwardId || null // Use the outwardId from selected product
+                outwardId: selectedProduct?.outwardId || null
             }
-            console.log('Assignment created:', assignmentData)
-            // Mock POST request
-            const response = await api.post('/outward-schemes', assignmentData)
 
-            
+            let response
+            if (isEdit && initialData?.id) {
+                // 🔹 UPDATE (PUT)
+                response = await api.put(`/outward-schemes/${initialData.id}`, assignmentData)
+            } else {
+                // 🔹 CREATE (POST)
+                response = await api.post('/outward-schemes', assignmentData)
+            }
+
             onSubmit(response.data)
             onCancel()
         } catch (error) {
-            console.error('Error creating assignment:', error)
-            // Handle error - show toast/notification
+            console.error('Error saving assignment:', error)
+            // TODO: show toast/notification
         } finally {
             setLoading(false)
         }
     }
+
 
     const handleCancel = () => {
         reset(getDefaultValues())

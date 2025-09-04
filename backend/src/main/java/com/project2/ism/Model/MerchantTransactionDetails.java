@@ -4,6 +4,9 @@ import com.project2.ism.Model.Users.Merchant;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
+import java.util.BitSet;
+
 @Entity
 @Table(name = "merchant_transaction_details",
         uniqueConstraints = {
@@ -16,6 +19,8 @@ public class MerchantTransactionDetails extends TransactionDetailsBase{
     @JoinColumn(name = "merchant_id",nullable = false)
     private Merchant merchant;
 
+    private BigDecimal charge;
+
     public MerchantTransactionDetails() {
     }
 
@@ -25,5 +30,13 @@ public class MerchantTransactionDetails extends TransactionDetailsBase{
 
     public void setMerchant(Merchant merchant) {
         this.merchant = merchant;
+    }
+
+    public BigDecimal getCharge() {
+        return charge;
+    }
+
+    public void setCharge(BigDecimal charge) {
+        this.charge = charge;
     }
 }
