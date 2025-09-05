@@ -1,6 +1,8 @@
 package com.project2.ism.Repository;
 
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
+import com.project2.ism.Model.Product;
+import com.project2.ism.Model.Users.Merchant;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -109,4 +111,9 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
         ORDER BY psn.id DESC
         """)
     Optional<ProductSerialNumbers> findByTid(@Param("tid") String tid);
+
+    // ProductSerialsRepository
+    List<ProductSerialNumbers> findByMerchantAndProduct(Merchant merchant, Product product);
+
+
 }

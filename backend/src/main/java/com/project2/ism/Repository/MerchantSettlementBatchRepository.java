@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,5 +32,12 @@ public interface MerchantSettlementBatchRepository extends JpaRepository<Merchan
 
     Page<MerchantSettlementBatch> findByMerchantIdOrderByCreatedAtDesc(Long merchantId, Pageable pageable);
 
+    // MerchantSettlementBatchRepository
+    Optional<MerchantSettlementBatch> findByMerchantIdAndCycleKeyAndProductIdAndStatusIn(
+            Long merchantId, String cycleKey, Long productId, List<String> statuses);
+
+    @Modifying
+    @Query("UPDATE MerchantSettlementBatch b SET b.status = :status WHERE b.id = :id")
+    int updateStatusById(@Param("id") Long id, @Param("status") String status);
 }
 

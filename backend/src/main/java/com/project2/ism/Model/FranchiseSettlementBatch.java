@@ -15,6 +15,8 @@ public class FranchiseSettlementBatch {
     @Column(name = "franchise_id", nullable = false)
     private Long franchiseId;
 
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
     @Column(name = "cycle_key", nullable = false)
     private String cycleKey;
 
@@ -42,10 +44,18 @@ public class FranchiseSettlementBatch {
 
     @Column(name = "processed_transactions")
     private Integer processedTransactions = 0;
+    @Column(name = "failed_transactions")
+    private Integer failedTransactions = 0;
 
     @Column(name = "total_franchise_commission", precision = 19, scale = 2)
     private BigDecimal totalFranchiseCommission = BigDecimal.ZERO;
 
+    @Column(name = "total_amount", precision = 19, scale = 2)
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+    @Column(name = "total_net_amount", precision = 19, scale = 2)
+    private BigDecimal totalNetAmount = BigDecimal.ZERO;
+    @Column(name = "total_fee", precision = 19, scale = 2)
+    private BigDecimal totalFees = BigDecimal.ZERO;
     @Column(name = "processing_started_at")
     private LocalDateTime processingStartedAt;
 
@@ -62,8 +72,9 @@ public class FranchiseSettlementBatch {
     public FranchiseSettlementBatch() {
     }
 
-    public FranchiseSettlementBatch(Long franchiseId, String cycleKey, String createdBy) {
+    public FranchiseSettlementBatch(Long franchiseId,Long productId, String cycleKey, String createdBy) {
         this.franchiseId = franchiseId;
+        this.productId = productId;
         this.cycleKey = cycleKey;
         this.createdBy = createdBy;
         this.status = BatchStatus.DRAFT;
@@ -86,6 +97,14 @@ public class FranchiseSettlementBatch {
 
     public void setFranchiseId(Long franchiseId) {
         this.franchiseId = franchiseId;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
     }
 
     public String getCycleKey() {
@@ -160,12 +179,44 @@ public class FranchiseSettlementBatch {
         this.processedTransactions = processedTransactions;
     }
 
+    public Integer getFailedTransactions() {
+        return failedTransactions;
+    }
+
+    public void setFailedTransactions(Integer failedTransactions) {
+        this.failedTransactions = failedTransactions;
+    }
+
     public BigDecimal getTotalFranchiseCommission() {
         return totalFranchiseCommission;
     }
 
     public void setTotalFranchiseCommission(BigDecimal totalFranchiseCommission) {
         this.totalFranchiseCommission = totalFranchiseCommission;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public BigDecimal getTotalNetAmount() {
+        return totalNetAmount;
+    }
+
+    public void setTotalNetAmount(BigDecimal totalNetAmount) {
+        this.totalNetAmount = totalNetAmount;
+    }
+
+    public BigDecimal getTotalFees() {
+        return totalFees;
+    }
+
+    public void setTotalFees(BigDecimal totalFees) {
+        this.totalFees = totalFees;
     }
 
     public LocalDateTime getProcessingStartedAt() {

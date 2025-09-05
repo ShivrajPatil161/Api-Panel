@@ -685,6 +685,16 @@ public class EnhancedSettlementService {
         this.candidateRepo = candidateRepo;
     }
 
+    //Flow:
+//1. Check if merchant is direct or franchise
+//2. For DIRECT merchants: Reuse existing DRAFT/OPEN batches
+//3. For FRANCHISE merchants: Always create new batch
+//4. Calculate settlement window based on cycleKey:
+//   - T0: Current timestamp
+//   - T1: End of today (23:59:59)
+//   - T2: End of tomorrow
+//5. Find earliest unsettled transaction date as window start
+//6. Create MerchantSettlementBatch record
     @Transactional
     public MerchantSettlementBatch getOrCreateActiveBatch(Long merchantId, String cycleKey, String createdBy) {
         // For direct merchants, reuse existing batches
@@ -709,8 +719,8 @@ public class EnhancedSettlementService {
     public MerchantSettlementBatch createBatch(Long merchantId, String cycleKey, String createdBy) {
         LocalDateTime windowEnd = switch (cycleKey == null ? "" : cycleKey.toUpperCase()) {
             case "T0" -> LocalDateTime.now();
-            case "T1" -> LocalDate.now().atTime(23, 59, 59);
-            case "T2" -> LocalDate.now().plusDays(1).atTime(23, 59, 59);
+            case "T1" -> LocalDate.now().minusDays(1).atTime(23, 59, 59);
+            case "T2" -> LocalDate.now().minusDays(2).atTime(23, 59, 59);
             default -> throw new IllegalArgumentException("Unknown cycleKey: " + cycleKey);
         };
 

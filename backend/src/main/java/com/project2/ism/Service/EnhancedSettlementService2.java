@@ -1,0 +1,770 @@
+package com.project2.ism.Service;
+
+import com.project2.ism.DTO.TempDTOs.*;
+import com.project2.ism.Model.*;
+import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
+import com.project2.ism.Model.PricingScheme.CardRate;
+import com.project2.ism.Model.Users.Franchise;
+import com.project2.ism.Model.Users.Merchant;
+
+import com.project2.ism.Repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class EnhancedSettlementService2 {
+
+    private static final Logger log = LoggerFactory.getLogger(EnhancedSettlementService2.class);
+
+    private final ProductSerialsRepository serialRepo;
+    private final ProductRepository productRepository;
+    private final VendorTransactionsRepository vendorRepo;
+    private final MerchantSettlementBatchRepository batchRepo;
+    private final MerchantWalletRepository walletRepo;
+    private final MerchantRepository merchantRepository;
+    private final MerchantTransDetRepository merchantTxnRepo;
+    private final ProductSchemeAssignmentRepository schemeAssignRepo;
+    private final CardRateRepository cardRateRepo;
+    private final FranchiseWalletRepository franchiseWalletRepo;
+    private final FranchiseTransDetRepository franchiseTxnRepo;
+    private final SettlementBatchCandidateRepository candidateRepo;
+    private final SettlementAsyncProcessor asyncProcessor;
+
+    public EnhancedSettlementService2(ProductSerialsRepository serialRepo,
+                                      ProductRepository productRepository, VendorTransactionsRepository vendorRepo,
+                                      MerchantSettlementBatchRepository batchRepo,
+                                      MerchantWalletRepository walletRepo,
+                                      MerchantRepository merchantRepository,
+                                      MerchantTransDetRepository merchantTxnRepo,
+                                      ProductSchemeAssignmentRepository schemeAssignRepo,
+                                      CardRateRepository cardRateRepo,
+                                      FranchiseWalletRepository franchiseWalletRepo,
+                                      FranchiseTransDetRepository franchiseTxnRepo,
+                                      SettlementBatchCandidateRepository candidateRepo,
+                                      SettlementAsyncProcessor asyncProcessor) {
+        this.serialRepo = serialRepo;
+        this.productRepository = productRepository;
+        this.vendorRepo = vendorRepo;
+        this.batchRepo = batchRepo;
+        this.walletRepo = walletRepo;
+        this.merchantRepository = merchantRepository;
+        this.merchantTxnRepo = merchantTxnRepo;
+        this.schemeAssignRepo = schemeAssignRepo;
+        this.cardRateRepo = cardRateRepo;
+        this.franchiseWalletRepo = franchiseWalletRepo;
+        this.franchiseTxnRepo = franchiseTxnRepo;
+        this.candidateRepo = candidateRepo;
+        this.asyncProcessor = asyncProcessor;
+    }
+
+    /**
+     * Create or get active batch for direct merchants (with product_id support)
+     */
+    @Transactional
+    public MerchantSettlementBatch getOrCreateActiveBatch(Long merchantId, Long productId, String cycleKey, String createdBy) {
+        log.debug("Getting/creating active batch for merchant={}, cycle={}, product={}", merchantId, cycleKey, productId);
+
+        Merchant merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
+
+        // For direct merchants, reuse existing batches with same product
+        if (merchant.getFranchise() == null) {
+            Optional<MerchantSettlementBatch> existing = batchRepo
+                    .findByMerchantIdAndCycleKeyAndProductIdAndStatusIn(
+                            merchantId, cycleKey, productId, Arrays.asList("DRAFT", "OPEN"));
+
+            if (existing.isPresent()) {
+                log.debug("Found existing batch {} for merchant {}", existing.get().getId(), merchantId);
+                return existing.get();
+            }
+        }
+
+        // Create new batch
+        return createBatch(merchantId,productId, cycleKey, createdBy);
+    }
+
+    /**
+     * Create new settlement batch with product_id filtering
+     */
+    public MerchantSettlementBatch createBatch(Long merchantId, Long productId, String cycleKey, String createdBy) {
+        log.debug("Creating new batch for merchant={}, cycle={}, product={}", merchantId, cycleKey, productId);
+
+        LocalDateTime windowEnd = calculateWindowEnd(cycleKey);
+        LocalDateTime windowStart = calculateWindowStart(merchantId, productId);
+
+        MerchantSettlementBatch batch = new MerchantSettlementBatch();
+        batch.setMerchantId(merchantId);
+        batch.setWindowStart(windowStart);
+        batch.setWindowEnd(windowEnd);
+        batch.setCycleKey(cycleKey);
+        batch.setCreatedBy(createdBy);
+        batch.setProductId(productId); // NEW: Store product_id
+        batch.setStatus("OPEN");
+
+        MerchantSettlementBatch savedBatch = batchRepo.save(batch);
+        log.info("Created batch {} for merchant {} with product {}", savedBatch.getId(), merchantId, productId);
+        return savedBatch;
+    }
+
+    /**
+     * Update batch candidates for direct merchants
+     */
+    @Transactional
+    public MerchantSettlementBatch updateBatchCandidates(Long batchId, List<String> vendorTxIds) {
+        log.debug("Updating batch {} candidates with {} transactions", batchId, vendorTxIds.size());
+
+        MerchantSettlementBatch batch = getBatchById(batchId);
+        validateBatchForUpdates(batch);
+
+        // Clear existing candidates
+        candidateRepo.deleteByBatchId(batchId);
+
+        // Process new candidates
+        BatchSummary summary = processCandidateTransactions(batch, vendorTxIds);
+
+        // Update batch totals
+        updateBatchTotals(batch, summary);
+
+        // Trigger async processing
+        asyncProcessor.processBatchWithTracking(batch.getId());
+
+        log.info("Updated batch {} with {} valid candidates, total amount: {}",
+                batchId, summary.validCount, summary.totalAmount);
+        return batchRepo.save(batch);
+    }
+
+    /**
+     * Get settlement candidates with product_id filtering
+     */
+    public List<SettlementCandidateDTO> listSettlementCandidates(Long merchantId, LocalDateTime from, LocalDateTime to, Long productId) {
+        log.debug("Listing candidates for merchant={}, product={}, from={} to={}", merchantId, productId, from, to);
+
+        // Get device identifiers for specific product
+        Set<DeviceIdentifiers> deviceIds = getDeviceIdentifiersForProduct(merchantId, productId);
+
+        if (deviceIds.isEmpty()) {
+            log.warn("No devices found for merchant {} and product {}", merchantId, productId);
+            return Collections.emptyList();
+        } else {
+            deviceIds.forEach(di -> log.debug("Fetched device → MID={}, TID={}", di.getMid(), di.getTid()));
+        }
+
+        // Extract MIDs and TIDs
+        Set<String> mids = deviceIds.stream()
+                .map(DeviceIdentifiers::getMid)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Set<String> tids = deviceIds.stream()
+                .map(DeviceIdentifiers::getTid)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // Find candidate transactions
+        List<VendorTransactions> candidates = vendorRepo.findCandidates(
+                from, to,
+                mids.isEmpty() ? List.of("__NONE__") : new ArrayList<>(mids),
+                tids.isEmpty() ? List.of("__NONE__") : new ArrayList<>(tids)
+        );
+
+        log.debug("Found {} candidate transactions for merchant {} product {}",
+                candidates.size(), merchantId, productId);
+
+        return candidates.stream()
+                .map(vt -> mapToSettlementCandidate(vt, merchantId, productId))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get settlement candidates by cycle with product filtering
+     */
+    public List<SettlementCandidateDTO> listSettlementCandidatesForCycle(Long merchantId, String cycleKey, Long productId) {
+        log.debug("Listing candidates for merchant={}, cycle={}, product={}", merchantId, cycleKey, productId);
+
+        LocalDateTime windowEnd = calculateWindowEnd(cycleKey);
+        LocalDateTime windowStart = calculateWindowStart(merchantId, productId);
+
+        return listSettlementCandidates(merchantId, windowStart, windowEnd, productId);
+    }
+
+    /**
+     * Resume failed batch processing
+     */
+    public void resumeBatch(Long batchId) {
+        log.info("Resuming batch {}", batchId);
+
+        MerchantSettlementBatch batch = getBatchById(batchId);
+        validateBatchForResume(batch);
+
+        // Reset failed candidates to selected
+        candidateRepo.updateFailedCandidatesToSelected(batchId);
+
+        // Trigger async processing
+        asyncProcessor.processBatchWithTracking(batchId);
+
+        log.info("Resumed processing for batch {}", batchId);
+    }
+
+    /**
+     * Settle single transaction with enhanced error handling
+     */
+    @Transactional
+    public SettlementResultDTO settleOneEnhanced(Long merchantId, Long batchId, String vendorTxId) {
+        log.debug("Processing settlement for merchant={}, batch={}, tx={}", merchantId, batchId, vendorTxId);
+
+        try {
+            VendorTransactions vt = getVendorTransaction(vendorTxId);
+
+            if (Boolean.TRUE.equals(vt.getSettled())) {
+                log.info("Transaction {} already settled, skipping", vendorTxId);
+                return SettlementResultDTO.alreadySettled(vendorTxId);
+            }
+
+            Merchant merchant = getMerchant(merchantId);
+            ProductSerialNumbers device = findDeviceForTransaction(vt, merchant);
+
+            validateTransactionBelongsToMerchant(vt, device, merchantId);
+
+            CardRate cardRate = getCardRateForTransaction(vt, device);
+            BigDecimal amount = nvl(vt.getAmount());
+
+            SettlementResultDTO result;
+            if (merchant.getFranchise() != null) {
+                result = processFranchiseMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
+            } else {
+                result = processDirectMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
+            }
+
+            log.info("Successfully settled transaction {} for merchant {}, amount: {}, fee: {}",
+                    vendorTxId, merchantId, result.getAmount(), result.getFee());
+            return result;
+
+        } catch (Exception e) {
+            log.error("Settlement failed for transaction {} merchant {}: {}", vendorTxId, merchantId, e.getMessage(), e);
+            return SettlementResultDTO.failed(vendorTxId, e.getMessage());
+        }
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    private LocalDateTime calculateWindowEnd(String cycleKey) {
+        return switch (cycleKey == null ? "" : cycleKey.toUpperCase()) {
+            case "T0" -> LocalDateTime.now();
+            case "T1" -> LocalDate.now().minusDays(1).atTime(23, 59, 59);
+            case "T2" -> LocalDate.now().minusDays(2).atTime(23, 59, 59);
+            default -> throw new IllegalArgumentException("Unknown cycleKey: " + cycleKey);
+        };
+    }
+
+    private LocalDateTime calculateWindowStart(Long merchantId, Long productId) {
+        Set<DeviceIdentifiers> deviceIds = getDeviceIdentifiersForProduct(merchantId, productId);
+
+        if (deviceIds.isEmpty()) {
+            return merchantRepository.findById(merchantId)
+                    .map(m -> m.getCreatedAt() != null ? m.getCreatedAt() : LocalDateTime.now())
+                    .orElse(LocalDateTime.now());
+        }
+
+        Set<String> mids = deviceIds.stream()
+                .map(DeviceIdentifiers::getMid)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        return mids.isEmpty()
+                ? LocalDateTime.now().minusDays(30)
+                : vendorRepo.findEarliestUnsettledDateByMids(new ArrayList<>(mids))
+                .orElse(LocalDateTime.now().minusDays(30));
+    }
+
+    private Set<DeviceIdentifiers> getDeviceIdentifiersForProduct(Long merchantId, Long productId) {
+        Merchant m = merchantRepository.findById(merchantId).orElseThrow();
+        Product p = productRepository.findById(productId).orElseThrow();
+
+        List<ProductSerialNumbers> list = serialRepo.findByMerchantAndProduct(m, p);
+
+        return list.stream()
+                .map(row -> new DeviceIdentifiers(row.getMid(), row.getTid()))
+                .filter(di -> di.getMid() != null || di.getTid() != null)
+                .collect(Collectors.toSet());
+    }
+
+
+    private void validateBatchForUpdates(MerchantSettlementBatch batch) {
+        if (!"DRAFT".equals(batch.getStatus()) && !"OPEN".equals(batch.getStatus())) {
+            throw new IllegalStateException("Cannot modify batch in " + batch.getStatus() + " state");
+        }
+    }
+
+    private void validateBatchForResume(MerchantSettlementBatch batch) {
+        if (!"PARTIALLY_COMPLETED".equals(batch.getStatus()) && !"FAILED".equals(batch.getStatus())) {
+            throw new IllegalStateException("Batch cannot be resumed. Current status: " + batch.getStatus());
+        }
+    }
+
+    private BatchSummary processCandidateTransactions(MerchantSettlementBatch batch, List<String> vendorTxIds) {
+        BatchSummary summary = new BatchSummary();
+
+        for (String vendorTxId : vendorTxIds) {
+            try {
+                VendorTransactions vt = getVendorTransaction(vendorTxId);
+                SettlementCandidateDTO dto = mapToSettlementCandidate(vt, batch.getMerchantId(), batch.getProductId());
+
+                if (dto.getError() == null) {
+                    SettlementBatchCandidate candidate = new SettlementBatchCandidate(
+                            batch.getId(), vendorTxId, dto.getAmount(), dto.getFee(), dto.getNetAmount());
+                    candidateRepo.save(candidate);
+                    summary.addValid(dto.getAmount(), dto.getFee(), dto.getNetAmount());
+                } else {
+                    log.warn("Invalid candidate {}: {}", vendorTxId, dto.getError());
+                    summary.addInvalid();
+                }
+            } catch (Exception e) {
+                log.error("Error processing candidate {}: {}", vendorTxId, e.getMessage());
+                summary.addInvalid();
+            }
+        }
+
+        return summary;
+    }
+
+    private void updateBatchTotals(MerchantSettlementBatch batch, BatchSummary summary) {
+        batch.setTotalTransactions(summary.validCount);
+        batch.setTotalAmount(summary.totalAmount);
+        batch.setTotalFees(summary.totalFees);
+        batch.setTotalNetAmount(summary.totalNet);
+        batch.setStatus("OPEN");
+    }
+
+    private VendorTransactions getVendorTransaction(String vendorTxId) {
+        return vendorRepo.findByTransactionReferenceId(vendorTxId)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + vendorTxId));
+    }
+
+    private Merchant getMerchant(Long merchantId) {
+        return merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
+    }
+
+    private ProductSerialNumbers findDeviceForTransaction(VendorTransactions vt, Merchant merchant) {
+        Optional<ProductSerialNumbers> device = findDeviceForTransaction(vt);
+        if (device.isEmpty()) {
+            throw new IllegalStateException("Device not found for transaction: " + vt.getTransactionReferenceId());
+        }
+        return device.get();
+    }
+
+    private Optional<ProductSerialNumbers> findDeviceForTransaction(VendorTransactions vt) {
+        // Try MID + TID first (most precise)
+        if (vt.getMid() != null && vt.getTid() != null) {
+            List<ProductSerialNumbers> devices = serialRepo.findByMidAndTid(vt.getMid(), vt.getTid());
+            if (!devices.isEmpty()) {
+                return Optional.of(devices.get(0));
+            }
+        }
+
+        // Try MID only
+        if (vt.getMid() != null) {
+            Optional<ProductSerialNumbers> device = serialRepo.findByMid(vt.getMid());
+            if (device.isPresent()) {
+                return device;
+            }
+        }
+
+        // Try TID only (least precise)
+        if (vt.getTid() != null) {
+            Optional<ProductSerialNumbers> device = serialRepo.findByTid(vt.getTid());
+            if (device.isPresent()) {
+                return device;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private void validateTransactionBelongsToMerchant(VendorTransactions vt, ProductSerialNumbers device, Long expectedMerchantId) {
+        if (!expectedMerchantId.equals(device.getMerchant().getId())) {
+            throw new IllegalStateException("Transaction " + vt.getTransactionReferenceId() +
+                    " belongs to different merchant: " + device.getMerchant().getId());
+        }
+    }
+
+    private CardRate getCardRateForTransaction(VendorTransactions vt, ProductSerialNumbers device) {
+        ProductSchemeAssignment schemeAssignment = schemeAssignRepo.findByOutwardTransaction(device.getOutwardTransaction())
+                .orElseThrow(() -> new IllegalStateException("No pricing scheme found for device"));
+
+        String cardName = normalizeCardName(vt.getBrandType(), vt.getCardType());
+
+        return cardRateRepo.findByPricingScheme_IdAndCardNameContainingIgnoreCase(
+                        schemeAssignment.getScheme().getId(), cardName)
+                .or(() -> cardRateRepo.findByPricingScheme_IdAndCardNameContainingIgnoreCase(
+                        schemeAssignment.getScheme().getId(), "DEFAULT"))
+                .orElseThrow(() -> new IllegalStateException("No card rate found for " + cardName));
+    }
+
+    private SettlementResultDTO processDirectMerchantSettlement(Merchant merchant, VendorTransactions vt,
+                                                                CardRate cr, BigDecimal amount, Long batchId, ProductSerialNumbers device) {
+        log.debug("Processing direct merchant settlement for merchant {} amount {}", merchant.getId(), amount);
+
+        Double rateValue = cr.getRate();
+        if (rateValue == null) {
+            throw new IllegalStateException("No rate configured for card: " + cr.getCardName());
+        }
+
+        BigDecimal feePct = amount.signum() > 0
+                ? BigDecimal.valueOf(rateValue).movePointLeft(2)
+                : BigDecimal.ZERO;
+        BigDecimal fee = amount.multiply(feePct).setScale(2, RoundingMode.HALF_UP);
+        if (fee.compareTo(amount.abs()) > 0) fee = amount.abs();
+        BigDecimal net = amount.subtract(fee).setScale(2, RoundingMode.HALF_UP);
+
+        MerchantWallet wallet = updateMerchantWallet(merchant.getId(), net, amount);
+        createMerchantTransactionDetails(merchant, vt, amount, fee, wallet.getAvailableBalance(), batchId);
+        markTransactionSettled(vt, batchId);
+
+        return SettlementResultDTO.ok(vt.getTransactionReferenceId(), amount, fee, net, wallet.getAvailableBalance());
+    }
+
+    private SettlementResultDTO processFranchiseMerchantSettlement(Merchant merchant, VendorTransactions vt,
+                                                                   CardRate cr, BigDecimal amount, Long batchId, ProductSerialNumbers device) {
+        log.debug("Processing franchise merchant settlement for merchant {} amount {}", merchant.getId(), amount);
+
+        Franchise franchise = merchant.getFranchise();
+        if (franchise == null) {
+            throw new IllegalStateException("Merchant does not belong to a franchise");
+        }
+
+        Double merchantRatePercent = cr.getMerchantRate();
+        Double franchiseRatePercent = cr.getFranchiseRate();
+
+        if (merchantRatePercent == null || franchiseRatePercent == null) {
+            log.warn("Dual rates not configured for card: {}. Using single rate.", cr.getCardName());
+            return processDirectMerchantSettlement(merchant, vt, cr, amount, batchId, device);
+        }
+
+        if (merchantRatePercent < franchiseRatePercent) {
+            log.warn("Merchant rate ({}) is less than franchise rate ({}) for card: {}. This may cause negative commission.",
+                    merchantRatePercent, franchiseRatePercent, cr.getCardName());
+        }
+
+        BigDecimal merchantRate = BigDecimal.valueOf(merchantRatePercent).movePointLeft(2);
+        BigDecimal franchiseRate = BigDecimal.valueOf(franchiseRatePercent).movePointLeft(2);
+
+        BigDecimal merchantFee = amount.multiply(merchantRate).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal franchiseFee = amount.multiply(franchiseRate).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal franchiseCommission = merchantFee.subtract(franchiseFee).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal merchantNet = amount.subtract(merchantFee);
+
+        MerchantWallet merchantWallet = updateMerchantWallet(merchant.getId(), merchantNet, amount);
+        FranchiseWallet franchiseWallet = updateFranchiseWallet(franchise.getId(), franchiseCommission);
+
+        createMerchantTransactionDetails(merchant, vt, amount, merchantFee, merchantWallet.getAvailableBalance(), batchId);
+        createFranchiseTransactionDetails(franchise, vt, amount, franchiseCommission,
+                franchiseWallet != null ? franchiseWallet.getAvailableBalance() : BigDecimal.ZERO, batchId);
+
+        markTransactionSettled(vt, batchId);
+
+        return SettlementResultDTO.ok(vt.getTransactionReferenceId(), amount, merchantFee, merchantNet, merchantWallet.getAvailableBalance());
+    }
+
+    // ==================== WALLET & TRANSACTION METHODS ====================
+
+    private MerchantWallet updateMerchantWallet(Long merchantId, BigDecimal net, BigDecimal amount) {
+        MerchantWallet wallet = walletRepo.findByMerchantIdForUpdate(merchantId).orElseGet(() -> {
+            MerchantWallet w = new MerchantWallet();
+            Merchant mRef = new Merchant();
+            mRef.setId(merchantId);
+            w.setMerchant(mRef);
+            w.setAvailableBalance(BigDecimal.ZERO);
+            w.setLastUpdatedAmount(BigDecimal.ZERO);
+            w.setLastUpdatedAt(LocalDateTime.now());
+            w.setTotalCash(BigDecimal.ZERO);
+            w.setCutOfAmount(BigDecimal.ZERO);
+            return walletRepo.save(w);
+        });
+
+        BigDecimal before = nvl(wallet.getAvailableBalance());
+        BigDecimal after = before.add(net);
+        wallet.setAvailableBalance(after);
+        wallet.setLastUpdatedAmount(net);
+        wallet.setLastUpdatedAt(LocalDateTime.now());
+        wallet.setTotalCash(nvl(wallet.getTotalCash()).add(amount.max(BigDecimal.ZERO)));
+
+        return walletRepo.save(wallet);
+    }
+
+    private FranchiseWallet updateFranchiseWallet(Long franchiseId, BigDecimal commission) {
+        if (commission.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+
+        FranchiseWallet wallet = franchiseWalletRepo.findByFranchiseIdForUpdate(franchiseId)
+                .orElseGet(() -> {
+                    FranchiseWallet w = new FranchiseWallet();
+                    Franchise fRef = new Franchise();
+                    fRef.setId(franchiseId);
+                    w.setFranchise(fRef);
+                    w.setAvailableBalance(BigDecimal.ZERO);
+                    w.setLastUpdatedAmount(BigDecimal.ZERO);
+                    w.setLastUpdatedAt(LocalDateTime.now());
+                    w.setTotalCash(BigDecimal.ZERO);
+                    w.setCutOfAmount(BigDecimal.ZERO);
+                    return franchiseWalletRepo.save(w);
+                });
+
+        BigDecimal before = nvl(wallet.getAvailableBalance());
+        BigDecimal after = before.add(commission);
+        wallet.setAvailableBalance(after);
+        wallet.setLastUpdatedAmount(commission);
+        wallet.setLastUpdatedAt(LocalDateTime.now());
+
+        return franchiseWalletRepo.save(wallet);
+    }
+
+    private void createMerchantTransactionDetails(Merchant merchant, VendorTransactions vt,
+                                                  BigDecimal amount, BigDecimal fee, BigDecimal balanceAfter, Long batchId) {
+        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
+            mtd.setMerchant(merchant);
+            mtd.setCharge(fee);
+            mtd.setVendorTransactionId(vt.getInternalId().toString());
+            mtd.setDateAndTimeOfTransaction(vt.getDate());
+            mtd.setAmount(amount);
+            mtd.setFinalBalance(balanceAfter);
+            mtd.setBalAfterTran(balanceAfter);
+            mtd.setTranStatus("SETTLED");
+            mtd.setTransactionType("SETTLEMENT");
+            mtd.setRemarks("Batch " + batchId + " settlement");
+            merchantTxnRepo.save(mtd);
+        }
+    }
+
+    private void createFranchiseTransactionDetails(Franchise franchise, VendorTransactions vt,
+                                                   BigDecimal amount, BigDecimal commission, BigDecimal balanceAfter, Long batchId) {
+        if (commission.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+
+        String vendorTxKey = vt.getInternalId().toString() + "_FRANCHISE";
+        if (!franchiseTxnRepo.existsByVendorTransactionId(vendorTxKey)) {
+            FranchiseTransactionDetails ftd = new FranchiseTransactionDetails();
+            ftd.setFranchise(franchise);
+            ftd.setVendorTransactionId(vendorTxKey);
+            ftd.setDateAndTimeOfTransaction(vt.getDate());
+            ftd.setAmount(commission);
+            ftd.setFinalBalance(balanceAfter);
+            ftd.setBalAfterTran(balanceAfter);
+            ftd.setTranStatus("SETTLED");
+            ftd.setTransactionType("COMMISSION");
+            ftd.setRemarks("Batch " + batchId + " commission from merchant transaction " + vt.getTransactionReferenceId());
+            franchiseTxnRepo.save(ftd);
+        }
+    }
+
+    private void markTransactionSettled(VendorTransactions vt, Long batchId) {
+        vt.setSettled(true);
+        vt.setSettledAt(LocalDateTime.now());
+        vt.setSettlementBatchId(batchId);
+        vendorRepo.save(vt);
+    }
+
+    private SettlementCandidateDTO mapToSettlementCandidate(VendorTransactions vt, Long expectedMerchantId, Long productId) {
+        try {
+            Optional<ProductSerialNumbers> deviceOpt = findDeviceForTransaction(vt);
+            if (deviceOpt.isEmpty()) {
+                return SettlementCandidateDTO.notFound(vt, "DEVICE_NOT_FOUND");
+            }
+
+            ProductSerialNumbers device = deviceOpt.get();
+
+            if (!expectedMerchantId.equals(device.getMerchant().getId())) {
+                return SettlementCandidateDTO.notFound(vt, "WRONG_MERCHANT");
+            }
+
+            // Check if device belongs to the specified product
+            if (productId != null && !productId.equals(device.getProduct().getId())) {
+                return SettlementCandidateDTO.notFound(vt, "WRONG_PRODUCT");
+            }
+
+            Optional<ProductSchemeAssignment> schemeOpt = schemeAssignRepo.findByOutwardTransaction(device.getOutwardTransaction());
+            if (schemeOpt.isEmpty()) {
+                return SettlementCandidateDTO.notFound(vt, "NO_PRICING_SCHEME");
+            }
+
+            ProductSchemeAssignment scheme = schemeOpt.get();
+
+            LocalDate txnDate = vt.getDate() != null ? vt.getDate().toLocalDate() : LocalDate.now();
+            if (scheme.getExpiryDate() != null && txnDate.isAfter(scheme.getExpiryDate())) {
+                return SettlementCandidateDTO.notFound(vt, "SCHEME_EXPIRED");
+            }
+
+            String cardName = normalizeCardName(vt.getBrandType(), vt.getCardType());
+            Optional<CardRate> crOpt = cardRateRepo.findByPricingScheme_IdAndCardNameContainingIgnoreCase(
+                            scheme.getScheme().getId(), cardName)
+                    .or(() -> cardRateRepo.findByPricingScheme_IdAndCardNameContainingIgnoreCase(
+                            scheme.getScheme().getId(), "DEFAULT"));
+
+            if (crOpt.isEmpty()) {
+                return SettlementCandidateDTO.notFound(vt, "NO_CARD_RATE");
+            }
+
+            CardRate cr = crOpt.get();
+            BigDecimal amount = vt.getAmount() == null ? BigDecimal.ZERO : vt.getAmount();
+
+            // Check if merchant is franchise merchant and use appropriate rate
+            Merchant merchant = device.getMerchant();
+            boolean isFranchiseMerchant = merchant.getFranchise() != null;
+
+            Double rateToUse;
+            if (isFranchiseMerchant && cr.getMerchantRate() != null) {
+                rateToUse = cr.getMerchantRate();
+            } else {
+                rateToUse = cr.getRate();
+            }
+
+            if (rateToUse == null) {
+                return SettlementCandidateDTO.notFound(vt, "NO_RATE_CONFIGURED");
+            }
+
+            BigDecimal feePct = amount.signum() > 0
+                    ? BigDecimal.valueOf(rateToUse).movePointLeft(2)
+                    : BigDecimal.ZERO;
+            BigDecimal fee = amount.multiply(feePct).setScale(2, RoundingMode.HALF_UP);
+            if (fee.compareTo(amount.abs()) > 0) fee = amount.abs();
+            BigDecimal net = amount.subtract(fee).setScale(2, RoundingMode.HALF_UP);
+
+            return new SettlementCandidateDTO(
+                    vt.getInternalId(),
+                    vt.getTransactionReferenceId(),
+                    vt.getDate(),
+                    amount,
+                    vt.getCardType(),
+                    vt.getBrandType(),
+                    cardName,
+                    rateToUse,
+                    fee,
+                    net,
+                    null
+            );
+
+        } catch (Exception ex) {
+            log.error("Error mapping vendor transaction {}", vt.getInternalId(), ex);
+            return SettlementCandidateDTO.notFound(vt, "MAPPING_ERROR: " + ex.getMessage());
+        }
+    }
+
+    // ==================== READ-ONLY METHODS ====================
+
+    @Transactional(readOnly = true)
+    public MerchantSettlementBatch getBatchById(Long batchId) {
+        return batchRepo.findById(batchId)
+                .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
+    }
+
+    @Transactional(readOnly = true)
+    public BatchProgressDTO getBatchProgress(Long batchId) {
+        MerchantSettlementBatch batch = getBatchById(batchId);
+
+        BatchProgressDTO progress = new BatchProgressDTO();
+        progress.setBatchId(batchId);
+        progress.setStatus(batch.getStatus());
+        progress.setTotalTransactions(batch.getTotalTransactions());
+        progress.setProcessedTransactions(batch.getProcessedTransactions());
+        progress.setFailedTransactions(batch.getFailedTransactions());
+        progress.setTotalAmount(batch.getTotalAmount());
+        progress.setTotalFees(batch.getTotalFees());
+        progress.setTotalNetAmount(batch.getTotalNetAmount());
+        progress.setProcessingStartedAt(batch.getProcessingStartedAt());
+        progress.setProcessingCompletedAt(batch.getProcessingCompletedAt());
+        progress.setErrorMessage(batch.getErrorMessage());
+
+        if (batch.getTotalTransactions() != null && batch.getTotalTransactions() > 0) {
+            int totalProcessed = (batch.getProcessedTransactions() != null ? batch.getProcessedTransactions() : 0) +
+                    (batch.getFailedTransactions() != null ? batch.getFailedTransactions() : 0);
+            progress.setProgressPercentage((totalProcessed * 100.0) / batch.getTotalTransactions());
+        } else {
+            progress.setProgressPercentage(0.0);
+        }
+
+        return progress;
+    }
+
+    @Transactional(readOnly = true)
+    public List<MerchantSettlementBatch> getAllBatchesByMerchant(Long merchantId, int limit) {
+        return batchRepo.findByMerchantIdOrderByCreatedAtDesc(merchantId, PageRequest.of(0, limit)).getContent();
+    }
+
+    // ==================== UTILITY METHODS ====================
+
+    private BigDecimal nvl(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private String normalizeCardName(String brandType, String cardType) {
+        if (brandType == null) brandType = "";
+        if (cardType == null) cardType = "";
+        return (brandType + " " + cardType).trim();
+    }
+
+    @Transactional
+    public void markBatchClosed(Long id) {
+        batchRepo.updateStatusById(id, "CLOSED");
+    }
+
+
+    // ==================== INNER CLASSES ====================
+
+    private static class DeviceIdentifiers {
+        private final String mid;
+        private final String tid;
+
+        public DeviceIdentifiers(String mid, String tid) {
+            this.mid = mid;
+            this.tid = tid;
+        }
+
+        public String getMid() { return mid; }
+        public String getTid() { return tid; }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DeviceIdentifiers that = (DeviceIdentifiers) o;
+            return Objects.equals(mid, that.mid) && Objects.equals(tid, that.tid);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mid, tid);
+        }
+    }
+
+    private static class BatchSummary {
+        int validCount = 0;
+        int invalidCount = 0;
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal totalFees = BigDecimal.ZERO;
+        BigDecimal totalNet = BigDecimal.ZERO;
+
+        void addValid(BigDecimal amount, BigDecimal fee, BigDecimal net) {
+            validCount++;
+            totalAmount = totalAmount.add(amount);
+            totalFees = totalFees.add(fee);
+            totalNet = totalNet.add(net);
+        }
+
+        void addInvalid() {
+            invalidCount++;
+        }
+    }
+}

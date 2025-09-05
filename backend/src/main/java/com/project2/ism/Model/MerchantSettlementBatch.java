@@ -124,6 +124,9 @@ public class MerchantSettlementBatch {
     @Column(name = "merchant_id", nullable = false)
     private Long merchantId;
 
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+
     @Column(name = "window_start", nullable = false)
     private LocalDateTime windowStart;
 
@@ -174,9 +177,10 @@ public class MerchantSettlementBatch {
     public MerchantSettlementBatch() {
     }
 
-    public MerchantSettlementBatch(Long merchantId, LocalDateTime windowStart, LocalDateTime windowEnd,
+    public MerchantSettlementBatch(Long merchantId,Long productId, LocalDateTime windowStart, LocalDateTime windowEnd,
                                    String cycleKey, String createdBy) {
         this.merchantId = merchantId;
+        this.productId = productId;
         this.windowStart = windowStart;
         this.windowEnd = windowEnd;
         this.cycleKey = cycleKey;
@@ -200,6 +204,14 @@ public class MerchantSettlementBatch {
 
     public void setMerchantId(Long merchantId) {
         this.merchantId = merchantId;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
     }
 
     public LocalDateTime getWindowStart() {
