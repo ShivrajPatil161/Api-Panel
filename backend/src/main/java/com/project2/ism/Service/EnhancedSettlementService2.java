@@ -156,17 +156,17 @@ public class EnhancedSettlementService2 {
             log.warn("No devices found for merchant {} and product {}", merchantId, productId);
             return Collections.emptyList();
         } else {
-            deviceIds.forEach(di -> log.debug("Fetched device → MID={}, TID={}", di.getMid(), di.getTid()));
+            deviceIds.forEach(di -> log.debug("Fetched device → MID={}, TID={}", di.mid(), di.tid()));
         }
 
         // Extract MIDs and TIDs
         Set<String> mids = deviceIds.stream()
-                .map(DeviceIdentifiers::getMid)
+                .map(DeviceIdentifiers::mid)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
         Set<String> tids = deviceIds.stream()
-                .map(DeviceIdentifiers::getTid)
+                .map(DeviceIdentifiers::tid)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
@@ -276,7 +276,7 @@ public class EnhancedSettlementService2 {
         }
 
         Set<String> mids = deviceIds.stream()
-                .map(DeviceIdentifiers::getMid)
+                .map(DeviceIdentifiers::mid)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
@@ -294,7 +294,7 @@ public class EnhancedSettlementService2 {
 
         return list.stream()
                 .map(row -> new DeviceIdentifiers(row.getMid(), row.getTid()))
-                .filter(di -> di.getMid() != null || di.getTid() != null)
+                .filter(di -> di.mid() != null || di.tid() != null)
                 .collect(Collectors.toSet());
     }
 
@@ -723,30 +723,8 @@ public class EnhancedSettlementService2 {
 
     // ==================== INNER CLASSES ====================
 
-    private static class DeviceIdentifiers {
-        private final String mid;
-        private final String tid;
+    private record DeviceIdentifiers(String mid, String tid) {
 
-        public DeviceIdentifiers(String mid, String tid) {
-            this.mid = mid;
-            this.tid = tid;
-        }
-
-        public String getMid() { return mid; }
-        public String getTid() { return tid; }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            DeviceIdentifiers that = (DeviceIdentifiers) o;
-            return Objects.equals(mid, that.mid) && Objects.equals(tid, that.tid);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(mid, tid);
-        }
     }
 
     private static class BatchSummary {
