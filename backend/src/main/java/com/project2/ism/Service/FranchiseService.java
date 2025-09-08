@@ -105,16 +105,15 @@ import com.project2.ism.DTO.FranchiseMerchantStatsDTO;
 import com.project2.ism.DTO.FranchiseProductSummaryDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
+import com.project2.ism.Model.FranchiseWallet;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
+import com.project2.ism.Model.MerchantWallet;
 import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
 
-import com.project2.ism.Repository.FranchiseRepository;
-import com.project2.ism.Repository.MerchantRepository;
-import com.project2.ism.Repository.OutwardTransactionRepository;
-import com.project2.ism.Repository.ProductSerialsRepository;
+import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -136,15 +135,17 @@ public class FranchiseService {
     private final ProductSerialsRepository serialRepo;
     private final OutwardTransactionRepository outwardRepo;
 
+    private final FranchiseWalletRepository franchiseWalletRepository;
     public FranchiseService(FranchiseRepository franchiseRepository,
                             FileStorageService fileStorageService,
-                            UserService userService, MerchantRepository merchantRepository, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo) {
+                            UserService userService, MerchantRepository merchantRepository, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo, FranchiseWalletRepository franchiseWalletRepository) {
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.merchantRepository = merchantRepository;
         this.serialRepo = serialRepo;
         this.outwardRepo = outwardRepo;
+        this.franchiseWalletRepository = franchiseWalletRepository;
     }
 
     public void createFranchise(FranchiseFormDTO dto) {
@@ -353,5 +354,11 @@ public class FranchiseService {
                 ));
 
         return dto;
+    }
+
+    public BigDecimal getWalletBalance(Long merchantId) {
+        return franchiseWalletRepository.findByFranchiseId(merchantId)
+                .map(FranchiseWallet::getAvailableBalance)
+                .orElse(BigDecimal.ZERO); // if wallet row not present yet
     }
 }

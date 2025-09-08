@@ -15,13 +15,13 @@ public class CardRate {
     private String cardName;
 
     @Column(name = "rate")
-    private Double rate;
+    private Double rate;//-for direct merchant
 
     @Column(name = "franchise_rate")
     private Double franchiseRate;
 
     @Column(name = "merchant_rate")
-    private Double merchantRate;
+    private Double merchantRate;//merchant belonging to franchise
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pricing_scheme_id")

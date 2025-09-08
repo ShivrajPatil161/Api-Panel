@@ -63,7 +63,7 @@ const SettlementBatchStatusMonitor = () => {
 
             setLoading(true);
             try {
-                const response = await api.get(`/franchise/${franchiseId}/merchants`);
+                const response = await api.get(`/merchants/franchise/${franchiseId}`);
                 setAvailableFranchiseMerchants(response.data);
 
                 // Set selected franchise entity
@@ -102,23 +102,23 @@ const SettlementBatchStatusMonitor = () => {
                 const response = await api.get(`/merchants/${merchantId}/settlement/batches`);
                 setSettlementBatches(response.data);
 
-                // Fetch details for each batch
+                // Fetch details for each batch (status endpoint)
                 const batchDetailsPromises = response.data.map(async (batch) => {
                     try {
                         const statusResponse = await api.get(
-                            `/merchants/${merchantId}/settlement/batches/${batch.id}/status`
+                            `/merchants/${merchantId}/settlement/batches/${batch.batchId}`
                         );
-                        return { id: batch.id, details: statusResponse.data };
+                        return { batchId: batch.batchId, details: statusResponse.data };
                     } catch (error) {
-                        console.error(`Error fetching details for batch ${batch.id}:`, error);
-                        return { id: batch.id, details: null, error: true };
+                        console.error(`Error fetching details for batch ${batch.batchId}:`, error);
+                        return { batchId: batch.batchId, details: null, error: true };
                     }
                 });
 
                 const allBatchDetails = await Promise.all(batchDetailsPromises);
                 const batchDetailsMap = {};
-                allBatchDetails.forEach(({ id, details, error }) => {
-                    batchDetailsMap[id] = { details, error };
+                allBatchDetails.forEach(({ batchId, details, error }) => {
+                    batchDetailsMap[batchId] = { details, error };
                 });
                 setBatchDetails(batchDetailsMap);
 
@@ -139,7 +139,7 @@ const SettlementBatchStatusMonitor = () => {
         setRefreshing(prev => ({ ...prev, [batchId]: true }));
         try {
             const statusResponse = await api.get(
-                `/merchants/${merchantId}/settlement/batches/${batchId}/status`
+                `/merchants/${merchantId}/settlement/batches/${batchId}`
             );
 
             setBatchDetails(prev => ({
@@ -165,19 +165,19 @@ const SettlementBatchStatusMonitor = () => {
             const batchDetailsPromises = settlementBatches.map(async (batch) => {
                 try {
                     const statusResponse = await api.get(
-                        `/merchants/${merchantId}/settlement/batches/${batch.id}/status`
+                        `/merchants/${merchantId}/settlement/batches/${batch.batchId}`
                     );
-                    return { id: batch.id, details: statusResponse.data };
+                    return { batchId: batch.batchId, details: statusResponse.data };
                 } catch (error) {
-                    console.error(`Error fetching details for batch ${batch.id}:`, error);
-                    return { id: batch.id, details: null, error: true };
+                    console.error(`Error fetching details for batch ${batch.batchId}:`, error);
+                    return { batchId: batch.batchId, details: null, error: true };
                 }
             });
 
             const allBatchDetails = await Promise.all(batchDetailsPromises);
             const batchDetailsMap = {};
-            allBatchDetails.forEach(({ id, details, error }) => {
-                batchDetailsMap[id] = { details, error };
+            allBatchDetails.forEach(({ batchId, details, error }) => {
+                batchDetailsMap[batchId] = { details, error };
             });
             setBatchDetails(batchDetailsMap);
         } catch (error) {
@@ -344,18 +344,17 @@ const SettlementBatchStatusMonitor = () => {
 
                             <div className="space-y-4">
                                 {settlementBatches.map((batch) => {
-                                    const batchDetail = batchDetails[batch.id];
-                                    const details = batchDetail?.details;
+                                    const batchDetail = batchDetails[batch.batchId];
                                     const hasError = batchDetail?.error;
 
                                     return (
-                                        <div key={batch.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                        <div key={batch.batchId} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                                             {/* Batch Header */}
                                             <div className="flex justify-between items-start mb-4">
                                                 <div className="flex-1">
                                                     <div className="flex items-center space-x-3">
                                                         <h3 className="text-lg font-medium text-gray-900">
-                                                            Batch #{batch.id}
+                                                            Batch #{batch.batchId}
                                                         </h3>
                                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(batch.status)}`}>
                                                             {batch.status}
@@ -367,53 +366,29 @@ const SettlementBatchStatusMonitor = () => {
                                                         )}
                                                     </div>
                                                     <p className="text-sm text-gray-500 mt-1">
-                                                        Created: {formatDate(batch.createdAt)}
+                                                        Window: {formatDate(batch.windowStart)} - {formatDate(batch.windowEnd)}
                                                     </p>
                                                 </div>
                                                 <button
-                                                    onClick={() => refreshBatchStatus(batch.id)}
-                                                    disabled={refreshing[batch.id]}
+                                                    onClick={() => refreshBatchStatus(batch.batchId)}
+                                                    disabled={refreshing[batch.batchId]}
                                                     className="px-3 py-1 text-sm text-blue-600 border border-blue-600 rounded hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    {refreshing[batch.id] ? "..." : "Refresh"}
+                                                    {refreshing[batch.batchId] ? "..." : "Refresh"}
                                                 </button>
                                             </div>
 
                                             {/* Batch Details Grid */}
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                                                {/* Basic Info */}
-                                                <div className="space-y-2">
-                                                    <div>
-                                                        <span className="text-gray-500">Cycle:</span>
-                                                        <p className="font-medium">{batch.cycleKey || 'N/A'}</p>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-gray-500">Created By:</span>
-                                                        <p className="font-medium">{batch.createdBy || 'N/A'}</p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Window Info */}
-                                                <div className="space-y-2">
-                                                    <div>
-                                                        <span className="text-gray-500">Window Start:</span>
-                                                        <p className="font-medium">{formatDate(batch.windowStart)}</p>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-gray-500">Window End:</span>
-                                                        <p className="font-medium">{formatDate(batch.windowEnd)}</p>
-                                                    </div>
-                                                </div>
-
                                                 {/* Transaction Info */}
                                                 <div className="space-y-2">
                                                     <div>
                                                         <span className="text-gray-500">Total Transactions:</span>
-                                                        <p className="font-medium">{details?.totalTransactions || 'Loading...'}</p>
+                                                        <p className="font-medium">{batch.totalTransactions}</p>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-500">Settled Transactions:</span>
-                                                        <p className="font-medium text-green-600">{details?.settledTransactions || 'Loading...'}</p>
+                                                        <span className="text-gray-500">Processed:</span>
+                                                        <p className="font-medium text-green-600">{batch.processedTransactions}</p>
                                                     </div>
                                                 </div>
 
@@ -421,72 +396,76 @@ const SettlementBatchStatusMonitor = () => {
                                                 <div className="space-y-2">
                                                     <div>
                                                         <span className="text-gray-500">Total Amount:</span>
-                                                        <p className="font-medium">
-                                                            {details?.totalAmount ? `₹${details.totalAmount.toLocaleString('en-IN')}` : 'Loading...'}
-                                                        </p>
+                                                        <p className="font-medium">₹{batch.totalAmount.toLocaleString('en-IN')}</p>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-500">Settled Amount:</span>
-                                                        <p className="font-medium text-green-600">
-                                                            {details?.settledAmount ? `₹${details.settledAmount.toLocaleString('en-IN')}` : 'Loading...'}
-                                                        </p>
+                                                        <span className="text-gray-500">Net Amount:</span>
+                                                        <p className="font-medium text-green-600">₹{batch.totalNetAmount.toLocaleString('en-IN')}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Fees & Failed */}
+                                                <div className="space-y-2">
+                                                    <div>
+                                                        <span className="text-gray-500">Total Fees:</span>
+                                                        <p className="font-medium">₹{batch.totalFees.toLocaleString('en-IN')}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-500">Failed Transactions:</span>
+                                                        <p className="font-medium text-red-600">{batch.failedTransactions}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Processing Times */}
+                                                <div className="space-y-2">
+                                                    <div>
+                                                        <span className="text-gray-500">Started:</span>
+                                                        <p className="font-medium">{formatDate(batch.processingStartedAt)}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-500">Completed:</span>
+                                                        <p className="font-medium">{formatDate(batch.processingCompletedAt)}</p>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Additional Details if available */}
-                                            {details && (
-                                                <div className="mt-4 pt-4 border-t border-gray-200">
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                                        {details.processingStartTime && (
-                                                            <div>
-                                                                <span className="text-gray-500">Processing Started:</span>
-                                                                <p className="font-medium">{formatDate(details.processingStartTime)}</p>
-                                                            </div>
-                                                        )}
-                                                        {details.processingEndTime && (
-                                                            <div>
-                                                                <span className="text-gray-500">Processing Completed:</span>
-                                                                <p className="font-medium">{formatDate(details.processingEndTime)}</p>
-                                                            </div>
-                                                        )}
-                                                        {details.lastUpdated && (
-                                                            <div>
-                                                                <span className="text-gray-500">Last Updated:</span>
-                                                                <p className="font-medium">{formatDate(details.lastUpdated)}</p>
-                                                            </div>
-                                                        )}
+                                            {/* Progress Bar */}
+                                            {batch.totalTransactions > 0 && (
+                                                <div className="mt-4">
+                                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                                        <span>Processing Progress</span>
+                                                        <span>
+                                                            {batch.processedTransactions} / {batch.totalTransactions}
+                                                            ({Math.round((batch.processedTransactions / batch.totalTransactions) * 100)}%)
+                                                        </span>
                                                     </div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div
+                                                            className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                                                            style={{
+                                                                width: `${Math.min((batch.processedTransactions / batch.totalTransactions) * 100, 100)}%`
+                                                            }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            )}
 
-                                                    {/* Progress Bar */}
-                                                    {details.totalTransactions > 0 && (
-                                                        <div className="mt-4">
-                                                            <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                                                <span>Settlement Progress</span>
-                                                                <span>
-                                                                    {details.settledTransactions} / {details.totalTransactions}
-                                                                    ({Math.round((details.settledTransactions / details.totalTransactions) * 100)}%)
-                                                                </span>
-                                                            </div>
-                                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                                <div
-                                                                    className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                                                                    style={{
-                                                                        width: `${Math.min((details.settledTransactions / details.totalTransactions) * 100, 100)}%`
-                                                                    }}
-                                                                ></div>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                            {/* Error Messages */}
+                                            {batch.errorMessage && (
+                                                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                                                    <p className="text-sm text-red-800">
+                                                        <strong>Error:</strong> {batch.errorMessage}
+                                                    </p>
+                                                </div>
+                                            )}
 
-                                                    {/* Error Messages */}
-                                                    {details.errorMessage && (
-                                                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                                                            <p className="text-sm text-red-800">
-                                                                <strong>Error:</strong> {details.errorMessage}
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                            {/* Last Updated from status API */}
+                                            {batchDetail?.details?.lastUpdated && (
+                                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                                    <div className="text-sm">
+                                                        <span className="text-gray-500">Last Status Check:</span>
+                                                        <span className="font-medium ml-2">{formatDate(batchDetail.details.lastUpdated)}</span>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

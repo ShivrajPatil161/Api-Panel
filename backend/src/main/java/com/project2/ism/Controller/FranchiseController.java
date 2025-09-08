@@ -74,6 +74,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -186,11 +187,12 @@ public class FranchiseController {
     @GetMapping("/profile")
     public ResponseEntity<?> profile(@RequestParam String email) {
         Franchise franchise = franchiseService.getFranchiseByEmail(email);
+        BigDecimal walletBalance = franchiseService.getWalletBalance(franchise.getId());
         FranchiseListDTO dto = new FranchiseListDTO(
                 franchise.getId(),
                 franchise.getFranchiseName(),
                 franchise.getContactPerson().getEmail(),
-                franchise.getWalletBalance()
+                walletBalance
         );
         return ResponseEntity.ok(dto);
     }
