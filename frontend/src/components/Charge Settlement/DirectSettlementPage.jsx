@@ -16,7 +16,7 @@ const DirectSettlementPage = () => {
     // Form state
     const [selectedMerchantId, setSelectedMerchantId] = useState('');
     const [cycleKey, setCycleKey] = useState('');
-    const [productId, setProductId] = useState(0);
+    const [productId, setProductId] = useState('');
     const [selectedTxIds, setSelectedTxIds] = useState([]);
 
     // Data state
@@ -110,10 +110,7 @@ const DirectSettlementPage = () => {
         resetBatch();
         clearCandidates();
 
-        // Create new batch if all required fields are present
-        if (selectedMerchantId && cycleKey && productId) {
-            handleCreateBatch();
-        }
+      
     }, [selectedMerchantId, cycleKey, productId, resetBatch, clearCandidates, handleCreateBatch]);
 
     // Calculate selection totals
@@ -230,16 +227,30 @@ const DirectSettlementPage = () => {
 
                 {/* Settlement Filters */}
                 {selectedMerchantId && (
-                    <SettlementFilters
-                        cycleKey={cycleKey}
-                        setCycleKey={setCycleKey}
-                        productId={productId}
-                        setProductId={setProductId}
-                        products={products}
-                        isLoading={isLoadingProducts}
-                        onFiltersChange={handleFiltersChange}
-                    />
+                    <div className="mb-6">
+                        <SettlementFilters
+                            cycleKey={cycleKey}
+                            setCycleKey={setCycleKey}
+                            productId={productId}
+                            setProductId={setProductId}
+                            products={products}
+                            isLoading={isLoadingProducts}
+                            onFiltersChange={handleFiltersChange}
+                        />
+
+                        {/* Create Batch button */}
+                        {cycleKey && productId>0 && (
+                            <button
+                                onClick={handleCreateBatch}
+                                disabled={batchLoading}
+                                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 disabled:bg-gray-400"
+                            >
+                                {batchLoading ? 'Creating Batch...' : 'Create Batch'}
+                            </button>
+                        )}
+                    </div>
                 )}
+
 
                 {/* Candidates Table */}
                 {batch && (

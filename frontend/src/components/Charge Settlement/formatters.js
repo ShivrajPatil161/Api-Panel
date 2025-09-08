@@ -37,7 +37,7 @@ export const formatDate = (dateStr) => {
 
 export const formatPercentage = (rate) => {
   if (!rate && rate !== 0) return '—';
-  return `${(rate * 100).toFixed(2)}%`;
+  return `${(rate).toFixed(2)}%`;
 };
 
 export const truncateText = (text, maxLength = 20) => {

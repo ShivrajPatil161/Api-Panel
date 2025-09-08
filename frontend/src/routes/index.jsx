@@ -29,8 +29,8 @@ import CustomerProductsList from '../components/Tables/CustomerProducts/Customer
 import TransactionUpload from '../components/Forms/FileUpload.jsx'
 import TransactionSelectionForm from '../components/Forms/ChargeCalculation.jsx'
 import SettlementBatchStatusMonitor from '../components/Tables/SettlementBatchStatusMonitor.jsx'
-import DirectSettlementPage from '../components/TempAgainn/DirectSettlementPage.jsx'
-import FranchiseSettlementPage from '../components/TempAgainn/FranchiseSettlementPage.jsx'
+import DirectSettlementPage from '../components/Charge Settlement/DirectSettlementPage.jsx'
+import FranchiseSettlementPage from '../components/Charge Settlement/FranchiseSettlementPage.jsx'
 
 
 
@@ -163,14 +163,6 @@ export const router = createBrowserRouter([
               {
                 path: "charges",
                 element: <TransactionSelectionForm />
-              },
-              {
-                path: "direct",
-                element: <DirectSettlementPage />
-              },
-              {
-                path: "franchise",
-                element: <FranchiseSettlementPage />
               },
               {
                 path: "batch-status",

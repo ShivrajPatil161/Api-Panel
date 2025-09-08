@@ -21,7 +21,8 @@ const SettlementFilters = ({
     };
 
     const handleProductChange = (e) => {
-        const newProductId = e.target.value;
+        const newProductId = Number(e.target.value);
+       // console.log(newProductId);
         setProductId(newProductId);
         onFiltersChange?.(cycleKey, newProductId);
     };
@@ -58,14 +59,14 @@ const SettlementFilters = ({
                     </label>
                     <select
                         id="productId"
-                        value={productId}
+                        value={productId.toString()}
                         onChange={handleProductChange}
                         disabled={isLoading || !products.length}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                         <option value="">Select Product</option>
                         {products.map((product) => (
-                            <option key={product.productId} value={product.productId}>
+                            <option key={product.productId} value={product.productId.toString()}>
                                 {product.name || product.productName || `Product ${product.productId}`}
                             </option>
                         ))}

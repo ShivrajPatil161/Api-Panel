@@ -152,7 +152,7 @@ const CandidatesTable = ({
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-gray-900">
-                                            {truncateText(candidate.transactionReferenceId, 20)}
+                                            {truncateText(candidate.transactionReferenceId, 25)}
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
