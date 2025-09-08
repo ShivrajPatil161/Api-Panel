@@ -427,8 +427,53 @@ public class EnhancedSettlementService2 {
         if (fee.compareTo(amount.abs()) > 0) fee = amount.abs();
         BigDecimal net = amount.subtract(fee).setScale(2, RoundingMode.HALF_UP);
 
-        MerchantWallet wallet = updateMerchantWallet(merchant.getId(), net, amount);
-        createMerchantTransactionDetails(merchant, vt, amount, fee, wallet.getAvailableBalance(), batchId);
+        // --- Lock & fetch wallet first ---
+        MerchantWallet wallet = walletRepo.findByMerchantIdForUpdate(merchant.getId())
+                .orElseGet(() -> {
+                    MerchantWallet w = new MerchantWallet();
+                    Merchant mRef = new Merchant();
+                    mRef.setId(merchant.getId());
+                    w.setMerchant(mRef);
+                    w.setAvailableBalance(BigDecimal.ZERO);
+                    w.setLastUpdatedAmount(BigDecimal.ZERO);
+                    w.setLastUpdatedAt(LocalDateTime.now());
+                    w.setTotalCash(BigDecimal.ZERO);
+                    w.setCutOfAmount(BigDecimal.ZERO);
+                    return walletRepo.save(w);
+                });
+
+        BigDecimal beforeBalance = nvl(wallet.getAvailableBalance());
+        BigDecimal afterBalance = beforeBalance.add(net);
+
+        // --- First create transaction details ---
+        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
+            mtd.setMerchant(merchant);
+            mtd.setCharge(fee);
+            mtd.setActionOnBalance("CREDIT");
+            mtd.setVendorTransactionId(vt.getTransactionReferenceId());
+            mtd.setDateAndTimeOfTransaction(vt.getDate());
+            mtd.setAmount(amount);
+            mtd.setNetAmount(net);
+            mtd.setFinalBalance(afterBalance);
+            mtd.setBalBeforeTran(beforeBalance);
+            mtd.setBalAfterTran(afterBalance);
+            mtd.setTranStatus("SETTLED");
+            mtd.setTransactionType("CREDIT");
+            mtd.setRemarks("Batch " + batchId + " settlement");
+            mtd.setService("Settlement");
+            mtd.setUpdatedDateAndTimeOfTransaction(LocalDateTime.now());
+            merchantTxnRepo.save(mtd);
+        }
+
+        // --- Then update wallet ---
+        wallet.setAvailableBalance(afterBalance);
+        wallet.setLastUpdatedAmount(net);
+        wallet.setLastUpdatedAt(LocalDateTime.now());
+        wallet.setTotalCash(nvl(wallet.getTotalCash()).add(net.max(BigDecimal.ZERO)));
+        walletRepo.save(wallet);
+
+        // --- Mark transaction settled ---
         markTransactionSettled(vt, batchId);
 
         return SettlementResultDTO.ok(vt.getTransactionReferenceId(), amount, fee, net, wallet.getAvailableBalance());
@@ -464,12 +509,105 @@ public class EnhancedSettlementService2 {
         BigDecimal franchiseCommission = merchantFee.subtract(franchiseFee).setScale(2, RoundingMode.HALF_UP);
         BigDecimal merchantNet = amount.subtract(merchantFee);
 
-        MerchantWallet merchantWallet = updateMerchantWallet(merchant.getId(), merchantNet, amount);
-        FranchiseWallet franchiseWallet = updateFranchiseWallet(franchise.getId(), franchiseCommission);
+        // --- lock merchant wallet first ---
+        MerchantWallet merchantWallet = walletRepo.findByMerchantIdForUpdate(merchant.getId())
+                .orElseGet(() -> {
+                    MerchantWallet w = new MerchantWallet();
+                    Merchant mRef = new Merchant();
+                    mRef.setId(merchant.getId());
+                    w.setMerchant(mRef);
+                    w.setAvailableBalance(BigDecimal.ZERO);
+                    w.setLastUpdatedAmount(BigDecimal.ZERO);
+                    w.setLastUpdatedAt(LocalDateTime.now());
+                    w.setTotalCash(BigDecimal.ZERO);
+                    w.setCutOfAmount(BigDecimal.ZERO);
+                    return walletRepo.save(w);
+                });
 
-        createMerchantTransactionDetails(merchant, vt, amount, merchantFee, merchantWallet.getAvailableBalance(), batchId);
-        createFranchiseTransactionDetails(franchise, vt, amount, franchiseCommission,
-                franchiseWallet != null ? franchiseWallet.getAvailableBalance() : BigDecimal.ZERO, batchId);
+        BigDecimal merchantBefore = nvl(merchantWallet.getAvailableBalance());
+        BigDecimal merchantAfter = merchantBefore.add(merchantNet);
+
+        // --- lock franchise wallet if commission positive ---
+        FranchiseWallet franchiseWallet = null;
+        BigDecimal franchiseBefore = BigDecimal.ZERO;
+        BigDecimal franchiseAfter = BigDecimal.ZERO;
+        if (franchiseCommission.compareTo(BigDecimal.ZERO) > 0) {
+            franchiseWallet = franchiseWalletRepo.findByFranchiseIdForUpdate(franchise.getId())
+                    .orElseGet(() -> {
+                        FranchiseWallet w = new FranchiseWallet();
+                        Franchise fRef = new Franchise();
+                        fRef.setId(franchise.getId());
+                        w.setFranchise(fRef);
+                        w.setAvailableBalance(BigDecimal.ZERO);
+                        w.setLastUpdatedAmount(BigDecimal.ZERO);
+                        w.setLastUpdatedAt(LocalDateTime.now());
+                        w.setTotalCash(BigDecimal.ZERO);
+                        w.setCutOfAmount(BigDecimal.ZERO);
+                        return franchiseWalletRepo.save(w);
+                    });
+            franchiseBefore = nvl(franchiseWallet.getAvailableBalance());
+            franchiseAfter = franchiseBefore.add(franchiseCommission);
+        }
+
+        // --- create transaction details first ---
+        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
+            mtd.setMerchant(merchant);
+            mtd.setCharge(merchantFee);
+            mtd.setActionOnBalance("CREDIT");
+            mtd.setVendorTransactionId(vt.getTransactionReferenceId());
+            mtd.setDateAndTimeOfTransaction(vt.getDate());
+            mtd.setAmount(merchantNet);
+            mtd.setFinalBalance(merchantAfter);
+            mtd.setBalBeforeTran(merchantBefore);
+            mtd.setBalAfterTran(merchantAfter);
+            mtd.setTranStatus("SETTLED");
+            mtd.setTransactionType("CREDIT");
+            mtd.setRemarks("Batch " + batchId + " settlement");
+            mtd.setService("Settlement");
+            mtd.setUpdatedDateAndTimeOfTransaction(LocalDateTime.now());
+            merchantTxnRepo.save(mtd);
+        }
+
+        if (franchiseCommission.compareTo(BigDecimal.ZERO) > 0) {
+            String vendorTxKey = vt.getInternalId().toString() + "_FRANCHISE";
+            if (!franchiseTxnRepo.existsByVendorTransactionId(vendorTxKey)) {
+                FranchiseTransactionDetails ftd = new FranchiseTransactionDetails();
+                ftd.setFranchise(franchise);
+                ftd.setVendorTransactionId(vt.getTransactionReferenceId());
+                ftd.setActionOnBalance("CREDIT");
+                ftd.setDateAndTimeOfTransaction(vt.getDate());
+                ftd.setAmount(amount);
+                ftd.setFinalBalance(franchiseAfter);
+                ftd.setBalBeforeTran(franchiseBefore);
+                ftd.setBalAfterTran(franchiseAfter);
+                ftd.setTranStatus("SETTLED");
+                ftd.setTransactionType("CREDIT");
+                ftd.setService("COMMISSION");
+                ftd.setUpdatedDateAndTimeOfTransaction(LocalDateTime.now());
+                ftd.setNetAmount(franchiseCommission);
+                ftd.setRemarks("Batch " + batchId + " commission from merchant transaction " + vt.getTransactionReferenceId());
+                franchiseTxnRepo.save(ftd);
+            }
+        }
+
+        // --- then update wallets ---
+        merchantWallet.setAvailableBalance(merchantAfter);
+        merchantWallet.setLastUpdatedAmount(merchantNet);
+        merchantWallet.setLastUpdatedAt(LocalDateTime.now());
+        merchantWallet.setTotalCash(nvl(merchantWallet.getTotalCash()).add(merchantNet.max(BigDecimal.ZERO)));
+        walletRepo.save(merchantWallet);
+
+        if (franchiseWallet != null) {
+            franchiseWallet.setAvailableBalance(franchiseAfter);
+            franchiseWallet.setLastUpdatedAmount(franchiseCommission);
+            franchiseWallet.setLastUpdatedAt(LocalDateTime.now());
+            franchiseWallet.setTotalCash(nvl(franchiseWallet.getTotalCash()).add(franchiseCommission.max(BigDecimal.ZERO)));
+            franchiseWalletRepo.save(franchiseWallet);
+        }
+
+        // --- mark settled ---
+
 
         markTransactionSettled(vt, batchId);
 
@@ -497,7 +635,7 @@ public class EnhancedSettlementService2 {
         wallet.setAvailableBalance(after);
         wallet.setLastUpdatedAmount(net);
         wallet.setLastUpdatedAt(LocalDateTime.now());
-        wallet.setTotalCash(nvl(wallet.getTotalCash()).add(amount.max(BigDecimal.ZERO)));
+        wallet.setTotalCash(nvl(wallet.getTotalCash()).add(net.max(BigDecimal.ZERO)));// earlier it was amount
 
         return walletRepo.save(wallet);
     }
@@ -526,6 +664,7 @@ public class EnhancedSettlementService2 {
         wallet.setAvailableBalance(after);
         wallet.setLastUpdatedAmount(commission);
         wallet.setLastUpdatedAt(LocalDateTime.now());
+        wallet.setTotalCash(wallet.getTotalCash().add(after.max(BigDecimal.ZERO)));
 
         return franchiseWalletRepo.save(wallet);
     }
@@ -536,9 +675,10 @@ public class EnhancedSettlementService2 {
             MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
             mtd.setCharge(fee);
+            mtd.setActionOnBalance("CREDIT");
             mtd.setVendorTransactionId(vt.getInternalId().toString());
             mtd.setDateAndTimeOfTransaction(vt.getDate());
-            mtd.setAmount(amount);
+            mtd.setAmount(amount.subtract(fee));//was only amount first
             mtd.setFinalBalance(balanceAfter);
             mtd.setBalAfterTran(balanceAfter);
             mtd.setTranStatus("SETTLED");
@@ -559,6 +699,7 @@ public class EnhancedSettlementService2 {
             FranchiseTransactionDetails ftd = new FranchiseTransactionDetails();
             ftd.setFranchise(franchise);
             ftd.setVendorTransactionId(vendorTxKey);
+            ftd.setActionOnBalance("CREDIT");
             ftd.setDateAndTimeOfTransaction(vt.getDate());
             ftd.setAmount(commission);
             ftd.setFinalBalance(balanceAfter);

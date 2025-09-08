@@ -113,8 +113,19 @@ public abstract class TransactionDetailsBase {
     private String vendorTransactionId;
 
 
+    @Column(name = "net_amount", precision = 38, scale = 2)
+    private BigDecimal netAmount;
+
 
     public TransactionDetailsBase() {
+    }
+
+    public BigDecimal getNetAmount() {
+        return netAmount;
+    }
+
+    public void setNetAmount(BigDecimal netAmount) {
+        this.netAmount = netAmount;
     }
 
     public String getActionOnBalance() {
