@@ -10,6 +10,7 @@ import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,19 +40,22 @@ public class EnhancedSettlementService2 {
     private final FranchiseTransDetRepository franchiseTxnRepo;
     private final SettlementBatchCandidateRepository candidateRepo;
     private final SettlementAsyncProcessor asyncProcessor;
-
-    public EnhancedSettlementService2(ProductSerialsRepository serialRepo,
-                                      ProductRepository productRepository, VendorTransactionsRepository vendorRepo,
-                                      MerchantSettlementBatchRepository batchRepo,
-                                      MerchantWalletRepository walletRepo,
-                                      MerchantRepository merchantRepository,
-                                      MerchantTransDetRepository merchantTxnRepo,
-                                      ProductSchemeAssignmentRepository schemeAssignRepo,
-                                      CardRateRepository cardRateRepo,
-                                      FranchiseWalletRepository franchiseWalletRepo,
-                                      FranchiseTransDetRepository franchiseTxnRepo,
-                                      SettlementBatchCandidateRepository candidateRepo,
-                                      SettlementAsyncProcessor asyncProcessor) {
+    @Autowired
+    public EnhancedSettlementService2(
+            ProductSerialsRepository serialRepo,
+            ProductRepository productRepository,
+            VendorTransactionsRepository vendorRepo,
+            MerchantSettlementBatchRepository batchRepo,
+            MerchantWalletRepository walletRepo,
+            MerchantRepository merchantRepository,
+            MerchantTransDetRepository merchantTxnRepo,
+            ProductSchemeAssignmentRepository schemeAssignRepo,
+            CardRateRepository cardRateRepo,
+            FranchiseWalletRepository franchiseWalletRepo,
+            FranchiseTransDetRepository franchiseTxnRepo,
+            SettlementBatchCandidateRepository candidateRepo,
+            SettlementAsyncProcessor asyncProcessor
+    ) {
         this.serialRepo = serialRepo;
         this.productRepository = productRepository;
         this.vendorRepo = vendorRepo;
@@ -446,13 +450,13 @@ public class EnhancedSettlementService2 {
         BigDecimal afterBalance = beforeBalance.add(net);
 
         // --- First create transaction details ---
-        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+        if (merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
             MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
             mtd.setCharge(fee);
             mtd.setActionOnBalance("CREDIT");
             mtd.setVendorTransactionId(vt.getTransactionReferenceId());
-            mtd.setDateAndTimeOfTransaction(vt.getDate());
+            mtd.setTransactionDate(vt.getDate());
             mtd.setAmount(amount);
             mtd.setNetAmount(net);
             mtd.setFinalBalance(afterBalance);
@@ -550,13 +554,13 @@ public class EnhancedSettlementService2 {
         }
 
         // --- create transaction details first ---
-        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+        if (merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
             MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
             mtd.setCharge(merchantFee);
             mtd.setActionOnBalance("CREDIT");
             mtd.setVendorTransactionId(vt.getTransactionReferenceId());
-            mtd.setDateAndTimeOfTransaction(vt.getDate());
+            mtd.setTransactionDate(vt.getDate());
             mtd.setAmount(merchantNet);
             mtd.setFinalBalance(merchantAfter);
             mtd.setBalBeforeTran(merchantBefore);
@@ -576,7 +580,7 @@ public class EnhancedSettlementService2 {
                 ftd.setFranchise(franchise);
                 ftd.setVendorTransactionId(vt.getTransactionReferenceId());
                 ftd.setActionOnBalance("CREDIT");
-                ftd.setDateAndTimeOfTransaction(vt.getDate());
+                ftd.setTransactionDate(vt.getDate());
                 ftd.setAmount(amount);
                 ftd.setFinalBalance(franchiseAfter);
                 ftd.setBalBeforeTran(franchiseBefore);
@@ -614,102 +618,6 @@ public class EnhancedSettlementService2 {
         return SettlementResultDTO.ok(vt.getTransactionReferenceId(), amount, merchantFee, merchantNet, merchantWallet.getAvailableBalance());
     }
 
-    // ==================== WALLET & TRANSACTION METHODS ====================
-
-    private MerchantWallet updateMerchantWallet(Long merchantId, BigDecimal net, BigDecimal amount) {
-        MerchantWallet wallet = walletRepo.findByMerchantIdForUpdate(merchantId).orElseGet(() -> {
-            MerchantWallet w = new MerchantWallet();
-            Merchant mRef = new Merchant();
-            mRef.setId(merchantId);
-            w.setMerchant(mRef);
-            w.setAvailableBalance(BigDecimal.ZERO);
-            w.setLastUpdatedAmount(BigDecimal.ZERO);
-            w.setLastUpdatedAt(LocalDateTime.now());
-            w.setTotalCash(BigDecimal.ZERO);
-            w.setCutOfAmount(BigDecimal.ZERO);
-            return walletRepo.save(w);
-        });
-
-        BigDecimal before = nvl(wallet.getAvailableBalance());
-        BigDecimal after = before.add(net);
-        wallet.setAvailableBalance(after);
-        wallet.setLastUpdatedAmount(net);
-        wallet.setLastUpdatedAt(LocalDateTime.now());
-        wallet.setTotalCash(nvl(wallet.getTotalCash()).add(net.max(BigDecimal.ZERO)));// earlier it was amount
-
-        return walletRepo.save(wallet);
-    }
-
-    private FranchiseWallet updateFranchiseWallet(Long franchiseId, BigDecimal commission) {
-        if (commission.compareTo(BigDecimal.ZERO) <= 0) {
-            return null;
-        }
-
-        FranchiseWallet wallet = franchiseWalletRepo.findByFranchiseIdForUpdate(franchiseId)
-                .orElseGet(() -> {
-                    FranchiseWallet w = new FranchiseWallet();
-                    Franchise fRef = new Franchise();
-                    fRef.setId(franchiseId);
-                    w.setFranchise(fRef);
-                    w.setAvailableBalance(BigDecimal.ZERO);
-                    w.setLastUpdatedAmount(BigDecimal.ZERO);
-                    w.setLastUpdatedAt(LocalDateTime.now());
-                    w.setTotalCash(BigDecimal.ZERO);
-                    w.setCutOfAmount(BigDecimal.ZERO);
-                    return franchiseWalletRepo.save(w);
-                });
-
-        BigDecimal before = nvl(wallet.getAvailableBalance());
-        BigDecimal after = before.add(commission);
-        wallet.setAvailableBalance(after);
-        wallet.setLastUpdatedAmount(commission);
-        wallet.setLastUpdatedAt(LocalDateTime.now());
-        wallet.setTotalCash(wallet.getTotalCash().add(after.max(BigDecimal.ZERO)));
-
-        return franchiseWalletRepo.save(wallet);
-    }
-
-    private void createMerchantTransactionDetails(Merchant merchant, VendorTransactions vt,
-                                                  BigDecimal amount, BigDecimal fee, BigDecimal balanceAfter, Long batchId) {
-        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
-            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
-            mtd.setMerchant(merchant);
-            mtd.setCharge(fee);
-            mtd.setActionOnBalance("CREDIT");
-            mtd.setVendorTransactionId(vt.getInternalId().toString());
-            mtd.setDateAndTimeOfTransaction(vt.getDate());
-            mtd.setAmount(amount.subtract(fee));//was only amount first
-            mtd.setFinalBalance(balanceAfter);
-            mtd.setBalAfterTran(balanceAfter);
-            mtd.setTranStatus("SETTLED");
-            mtd.setTransactionType("SETTLEMENT");
-            mtd.setRemarks("Batch " + batchId + " settlement");
-            merchantTxnRepo.save(mtd);
-        }
-    }
-
-    private void createFranchiseTransactionDetails(Franchise franchise, VendorTransactions vt,
-                                                   BigDecimal amount, BigDecimal commission, BigDecimal balanceAfter, Long batchId) {
-        if (commission.compareTo(BigDecimal.ZERO) <= 0) {
-            return;
-        }
-
-        String vendorTxKey = vt.getInternalId().toString() + "_FRANCHISE";
-        if (!franchiseTxnRepo.existsByVendorTransactionId(vendorTxKey)) {
-            FranchiseTransactionDetails ftd = new FranchiseTransactionDetails();
-            ftd.setFranchise(franchise);
-            ftd.setVendorTransactionId(vendorTxKey);
-            ftd.setActionOnBalance("CREDIT");
-            ftd.setDateAndTimeOfTransaction(vt.getDate());
-            ftd.setAmount(commission);
-            ftd.setFinalBalance(balanceAfter);
-            ftd.setBalAfterTran(balanceAfter);
-            ftd.setTranStatus("SETTLED");
-            ftd.setTransactionType("COMMISSION");
-            ftd.setRemarks("Batch " + batchId + " commission from merchant transaction " + vt.getTransactionReferenceId());
-            franchiseTxnRepo.save(ftd);
-        }
-    }
 
     private void markTransactionSettled(VendorTransactions vt, Long batchId) {
         vt.setSettled(true);

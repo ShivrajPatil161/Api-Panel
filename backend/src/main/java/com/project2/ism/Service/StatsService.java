@@ -49,8 +49,8 @@ public class StatsService {
     public MerchantStatsDTO getMerchantStats(Long merchantId) {
         Long outwardCount = outwardTransactionRepository.countByMerchantId(merchantId);
         Long allocatedProducts = productSerialsRepository.countByMerchantId(merchantId);
-//        BigDecimal wallet = merchantRepository.findById(merchantId)
-//                .map(Merchant::getWalletBalance).orElse(BigDecimal.ZERO);
+        BigDecimal wallet = merchantRepository.findById(merchantId)
+                .map(Merchant::getWalletBalance).orElse(BigDecimal.ZERO);
 
         // ✅ fetch product-level stats
         List<MerchantProductSummaryDTO> productSummary = merchantService.getProductsOfMerchant(merchantId);

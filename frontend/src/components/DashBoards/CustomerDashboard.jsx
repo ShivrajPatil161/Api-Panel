@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Store,
     Package,
@@ -19,16 +19,56 @@ import {
 } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
 
-const CustomerDashboard = ({ userType, userId }) => {
+const CustomerDashboard = ({ userType }) => {
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [userId, setUserId] = useState(null);
 
+    // Function to get userId from localStorage with retry logic
+    const getUserId = useCallback(() => {
+        const id = localStorage.getItem("customerId");
+        return id && id !== 'null' && id !== 'undefined' ? id : null;
+    }, []);
+
+    // Effect to monitor localStorage changes and set userId
     useEffect(() => {
-        fetchDashboardData();
-    }, [userType, userId]);
+        const checkUserId = () => {
+            const id = getUserId();
+            if (id !== userId) {
+                setUserId(id);
+            }
+        };
 
-    const fetchDashboardData = async () => {
+        // Check immediately
+        checkUserId();
+
+        // Set up interval to check for userId (useful for async login scenarios)
+        const intervalId = setInterval(checkUserId, 100);
+
+        // Listen for storage events (when localStorage changes)
+        const handleStorageChange = (e) => {
+            if (e.key === 'customerId') {
+                checkUserId();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        // Cleanup
+        return () => {
+            clearInterval(intervalId);
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, [getUserId, userId]);
+
+    const fetchDashboardData = useCallback(async () => {
+        // Don't fetch if userId is not available
+        if (!userId) {
+            setLoading(true);
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -45,7 +85,26 @@ const CustomerDashboard = ({ userType, userId }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [userType, userId]);
+
+    // Effect to fetch data when userId or userType changes
+    useEffect(() => {
+        if (userId) {
+            fetchDashboardData();
+        }
+    }, [userId, fetchDashboardData]);
+
+    // Show loading state while waiting for userId
+    if (!userId) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+                <div className="flex items-center space-x-3 text-slate-600">
+                    <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+                    <span className="text-xl font-medium">Initializing Dashboard...</span>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) {
         return (
@@ -167,10 +226,6 @@ const CustomerDashboard = ({ userType, userId }) => {
         return userType === 'franchise' ? Store : Users;
     };
 
-    // const getWalletBalance = () => {
-    //     return `₹${dashboardData?.walletBalance?.toFixed(2) || '0.00'}`;
-    // };
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
             <div className="container mx-auto px-6 py-8">
@@ -220,13 +275,6 @@ const CustomerDashboard = ({ userType, userId }) => {
                                 color="green"
                                 subtitle="Products distributed"
                             />
-                            {/* <StatCard
-                                title="Wallet Balance"
-                                value={getWalletBalance()}
-                                icon={Wallet}
-                                color="purple"
-                                subtitle="Available funds"
-                            /> */}
                             <StatCard
                                 title="Active Products"
                                 value={dashboardData?.products?.length || 0}
@@ -253,14 +301,6 @@ const CustomerDashboard = ({ userType, userId }) => {
                                 color="blue"
                                 subtitle="Products assigned"
                             />
-                            {/* <StatCard
-                                title="Wallet Balance"
-                                value={getWalletBalance()}
-                                icon={Wallet}
-                                color="purple"
-                                subtitle="Available funds"
-                                bgGradient="bg-gradient-to-br from-purple-500 to-indigo-600"
-                            /> */}
                             <StatCard
                                 title="Active Products"
                                 value={dashboardData?.products?.length || 0}
@@ -329,7 +369,7 @@ const CustomerDashboard = ({ userType, userId }) => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-white rounded-xl p-6 shadow-md">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -349,16 +389,6 @@ const CustomerDashboard = ({ userType, userId }) => {
                                 <ArrowDownLeft className="w-8 h-8 text-red-600" />
                             </div>
                         </div>
-
-                        {/* <div className="bg-white rounded-xl p-6 shadow-md">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-slate-600 mb-1">Wallet Balance</p>
-                                    <p className="text-2xl font-bold text-green-600">{getWalletBalance()}</p>
-                                </div>
-                                <Wallet className="w-8 h-8 text-green-600" />
-                            </div>
-                        </div> */}
                     </div>
                 </div>
             </div>

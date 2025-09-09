@@ -53,8 +53,8 @@ public abstract class TransactionDetailsBase {
     @Column(name = "client_ip")
     private String clientIp;
 
-    @Column(name = "date_of_transaction")
-    private LocalDateTime dateAndTimeOfTransaction;
+    @Column(name = "transaction_date")
+    private LocalDateTime transactionDate;
 
     @Column(name = "failure_remarks")
     private String failureRemarks;
@@ -208,12 +208,12 @@ public abstract class TransactionDetailsBase {
         this.clientIp = clientIp;
     }
 
-    public LocalDateTime getDateAndTimeOfTransaction() {
-        return dateAndTimeOfTransaction;
+    public LocalDateTime getTransactionDate() {
+        return transactionDate;
     }
 
-    public void setDateAndTimeOfTransaction(LocalDateTime dateAndTimeOfTransaction) {
-        this.dateAndTimeOfTransaction = dateAndTimeOfTransaction;
+    public void setTransactionDate(LocalDateTime transactionDate) {
+        this.transactionDate = transactionDate;
     }
 
     public String getFailureRemarks() {
