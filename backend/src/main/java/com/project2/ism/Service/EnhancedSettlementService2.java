@@ -449,8 +449,9 @@ public class EnhancedSettlementService2 {
         BigDecimal beforeBalance = nvl(wallet.getAvailableBalance());
         BigDecimal afterBalance = beforeBalance.add(net);
 
+        System.out.println(merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString()));
         // --- First create transaction details ---
-        if (merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
             MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
             mtd.setCharge(fee);
@@ -554,7 +555,9 @@ public class EnhancedSettlementService2 {
         }
 
         // --- create transaction details first ---
-        if (merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+
+        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+
             MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
             mtd.setCharge(merchantFee);
