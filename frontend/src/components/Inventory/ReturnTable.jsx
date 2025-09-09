@@ -17,9 +17,19 @@ import {
     Eye,
     Edit,
     Trash2,
+    Loader2
 } from 'lucide-react'
 
-const ReturnTable = ({ data, onEdit, onView, onDelete }) => {
+const LoadingSpinner = ({ size = "sm" }) => {
+    const sizeClasses = {
+        sm: "h-4 w-4",
+        md: "h-6 w-6",
+        lg: "h-8 w-8"
+    }
+    return <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-500`} />
+}
+
+const ReturnTable = ({ data, onEdit, onView, onDelete,loading = false }) => {
     const [globalFilter, setGlobalFilter] = useState('')
     const [sorting, setSorting] = useState([])
 
@@ -190,6 +200,18 @@ const ReturnTable = ({ data, onEdit, onView, onDelete }) => {
         onGlobalFilterChange: setGlobalFilter,
     })
 
+    if (loading) {
+        return (
+            <div className="p-6 text-center">
+                <div className="flex items-center justify-center">
+                    <LoadingSpinner size="md" />
+                    <span className="ml-2 text-gray-600">Loading return transactions...</span>
+                </div>
+            </div>
+        )
+    }
+
+    
     if (!data || data.length === 0) {
         return (
             <div className="p-6 text-center">
