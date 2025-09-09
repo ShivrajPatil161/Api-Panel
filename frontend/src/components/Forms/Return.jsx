@@ -1,18 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, X, Loader2, ChevronDown } from 'lucide-react';
+import api from '../../constants/API/axiosInstance';
 
-// Zod validation schema
+// Updated Zod validation schema to match backend DTO
 const returnSchema = z.object({
   returnNumber: z.string().min(1, "Return number is required"),
   originalDeliveryNumber: z.string().min(1, "Original delivery number is required"),
-  customerId: z.string().min(1, "Customer ID is required"),
+  customerId: z.string().min(1, "Customer is required"),
+  customerType: z.string().min(1, "Customer type is required"),
   customerName: z.string().min(1, "Customer name is required"),
   returnDate: z.string().min(1, "Return date is required"),
   receivedBy: z.string().min(1, "Receiver name is required"),
-  productId: z.string().min(1, "Product ID is required"),
+  productCategoryId: z.string().min(1, "Product category is required"),
+  productId: z.string().min(1, "Product is required"),
   productName: z.string().min(1, "Product name is required"),
   productType: z.string().min(1, "Product type is required"),
   quantity: z.number().min(1, "Original quantity must be at least 1"),
@@ -31,8 +34,34 @@ const returnSchema = z.object({
   path: ["returnedQuantity"],
 });
 
+// Error Display Component
+const ErrorAlert = ({ message, onClose }) => (
+  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
+    <AlertCircle className="h-5 w-5 text-red-400 mr-2 flex-shrink-0" />
+    <span className="text-red-700 text-sm flex-grow">{message}</span>
+    {onClose && (
+      <button
+        onClick={onClose}
+        className="text-red-400 hover:text-red-600 ml-2"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    )}
+  </div>
+);
+
+// Loading Spinner Component
+const LoadingSpinner = ({ size = "sm" }) => {
+  const sizeClasses = {
+    sm: "h-4 w-4",
+    md: "h-6 w-6",
+    lg: "h-8 w-8"
+  }
+  return <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-500`} />
+}
+
 // Reusable Input Component
-const FormInput = ({ label, name, register, errors, required = false, type = "text", ...props }) => (
+const FormInput = ({ label, name, register, errors, required = false, type = "text", disabled = false, ...props }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
@@ -43,8 +72,10 @@ const FormInput = ({ label, name, register, errors, required = false, type = "te
         valueAsNumber: type === 'number' ? true : false,
         required: required && `${label} is required`
       })}
-      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${errors[name] ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
-        }`}
+      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+        errors[name] ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+      } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+      disabled={disabled}
       {...props}
     />
     {errors[name] && (
@@ -57,43 +88,82 @@ const FormInput = ({ label, name, register, errors, required = false, type = "te
 );
 
 // Reusable Select Component
-const FormSelect = ({ label, name, register, errors, required = false, options, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      {label} {required && <span className="text-red-500">*</span>}
-    </label>
-    <select
-      {...register(name, { required: required && `${label} is required` })}
-      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${errors[name] ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
-        }`}
-      {...props}
-    >
-      <option value="">Select {label.toLowerCase()}</option>
-      {options.map(option => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-    {errors[name] && (
-      <div className="flex items-center mt-1 text-sm text-red-600">
-        <AlertCircle className="w-4 h-4 mr-1" />
-        {errors[name].message}
+const FormSelect = ({ 
+  label, 
+  name, 
+  register, 
+  errors, 
+  required = false, 
+  options, 
+  loading = false,
+  placeholder,
+  disabled = false,
+  onChange,
+  ...props 
+}) => {
+  const { onChange: registerOnChange, ...registerRest } = register(name);
+
+  const handleChange = (e) => {
+    registerOnChange(e);
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <select
+          {...registerRest}
+          onChange={handleChange}
+          className={`w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none transition-colors ${
+            errors[name] ? 'border-red-500 focus:border-red-500' : 'border-gray-300'
+          } ${loading || disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400'}`}
+          disabled={loading || disabled}
+          {...props}
+        >
+          <option value="">
+            {loading ? `Loading ${label.toLowerCase()}...` : placeholder || `Select ${label.toLowerCase()}`}
+          </option>
+          {options.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+          {loading ? (
+            <LoadingSpinner />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          )}
+        </div>
       </div>
-    )}
-  </div>
-);
+      {errors[name] && (
+        <div className="flex items-center mt-1 text-sm text-red-600">
+          <AlertCircle className="w-4 h-4 mr-1" />
+          {errors[name].message}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Reusable Textarea Component
-const FormTextarea = ({ label, name, register, errors, required = false, ...props }) => (
+const FormTextarea = ({ label, name, register, errors, required = false, disabled = false, ...props }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
     <textarea
       {...register(name, { required: required && `${label} is required` })}
-      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${errors[name] ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
-        }`}
+      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+        errors[name] ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+      } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+      disabled={disabled}
       {...props}
     />
     {errors[name] && (
@@ -105,170 +175,448 @@ const FormTextarea = ({ label, name, register, errors, required = false, ...prop
   </div>
 );
 
-// Serial Number Grid Component
-const SerialNumberGrid = ({ quantity, returnedQuantity, onSelectionChange }) => {
-  const [serialNumbers, setSerialNumbers] = useState([]);
+// Serial Number Grid Component with API integration
+const SerialNumberGrid = ({ availableSerials = [], returnedQuantity, onSelectionChange, loading = false }) => {
   const [selectedSerials, setSelectedSerials] = useState(new Set());
 
-  // Generate dummy serial numbers when quantity changes
+  const maxQuantity = parseInt(returnedQuantity) || 0;
+
+  // Reset when product changes
   useEffect(() => {
-    if (quantity > 0) {
-      const newSerials = Array.from({ length: quantity }, (_, index) => ({
-        id: index + 1,
-        tid: `TID${String(Math.floor(Math.random() * 900000) + 100000)}`,
-        mid: `MID${String(Math.floor(Math.random() * 900000) + 100000)}`,
-        sid: `SID${String(Math.floor(Math.random() * 900000) + 100000)}`,
-        vpaid: `VPA${String(Math.floor(Math.random() * 900000) + 100000)}`,
-      }));
-      setSerialNumbers(newSerials);
-      setSelectedSerials(new Set());
-    } else {
-      setSerialNumbers([]);
-      setSelectedSerials(new Set());
+    setSelectedSerials(new Set());
+  }, [availableSerials]);
+
+  // Clamp when quantity reduces
+  useEffect(() => {
+    if (selectedSerials.size > maxQuantity) {
+      const trimmed = new Set(Array.from(selectedSerials).slice(0, maxQuantity));
+      setSelectedSerials(trimmed);
     }
-  }, [quantity]);
+  }, [maxQuantity, selectedSerials]);
 
-  // Handle row selection
-  const handleRowSelection = (serialId, isSelected) => {
-    const newSelected = new Set(selectedSerials);
+  // Notify parent
+  useEffect(() => {
+    const selectedItems = availableSerials.filter(serial => selectedSerials.has(serial.id));
+    onSelectionChange?.(selectedItems);
+  }, [selectedSerials, availableSerials, onSelectionChange]);
 
-    if (isSelected && selectedSerials.size < returnedQuantity) {
-      newSelected.add(serialId);
-    } else if (!isSelected) {
-      newSelected.delete(serialId);
-    }
+  const toggleSelection = useCallback(
+    (serialId) => {
+      setSelectedSerials(prev => {
+        const next = new Set(prev);
+        if (next.has(serialId)) {
+          next.delete(serialId);
+        } else if (next.size < maxQuantity) {
+          next.add(serialId);
+        }
+        return next;
+      });
+    },
+    [maxQuantity]
+  );
 
-    setSelectedSerials(newSelected);
-
-    // Pass selected serials to parent
-    const selectedData = serialNumbers.filter(serial => newSelected.has(serial.id));
-    onSelectionChange(selectedData);
+  const handleSelectAll = () => {
+    const toSelect = availableSerials.slice(0, maxQuantity).map(s => s.id);
+    setSelectedSerials(new Set(toSelect));
   };
 
-  if (!quantity || quantity === 0) {
+  const handleDeselectAll = () => {
+    setSelectedSerials(new Set());
+  };
+
+  if (loading) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-        <p className="text-gray-500">Enter original quantity to generate serial numbers</p>
+      <div className="mt-4 p-8 bg-gray-50 rounded-lg flex items-center justify-center">
+        <LoadingSpinner size="md" />
+        <span className="ml-2 text-gray-600">Loading serial numbers...</span>
       </div>
     );
   }
 
+  if (availableSerials.length === 0) {
+    return (
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <p className="text-sm text-gray-600">Select a product to view available serial numbers for return</p>
+      </div>
+    );
+  }
+
+  const selectedCount = selectedSerials.size;
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-gray-900">Serial Numbers</h4>
-          <div className="text-sm text-gray-600">
-            Selected: {selectedSerials.size} / {returnedQuantity} (Max: {returnedQuantity})
-          </div>
+    <div className="mt-4">
+      {/* Header with buttons */}
+      <div className="flex justify-between items-center mb-3">
+        <label className="block text-sm font-medium text-gray-700">
+          Serial Numbers Selection ({selectedCount}/{maxQuantity} selected)
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleSelectAll}
+            disabled={maxQuantity === 0 || selectedCount === maxQuantity}
+            className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50"
+          >
+            Select All
+          </button>
+          <button
+            type="button"
+            onClick={handleDeselectAll}
+            disabled={selectedCount === 0}
+            className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50"
+          >
+            Clear All
+          </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto max-h-80 overflow-y-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Select
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                #
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                TID
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                MID
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                SID
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                VPAID
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {serialNumbers.map((serial) => {
-              const isSelected = selectedSerials.has(serial.id);
-              const canSelect = !isSelected && selectedSerials.size < returnedQuantity;
+      {/* Table */}
+      <div className="border border-gray-300 rounded-lg overflow-hidden">
+        <div className="max-h-96 overflow-y-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 sticky top-0">
+              <tr>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Select</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">MID</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">SID</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">TID</th>
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">VPAID</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {availableSerials.map((serial, index) => {
+                const isSelected = selectedSerials.has(serial.id);
+                const isDisabled = !isSelected && selectedSerials.size >= maxQuantity;
 
-              return (
-                <tr
-                  key={serial.id}
-                  className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}
-                >
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(e) => handleRowSelection(serial.id, e.target.checked)}
-                      disabled={!canSelect && !isSelected}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-                    />
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
-                    {serial.id}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
-                    {serial.tid}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
-                    {serial.mid}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
-                    {serial.sid}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
-                    {serial.vpaid}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                return (
+                  <tr
+                    key={serial.id}
+                    className={`${isSelected ? "bg-red-50 border-l-4 border-red-500" : "hover:bg-gray-50"} transition-colors`}
+                  >
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={isDisabled}
+                        onChange={() => toggleSelection(serial.id)}
+                        className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                    </td>
+                    <td className="px-3 py-3 text-sm font-medium">{index + 1}</td>
+                    <td className="px-3 py-3 text-sm font-mono">{serial.mid || "-"}</td>
+                    <td className="px-3 py-3 text-sm font-mono">{serial.sid || "-"}</td>
+                    <td className="px-3 py-3 text-sm font-mono">{serial.tid || "-"}</td>
+                    <td className="px-3 py-3 text-sm font-mono">{serial.vpaid || "-"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {returnedQuantity > 0 && selectedSerials.size !== returnedQuantity && (
-        <div className="bg-yellow-50 border-t border-yellow-200 px-4 py-3">
-          <div className="flex items-center">
-            <AlertCircle className="w-4 h-4 text-yellow-600 mr-2" />
-            <p className="text-sm text-yellow-700">
-              Please select exactly {returnedQuantity} serial number{returnedQuantity !== 1 ? 's' : ''} for return.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Summary */}
+      <div className="mt-3 text-sm bg-red-50 p-3 rounded">
+        <strong>Summary:</strong> {selectedCount} out of {maxQuantity} required items selected for return
+        {selectedCount > 0 && selectedCount === maxQuantity && (
+          <div className="text-green-700 font-medium mt-1">✓ Ready for return processing</div>
+        )}
+        {selectedCount !== maxQuantity && maxQuantity > 0 && (
+          <div className="text-amber-700 mt-1">⚠ Please select exactly {maxQuantity} items to return</div>
+        )}
+      </div>
     </div>
   );
 };
 
-const OptimizedReturns = () => {
+const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
   const [selectedSerialNumbers, setSelectedSerialNumbers] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Data states
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [deliveryNumbers, setDeliveryNumbers] = useState([]);
+  const [availableSerials, setAvailableSerials] = useState([]);
+
+  // Loading states  
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [deliveryNumbersLoading, setDeliveryNumbersLoading] = useState(false);
+  const [serialsLoading, setSerialsLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
     control,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm({
     resolver: zodResolver(returnSchema),
-    defaultValues: {
+    defaultValues: editData || {
       quantity: 0,
       returnedQuantity: 0,
       refundAmount: 0,
       isWarranty: false,
       replacementRequired: false,
+      returnDate: new Date().toISOString().split('T')[0]
     }
   });
 
-  // Watch quantity and returnedQuantity for serial number grid
-  const quantity = watch('quantity');
+  // Watch values for dependencies
+  const selectedCategoryId = watch('productCategoryId');
+  const selectedProductId = watch('productId');
+  const selectedCustomerType = watch('customerType');
+  const selectedCustomerId = watch('customerId');
   const returnedQuantity = watch('returnedQuantity');
+  const selectedDeliveryNumber = watch('originalDeliveryNumber');
+
+  // API Functions with proper error handling
+  const fetchCategories = useCallback(async () => {
+    setCategoriesLoading(true);
+    setError(null);
+    try {
+      const response = await api.get('/product-categories');
+      if (response.data && Array.isArray(response.data)) {
+        const categoryOptions = response.data.map(category => ({
+          value: category.id.toString(),
+          label: category.categoryName || category.name || 'Unnamed Category'
+        }));
+        setCategories(categoryOptions);
+      } else {
+        throw new Error('Invalid response format for categories');
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setError(`Failed to load categories: ${error.response?.data?.message || error.message}`);
+      setCategories([]);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, []);
+
+  const fetchProductsByCategory = useCallback(async (categoryId) => {
+    if (!categoryId) {
+      setProducts([]);
+      return;
+    }
+
+    setProductsLoading(true);
+    setError(null);
+    try {
+      const response = await api.get(`/products/category/${categoryId}`);
+      if (response.data && Array.isArray(response.data)) {
+        const productOptions = response.data.map(product => ({
+          value: product.id.toString(),
+          label: `${product.productCode || 'N/A'} - ${product.productName || product.name || 'Unnamed Product'}`,
+          productCode: product.productCode,
+          productName: product.productName || product.name,
+          productType: product.productType || 'Unknown'
+        }));
+        setProducts(productOptions);
+      } else {
+        throw new Error('Invalid response format for products');
+      }
+      setValue('productId', ''); // Clear product selection when category changes
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setError(`Failed to load products: ${error.response?.data?.message || error.message}`);
+      setProducts([]);
+    } finally {
+      setProductsLoading(false);
+    }
+  }, [setValue]);
+
+  const fetchCustomers = useCallback(async (customerType) => {
+    if (!customerType) {
+      setCustomers([]);
+      return;
+    }
+
+    setCustomersLoading(true);
+    setError(null);
+    try {
+      const endpoint = customerType === 'franchise' ? '/franchise' : '/merchants/direct-merchant';
+      const response = await api.get(endpoint);
+
+      if (response.data && Array.isArray(response.data)) {
+        const customerOptions = response.data.map(customer => ({
+          value: customer.id.toString(),
+          label: customer.name ||
+            customer.businessName ||
+            customer.franchiseName ||
+            customer.merchantName ||
+            `${customer.firstName || ''} ${customer.lastName || ''}`.trim() ||
+            `Customer ${customer.id}`,
+          id: customer.id
+        }));
+        setCustomers(customerOptions);
+      } else {
+        throw new Error('Invalid response format for customers');
+      }
+      setValue('customerId', ''); // Clear customer selection when type changes
+    } catch (error) {
+      console.error(`Error fetching ${customerType}s:`, error);
+      setError(`Failed to load ${customerType}s: ${error.response?.data?.message || error.message}`);
+      setCustomers([]);
+    } finally {
+      setCustomersLoading(false);
+    }
+  }, [setValue]);
+
+  const fetchDeliveryNumbers = useCallback(async (customerId, customerType) => {
+    if (!customerId || !customerType) {
+      setDeliveryNumbers([]);
+      return;
+    }
+
+    setDeliveryNumbersLoading(true);
+    setError(null);
+    try {
+      // Fetch outward transactions for this customer to get delivery numbers
+      const response = await api.get('/outward-transactions');
+      if (response.data && Array.isArray(response.data)) {
+        const customerDeliveries = response.data.filter(transaction => {
+          if (customerType === 'franchise') {
+            return transaction.franchiseId === parseInt(customerId);
+          } else {
+            return transaction.merchantId === parseInt(customerId);
+          }
+        });
+
+        const deliveryOptions = customerDeliveries.map(delivery => ({
+          value: delivery.deliveryNumber,
+          label: `${delivery.deliveryNumber} - ${delivery.productName} (${new Date(delivery.dispatchDate).toLocaleDateString()})`
+        }));
+        setDeliveryNumbers(deliveryOptions);
+      }
+    } catch (error) {
+      console.error('Error fetching delivery numbers:', error);
+      setError(`Failed to load delivery numbers: ${error.response?.data?.message || error.message}`);
+      setDeliveryNumbers([]);
+    } finally {
+      setDeliveryNumbersLoading(false);
+    }
+  }, []);
+
+  const fetchAvailableSerials = useCallback(async (productId) => {
+    if (!productId) {
+      setAvailableSerials([]);
+      return;
+    }
+
+    setSerialsLoading(true);
+    setError(null);
+    try {
+      // For returns, we need to get serial numbers that were dispatched (from outward transactions)
+      const response = await api.get(`/outward-transactions`);
+      if (response.data && Array.isArray(response.data)) {
+        // Filter transactions by product and get their serial numbers
+        const productTransactions = response.data.filter(transaction => 
+          transaction.productId === parseInt(productId)
+        );
+        
+        // Extract all serial numbers from these transactions
+        let allSerials = [];
+        productTransactions.forEach(transaction => {
+          if (transaction.productSerialNumbers && Array.isArray(transaction.productSerialNumbers)) {
+            allSerials = [...allSerials, ...transaction.productSerialNumbers];
+          }
+        });
+        
+        setAvailableSerials(allSerials);
+      } else {
+        throw new Error('Invalid response format for serial numbers');
+      }
+    } catch (error) {
+      console.error('Error fetching serial numbers:', error);
+      setError(`Failed to load serial numbers: ${error.response?.data?.message || error.message}`);
+      setAvailableSerials([]);
+    } finally {
+      setSerialsLoading(false);
+    }
+  }, []);
+
+  // Effects with proper dependency management
+  useEffect(() => {
+    fetchCategories();
+    setError(null);
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    if (selectedCategoryId) {
+      fetchProductsByCategory(selectedCategoryId);
+    }
+  }, [selectedCategoryId, fetchProductsByCategory]);
+
+  useEffect(() => {
+    if (selectedCustomerType) {
+      fetchCustomers(selectedCustomerType);
+    }
+  }, [selectedCustomerType, fetchCustomers]);
+
+  useEffect(() => {
+    if (selectedCustomerId && selectedCustomerType) {
+      fetchDeliveryNumbers(selectedCustomerId, selectedCustomerType);
+    }
+  }, [selectedCustomerId, selectedCustomerType, fetchDeliveryNumbers]);
+
+  useEffect(() => {
+    if (selectedProductId) {
+      fetchAvailableSerials(selectedProductId);
+      // Auto-fill product name and type when product is selected
+      const selectedProduct = products.find(p => p.value === selectedProductId);
+      if (selectedProduct) {
+        setValue('productName', selectedProduct.productName);
+        setValue('productType', selectedProduct.productType);
+      }
+    }
+  }, [selectedProductId, fetchAvailableSerials, products, setValue]);
+
+  // Auto-fill customer name when customer is selected
+  useEffect(() => {
+    if (selectedCustomerId) {
+      const selectedCustomer = customers.find(c => c.value === selectedCustomerId);
+      if (selectedCustomer) {
+        setValue('customerName', selectedCustomer.label);
+      }
+    }
+  }, [selectedCustomerId, customers, setValue]);
+
+  // Load edit data
+  useEffect(() => {
+    if (editData) {
+      // Load form values
+      Object.keys(editData).forEach(key => {
+        if (!['selectedSerials', 'productSerialNumbers'].includes(key)) {
+          if (editData[key] !== null && editData[key] !== undefined) {
+            setValue(key, editData[key].toString());
+          }
+        }
+      });
+
+      // Handle existing serial selections
+      if (editData.productSerialNumbers && Array.isArray(editData.productSerialNumbers)) {
+        setSelectedSerialNumbers(editData.productSerialNumbers);
+      }
+    } else {
+      setSelectedSerialNumbers([]);
+      setError(null);
+    }
+  }, [editData, setValue]);
 
   // Form options
+  const customerTypeOptions = [
+    { value: 'franchise', label: 'Franchise' },
+    { value: 'merchant', label: 'Direct Merchant' }
+  ];
+
   const productTypes = [
     { value: 'pos_machine', label: 'POS Machine' },
     { value: 'qr_scanner', label: 'QR Scanner' },
@@ -306,299 +654,436 @@ const OptimizedReturns = () => {
     { value: 'pending', label: 'Pending Review' }
   ];
 
-  const onSubmit = async (data) => {
-    try {
-      // Validate serial number selection
-      if (returnedQuantity > 0 && selectedSerialNumbers.length !== returnedQuantity) {
-        alert(`Please select exactly ${returnedQuantity} serial numbers for return.`);
-        return;
-      }
-
-      const returnData = {
-        ...data,
-        selectedSerialNumbers,
-        submittedAt: new Date().toISOString()
-      };
-
-      console.log('Return Entry:', returnData);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      alert('Return entry saved successfully!');
-      reset();
-      setSelectedSerialNumbers([]);
-    } catch (error) {
-      console.error('Submission error:', error);
-      alert('Failed to save return entry. Please try again.');
-    }
-  };
-
   const handleSerialSelectionChange = (selectedSerials) => {
     setSelectedSerialNumbers(selectedSerials);
   };
 
+  const handleFormSubmit = async (data) => {
+    const maxQuantity = parseInt(data.returnedQuantity) || 0;
+
+    // Validation
+    if (selectedSerialNumbers.length === 0) {
+      setError('Please select at least one serial number for return');
+      return;
+    }
+
+    if (selectedSerialNumbers.length !== maxQuantity) {
+      setError(`Please select exactly ${maxQuantity} serial numbers for return`);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const submissionData = {
+        ...data,
+        selectedSerialIds: selectedSerialNumbers.map(serial => serial.id),
+        productSerialNumbers: selectedSerialNumbers
+      };
+
+      await onSubmit(submissionData);
+      handleClose();
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setError(`Failed to ${editData ? 'update' : 'create'} return transaction: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    reset();
+    setSelectedSerialNumbers([]);
+    setProducts([]);
+    setCustomers([]);
+    setDeliveryNumbers([]);
+    setAvailableSerials([]);
+    setError(null);
+    onCancel();
+  };
+
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Return Entry</h2>
-        <p className="text-gray-600 mt-1">Process product returns with serial number tracking</p>
+    <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md">
+      {/* Modal Header */}
+      <div className="flex justify-between items-center p-6 border-b bg-gray-50">
+        <h2 className="text-2xl font-bold text-gray-800">
+          {editData ? 'Edit Return Entry' : 'Add New Return Entry'}
+        </h2>
+        <button
+          onClick={handleClose}
+          className="p-2 hover:bg-gray-200 rounded-md transition-colors"
+          disabled={isSubmitting}
+        >
+          <X size={24} />
+        </button>
       </div>
 
-      <div className="space-y-8">
-        {/* Return & Customer Details + Product Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Return & Customer Details */}
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Return & Customer Details</h3>
-            <div className="space-y-4">
-              <FormInput
-                label="Return Number"
-                name="returnNumber"
-                register={register}
-                errors={errors}
-                required
-                placeholder="Enter return number"
-              />
-              <FormInput
-                label="Original Delivery Number"
-                name="originalDeliveryNumber"
-                register={register}
-                errors={errors}
-                required
-                placeholder="Enter original delivery number"
-              />
-              <FormInput
-                label="Customer ID"
-                name="customerId"
-                register={register}
-                errors={errors}
-                required
-                placeholder="Enter customer ID"
-              />
-              <FormInput
-                label="Customer Name"
-                name="customerName"
-                register={register}
-                errors={errors}
-                required
-                placeholder="Enter customer name"
-              />
-              <FormInput
-                label="Return Date"
-                name="returnDate"
-                type="date"
-                register={register}
-                errors={errors}
-                required
-              />
-              <FormInput
-                label="Received By"
-                name="receivedBy"
-                register={register}
-                errors={errors}
-                required
-                placeholder="Enter receiver name"
-              />
+      {/* Modal Body */}
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6">
+        <div className="space-y-6">
+          {/* Error Display */}
+          {error && (
+            <ErrorAlert
+              message={error}
+              onClose={() => setError(null)}
+            />
+          )}
+
+          {/* Return & Customer Details + Product Details */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Return & Customer Details */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Return & Customer Details</h3>
+              <div className="space-y-4">
+                <FormInput
+                  label="Return Number"
+                  name="returnNumber"
+                  register={register}
+                  errors={errors}
+                  required
+                  placeholder="Enter return number"
+                  disabled={isSubmitting}
+                />
+
+                <FormSelect
+                  label="Customer Type"
+                  name="customerType"
+                  register={register}
+                  errors={errors}
+                  options={customerTypeOptions}
+                  placeholder="Select customer type"
+                  required
+                  disabled={isSubmitting}
+                />
+
+                <FormSelect
+                  label="Customer"
+                  name="customerId"
+                  register={register}
+                  errors={errors}
+                  options={customers}
+                  loading={customersLoading}
+                  placeholder={!selectedCustomerType ? 'Select customer type first' : 'Select customer'}
+                  required
+                  disabled={isSubmitting || !selectedCustomerType}
+                />
+
+                <FormInput
+                  label="Customer Name"
+                  name="customerName"
+                  register={register}
+                  errors={errors}
+                  required
+                  placeholder="Customer name (auto-filled)"
+                  disabled={true}
+                />
+
+                <FormSelect
+                  label="Original Delivery Number"
+                  name="originalDeliveryNumber"
+                  register={register}
+                  errors={errors}
+                  options={deliveryNumbers}
+                  loading={deliveryNumbersLoading}
+                  placeholder={!selectedCustomerId ? 'Select customer first' : 'Select delivery number'}
+                  required
+                  disabled={isSubmitting || !selectedCustomerId}
+                />
+
+                <FormInput
+                  label="Return Date"
+                  name="returnDate"
+                  type="date"
+                  register={register}
+                  errors={errors}
+                  required
+                  disabled={isSubmitting}
+                />
+
+                <FormInput
+                  label="Received By"
+                  name="receivedBy"
+                  register={register}
+                  errors={errors}
+                  required
+                  placeholder="Enter receiver name"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            {/* Product Details */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Product Details</h3>
+              <div className="space-y-4">
+                <FormSelect
+                  label="Product Category"
+                  name="productCategoryId"
+                  register={register}
+                  errors={errors}
+                  options={categories}
+                  loading={categoriesLoading}
+                  placeholder="Select product category"
+                  required
+                  disabled={isSubmitting}
+                />
+
+                <FormSelect
+                  label="Product"
+                  name="productId"
+                  register={register}
+                  errors={errors}
+                  options={products}
+                  loading={productsLoading}
+                  placeholder={!selectedCategoryId ? 'Select category first' : 'Select product'}
+                  required
+                  disabled={isSubmitting || !selectedCategoryId}
+                />
+
+                <FormInput
+                  label="Product Name"
+                  name="productName"
+                  register={register}
+                  errors={errors}
+                  required
+                  placeholder="Product name (auto-filled)"
+                  disabled={true}
+                />
+
+                <FormSelect
+                  label="Product Type"
+                  name="productType"
+                  register={register}
+                  errors={errors}
+                  required
+                  options={productTypes}
+                  disabled={true}
+                />
+
+                <FormInput
+                  label="Original Quantity"
+                  name="quantity"
+                  type="number"
+                  register={register}
+                  errors={errors}
+                  required
+                  min="1"
+                  placeholder="Enter original quantity"
+                  disabled={isSubmitting}
+                />
+
+                <FormInput
+                  label="Returned Quantity"
+                  name="returnedQuantity"
+                  type="number"
+                  register={register}
+                  errors={errors}
+                  required
+                  min="1"
+                  max={watch('quantity') || undefined}
+                  placeholder="Enter returned quantity"
+                  disabled={isSubmitting}
+                />
+                {availableSerials.length > 0 && returnedQuantity && parseInt(returnedQuantity) > availableSerials.length && (
+                  <p className="mt-1 text-sm text-amber-600 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    Returned quantity exceeds available dispatched items ({availableSerials.length})
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Product Details */}
+          {/* Serial Numbers Grid - Full Width */}
           <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Product Details</h3>
-            <div className="space-y-4">
-              <FormInput
-                label="Product ID"
-                name="productId"
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Serial Numbers Selection for Return</h3>
+            <SerialNumberGrid
+              availableSerials={availableSerials}
+              returnedQuantity={returnedQuantity || 0}
+              onSelectionChange={handleSerialSelectionChange}
+              loading={serialsLoading}
+            />
+          </div>
+
+          {/* Return Details */}
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Return Details</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <FormSelect
+                label="Return Reason"
+                name="returnReason"
                 register={register}
                 errors={errors}
                 required
-                placeholder="Enter product ID"
-              />
-              <FormInput
-                label="Product Name"
-                name="productName"
-                register={register}
-                errors={errors}
-                required
-                placeholder="Enter product name"
+                options={returnReasons}
+                disabled={isSubmitting}
               />
               <FormSelect
-                label="Product Type"
-                name="productType"
+                label="Return Condition"
+                name="returnCondition"
                 register={register}
                 errors={errors}
                 required
-                options={productTypes}
+                options={returnConditions}
+                disabled={isSubmitting}
+              />
+              <FormSelect
+                label="Action Taken"
+                name="actionTaken"
+                register={register}
+                errors={errors}
+                required
+                options={actionsTaken}
+                disabled={isSubmitting}
               />
               <FormInput
-                label="Original Quantity"
-                name="quantity"
+                label="Refund Amount"
+                name="refundAmount"
                 type="number"
                 register={register}
                 errors={errors}
-                required
-                min="1"
-                placeholder="Enter original quantity"
+                step="0.01"
+                min="0"
+                placeholder="Enter refund amount"
+                disabled={isSubmitting}
               />
               <FormInput
-                label="Returned Quantity"
-                name="returnedQuantity"
-                type="number"
+                label="Approved By"
+                name="approvedBy"
                 register={register}
                 errors={errors}
-                required
-                min="1"
-                max={quantity || undefined}
-                placeholder="Enter returned quantity"
+                placeholder="Enter approver name"
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Checkboxes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="flex items-center space-x-3">
+                <Controller
+                  name="isWarranty"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="checkbox"
+                      {...field}
+                      value=""
+                      checked={field.value}
+                      disabled={isSubmitting}
+                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    />
+                  )}
+                />
+                <label className="text-sm text-gray-700">
+                  This is a warranty return
+                </label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Controller
+                  name="replacementRequired"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="checkbox"
+                      {...field}
+                      value=""
+                      checked={field.value}
+                      disabled={isSubmitting}
+                      className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    />
+                  )}
+                />
+                <label className="text-sm text-gray-700">
+                  Replacement required
+                </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormTextarea
+                label="Inspection Notes"
+                name="inspectionNotes"
+                register={register}
+                errors={errors}
+                rows={4}
+                placeholder="Enter detailed inspection notes"
+                disabled={isSubmitting}
+              />
+              <FormTextarea
+                label="Remarks"
+                name="remarks"
+                register={register}
+                errors={errors}
+                rows={4}
+                placeholder="Enter any additional remarks"
+                disabled={isSubmitting}
               />
             </div>
           </div>
-        </div>
 
-        {/* Serial Numbers Grid - Full Width */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Serial Numbers Selection</h3>
-          <SerialNumberGrid
-            quantity={quantity || 0}
-            returnedQuantity={returnedQuantity || 0}
-            onSelectionChange={handleSerialSelectionChange}
-          />
-        </div>
-
-        {/* Return Details */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Return Details</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <FormSelect
-              label="Return Reason"
-              name="returnReason"
-              register={register}
-              errors={errors}
-              required
-              options={returnReasons}
-            />
-            <FormSelect
-              label="Return Condition"
-              name="returnCondition"
-              register={register}
-              errors={errors}
-              required
-              options={returnConditions}
-            />
-            <FormSelect
-              label="Action Taken"
-              name="actionTaken"
-              register={register}
-              errors={errors}
-              required
-              options={actionsTaken}
-            />
-            <FormInput
-              label="Refund Amount"
-              name="refundAmount"
-              type="number"
-              register={register}
-              errors={errors}
-              step="0.01"
-              min="0"
-              placeholder="Enter refund amount"
-            />
-            <FormInput
-              label="Approved By"
-              name="approvedBy"
-              register={register}
-              errors={errors}
-              placeholder="Enter approver name"
-            />
+          {/* Submit Buttons */}
+          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={`px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              disabled={isSubmitting || (returnedQuantity && selectedSerialNumbers.length !== parseInt(returnedQuantity))}
+            >
+              {isSubmitting && <LoadingSpinner />}
+              <span>
+                {isSubmitting
+                  ? (editData ? 'Updating...' : 'Processing...')
+                  : (editData ? 'Update Return' : 'Process Return')
+                }
+              </span>
+            </button>
           </div>
 
-          {/* Checkboxes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="flex items-center space-x-3">
-              <Controller
-                name="isWarranty"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    type="checkbox"
-                    {...field}
-                    value=""
-                    checked={field.value}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                )}
-              />
-              <label className="text-sm text-gray-700">
-                This is a warranty return
-              </label>
+          {/* Form Status */}
+          {returnedQuantity && availableSerials.length > 0 && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center text-sm text-red-700">
+                <div className="flex-1">
+                  <strong>Return Status:</strong>
+                  <div className="mt-1">
+                    • Quantity to return: {returnedQuantity}
+                  </div>
+                  <div>
+                    • Serial numbers selected: {selectedSerialNumbers.length}
+                  </div>
+                  <div>
+                    • Available for return: {availableSerials.length}
+                  </div>
+                </div>
+                <div className="ml-4">
+                  {selectedSerialNumbers.length === parseInt(returnedQuantity) ? (
+                    <div className="flex items-center text-green-600">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                      Ready to submit
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-amber-600">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2"></div>
+                      Incomplete selection
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <Controller
-                name="replacementRequired"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    type="checkbox"
-                    {...field}
-                    value=""
-                    checked={field.value}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                )}
-              />
-              <label className="text-sm text-gray-700">
-                Replacement required
-              </label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormTextarea
-              label="Inspection Notes"
-              name="inspectionNotes"
-              register={register}
-              errors={errors}
-              rows={4}
-              placeholder="Enter detailed inspection notes"
-            />
-            <FormTextarea
-              label="Remarks"
-              name="remarks"
-              register={register}
-              errors={errors}
-              rows={4}
-              placeholder="Enter any additional remarks"
-            />
-          </div>
+          )}
         </div>
-
-        {/* Submit Buttons */}
-        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={() => {
-              reset();
-              setSelectedSerialNumbers([]);
-            }}
-            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          >
-            Clear Form
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            onClick={handleSubmit(onSubmit)}
-            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-          >
-            {isSubmitting ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : null}
-            <span>{isSubmitting ? 'Saving...' : 'Save Return Entry'}</span>
-          </button>
-        </div>
-      </div>
+      </form>
     </div>
   );
 };

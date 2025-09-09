@@ -4,6 +4,7 @@ import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.InventoryTransactions.InwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
+import com.project2.ism.Model.InventoryTransactions.ReturnTransactions;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Repository.ProductSerialsRepository;
 
@@ -61,6 +62,29 @@ public class ProductSerialDTO {
         }
 
         // Keep all other fields unchanged (inward transaction, product, etc.)
+        return existingSerial;
+    }
+
+    // ✅ Mapping from DTO → Entity (for ReturnTransactions)
+    public ProductSerialNumbers toReturnEntity(ReturnTransactions ret, ProductSerialsRepository serialRepo) {
+        ProductSerialNumbers existingSerial = serialRepo.findById(this.id)
+                .orElseThrow(() -> new ResourceNotFoundException("Serial number not found with id: " + this.id));
+
+        // Safety check: must already be part of an outward transaction before returning
+        if (existingSerial.getOutwardTransaction() == null) {
+            throw new IllegalStateException("Cannot return serial that was never outwarded: " + existingSerial.getSid());
+        }
+
+        // Link to return transaction
+        existingSerial.setReturnTransaction(ret);
+
+        // Clear merchant (product is back from field)
+        existingSerial.setMerchant(null);
+
+        // Clear outward transaction
+        existingSerial.setOutwardTransaction(null);
+
+        // Keep inward + product references unchanged
         return existingSerial;
     }
 }
