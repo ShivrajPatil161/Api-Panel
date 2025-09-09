@@ -448,10 +448,10 @@ public class EnhancedSettlementService2 {
 
         BigDecimal beforeBalance = nvl(wallet.getAvailableBalance());
         BigDecimal afterBalance = beforeBalance.add(net);
+
         System.out.println(merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString()));
         // --- First create transaction details ---
         if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
-            System.out.println("hi from mtd");
             MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
             mtd.setCharge(fee);
@@ -470,7 +470,7 @@ public class EnhancedSettlementService2 {
             mtd.setUpdatedDateAndTimeOfTransaction(LocalDateTime.now());
             merchantTxnRepo.save(mtd);
         }
-        System.out.println("hi 2");
+
         // --- Then update wallet ---
         wallet.setAvailableBalance(afterBalance);
         wallet.setLastUpdatedAmount(net);
@@ -555,7 +555,9 @@ public class EnhancedSettlementService2 {
         }
 
         // --- create transaction details first ---
+
         if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
+
             MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
             mtd.setCharge(merchantFee);

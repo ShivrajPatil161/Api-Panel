@@ -45,5 +45,6 @@ public interface MerchantSettlementBatchRepository extends JpaRepository<Merchan
     Long countByStatus(String processing);
 
     Long countByStatusAndProcessingCompletedAtBetween(String completed, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
 }
 
