@@ -10,6 +10,8 @@ import ReturnsForm from '../Forms/Return'
 import inwardAPI from '../../constants/API/inwardApi'
 import { createOutwardTransaction, deleteOutwardTransaction, getAllOutwardTransactions, updateOutwardTransaction } from '../../constants/API/OutwardTransAPI'
 import { toast } from 'react-toastify'
+import OptimizedReturns from '../Forms/Return'
+import returnTransactionAPI from '../../constants/API/returnTransactionApi'
 
 
 const InventoryManagement = () => {
@@ -103,12 +105,14 @@ const InventoryManagement = () => {
 
     // Update the useEffect to fetch outward data when tab changes
     useEffect(() => {
-        if (activeTab === 'inward') {
-            fetchInwardData()
-        } else if (activeTab === 'outward') {
-            fetchOutwardData()
-        }
-    }, [activeTab])
+    if (activeTab === 'inward') {
+        fetchInwardData()
+    } else if (activeTab === 'outward') {
+        fetchOutwardData()
+    } else if (activeTab === 'returns') {
+        fetchReturnData()
+    }
+}, [activeTab])
 
    
 
@@ -185,12 +189,68 @@ console.log("hi-3")
         }
     }
 
-   
+    const [editingReturn, setEditingReturn] = useState(null)
 
-    const handleReturnSubmit = (data) => {
-        setReturnData(prev => [...prev, { ...data, id: Date.now() }])
-        setIsReturnModalOpen(false)
+    const fetchReturnData = async () => {
+    setLoading(true)
+    try {
+        const data = await returnTransactionAPI.getAllReturnTransactions()
+        console.log('Return data:', data)
+        setReturnData(Array.isArray(data) ? data : [])
+    } catch (error) {
+        console.error("Error fetching return data:", error)
+        toast.error("Error fetching return transactions. Please try again.")
+    } finally {
+        setLoading(false)
     }
+}
+
+const handleReturnSubmit = async (data) => {
+    setLoading(true)
+    try {
+        if (editingReturn) {
+            await returnTransactionAPI.updateReturnTransaction(editingReturn.id, data)
+            toast.success("Return transaction updated successfully!")
+        } else {
+            await returnTransactionAPI.createReturnTransaction(data)
+            toast.success("Return transaction created successfully!")
+        }
+
+        await fetchReturnData()
+        setIsReturnModalOpen(false)
+        setEditingReturn(null)
+    } catch (error) {
+        console.error("Error saving return transaction:", error)
+        toast.error("Error saving return transaction. Please try again.")
+    } finally {
+        setLoading(false)
+    }
+}
+
+const handleEditReturn = (returnEntry) => {
+    setEditingReturn(returnEntry)
+    setIsReturnModalOpen(true)
+}
+
+const handleViewReturn = (returnEntry) => {
+    console.log("View return entry:", returnEntry)
+}
+
+const handleDeleteReturn = async (id) => {
+    if (window.confirm("Are you sure you want to delete this return transaction?")) {
+        setLoading(true)
+        try {
+            await returnTransactionAPI.deleteReturnTransaction(id)
+            toast.success("Return transaction deleted successfully!")
+            await fetchReturnData()
+        } catch (error) {
+            console.error("Error deleting return transaction:", error)
+            toast.error("Error deleting return transaction. Please try again.")
+        } finally {
+            setLoading(false)
+        }
+    }
+}
 
     const getActionButtons = () => {
         switch (activeTab) {
@@ -255,7 +315,15 @@ console.log("hi-3")
                     />
                 )
             case 'returns':
-                return <ReturnTable data={returnData} />
+            return (
+                <ReturnTable 
+                    data={returnData} 
+                    onEdit={handleEditReturn}
+                    onView={handleViewReturn}
+                    onDelete={handleDeleteReturn}
+                    loading={loading}
+                />
+            )
             default:
                 return <InventoryTable data={inventoryData} />
         }
@@ -343,9 +411,13 @@ console.log("hi-3")
                 {isReturnModalOpen && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
                         <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-                            <ReturnsForm
+                            <OptimizedReturns
                                 onSubmit={handleReturnSubmit}
-                                onCancel={() => setIsReturnModalOpen(false)}
+                                onCancel={() => {
+                                    setIsReturnModalOpen(false)
+                                    setEditingReturn(null)
+                                }}
+                                editData={editingReturn}
                             />
                         </div>
                     </div>
