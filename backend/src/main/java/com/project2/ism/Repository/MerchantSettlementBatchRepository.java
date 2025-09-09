@@ -42,8 +42,8 @@ public interface MerchantSettlementBatchRepository extends JpaRepository<Merchan
     @Query("UPDATE MerchantSettlementBatch b SET b.status = :status WHERE b.id = :id")
     int updateStatusById(@Param("id") Long id, @Param("status") String status);
 
-    Long countByStatus(FranchiseSettlementBatch.BatchStatus processing);
+    Long countByStatus(String processing);
 
-    Long countByStatusAndProcessingCompletedAtBetween(FranchiseSettlementBatch.BatchStatus completed, LocalDateTime startOfDay, LocalDateTime endOfDay);
+    Long countByStatusAndProcessingCompletedAtBetween(String completed, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }
 
