@@ -4,6 +4,7 @@ import com.project2.ism.Model.FranchiseTransactionDetails;
 import com.project2.ism.Model.MerchantTransactionDetails;
 import com.project2.ism.Service.FranchiseTransDetService;
 import com.project2.ism.Service.MerchantTransDetService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,7 @@ public class MerchantTransDetController {
 
     private final MerchantTransDetService merchantTransDetService;
 
+    @Autowired
     public MerchantTransDetController(MerchantTransDetService merchantTransDetService) {
         this.merchantTransDetService = merchantTransDetService;
     }

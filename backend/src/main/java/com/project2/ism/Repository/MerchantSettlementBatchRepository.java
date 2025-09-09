@@ -1,5 +1,6 @@
 package com.project2.ism.Repository;
 
+import com.project2.ism.Model.FranchiseSettlementBatch;
 import com.project2.ism.Model.MerchantSettlementBatch;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.net.ContentHandler;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,5 +41,9 @@ public interface MerchantSettlementBatchRepository extends JpaRepository<Merchan
     @Modifying
     @Query("UPDATE MerchantSettlementBatch b SET b.status = :status WHERE b.id = :id")
     int updateStatusById(@Param("id") Long id, @Param("status") String status);
+
+    Long countByStatus(FranchiseSettlementBatch.BatchStatus processing);
+
+    Long countByStatusAndProcessingCompletedAtBetween(FranchiseSettlementBatch.BatchStatus completed, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }
 
