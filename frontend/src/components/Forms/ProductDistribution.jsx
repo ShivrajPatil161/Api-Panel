@@ -164,9 +164,6 @@ const ProductDistribution = () => {
       };
 
       await distributionApi.submitDistribution(distributionData);
-
-      alert('Distribution completed successfully!');
-
       // Reset form
       setFormData({
         franchise: userType === 'franchise' ? customerId || '' : '',
