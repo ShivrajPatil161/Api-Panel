@@ -31,6 +31,7 @@ import TransactionSelectionForm from '../components/Forms/ChargeCalculation.jsx'
 import SettlementBatchStatusMonitor from '../components/Tables/SettlementBatchStatusMonitor.jsx'
 import DirectSettlementPage from '../components/Charge Settlement/DirectSettlementPage.jsx'
 import FranchiseSettlementPage from '../components/Charge Settlement/FranchiseSettlementPage.jsx'
+import InwardForCustomer from '../components/Tables/InwardForCustomer.jsx'
 
 
 
@@ -148,6 +149,10 @@ export const router = createBrowserRouter([
               {
                 path: "products-distribution",
                 element: <ProductDistribution />
+              },
+              {
+                path: "inward-products",
+                element: <InwardForCustomer />
               },
 
             ]

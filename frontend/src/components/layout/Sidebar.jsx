@@ -234,6 +234,7 @@ const getMenuItems = (userType) => {
         icon: Package,
         iconColor: '',
         children: [
+          { title: 'Inward Entry', path: '/dashboard/customers/inward-products', icon: Package },
           { title: 'Product List', path: '/dashboard/inventory/customer-products', icon: Package },
           { title: 'Product Distribution', path: '/dashboard/customers/products-distribution', icon: Package }
         ]
@@ -258,6 +259,7 @@ const getMenuItems = (userType) => {
         icon: Package,
         iconColor: '',
         children: [
+          { title: 'Inward Entry', path: '/dashboard/customers/inward-products', icon: Package },
           { title: 'Product List', path: '/dashboard/inventory/customer-products', icon: Package }
         ]
       },
