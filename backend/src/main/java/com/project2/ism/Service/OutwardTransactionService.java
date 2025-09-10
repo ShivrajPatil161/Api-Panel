@@ -1,6 +1,7 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.DTO.FranchiseInwardDTO;
+import com.project2.ism.DTO.MerchantInwardDTO;
 import com.project2.ism.DTO.OutwardTransactionDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
@@ -144,6 +145,23 @@ public class OutwardTransactionService {
 
         return list.stream().map(outward -> {
             FranchiseInwardDTO dto = new FranchiseInwardDTO();
+            dto.setOutwardId(outward.getId());
+            dto.setProductName(outward.getProduct().getProductName()); // assuming relation exists
+            dto.setQuantity(Long.valueOf(outward.getQuantity()));
+            dto.setDeliveryMethod(outward.getDeliveryMethod());
+            dto.setTrackingNumber(outward.getTrackingNumber());
+            dto.setDispatchDate(outward.getDispatchDate());
+            dto.setExpectedDeliveryDate(outward.getExpectedDeliveryDate());
+            dto.setReceivedDate(outward.getReceivedDate());
+            return dto;
+        }).toList();
+    }
+
+    public List<MerchantInwardDTO> getMerchantInward(Long merchantId) {
+        List<OutwardTransactions> list = outwardTransactionRepository.findByMerchantId(merchantId);
+
+        return list.stream().map(outward -> {
+            MerchantInwardDTO dto = new MerchantInwardDTO();
             dto.setOutwardId(outward.getId());
             dto.setProductName(outward.getProduct().getProductName()); // assuming relation exists
             dto.setQuantity(Long.valueOf(outward.getQuantity()));

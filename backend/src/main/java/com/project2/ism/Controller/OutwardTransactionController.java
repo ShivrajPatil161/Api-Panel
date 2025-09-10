@@ -3,6 +3,7 @@ package com.project2.ism.Controller;
 
 
 import com.project2.ism.DTO.FranchiseInwardDTO;
+import com.project2.ism.DTO.MerchantInwardDTO;
 import com.project2.ism.DTO.OutwardTransactionDTO;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Service.OutwardTransactionService;
@@ -68,5 +69,10 @@ public class OutwardTransactionController {
     @GetMapping("/franchise/{franchiseId}")
     public ResponseEntity<List<FranchiseInwardDTO>> getFranchiseInward(@PathVariable Long franchiseId) {
         return ResponseEntity.ok(service.getFranchiseInward(franchiseId));
+    }
+
+    @GetMapping("/merchant/{merchantId}")
+    public ResponseEntity<List<MerchantInwardDTO>> getMerchantInward(@PathVariable Long merchantId) {
+        return ResponseEntity.ok(service.getMerchantInward(merchantId));
     }
 }
