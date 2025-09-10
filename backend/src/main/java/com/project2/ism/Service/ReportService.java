@@ -119,7 +119,9 @@ public class ReportService {
 
     private Long getPendingSettlementsCount() {
         Long franchisePending = franchiseSettlementBatchRepository.countByStatus(PROCESSING);
+
         Long merchantPending = merchantSettlementBatchRepository.countByStatus("PROCESSING");
+
 
         return (franchisePending != null ? franchisePending : 0L) +
                 (merchantPending != null ? merchantPending : 0L);
@@ -190,9 +192,11 @@ public class ReportService {
         Long franchiseFailed = franchiseSettlementBatchRepository.countByStatus(FAILED);
 
         // Merchant settlements
+
         Long merchantPending = merchantSettlementBatchRepository.countByStatus("PROCESSING");
         Long merchantCompleted = merchantSettlementBatchRepository.countByStatus("COMPLETED");
         Long merchantFailed = merchantSettlementBatchRepository.countByStatus("FAILED");
+
 
         distribution.add(new SettlementStatusDTO("PROCESSING",
                 (franchisePending != null ? franchisePending : 0L) + (merchantPending != null ? merchantPending : 0L)));
