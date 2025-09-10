@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -62,6 +64,7 @@ public class SettlementAsyncProcessor {
             log.info("Processing {} candidates for batch {}", candidates.size(), batchId);
 
             int processed = 0, failed = 0;
+            BigDecimal amountTotal = BigDecimal.ZERO, feesTotal = BigDecimal.ZERO, netTotal = BigDecimal.ZERO;
 
             // Process each candidate in sequence (keeps DB connections bounded)
             for (SettlementBatchCandidate candidate : candidates) {
@@ -80,6 +83,9 @@ public class SettlementAsyncProcessor {
                     if ("OK".equals(result.getStatus())) {
                         updateCandidateStatus(candidate, SettlementBatchCandidate.CandidateStatus.COMPLETED);
                         processed++;
+                        amountTotal=amountTotal.add( result.getAmount() != null ? result.getAmount().setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO);
+                        feesTotal = feesTotal.add( result.getFee() != null ?result.getFee().setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO);
+                        netTotal = netTotal.add( result.getNet() != null ?result.getNet().setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO);
                         log.debug("Successfully processed transaction {} for batch {}",
                                 candidate.getVendorTxId(), batchId);
                     } else {
@@ -98,9 +104,9 @@ public class SettlementAsyncProcessor {
             }
 
             // Update final batch results
-            updateBatchResults(batchId, processed, failed);
+            updateBatchResults(batchId, processed, failed,amountTotal,feesTotal,netTotal);
 
-            log.info("Completed batch {} processing: {} succeeded, {} failed", batchId, processed, failed);
+            log.info("Completed batch {} processing: {} succeeded, {} failed,{} amountTotal, {} feesTotal,{} netTotal", batchId, processed, failed,amountTotal,feesTotal,netTotal);
 
         } catch (Exception e) {
             log.error("Batch processing failed for batch {}", batchId, e);
@@ -141,13 +147,16 @@ public class SettlementAsyncProcessor {
      * Update batch final results in separate transaction
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateBatchResults(Long batchId, int processed, int failed) {
+    public void updateBatchResults(Long batchId, int processed, int failed, BigDecimal amountTotal,BigDecimal feesTotal,BigDecimal netTotal) {
         try {
             MerchantSettlementBatch batch = batchRepo.findById(batchId)
                     .orElseThrow(() -> new IllegalStateException("Batch not found: " + batchId));
 
             batch.setProcessedTransactions(processed);
             batch.setFailedTransactions(failed);
+            batch.setTotalAmount(amountTotal);
+            batch.setTotalFees(feesTotal);
+            batch.setTotalNetAmount(netTotal);
             batch.setProcessingCompletedAt(LocalDateTime.now());
 
             // Set final status based on results

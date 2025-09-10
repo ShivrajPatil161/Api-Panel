@@ -346,7 +346,7 @@ public class EnhancedSettlementService2 {
         batch.setTotalAmount(summary.totalAmount);
         batch.setTotalFees(summary.totalFees);
         batch.setTotalNetAmount(summary.totalNet);
-        batch.setStatus("OPEN");
+        batch.setStatus("PROCESSING");
     }
 
     private VendorTransactions getVendorTransaction(String vendorTxId) {
