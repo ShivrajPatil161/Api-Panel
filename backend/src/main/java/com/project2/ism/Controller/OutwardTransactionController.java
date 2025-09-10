@@ -2,6 +2,7 @@ package com.project2.ism.Controller;
 
 
 
+import com.project2.ism.DTO.FranchiseInwardDTO;
 import com.project2.ism.DTO.OutwardTransactionDTO;
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Service.OutwardTransactionService;
@@ -56,5 +57,16 @@ public class OutwardTransactionController {
     public ResponseEntity<?> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{outwardId}/received")
+    public ResponseEntity<?> updateReceivedDate(@PathVariable Long outwardId){
+        service.receivedDateService(outwardId);
+        return ResponseEntity.ok("Outward Transaction "+ outwardId + " marked as received.");
+    }
+
+    @GetMapping("/franchise/{franchiseId}")
+    public ResponseEntity<List<FranchiseInwardDTO>> getFranchiseInward(@PathVariable Long franchiseId) {
+        return ResponseEntity.ok(service.getFranchiseInward(franchiseId));
     }
 }

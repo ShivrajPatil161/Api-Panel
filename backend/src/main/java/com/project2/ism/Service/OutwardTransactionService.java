@@ -1,5 +1,6 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.DTO.FranchiseInwardDTO;
 import com.project2.ism.DTO.OutwardTransactionDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
@@ -12,25 +13,26 @@ import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class OutwardTransactionService {
 
-        private final OutwardTransactionRepository repository;
+        private final OutwardTransactionRepository outwardTransactionRepository;
         private final FranchiseRepository franchiseRepo;
         private final MerchantRepository merchantRepo;
         private final ProductRepository productRepo;
         private final ProductSerialsRepository serialRepo;
 
         public OutwardTransactionService(
-                OutwardTransactionRepository repository,
+                OutwardTransactionRepository outwardTransactionRepository,
                 FranchiseRepository franchiseRepo,
                 MerchantRepository merchantRepo,
                 ProductRepository productRepo,
                 ProductSerialsRepository serialRepo) {
-            this.repository = repository;
+            this.outwardTransactionRepository = outwardTransactionRepository;
             this.franchiseRepo = franchiseRepo;
             this.merchantRepo = merchantRepo;
             this.productRepo = productRepo;
@@ -38,18 +40,18 @@ public class OutwardTransactionService {
         }
 
         public List<OutwardTransactions> getAll() {
-            return repository.findAll();
+            return outwardTransactionRepository.findAll();
         }
 
         public OutwardTransactions getById(Long id) {
-            return repository.findById(id)
+            return outwardTransactionRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Outward Transaction not found with id " + id));
         }
 
         @Transactional
         public OutwardTransactions
         createFromDTO(OutwardTransactionDTO dto) {
-            if (repository.existsByDeliveryNumber(dto.deliveryNumber)) {
+            if (outwardTransactionRepository.existsByDeliveryNumber(dto.deliveryNumber)) {
                 throw new DuplicateResourceException("Delivery number already exists: " + dto.deliveryNumber);
             }
 
@@ -69,7 +71,7 @@ public class OutwardTransactionService {
                     : null;
 
             OutwardTransactions outward = dto.toEntity(franchise, merchant, product,serialRepo);
-            return repository.save(outward);
+            return outwardTransactionRepository.save(outward);
         }
 
         @Transactional
@@ -115,7 +117,7 @@ public class OutwardTransactionService {
                 );
             }
 
-            return repository.save(existing);
+            return outwardTransactionRepository.save(existing);
         }
 
         @Transactional
@@ -125,9 +127,33 @@ public class OutwardTransactionService {
             for (ProductSerialNumbers psn : existing.getProductSerialNumbers()) {
                 psn.setOutwardTransaction(null);
             }
-            repository.delete(existing);
+            outwardTransactionRepository.delete(existing);
         }
 
 
+        @Transactional
+        public void receivedDateService (Long outwardId){
+            OutwardTransactions outward = outwardTransactionRepository.findById(outwardId)
+                    .orElseThrow(() ->new IllegalArgumentException("Outward transaction not found: "+ outwardId));
+            outward.setReceivedDate(LocalDateTime.now());
+            outwardTransactionRepository.save(outward);
+        }
+
+    public List<FranchiseInwardDTO> getFranchiseInward(Long franchiseId) {
+        List<OutwardTransactions> list = outwardTransactionRepository.findByFranchiseId(franchiseId);
+
+        return list.stream().map(outward -> {
+            FranchiseInwardDTO dto = new FranchiseInwardDTO();
+            dto.setOutwardId(outward.getId());
+            dto.setProductName(outward.getProduct().getProductName()); // assuming relation exists
+            dto.setQuantity(Long.valueOf(outward.getQuantity()));
+            dto.setDeliveryMethod(outward.getDeliveryMethod());
+            dto.setTrackingNumber(outward.getTrackingNumber());
+            dto.setDispatchDate(outward.getDispatchDate());
+            dto.setExpectedDeliveryDate(outward.getExpectedDeliveryDate());
+            dto.setReceivedDate(outward.getReceivedDate());
+            return dto;
+        }).toList();
+    }
     }
 

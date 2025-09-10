@@ -3,7 +3,6 @@ package com.project2.ism.Repository;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Users.Merchant;
-import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -26,14 +25,16 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
     List<ProductSerialNumbers> findByProduct_IdAndMerchantIsNullAndOutwardTransactionIsNull(Long productId);
 
 
-    List<ProductSerialNumbers> findByOutwardTransaction_IdAndMerchantIsNull(Long outwardID);
-   // List<ProductSerialNumbers> findByOutwardTransaction_Id(Long outwardID, Long franchiseId);
+    List<ProductSerialNumbers> findByOutwardTransaction_IdAndMerchantIsNotNullAndReceivedDateIsNull(Long outwardID);
+
+    List<ProductSerialNumbers> findByOutwardTransaction_IdAndMerchantIsNullAndReceivedDateIsNull(Long outwardID);
 
     List<ProductSerialNumbers> findByMerchant_Id(Long merchantId);
     @Modifying
-    @Transactional
-    @Query("UPDATE ProductSerialNumbers psn SET psn.merchant.id = :merchantId WHERE psn.id IN :serialIds")
-    int assignMerchantToSerials(@Param("merchantId") Long merchantId, @Param("serialIds") List<Long> serialIds);
+    @Query("UPDATE ProductSerialNumbers ps SET ps.merchant.id = :merchantId, ps.productDistribution.id = :distributionId WHERE ps.id IN :serialIds")
+    int assignMerchantToSerials(@Param("merchantId") Long merchantId,
+                                @Param("serialIds") List<Long> serialIds,
+                                @Param("distributionId") Long distributionId);
 
     @Query("SELECT " +
             "CASE " +
@@ -115,5 +116,9 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
     // ProductSerialsRepository
     List<ProductSerialNumbers> findByMerchantAndProduct(Merchant merchant, Product product);
 
+
+    @Modifying
+    @Query("UPDATE ProductSerialNumbers ps SET ps.productDistribution = NULL WHERE ps.productDistribution.id = :distributionId")
+    void clearDistributionFromSerials(@Param("distributionId") Long distributionId);
 
 }

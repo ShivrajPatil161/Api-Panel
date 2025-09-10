@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class ProductSerialNumbers {
 
@@ -60,6 +62,12 @@ public class ProductSerialNumbers {
     @ManyToOne
     @JoinColumn(name = "merchant_id")
     private Merchant merchant;
+
+    private LocalDateTime receivedDate;// unit received by merchant
+
+    @ManyToOne
+    @JoinColumn(name = "product_distribution_id")
+    private ProductDistribution productDistribution;
 
 
     public ProductSerialNumbers() {
@@ -160,5 +168,21 @@ public class ProductSerialNumbers {
 
     public void setReturnToVendor(ReturnToVendor returnToVendor) {
         this.returnToVendor = returnToVendor;
+    }
+
+    public LocalDateTime getReceivedDate() {
+        return receivedDate;
+    }
+
+    public void setReceivedDate(LocalDateTime receivedDate) {
+        this.receivedDate = receivedDate;
+    }
+
+    public ProductDistribution getProductDistribution() {
+        return productDistribution;
+    }
+
+    public void setProductDistribution(ProductDistribution productDistribution) {
+        this.productDistribution = productDistribution;
     }
 }

@@ -8,10 +8,12 @@ public class FranchiseProductSummaryDTO {
     private String productCode;
     private String productCategory;
     private Integer totalQuantity;
-    private Integer remainingQuantity;
 
+    private Integer valid;
+
+    private Integer inTransit;
     public FranchiseProductSummaryDTO(Long outwardId,Long productId, String productName, String productCode, String productCategory,
-                                      Integer totalQuantity, Integer remainingQuantity) {
+                                      Integer totalQuantity,Integer valid, Integer inTransit) {
 
         this.outwardId = outwardId;
         this.productId = productId;
@@ -19,10 +21,27 @@ public class FranchiseProductSummaryDTO {
         this.productCode = productCode;
         this.productCategory = productCategory;
         this.totalQuantity = totalQuantity;
-        this.remainingQuantity = remainingQuantity;
+        this.valid = valid;
+        this.inTransit = inTransit;
     }
 
     // getters + setters
+
+    public Integer getValid() {
+        return valid;
+    }
+
+    public void setValid(Integer valid) {
+        this.valid = valid;
+    }
+
+    public Integer getInTransit() {
+        return inTransit;
+    }
+
+    public void setInTransit(Integer inTransit) {
+        this.inTransit = inTransit;
+    }
 
     public long getOutwardId() {
         return outwardId;
@@ -72,13 +91,6 @@ public class FranchiseProductSummaryDTO {
         this.totalQuantity = totalQuantity;
     }
 
-    public Integer getRemainingQuantity() {
-        return remainingQuantity;
-    }
-
-    public void setRemainingQuantity(Integer remainingQuantity) {
-        this.remainingQuantity = remainingQuantity;
-    }
 }
 
 

@@ -52,7 +52,7 @@ const distributionApi = {
     try {
       // Simulate API call for now
       await new Promise(resolve => setTimeout(resolve, 1500));
-      const response = await api.post("/product-serial-number/assign-merchant", distributionData);
+      const response = await api.post("/product-distribution/assign-merchant", distributionData);
       if (response.status === 200) {
         toast.success(response.data);
       }

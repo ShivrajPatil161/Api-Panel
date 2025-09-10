@@ -1,6 +1,7 @@
 package com.project2.ism.Controller;
 
 import com.project2.ism.DTO.FranchiseStatsDTO;
+import com.project2.ism.DTO.InventoryTransactionStatsDTO;
 import com.project2.ism.DTO.MerchantStatsDTO;
 import com.project2.ism.Service.StatsService;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,10 @@ public class StatsController {
     @GetMapping("/merchants/{id}")
     public ResponseEntity<MerchantStatsDTO> getMerchantStats(@PathVariable Long id) {
         return ResponseEntity.ok(statsService.getMerchantStats(id));
+    }
+    @GetMapping("/transactions-stats")
+    public ResponseEntity<InventoryTransactionStatsDTO> getTransactionStats() {
+        return ResponseEntity.ok(statsService.getTransactionStats());
     }
 }
 

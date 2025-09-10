@@ -1,10 +1,7 @@
 package com.project2.ism.Service;
 
 
-import com.project2.ism.DTO.FranchiseProductSummaryDTO;
-import com.project2.ism.DTO.FranchiseStatsDTO;
-import com.project2.ism.DTO.MerchantProductSummaryDTO;
-import com.project2.ism.DTO.MerchantStatsDTO;
+import com.project2.ism.DTO.*;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
@@ -24,14 +21,23 @@ public class StatsService {
     private final FranchiseService franchiseService;
     private final MerchantService merchantService;
 
+    private final ProductSerialsRepository serialRepo;
 
-    public StatsService(FranchiseRepository franchiseRepository, MerchantRepository merchantRepository, OutwardTransactionRepository outwardTransactionRepository, ProductSerialsRepository productSerialsRepository, FranchiseService franchiseService, MerchantService merchantService) {
+
+    private final InwardTransactionRepository inwardTransactionRepository;
+
+
+
+
+    public StatsService(FranchiseRepository franchiseRepository, MerchantRepository merchantRepository, OutwardTransactionRepository outwardTransactionRepository, ProductSerialsRepository productSerialsRepository, FranchiseService franchiseService, MerchantService merchantService, ProductSerialsRepository serialRepo, InwardTransactionRepository inwardTransactionRepository) {
         this.franchiseRepository = franchiseRepository;
         this.merchantRepository = merchantRepository;
         this.outwardTransactionRepository = outwardTransactionRepository;
         this.productSerialsRepository = productSerialsRepository;
         this.franchiseService = franchiseService;
         this.merchantService = merchantService;
+        this.serialRepo = serialRepo;
+        this.inwardTransactionRepository = inwardTransactionRepository;
     }
 
     public FranchiseStatsDTO getFranchiseStats(Long franchiseId) {
@@ -58,4 +64,27 @@ public class StatsService {
         return new MerchantStatsDTO(merchantId, outwardCount,  allocatedProducts,productSummary);
     }
 
+    public InventoryTransactionStatsDTO getTransactionStats() {
+        InventoryTransactionStatsDTO dto = new InventoryTransactionStatsDTO();
+
+        // basic counts
+        dto.totalInwardTransactions = inwardTransactionRepository.count();
+        dto.totalOutwardTransactions = outwardTransactionRepository.count();
+        //dto.totalReturnTransactions = returnRepo.count();
+        dto.totalProductSerials = serialRepo.count();
+
+        // inward grouped by vendor
+        dto.inwardByVendor = inwardTransactionRepository.countGroupByVendor();
+
+        // outward grouped by customer type
+        dto.outwardByCustomer = outwardTransactionRepository.countByCustomerType();
+
+        // return reasons distribution
+        //dto.returnReasons = returnRepo.countGroupByReason();
+
+        // serial number status
+        dto.productSerialStatus = serialRepo.countByStatus();
+
+        return dto;
+    }
 }
