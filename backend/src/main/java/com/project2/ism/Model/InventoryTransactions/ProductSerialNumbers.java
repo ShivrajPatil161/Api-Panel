@@ -10,6 +10,12 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(
+        name = "product_serial_numbers",
+        indexes = {
+                @Index(name = "idx_psn_outward_txn", columnList = "outward_transaction_id")
+        }
+)
 public class ProductSerialNumbers {
 
     @Id

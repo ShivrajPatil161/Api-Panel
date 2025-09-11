@@ -21,7 +21,7 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
     boolean existsByTid(String tid);
     boolean existsByVpaid(String vpaid);
     boolean existsByMobNumber(String mobNumber);
-
+    long countByProductId(Long productId);
     List<ProductSerialNumbers> findByProduct_IdAndMerchantIsNullAndOutwardTransactionIsNull(Long productId);
 
 

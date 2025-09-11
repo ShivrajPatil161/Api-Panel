@@ -14,6 +14,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(
+        name = "outward_transactions",
+        indexes = {
+                @Index(name = "idx_outward_franchise", columnList = "franchise_id")
+        }
+)
 public class OutwardTransactions {
 
     @Id

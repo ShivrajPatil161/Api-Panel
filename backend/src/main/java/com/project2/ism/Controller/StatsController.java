@@ -3,9 +3,13 @@ package com.project2.ism.Controller;
 import com.project2.ism.DTO.FranchiseStatsDTO;
 import com.project2.ism.DTO.InventoryTransactionStatsDTO;
 import com.project2.ism.DTO.MerchantStatsDTO;
+import com.project2.ism.DTO.ReportDTO.FranchiseReportsDTO;
+import com.project2.ism.DTO.ReportDTO.VendorReportsDTO;
 import com.project2.ism.Service.StatsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/stats")
@@ -30,5 +34,17 @@ public class StatsController {
     public ResponseEntity<InventoryTransactionStatsDTO> getTransactionStats() {
         return ResponseEntity.ok(statsService.getTransactionStats());
     }
+
+    @GetMapping("/vendor-reports")
+    public ResponseEntity<VendorReportsDTO> getVendorReports() {
+        return ResponseEntity.ok(statsService.getVendorReports());
+    }
+
+    @GetMapping("/franchise-reports")
+    public ResponseEntity<List<FranchiseReportsDTO>> getFranchiseReports() {
+        List<FranchiseReportsDTO> reports = statsService.getFranchiseReports();
+        return ResponseEntity.ok(reports);
+    }
+
 }
 
