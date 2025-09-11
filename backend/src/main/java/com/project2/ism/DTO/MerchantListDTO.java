@@ -45,11 +45,13 @@ public class MerchantListDTO {
         this.status = status;
         this.createdAt = createdAt;
     }
-    public MerchantListDTO(Long id,String businessName,String contactPersonEmail,BigDecimal walletBalance){
+
+    public MerchantListDTO(Long id,String businessName,String contactPersonEmail,BigDecimal walletBalance,Long franchiseId){
         this.id = id;
         this.businessName = businessName;
         this.contactPersonEmail = contactPersonEmail;
         this.walletBalance = walletBalance;
+        this.franchiseId = franchiseId;
     }
 
     // Getters and Setters

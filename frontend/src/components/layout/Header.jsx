@@ -51,11 +51,15 @@ const Header = ({ userType }) => {
             : 'ME'
         });
         localStorage.setItem("customerId", res?.data?.id)
+        // if merchant belongs to franchise, also store it for conditional rendering
+        if (res.data.franchiseId) {
+          localStorage.setItem("franchiseId", res.data.franchiseId);
+        }
       } else {
         // Admin → no API call
         setProfileData({
           name: 'Admin User',
-          email: 'admin@company.com',
+          email: 'admin@ism.com',
           initials: 'AD'
         });
       }
