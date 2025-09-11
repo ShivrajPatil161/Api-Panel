@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ProductDistributionRepository extends JpaRepository<ProductDistribution,Long> {
     List<ProductDistribution> findByFranchiseId(Long franchiseId);
+    List<ProductDistribution> findByMerchantId(Long merchantId);
 }

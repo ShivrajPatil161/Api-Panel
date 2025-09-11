@@ -5,6 +5,7 @@ import com.project2.ism.Model.Users.Merchant;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 public class ProductDistribution {
@@ -25,6 +26,9 @@ public class ProductDistribution {
     @ManyToOne
     @JoinColumn(name = "merchant_id")
     private Merchant merchant;
+
+    @OneToMany(mappedBy = "productDistribution")
+    private List<ProductSerialNumbers> productSerialNumbers;
 
     public Long getId() {
         return id;
@@ -82,5 +86,13 @@ public class ProductDistribution {
 
     public void setFranchise(Franchise franchise) {
         this.franchise = franchise;
+    }
+
+    public List<ProductSerialNumbers> getProductSerialNumbers() {
+        return productSerialNumbers;
+    }
+
+    public void setProductSerialNumbers(List<ProductSerialNumbers> productSerialNumbers) {
+        this.productSerialNumbers = productSerialNumbers;
     }
 }

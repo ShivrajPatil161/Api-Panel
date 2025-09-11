@@ -118,7 +118,7 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
 
 
     @Modifying
-    @Query("UPDATE ProductSerialNumbers ps SET ps.productDistribution = NULL WHERE ps.productDistribution.id = :distributionId")
+    @Query("UPDATE ProductSerialNumbers ps SET ps.productDistribution = NULL, ps.merchant = NULL WHERE ps.productDistribution.id = :distributionId")
     void clearDistributionFromSerials(@Param("distributionId") Long distributionId);
 
 }

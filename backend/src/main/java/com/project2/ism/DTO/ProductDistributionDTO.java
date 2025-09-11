@@ -3,6 +3,7 @@ package com.project2.ism.DTO;
 import com.project2.ism.Model.InventoryTransactions.ProductDistribution;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ProductDistributionDTO {
     private Long id;
@@ -17,7 +18,7 @@ public class ProductDistributionDTO {
     private Long merchantId;
     private String merchantName;
 
-
+    private List<ProductSerialDTO> serialNumbers;
     // getters and setters
 
     public Long getId() {
@@ -90,5 +91,13 @@ public class ProductDistributionDTO {
 
     public void setMerchantName(String merchantName) {
         this.merchantName = merchantName;
+    }
+
+    public List<ProductSerialDTO> getSerialNumbers() {
+        return serialNumbers;
+    }
+
+    public void setSerialNumbers(List<ProductSerialDTO> serialNumbers) {
+        this.serialNumbers = serialNumbers;
     }
 }
