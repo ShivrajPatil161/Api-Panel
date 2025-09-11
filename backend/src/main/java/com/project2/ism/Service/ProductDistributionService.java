@@ -10,6 +10,7 @@ import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,7 @@ public class ProductDistributionService {
     private final ProductDistributionRepository productDistributionRepository;
     private final ProductSerialsRepository serialRepo;
     private final MerchantRepository merchantRepo;
+    private final FranchiseRepository franchiseRepository;
 
     private final InwardTransactionRepository inwardTransactionRepository;
 
@@ -29,10 +31,11 @@ public class ProductDistributionService {
 
 
 
-    public ProductDistributionService(ProductDistributionRepository productDistributionRepository, ProductSerialsRepository serialRepo, MerchantRepository merchantRepo, InwardTransactionRepository inwardTransactionRepository, OutwardTransactionRepository outwardTransactionRepository) {
+    public ProductDistributionService(ProductDistributionRepository productDistributionRepository, ProductSerialsRepository serialRepo, MerchantRepository merchantRepo, FranchiseRepository franchiseRepository, InwardTransactionRepository inwardTransactionRepository, OutwardTransactionRepository outwardTransactionRepository) {
         this.productDistributionRepository = productDistributionRepository;
         this.serialRepo = serialRepo;
         this.merchantRepo = merchantRepo;
+        this.franchiseRepository = franchiseRepository;
         this.inwardTransactionRepository = inwardTransactionRepository;
         this.outwardTransactionRepository = outwardTransactionRepository;
     }
@@ -47,14 +50,15 @@ public class ProductDistributionService {
         Merchant merchant = merchantRepo.findById(merchantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + merchantId));
 
-        Franchise franchise = new Franchise();
-        franchise.setId(franchiseId);
-
+        Franchise franchise = franchiseRepository.findById(request.getFranchiseId())
+                .orElseThrow(() -> new RuntimeException("Franchise not found"));
         // ✅ create distribution record
         ProductDistribution distribution = new ProductDistribution();
         distribution.setMerchant(merchant);
         distribution.setFranchise(franchise);
-        distribution.setDistributedBy(request.getDistributedBy()); // injected from JWT in controller
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        distribution.setDistributedBy(email);
+
         distribution.setQuantity((long) serialIds.size());
         distribution.setDistributedDate(LocalDateTime.now());
 

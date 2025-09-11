@@ -170,13 +170,22 @@ const ProductDistribution = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  // Helper function to get current franchise ID
+  const getCurrentFranchiseId = () => {
+    if (userType === 'franchise') {
+      return customerId; // For franchise users, use their customerId
+    } else if (userType === 'admin') {
+      return formData.franchise; // For admin users, use selected franchise
+    }
+    return null;
+  };
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setLoading(prev => ({ ...prev, submitting: true }));
     try {
       const distributionData = {
+        franchiseId: getCurrentFranchiseId(),
         merchantId: formData.merchant,
         selectedDeviceIds: selectedDevices,
         quantity: parseInt(formData.quantity)
