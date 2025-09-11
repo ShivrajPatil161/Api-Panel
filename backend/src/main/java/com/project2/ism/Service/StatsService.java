@@ -118,8 +118,7 @@ public class StatsService {
         return dto;
     }
 
-    public VendorReportsDTO getVendorReports(){
-// NEW: Vendors + their products + device counts
+    public VendorReportsDTO getVendorReports() {
         VendorReportsDTO dto = new VendorReportsDTO();
 
         List<VendorDetailDTO> vendorDetails = vendorRepository.findAll().stream()
@@ -128,24 +127,22 @@ public class StatsService {
                     vdto.setVendorId(vendor.getId());
                     vdto.setVendorName(vendor.getName());
 
-                    List<ProductDetailDTO> products = productRepository.findByVendorId(vendor.getId())
-                            .stream()
-                            .map(product -> {
-                                ProductDetailDTO pdto = new ProductDetailDTO();
-                                pdto.setProductId(product.getId());
-                                pdto.setProductName(product.getProductName());
-                                pdto.setTotalDevices(productSerialsRepository.countByProductId(product.getId()));
-                                return pdto;
-                            })
-                            .collect(Collectors.toList());
+                    // total products under this vendor
+                    Long totalProducts = productRepository.countByVendorId(vendor.getId());
 
-                    vdto.setProducts(products);
+                    // total devices = sum of devices for all products under this vendor
+                    Long totalDevices = productRepository.findByVendorId(vendor.getId()).stream()
+                            .mapToLong(p -> productSerialsRepository.countByProductId(p.getId()))
+                            .sum();
+
+                    vdto.setTotalProducts(totalProducts);
+                    vdto.setTotalDevices(totalDevices);
+
                     return vdto;
                 })
                 .toList();
 
         dto.setVendors(vendorDetails);
-
         return dto;
     }
 
