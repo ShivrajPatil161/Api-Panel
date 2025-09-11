@@ -1,6 +1,7 @@
 package com.project2.ism.Repository;
 
 import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
+import org.hibernate.usertype.LoggableUserType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -44,4 +45,7 @@ public interface OutwardTransactionRepository extends JpaRepository<OutwardTrans
     @Query("SELECT COUNT(ot) FROM OutwardTransactions ot WHERE ot.merchant.id = :merchantId")
     Long countByMerchantId(@Param("merchantId") Long merchantId);
 
+    List<OutwardTransactions> findByMerchantIdAndProductId(Long merchantId, Long productId);
+
+    List<OutwardTransactions> findByFranchiseIdAndProductId(Long merchantId, Long productId);
 }
