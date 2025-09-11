@@ -53,6 +53,13 @@ public class ProductDistributionController {
     }
 
     /**
+     * Get distributions by merchant
+     */
+    @GetMapping("/merchant/{merchantId}")
+    public ResponseEntity<List<ProductDistributionDTO>> getByMerchant(@PathVariable Long merchantId) {
+        return ResponseEntity.ok(productDistributionService.getByMerchant(merchantId));
+    }
+    /**
      * Delete a distribution (and unlink serials)
      */
     @DeleteMapping("/{distributionId}")

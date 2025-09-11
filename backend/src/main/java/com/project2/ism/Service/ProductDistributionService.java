@@ -2,8 +2,10 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.AssignMerchantRequest;
 import com.project2.ism.DTO.ProductDistributionDTO;
+import com.project2.ism.DTO.ProductSerialDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.InventoryTransactions.ProductDistribution;
+import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductDistributionService {
@@ -75,7 +78,11 @@ public class ProductDistributionService {
         ProductDistribution dist = productDistributionRepository.findById(distributionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Distribution not found: " + distributionId));
 
-        dist.setReceivedDate(LocalDateTime.now());
+        LocalDateTime time  = LocalDateTime.now();
+        dist.setReceivedDate(time);
+        List<ProductSerialNumbers> serials = dist.getProductSerialNumbers();
+        serials.forEach(psn -> psn.setReceivedDate(time));
+        serialRepo.saveAll(serials);
         return toDto(productDistributionRepository.save(dist));
     }
 
@@ -112,7 +119,12 @@ public class ProductDistributionService {
 
         productDistributionRepository.delete(dist);
     }
-
+    public List<ProductDistributionDTO> getByMerchant(Long merchantId) {
+        return productDistributionRepository.findByMerchantId(merchantId)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
     private ProductDistributionDTO toDto(ProductDistribution entity) {
         ProductDistributionDTO dto = new ProductDistributionDTO();
         dto.setId(entity.getId());
@@ -129,7 +141,14 @@ public class ProductDistributionService {
             dto.setMerchantId(entity.getMerchant().getId());
             dto.setMerchantName(entity.getMerchant().getBusinessName());
         }
-
+        if (entity.getProductSerialNumbers() != null) {
+            dto.setSerialNumbers( entity.getProductSerialNumbers().stream()
+                    .map(ProductSerialDTO::fromEntity)
+                    .collect(Collectors.toList())
+        );
+        }
         return dto;
     }
+
+
 }
