@@ -12,7 +12,7 @@ import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
 import UniversalExportButtons from './UniversalExportButtons';
 
-const FranchiseReports = () => {
+const VendorReports = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [globalFilter, setGlobalFilter] = useState('');
@@ -20,81 +20,83 @@ const FranchiseReports = () => {
 
     const columnHelper = createColumnHelper();
 
-    // Export configuration
+    // Transform vendor data for flat table display
+    const flattenedData = useMemo(() => {
+        const flattened = [];
+        data.forEach(vendor => {
+            
+                
+                    flattened.push({
+                        vendorName: vendor.vendorName,
+                        
+                        totalDevices: vendor.totalDevices,
+                        
+                        totalProducts: vendor.totalProducts,
+                        
+                    });
+        
+            }
+        );
+        return flattened;
+    }, [data]);
+
+    // Export configurations - no IDs
     const exportConfig = {
         columns: {
-            headers: ['Franchise Name', 'Total Merchants', 'Wallet Balance', 'Total Devices', 'Total Products'],
-            keys: ['franchiseName', 'totalMerchants', 'walletBalance', 'totalDevices', 'totalProducts'],
-            widths: [20, 15, 15, 15, 15],
+            headers: ['Vendor Name', 'Total Products', 'Total Devices'],
+            keys: ['vendorName', 'totalProducts', 'totalDevices'],
+            widths: [30, 30, 20],
             styles: {
-                0: { cellWidth: 50 },
-                1: { cellWidth: 30, halign: 'center' },
-                2: { cellWidth: 30, halign: 'center' },
-                3: { cellWidth: 30, halign: 'center' },
-                4: { cellWidth: 30, halign: 'center' }
+                0: { cellWidth: 60 },
+                1: { cellWidth: 60 },
+                2: { cellWidth: 30, halign: 'center' }
             }
         },
-        excelTransform: (data) => data.map(item => ({
-            'Franchise Name': item.franchiseName,
-            'Total Merchants': item.totalMerchants,
-            'Wallet Balance': item.walletBalance || 0,
-            'Total Devices': item.totalDevices,
-            'Total Products': item.totalProducts
+        excelTransform: (data) => flattenedData.map(item => ({
+            'Vendor Name': item.vendorName,
+            'Total Products': item.totalProducts,
+            'Total Devices': item.totalDevices
         })),
-        pdfTransform: (data) => data.map(item => ({
-            franchiseName: item.franchiseName,
-            totalMerchants: item.totalMerchants,
-            walletBalance: item.walletBalance || 0,
-            totalDevices: item.totalDevices,
-            totalProducts: item.totalProducts
-        }))
+        pdfTransform: (data) => flattenedData
     };
 
     const columns = useMemo(() => [
-        columnHelper.accessor('franchiseName', {
-            header: 'Franchise Name',
-            cell: info => (
-                <div className="font-medium text-gray-900">
-                    {info.getValue()}
-                </div>
-            ),
-        }),
-        columnHelper.accessor('totalMerchants', {
-            header: 'Total Merchants',
-            cell: info => (
-                <div className="text-center text-gray-700">
-                    {info.getValue()}
-                </div>
-            ),
-        }),
-        columnHelper.accessor('walletBalance', {
-            header: 'Wallet Balance',
-            cell: info => (
-                <div className="text-center text-gray-700">
-                    ${(info.getValue() || 0).toLocaleString()}
-                </div>
-            ),
-        }),
-        columnHelper.accessor('totalDevices', {
-            header: 'Total Devices',
-            cell: info => (
-                <div className="text-center text-gray-700">
-                    {info.getValue()}
-                </div>
-            ),
+        columnHelper.accessor('vendorName', {
+            header: 'Vendor Name',
+            cell: ({ row }) => {
+                
+                return (
+                    <div className="font-medium text-gray-900">
+                        {row.original.vendorName}
+                    </div>
+                );
+            },
         }),
         columnHelper.accessor('totalProducts', {
             header: 'Total Products',
-            cell: info => (
-                <div className="text-center text-gray-700">
-                    {info.getValue()}
+            cell: ({ row }) => {
+                
+                return (
+                    <div className="text-center text-gray-700 font-medium">
+                        {row.original.totalProducts}
+                    </div>
+                );
+            },
+        }),
+       
+        columnHelper.accessor('totalDevices', {
+            header: 'Total Devices',
+            cell: ({ row }) => (
+                <div className="text-center text-gray-700 font-medium">
+                    {row.original.totalDevices}
                 </div>
             ),
         }),
+       
     ], [columnHelper]);
 
     const table = useReactTable({
-        data,
+        data: flattenedData,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
@@ -117,10 +119,12 @@ const FranchiseReports = () => {
         const fetchReports = async () => {
             try {
                 setLoading(true);
-                const response = await api.get('/stats/franchise-reports');
-                setData(response.data);
+                const response = await api.get('/stats/vendor-reports');
+                // Handle the response structure with vendors array
+                setData(response.data.vendors || []);
             } catch (error) {
-                console.error('Error fetching franchise reports:', error);
+                console.error('Error fetching vendor reports:', error);
+                setData([]); // Set empty array on error
             } finally {
                 setLoading(false);
             }
@@ -136,19 +140,23 @@ const FranchiseReports = () => {
             </div>
         );
     }
+    const totalProducts = data.reduce((sum, v) => sum + (v.totalProducts || 0), 0);
+    const totalDevices = data.reduce((sum, v) => sum + (v.totalDevices || 0), 0);
+
+    
 
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Franchise Reports</h1>
-                    <p className="text-sm text-gray-600">Overview of franchise performance metrics</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Vendor Reports</h1>
+                    <p className="text-sm text-gray-600">Overview of vendor products and device distribution</p>
                 </div>
                 <UniversalExportButtons
-                    data={data}
-                    filename="franchise-reports"
-                    title="Franchise Reports"
+                    data={flattenedData}
+                    filename="vendor-reports"
+                    title="Vendor Reports"
                     {...exportConfig}
                 />
             </div>
@@ -160,7 +168,7 @@ const FranchiseReports = () => {
                     value={globalFilter ?? ''}
                     onChange={e => setGlobalFilter(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="Search franchises..."
+                    placeholder="Search vendors..."
                 />
             </div>
 
@@ -192,15 +200,39 @@ const FranchiseReports = () => {
                             ))}
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {table.getRowModel().rows.map(row => (
-                                <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                                    {row.getVisibleCells().map(cell => (
-                                        <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
+                            {table.getRowModel().rows.map((row, index) => {
+                                const nextRow = table.getRowModel().rows[index + 1];
+                                const isLastProductOfVendor = !nextRow || nextRow.original.vendorName !== row.original.vendorName;
+
+                                return (
+                                    <tr key={row.id} className={`hover:bg-gray-50 transition-colors ${isLastProductOfVendor ? 'border-b-2 border-gray-300' : ''}`}>
+                                        {row.getVisibleCells().map((cell, cellIndex) => {
+                                            const shouldShowCell = cell.getValue() !== null;
+                                            let rowSpan = 1;
+
+                                            // Calculate rowspan for vendor columns (0, 1, 4)
+                                            if (row.original.isFirstProduct && (cellIndex === 0 || cellIndex === 1 || cellIndex === 4)) {
+                                                rowSpan = row.original.productCount || 1;
+                                            }
+
+                                            if (!shouldShowCell && (cellIndex === 0 || cellIndex === 1 || cellIndex === 4)) {
+                                                return null;
+                                            }
+
+                                            return (
+                                                <td
+                                                    key={cell.id}
+                                                    className="px-6 py-4 whitespace-nowrap border-r border-gray-200 last:border-r-0"
+                                                    rowSpan={rowSpan}
+                                                    style={rowSpan > 1 ? { verticalAlign: 'top' } : {}}
+                                                >
+                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -240,32 +272,22 @@ const FranchiseReports = () => {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Franchises</div>
+                    <div className="text-sm font-medium text-gray-500">Total Vendors</div>
                     <div className="text-2xl font-bold text-gray-900">{data.length}</div>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Merchants</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                        {data.reduce((sum, item) => sum + item.totalMerchants, 0)}
-                    </div>
+                    <div className="text-sm font-medium text-gray-500">Total Products</div>
+                    <div className="text-2xl font-bold text-gray-900">{totalProducts}</div>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="text-sm font-medium text-gray-500">Total Devices</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                        {data.reduce((sum, item) => sum + item.totalDevices, 0)}
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Products</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                        {data.reduce((sum, item) => sum + item.totalProducts, 0)}
-                    </div>
+                    <div className="text-2xl font-bold text-gray-900">{totalDevices}</div>
                 </div>
             </div>
         </div>
     );
 };
 
-export default FranchiseReports;
+export default VendorReports;
