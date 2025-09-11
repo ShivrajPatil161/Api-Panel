@@ -61,13 +61,13 @@ public class InwardTransactions {
     @Size(max = 1000)
     private String remark;
 
-    // Helper method to add card rate
+    // Helper method
     public void addProductSerialNumbers(ProductSerialNumbers psn) {
         productSerialNumbers.add(psn);
         psn.setInwardTransaction(this);
     }
 
-    // Helper method to remove card rate
+    // Helper method
     public void removeProductSerialNumbers(ProductSerialNumbers psn) {
         productSerialNumbers.remove(psn);
         psn.setInwardTransaction(null);
