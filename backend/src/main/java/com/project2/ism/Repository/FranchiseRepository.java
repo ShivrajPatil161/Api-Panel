@@ -48,18 +48,20 @@ public interface FranchiseRepository extends JpaRepository<Franchise, Long> {
     SELECT new com.project2.ism.DTO.ReportDTO.FranchiseReportsDTO(
         f.franchiseName,
         COUNT(DISTINCT m.id),
-        f.walletBalance,
+        fw.availableBalance,
         COUNT(DISTINCT psn.id),
-        COUNT(DISTINCT p.id)   
+        COUNT(DISTINCT p.id)
     )
     FROM Franchise f
     LEFT JOIN Merchant m ON m.franchise.id = f.id
     LEFT JOIN OutwardTransactions ot ON ot.franchise.id = f.id
     LEFT JOIN ProductSerialNumbers psn ON psn.outwardTransaction.id = ot.id
     LEFT JOIN Product p ON p.id = ot.product.id
-    GROUP BY f.id,f.franchiseName, f.walletBalance
+    LEFT JOIN FranchiseWallet fw ON fw.franchise.id = f.id
+    GROUP BY f.id, f.franchiseName, fw.availableBalance
 """)
     List<FranchiseReportsDTO> getFranchiseReports();
+
 
 
 
