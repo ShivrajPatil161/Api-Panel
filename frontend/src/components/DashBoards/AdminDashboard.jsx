@@ -36,7 +36,7 @@ const AdminDashboard = () => {
         try {
             const [franchise, transactions, pricing, vendors, products] = await Promise.all([
                 api.get('/franchise/franchises-merchants'),
-                api.get('/product-serial-number/transactions-stats'),
+                api.get('/stats/transactions-stats'),
                 api.get('/pricing-schemes/stats'),
                 api.get('/vendors/stats'),
                 api.get('/products/stats')

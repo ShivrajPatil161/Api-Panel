@@ -217,11 +217,14 @@ public class MerchantController {
     public ResponseEntity<?> profile(@RequestParam String email) {
         Merchant merchant = merchantService.getMerchantByEmail(email);
         BigDecimal walletBalance = merchantService.getWalletBalance(merchant.getId());
+        Long franchiseId = (merchant.getFranchise() != null) ? merchant.getFranchise().getId() : null;
+
         MerchantListDTO dto = new MerchantListDTO(
                 merchant.getId(),
                 merchant.getBusinessName(),
                 merchant.getContactPerson().getEmail(),
-                walletBalance
+                walletBalance,
+                franchiseId
         );
         return ResponseEntity.ok(dto);
     }

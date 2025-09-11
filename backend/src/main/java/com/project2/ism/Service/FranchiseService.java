@@ -99,10 +99,7 @@
 
 package com.project2.ism.Service;
 
-import com.project2.ism.DTO.FranchiseFormDTO;
-import com.project2.ism.DTO.FranchiseListDTO;
-import com.project2.ism.DTO.FranchiseMerchantStatsDTO;
-import com.project2.ism.DTO.FranchiseProductSummaryDTO;
+import com.project2.ism.DTO.*;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
 import com.project2.ism.Model.FranchiseWallet;
@@ -307,10 +304,14 @@ public class FranchiseService {
     }
 
 
-    public List<ProductSerialNumbers> getPSN(Long outwardID){
-        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNull(outwardID);
+    public List<ProductSerialNumbers> getValidPSN(Long outwardID){
+        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNullAndReceivedDateIsNull(outwardID);
 
     }
+    public List<ProductSerialNumbers> getInTransitPSN(Long outwardID) {
+        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNotNullAndReceivedDateIsNull(outwardID);
+    }
+
 
 
     public List<FranchiseProductSummaryDTO> getProductsOfFranchise(Long franchiseId) {
@@ -319,7 +320,8 @@ public class FranchiseService {
         List<FranchiseProductSummaryDTO> result = new ArrayList<>();
         for (OutwardTransactions o : outwardList) {
             int totalQty = o.getQuantity();
-            int remainingQty = getPSN(o.getId()).size();
+            int valid = getValidPSN(o.getId()).size();
+            int inTransit = getInTransitPSN(o.getId()).size();
 
             result.add(new FranchiseProductSummaryDTO(
                     o.getId(),
@@ -328,7 +330,8 @@ public class FranchiseService {
                     o.getProduct().getProductCode(),
                     o.getProduct().getProductCategory().getCategoryName(), // assuming you have category relation
                     totalQty,
-                    remainingQty
+                    valid,
+                    inTransit
             ));
         }
         return result;

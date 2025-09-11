@@ -6,6 +6,7 @@ import com.project2.ism.DTO.TempDTOs.SettlementCandidateDTO;
 import com.project2.ism.DTO.TempDTOs.SettlementRequest;
 import com.project2.ism.Model.MerchantSettlementBatch;
 import com.project2.ism.Service.EnhancedSettlementService2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ public class EnhancedSettlementController {
 
     private final EnhancedSettlementService2 enhancedSettlementService;
 
+    @Autowired
     public EnhancedSettlementController(EnhancedSettlementService2 enhancedSettlementService) {
         this.enhancedSettlementService = enhancedSettlementService;
     }

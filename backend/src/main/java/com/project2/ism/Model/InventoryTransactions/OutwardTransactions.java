@@ -10,9 +10,16 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(
+        name = "outward_transactions",
+        indexes = {
+                @Index(name = "idx_outward_franchise", columnList = "franchise_id")
+        }
+)
 public class OutwardTransactions {
 
     @Id
@@ -60,6 +67,8 @@ public class OutwardTransactions {
     private String trackingNumber;
 
     private LocalDate expectedDeliveryDate;
+
+    private LocalDateTime receivedDate;// product received by customer
 
     @OneToMany(mappedBy = "outwardTransaction")
     private List<ProductSerialNumbers> productSerialNumbers;
@@ -211,5 +220,13 @@ public class OutwardTransactions {
 
     public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public LocalDateTime getReceivedDate() {
+        return receivedDate;
+    }
+
+    public void setReceivedDate(LocalDateTime receivedDate) {
+        this.receivedDate = receivedDate;
     }
 }

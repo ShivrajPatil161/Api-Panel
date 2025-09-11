@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, CheckCircle, Search } from 'lucide-react';
+import { Package, CheckCircle, Search, Download } from 'lucide-react';
 import distributionApi from "../../constants/API/distributionsAPI"
 
 const ProductDistribution = () => {
@@ -33,6 +33,7 @@ const ProductDistribution = () => {
   const [selectedDevices, setSelectedDevices] = useState([]);
   const [deviceSearch, setDeviceSearch] = useState('');
   const [errors, setErrors] = useState({});
+  const [devicesFetched, setDevicesFetched] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -50,18 +51,12 @@ const ProductDistribution = () => {
     }
   }, [formData.franchise, userType, customerId]);
 
-  // Load devices when product and quantity are selected
+  // Reset devices when product or quantity changes
   useEffect(() => {
-    if (formData.product && formData.quantity > 0) {
-      const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
-      if (selectedProduct) {
-        loadDevices(selectedProduct.outwardId);
-      }
-    } else {
-      setData(prev => ({ ...prev, devices: [] }));
-      setSelectedDevices([]);
-    }
-  }, [formData.product, formData.quantity, data.products]);
+    setData(prev => ({ ...prev, devices: [] }));
+    setSelectedDevices([]);
+    setDevicesFetched(false);
+  }, [formData.product, formData.quantity]);
 
   // API calls
   const loadFranchises = async () => {
@@ -88,6 +83,7 @@ const ProductDistribution = () => {
       // Reset dependent fields
       setFormData(prev => ({ ...prev, product: '', quantity: '', merchant: '' }));
       setSelectedDevices([]);
+      setDevicesFetched(false);
     } catch (error) {
       console.error('Load franchise data error:', error);
     } finally {
@@ -95,12 +91,18 @@ const ProductDistribution = () => {
     }
   };
 
-  const loadDevices = async (outwardId) => {
+  const loadDevices = async () => {
+    if (!formData.product) return;
+
     setLoading(prev => ({ ...prev, devices: true }));
     try {
-      const devices = await distributionApi.getSerialNumbersToDispatch(outwardId);
-      setData(prev => ({ ...prev, devices }));
-      setSelectedDevices([]);
+      const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+      if (selectedProduct) {
+        const devices = await distributionApi.getSerialNumbersToDispatch(selectedProduct.outwardId);
+        setData(prev => ({ ...prev, devices }));
+        setSelectedDevices([]);
+        setDevicesFetched(true);
+      }
     } catch (error) {
       console.error('Load devices error:', error);
     } finally {
@@ -113,6 +115,17 @@ const ProductDistribution = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+
+    // Validate quantity against available stock
+    if (field === 'quantity') {
+      const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+      if (selectedProduct && parseInt(value) > selectedProduct.valid) {
+        setErrors(prev => ({
+          ...prev,
+          quantity: `Quantity cannot exceed available stock (${selectedProduct.valid})`
+        }));
+      }
     }
   };
 
@@ -140,33 +153,45 @@ const ProductDistribution = () => {
     }
     if (!formData.quantity || formData.quantity <= 0) {
       newErrors.quantity = 'Please enter a valid quantity';
+    } else {
+      // Check quantity against available stock
+      const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+      if (selectedProduct && parseInt(formData.quantity) > selectedProduct.valid) {
+        newErrors.quantity = `Quantity cannot exceed available stock (${selectedProduct.valid})`;
+      }
     }
     if (!formData.merchant) {
       newErrors.merchant = 'Please select a merchant';
     }
-    if (selectedDevices.length !== parseInt(formData.quantity)) {
+    if (devicesFetched && selectedDevices.length !== parseInt(formData.quantity)) {
       newErrors.devices = `Please select exactly ${formData.quantity} devices`;
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  // Helper function to get current franchise ID
+  const getCurrentFranchiseId = () => {
+    if (userType === 'franchise') {
+      return customerId; // For franchise users, use their customerId
+    } else if (userType === 'admin') {
+      return formData.franchise; // For admin users, use selected franchise
+    }
+    return null;
+  };
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setLoading(prev => ({ ...prev, submitting: true }));
     try {
       const distributionData = {
+        franchiseId: getCurrentFranchiseId(),
         merchantId: formData.merchant,
         selectedDeviceIds: selectedDevices,
         quantity: parseInt(formData.quantity)
       };
 
       await distributionApi.submitDistribution(distributionData);
-
-      alert('Distribution completed successfully!');
-
       // Reset form
       setFormData({
         franchise: userType === 'franchise' ? customerId || '' : '',
@@ -176,11 +201,32 @@ const ProductDistribution = () => {
       });
       setSelectedDevices([]);
       setData(prev => ({ ...prev, devices: [] }));
+      setDevicesFetched(false);
     } catch (error) {
       alert('Distribution failed. Please try again.');
     } finally {
       setLoading(prev => ({ ...prev, submitting: false }));
     }
+  };
+
+  // Check if fetch devices button should be enabled
+  const canFetchDevices = () => {
+    return formData.product &&
+      formData.quantity &&
+      parseInt(formData.quantity) > 0 &&
+      !errors.quantity;
+  };
+
+  // Check if form is valid for distribution
+  const isFormValid = () => {
+    return (userType !== 'admin' || formData.franchise) &&
+      formData.product &&
+      formData.quantity &&
+      parseInt(formData.quantity) > 0 &&
+      formData.merchant &&
+      devicesFetched &&
+      selectedDevices.length === parseInt(formData.quantity) &&
+      !Object.keys(errors).some(key => errors[key]);
   };
 
   // Get filtered devices for display
@@ -250,7 +296,7 @@ const ProductDistribution = () => {
               <option value="">{loading.products ? 'Loading...' : 'Select Product'}</option>
               {data.products.map(product => (
                 <option key={product.outwardId} value={product.outwardId}>
-                  {product.productName} (Available: {product.remainingQuantity})
+                  {product.productName} (Available: {product.valid})
                 </option>
               ))}
             </select>
@@ -265,7 +311,7 @@ const ProductDistribution = () => {
             <input
               type="number"
               min="1"
-              max={selectedProduct?.remainingQuantity || 999}
+              max={selectedProduct?.valid || 999}
               value={formData.quantity}
               onChange={(e) => handleInputChange('quantity', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -274,7 +320,7 @@ const ProductDistribution = () => {
             />
             {errors.quantity && <p className="text-red-600 text-sm mt-1">{errors.quantity}</p>}
             {selectedProduct && (
-              <p className="text-sm text-gray-500 mt-1">Available: {selectedProduct.remainingQuantity}</p>
+              <p className="text-sm text-gray-500 mt-1">Available: {selectedProduct.valid}</p>
             )}
           </div>
 
@@ -299,10 +345,29 @@ const ProductDistribution = () => {
             {errors.merchant && <p className="text-red-600 text-sm mt-1">{errors.merchant}</p>}
           </div>
         </div>
+
+        {/* Fetch Devices Button */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <button
+            onClick={loadDevices}
+            disabled={!canFetchDevices() || loading.devices}
+            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading.devices ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            <span>{loading.devices ? 'Fetching...' : 'Fetch Available Devices'}</span>
+          </button>
+          <p className="text-sm text-gray-500 mt-2">
+            Select product and enter valid quantity first to fetch devices
+          </p>
+        </div>
       </div>
 
       {/* Device Selection */}
-      {data.devices.length > 0 && formData.quantity > 0 && (
+      {devicesFetched && data.devices.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-900">
@@ -320,66 +385,63 @@ const ProductDistribution = () => {
             </div>
           </div>
 
-          {loading.devices ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {filteredDevices.map(device => (
-                <div
-                  key={device.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedDevices.includes(device.id)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                    } ${!selectedDevices.includes(device.id) && selectedDevices.length >= parseInt(formData.quantity)
-                      ? 'opacity-50 cursor-not-allowed'
-                      : ''
-                    }`}
-                  onClick={() => handleDeviceToggle(device.id)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900">SID: {device.sid}</div>
-                      <div className="text-sm text-gray-600">MID: {device.mid}</div>
-                      <div className="text-sm text-gray-600">TID: {device.tid}</div>
-                      <div className="text-sm text-gray-600">VPA: {device.vpaid}</div>
-                    </div>
-                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedDevices.includes(device.id)
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300'
-                      }`}>
-                      {selectedDevices.includes(device.id) && (
-                        <CheckCircle className="w-3 h-3 text-white" />
-                      )}
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+            {filteredDevices.map(device => (
+              <div
+                key={device.id}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedDevices.includes(device.id)
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+                  } ${!selectedDevices.includes(device.id) && selectedDevices.length >= parseInt(formData.quantity)
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
+                  }`}
+                onClick={() => handleDeviceToggle(device.id)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900">SID: {device.sid}</div>
+                    <div className="text-sm text-gray-600">MID: {device.mid}</div>
+                    <div className="text-sm text-gray-600">TID: {device.tid}</div>
+                    <div className="text-sm text-gray-600">VPA: {device.vpaid}</div>
+                  </div>
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedDevices.includes(device.id)
+                    ? 'border-blue-500 bg-blue-500'
+                    : 'border-gray-300'
+                    }`}>
+                    {selectedDevices.includes(device.id) && (
+                      <CheckCircle className="w-3 h-3 text-white" />
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
 
           {errors.devices && <p className="text-red-600 text-sm mt-4">{errors.devices}</p>}
         </div>
       )}
 
-      {/* Submit Button */}
-      {formData.merchant && formData.quantity && selectedDevices.length === parseInt(formData.quantity) && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <button
-            onClick={handleSubmit}
-            disabled={loading.submitting}
-            className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading.submitting ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            ) : (
-              <CheckCircle className="w-5 h-5" />
-            )}
-            <span>{loading.submitting ? 'Distributing...' : 'Distribute Products'}</span>
-          </button>
-        </div>
-      )}
+      {/* Submit Button - Always visible */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <button
+          onClick={handleSubmit}
+          disabled={!isFormValid() || loading.submitting}
+          className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading.submitting ? (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+          ) : (
+            <CheckCircle className="w-5 h-5" />
+          )}
+          <span>{loading.submitting ? 'Distributing...' : 'Distribute Products'}</span>
+        </button>
+        {!isFormValid() && !loading.submitting && (
+          <p className="text-sm text-gray-500 mt-2 text-center">
+            Complete all fields and select devices to distribute products
+          </p>
+        )}
+      </div>
     </div>
   );
 };

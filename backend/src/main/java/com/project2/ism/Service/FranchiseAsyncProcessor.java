@@ -64,7 +64,7 @@ public class FranchiseAsyncProcessor {
                         List<String> transactionIds = entry.getValue();
                         return processOneMerchantWithTransactions(franchiseBatchId, merchantId, transactionIds);
                     })
-                    .collect(Collectors.toList());
+                    .toList();
 
             // Wait for all merchant processing to complete
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -204,19 +204,29 @@ public class FranchiseAsyncProcessor {
             for (MerchantBatchResult result : results) {
                 if (result.getError() == null) {
                     completed++;
+                    //have to see the working
+                    totalTransactions += result.getTotalTransactions();
+                    processedTransactions += result.getProcessedTransactions();
+                    failedTransactions += result.getFailedTransactions();
+                    totalAmount = totalAmount.add(result.getTotalAmount());
+                    totalFees = totalFees.add(result.getTotalFees());
+
+                    if (result.getFranchiseCommission() != null) {
+                        totalFranchiseCommission = totalFranchiseCommission.add(result.getFranchiseCommission());
+                    }
                 } else {
                     failed++;
                 }
 
-                totalTransactions += result.getTotalTransactions();
-                processedTransactions += result.getProcessedTransactions();
-                failedTransactions += result.getFailedTransactions();
-                totalAmount = totalAmount.add(result.getTotalAmount());
-                totalFees = totalFees.add(result.getTotalFees());
-
-                if (result.getFranchiseCommission() != null) {
-                    totalFranchiseCommission = totalFranchiseCommission.add(result.getFranchiseCommission());
-                }
+//                totalTransactions += result.getTotalTransactions();
+//                processedTransactions += result.getProcessedTransactions();
+//                failedTransactions += result.getFailedTransactions();
+//                totalAmount = totalAmount.add(result.getTotalAmount());
+//                totalFees = totalFees.add(result.getTotalFees());
+//
+//                if (result.getFranchiseCommission() != null) {
+//                    totalFranchiseCommission = totalFranchiseCommission.add(result.getFranchiseCommission());
+//                }
             }
 
             // Update batch totals
