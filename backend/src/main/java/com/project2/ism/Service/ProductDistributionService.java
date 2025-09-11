@@ -119,6 +119,9 @@ public class ProductDistributionService {
 
         productDistributionRepository.delete(dist);
     }
+    /**
+     * Get distributions by merchant
+     */
     public List<ProductDistributionDTO> getByMerchant(Long merchantId) {
         return productDistributionRepository.findByMerchantId(merchantId)
                 .stream()
