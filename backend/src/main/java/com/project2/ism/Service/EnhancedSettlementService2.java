@@ -242,12 +242,22 @@ public class EnhancedSettlementService2 {
             CardRate cardRate = getCardRateForTransaction(vt, device);
             BigDecimal amount = nvl(vt.getAmount());
 
-            SettlementResultDTO result;
+//            SettlementResultDTO result;
+//            if (merchant.getFranchise() != null) {
+//                result = processFranchiseMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
+//            } else {
+//                result = processDirectMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
+//            }
+
+            SettlementResultDTO temp;
             if (merchant.getFranchise() != null) {
-                result = processFranchiseMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
+                temp = processFranchiseMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
+                log.debug("Franchise settlement result: {}", temp);
             } else {
-                result = processDirectMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
+                temp = processDirectMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
+                log.debug("Direct settlement result: {}", temp);
             }
+            SettlementResultDTO result = temp;
 
             log.info("Successfully settled transaction {} for merchant {}, amount: {}, fee: {}",
                     vendorTxId, merchantId, result.getAmount(), result.getFee());
@@ -560,14 +570,15 @@ public class EnhancedSettlementService2 {
 
             MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
-            mtd.setCharge(merchantFee);
+            mtd.setCharge(merchantFee.subtract(franchiseCommission));
             mtd.setActionOnBalance("CREDIT");
             mtd.setVendorTransactionId(vt.getTransactionReferenceId());
             mtd.setTransactionDate(vt.getDate());
-            mtd.setAmount(merchantNet);
+            mtd.setAmount(amount);
             mtd.setFinalBalance(merchantAfter);
             mtd.setBalBeforeTran(merchantBefore);
             mtd.setBalAfterTran(merchantAfter);
+            mtd.setNetAmount(merchantNet);
             mtd.setTranStatus("SETTLED");
             mtd.setTransactionType("CREDIT");
             mtd.setRemarks("Batch " + batchId + " settlement");
@@ -618,7 +629,7 @@ public class EnhancedSettlementService2 {
 
         markTransactionSettled(vt, batchId);
 
-        return SettlementResultDTO.ok(vt.getTransactionReferenceId(), amount, merchantFee, merchantNet, merchantWallet.getAvailableBalance());
+        return SettlementResultDTO.ok(vt.getTransactionReferenceId(), amount, merchantFee, merchantNet, merchantWallet.getAvailableBalance(),franchiseCommission);
     }
 
 

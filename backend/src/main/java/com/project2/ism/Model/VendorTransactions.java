@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
         indexes = {
                 @Index(name = "idx_vt_mid", columnList = "mid"),
                 @Index(name = "idx_vt_tid", columnList = "tid"),
-                //@Index(name = "idx_vt_device_serial", columnList = "device_serial"),
                 @Index(name = "idx_vt_settled", columnList = "settled")
         })
 public class VendorTransactions {
