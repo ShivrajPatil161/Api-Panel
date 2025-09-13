@@ -1,6 +1,7 @@
 package com.project2.ism.Exception;
 
 
+import com.project2.ism.DTO.ReportDTO.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +117,32 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
         logger.error("Unexpected error: {}", ex.getMessage(), ex);
         return new ResponseEntity<>(buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request.getDescription(false)), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleValidationException(ValidationException ex) {
+        logger.error("Validation error: {}", ex.getMessage());
+
+        ApiResponse<Object> response = new ApiResponse<>();
+        response.setSuccess(false);
+        response.setMessage(ex.getMessage());
+        response.setErrorCode("VALIDATION_ERROR");
+        response.setTimestamp(LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBusinessException(BusinessException ex) {
+        logger.error("Business error: {}", ex.getMessage());
+
+        ApiResponse<Object> response = new ApiResponse<>();
+        response.setSuccess(false);
+        response.setMessage(ex.getMessage());
+        response.setErrorCode(ex.getErrorCode() != null ? ex.getErrorCode() : "BUSINESS_ERROR");
+        response.setTimestamp(LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }
 
