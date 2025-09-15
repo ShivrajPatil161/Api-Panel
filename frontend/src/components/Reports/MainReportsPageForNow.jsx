@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import FranchiseReports from "./FranchiseReports";
 import VendorReports from "./VendorReports";
-import MerchantTransactionReport from "./MerchantTransactionReport";
 import FTransReportDashboard from "./FranhiseTransReports/FTransReportDashboard";
+import MTransReportDashboard from "./MerchantTransReport/MTransReportDashboard";
 
 const MainReportsPageForNow = () => {
     // null = no tab selected initially
@@ -12,7 +12,7 @@ const MainReportsPageForNow = () => {
     const tabs = [
         { id: "franchise", label: "Franchise Reports", component: <FranchiseReports /> },
         { id: "vendor", label: "Vendor Reports", component: <VendorReports /> },
-        { id: "merchant-reports", label: "Direct Merchant Reports", component: <MerchantTransactionReport /> },
+        { id: "merchant-reports", label: "Direct Merchant Reports", component: <MTransReportDashboard /> },
         { id: "franchise-reports", label: "Franchise Reports", component: <FTransReportDashboard /> },
         // you can keep adding: { id: "sales", label: "Sales Reports", component: <SalesReports /> }
     ];
