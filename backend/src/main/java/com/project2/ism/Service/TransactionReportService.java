@@ -207,13 +207,312 @@ public class TransactionReportService {
 
         return performanceData.stream()
                 .map(row -> Map.of(
-                        "merchantName", row[0],
-                        "transactionCount", row[1],
-                        "totalAmount", row[2],
-                        "totalCommission", row[3]))
+                        "merchantId", row[0],
+                        "merchantName", row[1],
+                        "transactionCount", row[2],
+                        "totalAmount", row[3],
+                        "totalCommission", row[4]
+                        ))
                 .collect(Collectors.toList());
     }
 
+    // Keep all existing methods as they are, ADD these new methods:
+// should keep these methods all above remove
+    /**
+     * Generate merchant transaction report with enhanced filtering
+     */
+    public TransactionReportResponse generateEnhancedMerchantTransactionReport(TransactionReportRequest request) {
+        logger.info("Generating enhanced merchant transaction report for date range: {} to {}, dateFilter: {}, merchantType: {}",
+                request.getStartDate(), request.getEndDate(), request.getDateFilterType(), request.getMerchantType());
+
+        validateReportRequest(request);
+
+        try {
+            Pageable pageable = createPageable(request);
+
+            Page<MerchantTransactionDetails> transactionPage;
+
+            // Choose query based on date filter type and merchant type
+            if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+                transactionPage = merchantTransactionRepository
+                        .findMerchantTransactionsBySettlementDateFilters(
+                                request.getStartDate(),
+                                request.getEndDate(),
+                                request.getMerchantId(),
+                                request.getTransactionStatus(),
+                                request.getTransactionType(),
+                                pageable);
+
+            } else {
+                // Default to transaction date
+                transactionPage = merchantTransactionRepository
+                        .findMerchantTransactionsByFilters(
+                                request.getStartDate(),
+                                request.getEndDate(),
+                                request.getMerchantId(),
+                                request.getTransactionStatus(),
+                                request.getTransactionType(),
+                                pageable);
+            }
+
+            // Convert to DTOs
+            List<TransactionDetailResponse> transactionDetails = transactionPage.getContent()
+                    .stream()
+                    .map(this::mapToTransactionDetailResponse)
+                    .collect(Collectors.toList());
+
+            // Get summary data
+            TransactionSummary summary = getEnhancedMerchantTransactionSummary(request);
+
+            // Build response
+            TransactionReportResponse response = new TransactionReportResponse();
+            response.setTransactions(transactionDetails);
+            response.setSummary(summary);
+            response.setReportGeneratedAt(LocalDateTime.now());
+            response.setReportType("MERCHANT_TRANSACTION_REPORT");
+            response.setTotalPages(transactionPage.getTotalPages());
+            response.setTotalElements(transactionPage.getTotalElements());
+            response.setHasNext(transactionPage.hasNext());
+            response.setHasPrevious(transactionPage.hasPrevious());
+
+            logger.info("Successfully generated enhanced merchant transaction report with {} transactions",
+                    transactionDetails.size());
+            return response;
+
+        } catch (Exception e) {
+            logger.error("Error generating enhanced merchant transaction report", e);
+            throw new BusinessException("Failed to generate enhanced merchant transaction report: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Generate franchise transaction report with enhanced filtering
+     */
+    public TransactionReportResponse generateEnhancedFranchiseTransactionReport(TransactionReportRequest request) {
+        logger.info("Generating enhanced franchise transaction report for date range: {} to {}, dateFilter: {}",
+                request.getStartDate(), request.getEndDate(), request.getDateFilterType());
+
+        validateReportRequest(request);
+
+        try {
+            Pageable pageable = createPageable(request);
+
+            Page<FranchiseTransactionDetails> transactionPage;
+
+            // Choose query based on date filter type
+            if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+                transactionPage = franchiseTransactionRepository
+                        .findFranchiseTransactionsBySettlementDateFilters(
+                                request.getStartDate(),
+                                request.getEndDate(),
+                                request.getFranchiseId(),
+                                request.getTransactionStatus(),
+                                request.getTransactionType(),
+                                pageable);
+            } else {
+                // Default to transaction date
+                transactionPage = franchiseTransactionRepository
+                        .findFranchiseTransactionsByFilters(
+                                request.getStartDate(),
+                                request.getEndDate(),
+                                request.getFranchiseId(),
+                                request.getTransactionStatus(),
+                                request.getTransactionType(),
+                                pageable);
+            }
+
+            // Convert to DTOs
+            List<TransactionDetailResponse> transactionDetails = transactionPage.getContent()
+                    .stream()
+                    .map(this::mapToTransactionDetailResponse)
+                    .collect(Collectors.toList());
+
+            // Get franchise summary with commission data
+            FranchiseTransactionSummary summary = getEnhancedFranchiseTransactionSummary(request);
+
+            // Build response
+            TransactionReportResponse response = new TransactionReportResponse();
+            response.setTransactions(transactionDetails);
+            response.setSummary(summary);
+            response.setReportGeneratedAt(LocalDateTime.now());
+            response.setReportType("ENHANCED_FRANCHISE_TRANSACTION_REPORT");
+            response.setTotalPages(transactionPage.getTotalPages());
+            response.setTotalElements(transactionPage.getTotalElements());
+            response.setHasNext(transactionPage.hasNext());
+            response.setHasPrevious(transactionPage.hasPrevious());
+
+            logger.info("Successfully generated enhanced franchise transaction report with {} transactions",
+                    transactionDetails.size());
+            return response;
+
+        } catch (Exception e) {
+            logger.error("Error generating enhanced franchise transaction report", e);
+            throw new BusinessException("Failed to generate enhanced franchise transaction report: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get enhanced merchant transaction summary
+     */
+    public TransactionSummary getEnhancedMerchantTransactionSummary(TransactionReportRequest request) {
+        validateReportRequest(request);
+
+        Map<String, Object> summaryData;
+
+        if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+            summaryData = merchantTransactionRepository.getMerchantTransactionSummaryBySettlementDate(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getMerchantId(),
+                    request.getTransactionStatus(),
+                    request.getTransactionType());
+        } else {
+            summaryData = merchantTransactionRepository.getMerchantTransactionSummary(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getMerchantId(),
+                    request.getTransactionStatus(),
+                    request.getTransactionType());
+        }
+
+        return buildTransactionSummary(summaryData);
+    }
+
+    /**
+     * Get enhanced franchise transaction summary
+     */
+    public FranchiseTransactionSummary getEnhancedFranchiseTransactionSummary(TransactionReportRequest request) {
+        validateReportRequest(request);
+
+        Map<String, Object> summaryData;
+
+        if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+            summaryData = franchiseTransactionRepository.getFranchiseTransactionSummaryBySettlementDate(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getFranchiseId(),
+                    request.getTransactionStatus(),
+                    request.getTransactionType());
+        } else {
+            summaryData = franchiseTransactionRepository.getFranchiseTransactionSummary(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getFranchiseId(),
+                    request.getTransactionStatus(),
+                    request.getTransactionType());
+        }
+
+        FranchiseTransactionSummary summary = new FranchiseTransactionSummary();
+        populateBasicSummary(summary, summaryData);
+
+        // Set franchise-specific data
+        summary.setTotalCommission(getBigDecimalValue(summaryData, "totalCommission"));
+        summary.setActiveMerchants(getLongValue(summaryData, "activeMerchants"));
+
+        // Calculate commission breakdown
+        CommissionBreakdown commissionBreakdown = calculateCommissionBreakdown(summaryData);
+        summary.setCommissionBreakdown(commissionBreakdown);
+
+        return summary;
+    }
+
+    /**
+     * Get enhanced franchise merchant performance
+     */
+    public List<Map<String, Object>> getEnhancedFranchiseMerchantPerformance(TransactionReportRequest request) {
+        validateReportRequest(request);
+
+        List<Object[]> performanceData;
+
+        if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+            performanceData = franchiseTransactionRepository.getFranchiseMerchantPerformanceBySettlementDate(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getFranchiseId());
+        } else {
+            performanceData = franchiseTransactionRepository.getFranchiseMerchantPerformance(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getFranchiseId());
+        }
+
+        return performanceData.stream()
+                .map(row -> Map.of(
+                        "merchantId", row[0],
+                        "merchantName", row[1],
+                        "transactionCount", row[2],
+                        "totalAmount", row[3],
+                        "totalCommission", row[4]
+                        ))
+                .collect(Collectors.toList());
+    }
+
+
+
+    // more new ones
+    /**
+     * Get merchant transaction type breakdown
+     */
+    public List<Map<String, Object>> getEnhancedMerchantTransactionTypeBreakdown(TransactionReportRequest request) {
+        validateReportRequest(request);
+
+        List<Object[]> breakdownData;
+
+        if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+            breakdownData = merchantTransactionRepository.getMerchantTransactionTypeBreakdownBySettlementDate(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getMerchantId()
+            );
+        } else {
+            breakdownData = merchantTransactionRepository.getMerchantTransactionTypeBreakdown(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getMerchantId()
+            );
+        }
+
+        return breakdownData.stream()
+                .map(row -> Map.of(
+                        "transactionType", row[0],
+                        "transactionCount", row[1],
+                        "totalAmount", row[2]
+                ))
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Get top merchants by commission for a franchise
+     */
+    public List<Map<String, Object>> getEnhancedTopMerchantsByCommission(TransactionReportRequest request) {
+        validateReportRequest(request);
+
+        List<Object[]> topMerchants;
+
+        if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+            topMerchants = franchiseTransactionRepository.getTopMerchantsByCommissionBySettlementDate(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getFranchiseId()
+            );
+        } else {
+            topMerchants = franchiseTransactionRepository.getTopMerchantsByCommission(
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getFranchiseId()
+            );
+        }
+
+        return topMerchants.stream()
+                .map(row -> Map.of(
+                        "merchantName", row[0],
+                        "commission", row[1]
+                ))
+                .collect(Collectors.toList());
+    }
+
+// Keep all existing private helper methods as they are
     // Private helper methods
 
     private void validateReportRequest(TransactionReportRequest request) {

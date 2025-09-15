@@ -27,6 +27,9 @@ public class TransactionReportDTO {
         private String transactionType;
         private int page = 0;
         private int size = 50;
+        // NEW FIELDS - Add these to existing TransactionReportRequest
+        private String dateFilterType = "TRANSACTION_DATE"; // TRANSACTION_DATE or SETTLEMENT_DATE
+        private String merchantType = "ALL"; // ALL, DIRECT, FRANCHISE
 
         // Generate: getters, setters, constructors (noargs, allargs)
 
@@ -106,6 +109,21 @@ public class TransactionReportDTO {
 
         public void setSize(int size) {
             this.size = size;
+        }
+        public String getDateFilterType() {
+            return dateFilterType;
+        }
+
+        public void setDateFilterType(String dateFilterType) {
+            this.dateFilterType = dateFilterType;
+        }
+
+        public String getMerchantType() {
+            return merchantType;
+        }
+
+        public void setMerchantType(String merchantType) {
+            this.merchantType = merchantType;
         }
     }
 
@@ -542,4 +560,5 @@ public class TransactionReportDTO {
             this.activeMerchants = activeMerchants;
         }
     }
+
 }

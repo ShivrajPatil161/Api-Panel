@@ -508,7 +508,7 @@ public class EnhancedSettlementService2 {
 
         if (merchantRatePercent == null || franchiseRatePercent == null) {
             log.warn("Dual rates not configured for card: {}. Using single rate.", cr.getCardName());
-            return processDirectMerchantSettlement(merchant, vt, cr, amount, batchId, device);
+            return processDirectMerchantSettlement(merchant, vt, cr, amount, batchId, device);/////////////oooooooooooiiiiiiiiiiiiiiiiiii check this fallback , actuaally flaawed
         }
 
         if (merchantRatePercent < franchiseRatePercent) {
@@ -565,11 +565,12 @@ public class EnhancedSettlementService2 {
         }
 
         // --- create transaction details first ---
-
+        MerchantTransactionDetails mtd = new MerchantTransactionDetails();
         if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
 
-            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
+//            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
+            mtd.setGrossCharge(merchantFee);
             mtd.setCharge(merchantFee.subtract(franchiseCommission));
             mtd.setActionOnBalance("CREDIT");
             mtd.setVendorTransactionId(vt.getTransactionReferenceId());
@@ -584,15 +585,16 @@ public class EnhancedSettlementService2 {
             mtd.setRemarks("Batch " + batchId + " settlement");
             mtd.setService("Settlement");
             mtd.setUpdatedDateAndTimeOfTransaction(LocalDateTime.now());
-            merchantTxnRepo.save(mtd);
+            mtd = merchantTxnRepo.save(mtd);
         }
 
         if (franchiseCommission.compareTo(BigDecimal.ZERO) > 0) {
-            String vendorTxKey = vt.getInternalId().toString() + "_FRANCHISE";
+            String vendorTxKey = vt.getTransactionReferenceId();
             if (!franchiseTxnRepo.existsByVendorTransactionId(vendorTxKey)) {
                 FranchiseTransactionDetails ftd = new FranchiseTransactionDetails();
                 ftd.setFranchise(franchise);
-                ftd.setVendorTransactionId(vt.getTransactionReferenceId());
+                ftd.setVendorTransactionId(vendorTxKey);
+                ftd.setMerchantTransactionDetail(mtd);
                 ftd.setActionOnBalance("CREDIT");
                 ftd.setTransactionDate(vt.getDate());
                 ftd.setAmount(amount);
