@@ -44,6 +44,22 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             @Param("status") String status,
             @Param("transactionType") String transactionType,
             Pageable pageable);
+    // Query based on settlement date instead of transaction date
+    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
+            "mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
+            "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
+    Page<MerchantTransactionDetails> findMerchantTransactionsBySettlementDateFilters(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId,
+            @Param("status") String status,
+            @Param("transactionType") String transactionType,
+            Pageable pageable);
+
+
 
     @Query("SELECT " +
             "COUNT(mtd) as totalTransactions, " +
@@ -65,6 +81,29 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             @Param("status") String status,
             @Param("transactionType") String transactionType);
 
+    // Summary based on settlement date
+    @Query("SELECT " +
+            "COUNT(mtd) as totalTransactions, " +
+            "COALESCE(SUM(mtd.amount), 0) as totalAmount, " +
+            "COALESCE(SUM(mtd.netAmount), 0) as totalNetAmount, " +
+            "COALESCE(SUM(mtd.charge), 0) as totalCharges, " +
+            "COALESCE(AVG(mtd.amount), 0) as averageAmount, " +
+            "COUNT(CASE WHEN mtd.tranStatus = 'SETTLED' THEN 1 END) as successCount, " +
+            "COUNT(CASE WHEN mtd.tranStatus != 'SETTLED' THEN 1 END) as failureCount " +
+            "FROM MerchantTransactionDetails mtd WHERE " +
+            "mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType)")
+    Map<String, Object> getMerchantTransactionSummaryBySettlementDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId,
+            @Param("status") String status,
+            @Param("transactionType") String transactionType);
+
+
+
     @Query("SELECT mtd.transactionType, COUNT(mtd), SUM(mtd.amount) " +
             "FROM MerchantTransactionDetails mtd WHERE " +
             "mtd.transactionDate BETWEEN :startDate AND :endDate " +
@@ -74,5 +113,24 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             @Param("merchantId") Long merchantId);
+
+    // Transaction type breakdown based on settlement date
+    @Query("SELECT mtd.transactionType, COUNT(mtd), SUM(mtd.amount) " +
+            "FROM MerchantTransactionDetails mtd WHERE " +
+            "mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "GROUP BY mtd.transactionType")
+    List<Object[]> getMerchantTransactionTypeBreakdownBySettlementDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId);
+
+// NEW QUERIES - Add these to your existing MerchantTransDetRepository.java
+
+
+
+
+
+
 
 }

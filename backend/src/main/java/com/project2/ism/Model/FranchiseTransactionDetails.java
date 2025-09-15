@@ -14,6 +14,10 @@ public class FranchiseTransactionDetails extends TransactionDetailsBase{
     private Franchise franchise;
 
 
+    @OneToOne
+    @JoinColumn(name = "merchant_transaction_id", unique = true, nullable = true)
+    private MerchantTransactionDetails merchantTransactionDetail;
+
     public FranchiseTransactionDetails() {
     }
 
@@ -23,5 +27,13 @@ public class FranchiseTransactionDetails extends TransactionDetailsBase{
 
     public void setFranchise(Franchise franchise) {
         this.franchise = franchise;
+    }
+
+    public MerchantTransactionDetails getMerchantTransactionDetail() {
+        return merchantTransactionDetail;
+    }
+
+    public void setMerchantTransactionDetail(MerchantTransactionDetails merchantTransactionDetail) {
+        this.merchantTransactionDetail = merchantTransactionDetail;
     }
 }

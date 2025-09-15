@@ -133,71 +133,7 @@ public class TransactionReportController {
         }
     }
 
-    /**
-     * Generate merchant transaction report using POST with request body
-     * POST /api/v1/reports/transactions/merchant
-     */
-    @PostMapping("/merchant")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT') or hasRole('FRANCHISE')")
-    public ResponseEntity<ApiResponse<TransactionReportResponse>> generateMerchantTransactionReportPost(
-            @Valid @RequestBody TransactionReportRequest request) {
 
-        logger.info("Received POST request for merchant transaction report: {}", request);
-
-        try {
-            TransactionReportResponse report = transactionReportService.generateMerchantTransactionReport(request);
-
-            ApiResponse<TransactionReportResponse> response = new ApiResponse<>();
-            response.setSuccess(true);
-            response.setMessage("Merchant transaction report generated successfully");
-            response.setData(report);
-            response.setTimestamp(LocalDateTime.now());
-
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            logger.error("Error generating merchant transaction report", e);
-            ApiResponse<TransactionReportResponse> errorResponse = new ApiResponse<>();
-            errorResponse.setSuccess(false);
-            errorResponse.setMessage("Failed to generate report: " + e.getMessage());
-            errorResponse.setTimestamp(LocalDateTime.now());
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
-
-    /**
-     * Generate franchise transaction report using POST with request body
-     * POST /api/v1/reports/transactions/franchise
-     */
-    @PostMapping("/franchise")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
-    public ResponseEntity<ApiResponse<TransactionReportResponse>> generateFranchiseTransactionReportPost(
-            @Valid @RequestBody TransactionReportRequest request) {
-
-        logger.info("Received POST request for franchise transaction report: {}", request);
-
-        try {
-            TransactionReportResponse report = transactionReportService.generateFranchiseTransactionReport(request);
-
-            ApiResponse<TransactionReportResponse> response = new ApiResponse<>();
-            response.setSuccess(true);
-            response.setMessage("Franchise transaction report generated successfully");
-            response.setData(report);
-            response.setTimestamp(LocalDateTime.now());
-
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            logger.error("Error generating franchise transaction report", e);
-            ApiResponse<TransactionReportResponse> errorResponse = new ApiResponse<>();
-            errorResponse.setSuccess(false);
-            errorResponse.setMessage("Failed to generate report: " + e.getMessage());
-            errorResponse.setTimestamp(LocalDateTime.now());
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
 
     /**
      * Get merchant transaction summary only (without detailed transactions)
@@ -329,4 +265,383 @@ public class TransactionReportController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
+
+// NEW ENDPOINTS - Add these to your existing TransactionReportController.java
+
+    /**
+     * Generate enhanced merchant transaction report with date filter and merchant type options
+     * GET /api/v1/reports/transactions/merchant/enhanced
+     */
+    @GetMapping("/merchant/enhanced")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT') or hasRole('FRANCHISE')")
+    public ResponseEntity<ApiResponse<TransactionReportResponse>> generateEnhancedMerchantTransactionReport(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "merchantId") Long merchantId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType,
+            @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(value = "size", defaultValue = "50") @Min(1) @Max(1000) Integer size) {
+
+        logger.info("Received request for enhanced merchant transaction report: startDate={}, endDate={}, merchantId={}, dateFilter={}, ",
+                startDate, endDate, merchantId, dateFilterType);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setMerchantId(merchantId);
+            request.setTransactionStatus(status);
+            request.setTransactionType(transactionType);
+            request.setDateFilterType(dateFilterType);
+            request.setPage(page);
+            request.setSize(size);
+
+            TransactionReportResponse report = transactionReportService.generateEnhancedMerchantTransactionReport(request);
+
+            ApiResponse<TransactionReportResponse> response = new ApiResponse<>();
+            response.setSuccess(true);
+            response.setMessage("Merchant transaction report generated successfully");
+            response.setData(report);
+            response.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error generating enhanced merchant transaction report", e);
+            ApiResponse<TransactionReportResponse> errorResponse = new ApiResponse<>();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Failed to generate enhanced report: " + e.getMessage());
+            errorResponse.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    /**
+     * Generate enhanced franchise transaction report with date filter options
+     * GET /api/v1/reports/transactions/franchise/enhanced
+     */
+    @GetMapping("/franchise/enhanced")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
+    public ResponseEntity<ApiResponse<TransactionReportResponse>> generateEnhancedFranchiseTransactionReport(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "franchiseId") Long franchiseId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType,
+            @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(value = "size", defaultValue = "50") @Min(1) @Max(1000) Integer size) {
+
+        logger.info("Received request for enhanced franchise transaction report: startDate={}, endDate={}, franchiseId={}, dateFilter={}",
+                startDate, endDate, franchiseId, dateFilterType);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setFranchiseId(franchiseId);
+            request.setTransactionStatus(status);
+            request.setTransactionType(transactionType);
+            request.setDateFilterType(dateFilterType);
+            request.setPage(page);
+            request.setSize(size);
+
+            TransactionReportResponse report = transactionReportService.generateEnhancedFranchiseTransactionReport(request);
+
+            ApiResponse<TransactionReportResponse> response = new ApiResponse<>();
+            response.setSuccess(true);
+            response.setMessage("Franchise transaction report generated successfully");
+            response.setData(report);
+            response.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error generating enhanced franchise transaction report", e);
+            ApiResponse<TransactionReportResponse> errorResponse = new ApiResponse<>();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Failed to generate enhanced report: " + e.getMessage());
+            errorResponse.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+
+    /**
+     * Get enhanced merchant transaction summary with date filter and merchant type options
+     * GET /api/v1/reports/transactions/merchant/summary/enhanced
+     */
+    @GetMapping("/merchant/summary/enhanced")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT') or hasRole('FRANCHISE')")
+    public ResponseEntity<ApiResponse<TransactionSummary>> getEnhancedMerchantTransactionSummary(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "merchantId") Long merchantId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType)
+             {
+
+        logger.info("Received request for enhanced merchant transaction summary: startDate={}, endDate={}, merchantId={}, dateFilter={}",
+                startDate, endDate, merchantId, dateFilterType);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setMerchantId(merchantId);
+            request.setTransactionStatus(status);
+            request.setTransactionType(transactionType);
+            request.setDateFilterType(dateFilterType);
+
+            TransactionSummary summary = transactionReportService.getEnhancedMerchantTransactionSummary(request);
+
+            ApiResponse<TransactionSummary> response = new ApiResponse<>();
+            response.setSuccess(true);
+            response.setMessage("Merchant transaction summary retrieved successfully");
+            response.setData(summary);
+            response.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error getting enhanced merchant transaction summary", e);
+            ApiResponse<TransactionSummary> errorResponse = new ApiResponse<>();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Failed to get enhanced summary: " + e.getMessage());
+            errorResponse.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    /**
+     * Get enhanced franchise transaction summary with date filter options
+     * GET /api/v1/reports/transactions/franchise/summary/enhanced
+     */
+    @GetMapping("/franchise/summary/enhanced")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
+    public ResponseEntity<ApiResponse<FranchiseTransactionSummary>> getEnhancedFranchiseTransactionSummary(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "franchiseId", required = false) Long franchiseId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType) {
+
+        logger.info("Received request for enhanced franchise transaction summary: startDate={}, endDate={}, franchiseId={}, dateFilter={}",
+                startDate, endDate, franchiseId, dateFilterType);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setFranchiseId(franchiseId);
+            request.setTransactionStatus(status);
+            request.setTransactionType(transactionType);
+            request.setDateFilterType(dateFilterType);
+
+            FranchiseTransactionSummary summary = transactionReportService.getEnhancedFranchiseTransactionSummary(request);
+
+            ApiResponse<FranchiseTransactionSummary> response = new ApiResponse<>();
+            response.setSuccess(true);
+            response.setMessage("Franchise transaction summary retrieved successfully");
+            response.setData(summary);
+            response.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error getting enhanced franchise transaction summary", e);
+            ApiResponse<FranchiseTransactionSummary> errorResponse = new ApiResponse<>();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Failed to get enhanced summary: " + e.getMessage());
+            errorResponse.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    /**
+     * Get enhanced franchise merchant performance breakdown with date filter options
+     * GET /api/v1/reports/transactions/franchise/merchant-performance/enhanced
+     */
+    @GetMapping("/franchise/merchant-performance/enhanced")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getEnhancedFranchiseMerchantPerformance(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "franchiseId", required = false) Long franchiseId,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType) {
+
+        logger.info("Received request for enhanced franchise merchant performance: startDate={}, endDate={}, franchiseId={}, dateFilter={}",
+                startDate, endDate, franchiseId, dateFilterType);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setFranchiseId(franchiseId);
+            request.setDateFilterType(dateFilterType);
+
+            List<Map<String, Object>> performance = transactionReportService.getEnhancedFranchiseMerchantPerformance(request);
+
+            ApiResponse<List<Map<String, Object>>> response = new ApiResponse<>();
+            response.setSuccess(true);
+            response.setMessage("Franchise merchant performance retrieved successfully");
+            response.setData(performance);
+            response.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error getting enhanced franchise merchant performance", e);
+            ApiResponse<List<Map<String, Object>>> errorResponse = new ApiResponse<>();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Failed to get enhanced performance data: " + e.getMessage());
+            errorResponse.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+//    /**
+//     * Get direct merchants report (merchants with franchise_id = null)
+//     * GET /api/v1/reports/transactions/direct-merchants
+//     */
+//    @GetMapping("/direct-merchants")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<TransactionReportResponse>> getDirectMerchantsReport(
+//            @RequestParam("startDate") String startDate,
+//            @RequestParam("endDate") String endDate,
+//            @RequestParam(value = "status", required = false) String status,
+//            @RequestParam(value = "transactionType", required = false) String transactionType,
+//            @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
+//            @RequestParam(value = "size", defaultValue = "50") @Min(1) @Max(1000) Integer size) {
+//
+//        logger.info("Received request for direct merchants report: startDate={}, endDate={}",
+//                startDate, endDate);
+//
+//        try {
+//            TransactionReportRequest request = new TransactionReportRequest();
+//            request.setStartDate(LocalDateTime.parse(startDate));
+//            request.setEndDate(LocalDateTime.parse(endDate));
+//            request.setTransactionStatus(status);
+//            request.setTransactionType(transactionType);
+//            request.setMerchantType("DIRECT");
+//            request.setPage(page);
+//            request.setSize(size);
+//
+//            TransactionReportResponse report = transactionReportService.generateEnhancedMerchantTransactionReport(request);
+//
+//            ApiResponse<TransactionReportResponse> response = new ApiResponse<>();
+//            response.setSuccess(true);
+//            response.setMessage("Direct merchants report generated successfully");
+//            response.setData(report);
+//            response.setTimestamp(LocalDateTime.now());
+//
+//            return ResponseEntity.ok(response);
+//
+//        } catch (Exception e) {
+//            logger.error("Error generating direct merchants report", e);
+//            ApiResponse<TransactionReportResponse> errorResponse = new ApiResponse<>();
+//            errorResponse.setSuccess(false);
+//            errorResponse.setMessage("Failed to generate direct merchants report: " + e.getMessage());
+//            errorResponse.setTimestamp(LocalDateTime.now());
+//
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+//        }
+//    }
+
+    /// new ones
+    /**
+     * Get enhanced merchant transaction type breakdown
+     * GET /api/v1/reports/transactions/merchant/breakdown
+     */
+    @GetMapping("/merchant/breakdown")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getEnhancedMerchantTransactionTypeBreakdown(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "merchantId", required = false) Long merchantId,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType) {
+
+        logger.info("Received request for merchant transaction type breakdown: startDate={}, endDate={}, merchantId={}, dateFilter={}",
+                startDate, endDate, merchantId, dateFilterType);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setMerchantId(merchantId);
+            request.setDateFilterType(dateFilterType);
+
+            List<Map<String, Object>> breakdown = transactionReportService.getEnhancedMerchantTransactionTypeBreakdown(request);
+
+            ApiResponse<List<Map<String, Object>>> response = new ApiResponse<>();
+            response.setSuccess(true);
+            response.setMessage("Merchant transaction type breakdown retrieved successfully");
+            response.setData(breakdown);
+            response.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error getting merchant transaction type breakdown", e);
+            ApiResponse<List<Map<String, Object>>> errorResponse = new ApiResponse<>();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Failed to get merchant transaction type breakdown: " + e.getMessage());
+            errorResponse.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+    /**
+     * Get top merchants by commission for a franchise
+     * GET /api/v1/reports/transactions/franchise/top-merchants
+     */
+    @GetMapping("/franchise/top-merchants")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getEnhancedTopMerchantsByCommission(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "franchiseId", required = false) Long franchiseId,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType) {
+
+        logger.info("Received request for top merchants by commission: startDate={}, endDate={}, franchiseId={}, dateFilter={}",
+                startDate, endDate, franchiseId, dateFilterType);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setFranchiseId(franchiseId);
+            request.setDateFilterType(dateFilterType);
+
+            List<Map<String, Object>> topMerchants = transactionReportService.getEnhancedTopMerchantsByCommission(request);
+
+            ApiResponse<List<Map<String, Object>>> response = new ApiResponse<>();
+            response.setSuccess(true);
+            response.setMessage("Top merchants by commission retrieved successfully");
+            response.setData(topMerchants);
+            response.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Error getting top merchants by commission", e);
+            ApiResponse<List<Map<String, Object>>> errorResponse = new ApiResponse<>();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage("Failed to get top merchants by commission: " + e.getMessage());
+            errorResponse.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
 }
