@@ -14,7 +14,7 @@ const FTransReportFilters = ({ filters, onChange, isFranchise, reportType, onGen
             transactionTypeOptions: [
                 { value: 'CREDIT', label: 'Credit' },
                 { value: 'DEBIT', label: 'Debit' },
-                { value: 'ALL', label: 'All' }
+                { value: '', label: 'All' }
             ],
             showDateFilterType: true,
             dateFilterOptions: [
