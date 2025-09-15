@@ -19,7 +19,13 @@ const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenera
             showTransactionType: true,
             transactionTypeOptions: [
                 { value: 'CREDIT', label: 'Credit' },
-                { value: 'DEBIT', label: 'Debit' }
+                { value: 'DEBIT', label: 'Debit' },
+                { value: '', label: 'All' }
+            ],
+            showDateFilterType: true,
+            dateFilterOptions: [
+                { value: 'SETTLEMENT_DATE', label: 'Settlement Date' },
+                { value: 'TRANSACTION_DATE', label: 'Transaction Date' }
             ]
         }
         // Add more report configurations as needed
@@ -94,8 +100,15 @@ const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenera
     };
 
     const handleGenerate = async () => {
-        if (!filters.selectedMerchant || !filters.startDate || !filters.endDate) {
-            alert('Please fill all required fields');
+        // validate start & end dates always
+        if (!filters.startDate || !filters.endDate || !filters.dateFilterType) {
+            alert('Please select start and end dates');
+            return;
+        }
+
+        // validate merchant selection only if not a merchant user
+        if (!isMerchant && !filters.selectedMerchant || !filters.dateFilterType) {
+            alert('Please select a merchant');
             return;
         }
 
@@ -108,6 +121,7 @@ const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenera
             }
         }
     };
+
 
     return (
         <div className="space-y-4">
@@ -225,6 +239,25 @@ const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenera
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                             {currentConfig.transactionTypeOptions?.map(option => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+                {/* Date Filter Type - Show based on report type */}
+                {currentConfig.showDateFilterType && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Date Filter Type
+                        </label>
+                        <select
+                            value={filters.dateFilterType || "SETTLEMENT_DATE"}
+                            onChange={(e) => handleInputChange('dateFilterType', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                            {currentConfig.dateFilterOptions?.map(option => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
                                 </option>

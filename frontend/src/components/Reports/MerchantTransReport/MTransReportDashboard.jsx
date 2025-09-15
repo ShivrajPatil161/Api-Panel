@@ -13,7 +13,8 @@ const MTransReportDashboard = () => {
         selectedFranchise: '',
         selectedMerchant: '',
         startDate: '',
-        endDate: ''
+        endDate: '',
+        dateFilterType: 'SETTLEMENT_DATE'
     });
 
     // Get user details

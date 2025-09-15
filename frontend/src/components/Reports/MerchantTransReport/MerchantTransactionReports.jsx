@@ -438,6 +438,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                 merchantId: isMerchant ? customerId : localFilters.selectedMerchant,
                 status: 'SETTLED',
                 transactionType: localFilters.transactionType,
+                dateFilterType: localFilters.dateFilterType,
                 page: 0,
                 size: 100
             };
