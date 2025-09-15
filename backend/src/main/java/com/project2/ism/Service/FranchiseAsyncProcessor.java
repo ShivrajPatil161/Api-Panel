@@ -1,6 +1,5 @@
 package com.project2.ism.Service;
 
-import com.project2.ism.DTO.TempDTOs.SettlementCandidateDTO;
 import com.project2.ism.DTO.TempDTOs.SettlementResultDTO;
 import com.project2.ism.Model.*;
 import com.project2.ism.Model.Users.Merchant;
@@ -29,15 +28,17 @@ public class FranchiseAsyncProcessor {
 
     private final FranchiseSettlementBatchRepository franchiseBatchRepo;
     private final FranchiseBatchMerchantRepository batchMerchantRepo;
+    private final MerchantSettlementBatchRepository batchRepo;
     private final EnhancedSettlementService2 settlementService;
     private final MerchantRepository merchantRepo;
 
     public FranchiseAsyncProcessor(FranchiseSettlementBatchRepository franchiseBatchRepo,
                                    FranchiseBatchMerchantRepository batchMerchantRepo,
-                                   EnhancedSettlementService2 settlementService,
+                                   MerchantSettlementBatchRepository batchRepo, EnhancedSettlementService2 settlementService,
                                    MerchantRepository merchantRepo) {
         this.franchiseBatchRepo = franchiseBatchRepo;
         this.batchMerchantRepo = batchMerchantRepo;
+        this.batchRepo = batchRepo;
         this.settlementService = settlementService;
         this.merchantRepo = merchantRepo;
     }
@@ -106,7 +107,7 @@ public class FranchiseAsyncProcessor {
                 merchantId, transactionIds.size(), franchiseBatchId);
 
         MerchantBatchResult result = new MerchantBatchResult(merchantId);
-
+        MerchantSettlementBatch merchantBatch = null; // DECLARE HERE
         try {
             // Get batch merchant record
             FranchiseBatchMerchant batchMerchant = batchMerchantRepo
@@ -117,7 +118,7 @@ public class FranchiseAsyncProcessor {
 
             // Update merchant status to PROCESSING
             updateMerchantStatus(batchMerchant, FranchiseBatchMerchant.MerchantProcessingStatus.PROCESSING,
-                    LocalDateTime.now(), null, null);
+                    LocalDateTime.now(), null, null,BigDecimal.ZERO);
 
             // Validate merchant still belongs to franchise
             validateMerchantInFranchise(franchiseBatchId, merchantId);
@@ -126,7 +127,7 @@ public class FranchiseAsyncProcessor {
             FranchiseSettlementBatch batch = getFranchiseBatch(franchiseBatchId);
 
             // Create merchant-level settlement batch for tracking
-            MerchantSettlementBatch merchantBatch = settlementService.createBatch(
+            merchantBatch = settlementService.createBatch(
                     merchantId, batch.getProductId(), batch.getCycleKey(), "FRANCHISE_BULK");
 
             result.setTotalTransactions(transactionIds.size());
@@ -134,7 +135,7 @@ public class FranchiseAsyncProcessor {
             if (transactionIds.isEmpty()) {
                 log.info("No transactions provided for merchant {}", merchantId);
                 updateMerchantStatus(batchMerchant, FranchiseBatchMerchant.MerchantProcessingStatus.COMPLETED,
-                        null, LocalDateTime.now(), null);
+                        null, LocalDateTime.now(), null,BigDecimal.ZERO);
                 settlementService.markBatchClosed(merchantBatch.getId());
                 return CompletableFuture.completedFuture(result);
             }
@@ -146,8 +147,8 @@ public class FranchiseAsyncProcessor {
                             merchantId, merchantBatch.getId(), transactionId);
 
                     if ("OK".equals(settlementResult.getStatus())) {
-                        result.addSuccess(settlementResult.getAmount(), settlementResult.getFee());
-                        log.debug("Successfully settled transaction {} for merchant {}", transactionId, merchantId);
+                        result.addSuccess(settlementResult.getAmount(), settlementResult.getFee(),settlementResult.getNet(), settlementResult.getFranchiseCommission() );
+                        log.debug("Successfully settled transaction {} for merchant {} , amount {} , fee {}", transactionId, merchantId,settlementResult.getAmount(), settlementResult.getFee());
                     } else {
                         result.addFailure();
                         log.warn("Failed to settle transaction {} for merchant {}: {}",
@@ -162,8 +163,9 @@ public class FranchiseAsyncProcessor {
 
             // Close merchant batch and update status
             settlementService.markBatchClosed(merchantBatch.getId());
+            updateMerchantBatchStatistics(merchantBatch.getId(), result);
             updateMerchantStatus(batchMerchant, FranchiseBatchMerchant.MerchantProcessingStatus.COMPLETED,
-                    null, LocalDateTime.now(), null);
+                    null, LocalDateTime.now(), null, result.getTotalNetAmount());
 
             log.info("Completed processing merchant {} for franchise batch {}: {} succeeded, {} failed",
                     merchantId, franchiseBatchId, result.getProcessedTransactions(), result.getFailedTransactions());
@@ -173,12 +175,15 @@ public class FranchiseAsyncProcessor {
             result.setError(e.getMessage());
 
             // Update merchant status to FAILED
+            // Update merchant batch and status to FAILED
             try {
+                updateMerchantBatchStatistics(merchantBatch.getId(), result);
+
                 FranchiseBatchMerchant batchMerchant = batchMerchantRepo
                         .findByFranchiseBatchIdAndMerchantId(franchiseBatchId, merchantId);
                 if (batchMerchant != null) {
                     updateMerchantStatus(batchMerchant, FranchiseBatchMerchant.MerchantProcessingStatus.FAILED,
-                            null, LocalDateTime.now(), e.getMessage());
+                            null, LocalDateTime.now(), e.getMessage(), BigDecimal.ZERO);
                 }
             } catch (Exception ex) {
                 log.error("Failed to update merchant status to FAILED", ex);
@@ -194,13 +199,20 @@ public class FranchiseAsyncProcessor {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateFranchiseBatchResults(Long franchiseBatchId, List<MerchantBatchResult> results) {
         try {
+            for (MerchantBatchResult result : results) {
+                // process each result
+                System.out.println("MerchantId: " + result.getMerchantId());
+                System.out.println("Amount: " + result.getTotalAmount());
+                System.out.println("getFranchiseCommission: " + result.getTotalFranchiseCommission());
+
+            }
             FranchiseSettlementBatch batch = getFranchiseBatch(franchiseBatchId);
 
             int completed = 0, failed = 0;
             int totalTransactions = 0, processedTransactions = 0, failedTransactions = 0;
             BigDecimal totalAmount = BigDecimal.ZERO, totalFees = BigDecimal.ZERO;
             BigDecimal totalFranchiseCommission = BigDecimal.ZERO;
-
+            BigDecimal totalNetAmount = BigDecimal.ZERO;
             for (MerchantBatchResult result : results) {
                 if (result.getError() == null) {
                     completed++;
@@ -210,9 +222,9 @@ public class FranchiseAsyncProcessor {
                     failedTransactions += result.getFailedTransactions();
                     totalAmount = totalAmount.add(result.getTotalAmount());
                     totalFees = totalFees.add(result.getTotalFees());
-
-                    if (result.getFranchiseCommission() != null) {
-                        totalFranchiseCommission = totalFranchiseCommission.add(result.getFranchiseCommission());
+                    totalNetAmount = totalNetAmount.add(result.getTotalNetAmount());
+                    if (result.getTotalFranchiseCommission() != null) {
+                        totalFranchiseCommission = totalFranchiseCommission.add(result.getTotalFranchiseCommission());
                     }
                 } else {
                     failed++;
@@ -237,6 +249,7 @@ public class FranchiseAsyncProcessor {
             batch.setFailedTransactions(failedTransactions);
             batch.setTotalAmount(totalAmount);
             batch.setTotalFees(totalFees);
+            batch.setTotalNetAmount(totalNetAmount);
             batch.setTotalFranchiseCommission(totalFranchiseCommission);
             batch.setProcessingCompletedAt(LocalDateTime.now());
 
@@ -283,7 +296,8 @@ public class FranchiseAsyncProcessor {
                                      FranchiseBatchMerchant.MerchantProcessingStatus status,
                                      LocalDateTime processingStarted,
                                      LocalDateTime processingCompleted,
-                                     String errorMessage) {
+                                     String errorMessage,
+                                     BigDecimal merchantNetAmount) {
         try {
             batchMerchant.setStatus(status);
             if (processingStarted != null) {
@@ -291,6 +305,7 @@ public class FranchiseAsyncProcessor {
             }
             if (processingCompleted != null) {
                 batchMerchant.setProcessingCompletedAt(processingCompleted);
+                batchMerchant.setTotalAmount(merchantNetAmount);
             }
             if (errorMessage != null) {
                 batchMerchant.setErrorMessage(errorMessage);
@@ -302,6 +317,59 @@ public class FranchiseAsyncProcessor {
 
         } catch (Exception e) {
             log.error("Failed to update batch merchant {} status to {}", batchMerchant.getId(), status, e);
+        }
+    }
+
+
+    // Add this method to FranchiseAsyncProcessor class
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateMerchantBatchStatistics(Long merchantBatchId, MerchantBatchResult result) {
+        try {
+            MerchantSettlementBatch merchantBatch = batchRepo.findById(merchantBatchId)
+                    .orElseThrow(() -> new IllegalStateException("Merchant batch not found: " + merchantBatchId));
+
+            // Update statistics
+            merchantBatch.setTotalTransactions(result.getTotalTransactions());
+            merchantBatch.setProcessedTransactions(result.getProcessedTransactions());
+            merchantBatch.setFailedTransactions(result.getFailedTransactions());
+            merchantBatch.setTotalAmount(result.getTotalAmount());
+            merchantBatch.setTotalFees(result.getTotalFees());
+            merchantBatch.setTotalNetAmount(result.getTotalNetAmount());
+
+            // Update timestamps
+            if (merchantBatch.getProcessingStartedAt() == null) {
+                merchantBatch.setProcessingStartedAt(LocalDateTime.now());
+            }
+            merchantBatch.setProcessingCompletedAt(LocalDateTime.now());
+
+            // Update status
+            String finalStatus;
+            if (result.getError() != null) {
+                finalStatus = "FAILED";
+                merchantBatch.setErrorMessage(result.getError());
+            } else if (result.getFailedTransactions() == 0 && result.getProcessedTransactions() > 0) {
+                finalStatus = "COMPLETED";
+            } else if (result.getProcessedTransactions() > 0 && result.getFailedTransactions() > 0) {
+                finalStatus = "PARTIALLY_COMPLETED";
+            } else if (result.getFailedTransactions() > 0 && result.getProcessedTransactions() == 0) {
+                finalStatus = "FAILED";
+                merchantBatch.setErrorMessage("All transactions failed to process");
+            } else {
+                finalStatus = "COMPLETED"; // No transactions case
+            }
+
+            merchantBatch.setStatus(finalStatus);
+
+            // Use the existing repository from EnhancedSettlementService2
+            MerchantSettlementBatch savedBatch = batchRepo.save(merchantBatch);
+
+            log.info("Updated merchant batch {} statistics: status={}, processed={}, failed={}, totalAmount={}",
+                    merchantBatchId, finalStatus, result.getProcessedTransactions(),
+                    result.getFailedTransactions(), result.getTotalAmount());
+
+        } catch (Exception e) {
+            log.error("Failed to update merchant batch {} statistics", merchantBatchId, e);
         }
     }
 
@@ -339,6 +407,8 @@ public class FranchiseAsyncProcessor {
         }
     }
 
+
+
     // ==================== RESULT CLASS ====================
 
     public static class MerchantBatchResult {
@@ -348,7 +418,9 @@ public class FranchiseAsyncProcessor {
         private int failedTransactions = 0;
         private BigDecimal totalAmount = BigDecimal.ZERO;
         private BigDecimal totalFees = BigDecimal.ZERO;
-        private BigDecimal franchiseCommission = BigDecimal.ZERO;
+
+        private BigDecimal totalNetAmount = BigDecimal.ZERO;
+        private BigDecimal totalFranchiseCommission = BigDecimal.ZERO;
         private String error;
 
         public MerchantBatchResult(Long merchantId) {
@@ -361,14 +433,24 @@ public class FranchiseAsyncProcessor {
             return result;
         }
 
-        public void addSuccess(BigDecimal amount, BigDecimal fee) {
+        public void addSuccess(BigDecimal amount, BigDecimal fee,BigDecimal netAmount,BigDecimal franchiseCommission) {
             processedTransactions++;
             totalAmount = totalAmount.add(amount);
             totalFees = totalFees.add(fee);
+            totalNetAmount = totalNetAmount.add(netAmount);
+            totalFranchiseCommission = totalFranchiseCommission.add(franchiseCommission);
         }
 
         public void addFailure() {
             failedTransactions++;
+        }
+
+        public BigDecimal getTotalNetAmount() {
+            return totalNetAmount;
+        }
+
+        public void setTotalNetAmount(BigDecimal totalNetAmount) {
+            this.totalNetAmount = totalNetAmount;
         }
 
         // Getters and setters
@@ -390,10 +472,13 @@ public class FranchiseAsyncProcessor {
         public BigDecimal getTotalFees() { return totalFees; }
         public void setTotalFees(BigDecimal totalFees) { this.totalFees = totalFees; }
 
-        public BigDecimal getFranchiseCommission() { return franchiseCommission; }
-        public void setFranchiseCommission(BigDecimal franchiseCommission) { this.franchiseCommission = franchiseCommission; }
+        public BigDecimal getTotalFranchiseCommission() { return totalFranchiseCommission; }
+        public void setTotalFranchiseCommission(BigDecimal franchiseCommission) { this.totalFranchiseCommission = franchiseCommission; }
 
         public String getError() { return error; }
         public void setError(String error) { this.error = error; }
     }
+
+
+
 }

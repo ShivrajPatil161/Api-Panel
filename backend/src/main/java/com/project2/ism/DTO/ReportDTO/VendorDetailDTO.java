@@ -5,7 +5,10 @@ import java.util.List;
 public class VendorDetailDTO {
     private Long vendorId;
     private String vendorName;
-    private List<ProductDetailDTO> products;
+
+    private Long totalProducts;
+
+    private Long totalDevices;
 
     public Long getVendorId() {
         return vendorId;
@@ -23,11 +26,19 @@ public class VendorDetailDTO {
         this.vendorName = vendorName;
     }
 
-    public List<ProductDetailDTO> getProducts() {
-        return products;
+    public Long getTotalProducts() {
+        return totalProducts;
     }
 
-    public void setProducts(List<ProductDetailDTO> products) {
-        this.products = products;
+    public void setTotalProducts(Long totalProducts) {
+        this.totalProducts = totalProducts;
+    }
+
+    public Long getTotalDevices() {
+        return totalDevices;
+    }
+
+    public void setTotalDevices(Long totalDevices) {
+        this.totalDevices = totalDevices;
     }
 }

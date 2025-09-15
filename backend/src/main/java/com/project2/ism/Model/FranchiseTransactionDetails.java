@@ -13,6 +13,7 @@ public class FranchiseTransactionDetails extends TransactionDetailsBase{
     @JoinColumn(name = "franchise_id",nullable = false)
     private Franchise franchise;
 
+
     public FranchiseTransactionDetails() {
     }
 

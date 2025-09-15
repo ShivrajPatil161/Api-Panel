@@ -33,6 +33,7 @@ import DirectSettlementPage from '../components/Charge Settlement/DirectSettleme
 import FranchiseSettlementPage from '../components/Charge Settlement/FranchiseSettlementPage.jsx'
 import InwardForCustomer from '../components/Tables/InwardForCustomer.jsx'
 import ProductOutward from '../components/Tables/ProductOutward.jsx'
+import MainReportsPageForNow from '../components/Reports/MainReportsPageForNow.jsx'
 
 
 
@@ -178,12 +179,12 @@ export const router = createBrowserRouter([
           }, {
             path: 'merchants',
             element: <MerchantListComponent />
-          }
+          },
           // Reports
-          // {
-          //   path: "reports",
-          //   element: <Reports />
-          // }
+          {
+            path: "reports",
+            element: <MainReportsPageForNow />
+          }
         ]
       }
     ]

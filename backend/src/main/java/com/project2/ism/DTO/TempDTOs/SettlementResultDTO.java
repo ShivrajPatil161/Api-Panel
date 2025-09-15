@@ -10,6 +10,8 @@ public class SettlementResultDTO {
     private BigDecimal fee;
     private BigDecimal net;
 
+    private BigDecimal franchiseCommission;
+
     // ---- factory methods ----
     public static SettlementResultDTO ok(String vendorTxId, BigDecimal amount, BigDecimal fee, BigDecimal net, BigDecimal after) {
         SettlementResultDTO dto = new SettlementResultDTO();
@@ -19,6 +21,17 @@ public class SettlementResultDTO {
         dto.amount = amount;
         dto.fee = fee;
         dto.net = net;
+        return dto;
+    }
+    public static SettlementResultDTO ok(String vendorTxId, BigDecimal amount, BigDecimal fee, BigDecimal net, BigDecimal after,BigDecimal franchiseCommission) {
+        SettlementResultDTO dto = new SettlementResultDTO();
+        dto.vendorTxId = vendorTxId;
+        dto.status = "OK";
+        dto.message = "Settled successfully. Balance after: " + after;
+        dto.amount = amount;
+        dto.fee = fee;
+        dto.net = net;
+        dto.franchiseCommission = franchiseCommission;
         return dto;
     }
 
@@ -56,4 +69,12 @@ public class SettlementResultDTO {
 
     public BigDecimal getNet() { return net; }
     public void setNet(BigDecimal net) { this.net = net; }
+
+    public BigDecimal getFranchiseCommission() {
+        return franchiseCommission;
+    }
+
+    public void setFranchiseCommission(BigDecimal franchiseCommission) {
+        this.franchiseCommission = franchiseCommission;
+    }
 }
