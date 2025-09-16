@@ -34,6 +34,8 @@ import FranchiseSettlementPage from '../components/Charge Settlement/FranchiseSe
 import InwardForCustomer from '../components/Tables/InwardForCustomer.jsx'
 import ProductOutward from '../components/Tables/ProductOutward.jsx'
 import MainReportsPageForNow from '../components/Reports/MainReportsPageForNow.jsx'
+import Payout from '../components/Payout/Payout.jsx'
+import CreditCardBillPayment from '../components/Payout/CreditCardBillPayment.jsx'
 
 
 
@@ -179,6 +181,14 @@ export const router = createBrowserRouter([
           }, {
             path: 'merchants',
             element: <MerchantListComponent />
+          },
+          , {
+            path: 'payout',
+            element: <Payout />
+          },
+          {
+            path: 'credit-card-bill-payment',
+            element: <CreditCardBillPayment />
           },
           // Reports
           {

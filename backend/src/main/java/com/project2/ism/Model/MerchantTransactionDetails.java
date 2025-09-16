@@ -21,6 +21,8 @@ public class MerchantTransactionDetails extends TransactionDetailsBase{
 
     private BigDecimal charge;
 
+    private BigDecimal grossCharge;
+
     public MerchantTransactionDetails() {
     }
 
@@ -38,5 +40,13 @@ public class MerchantTransactionDetails extends TransactionDetailsBase{
 
     public void setCharge(BigDecimal charge) {
         this.charge = charge;
+    }
+
+    public BigDecimal getGrossCharge() {
+        return grossCharge;
+    }
+
+    public void setGrossCharge(BigDecimal grossCharge) {
+        this.grossCharge = grossCharge;
     }
 }
