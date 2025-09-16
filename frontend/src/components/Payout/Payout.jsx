@@ -14,16 +14,20 @@ const Payout = () => {
     const [loading, setLoading] = useState(false);
 
     const customerId = localStorage.getItem('customerId');
+    const customerType = localStorage.getItem("userType");
 
     useEffect(() => {
         fetchBanks();
-        console.log(dummyBanks)
     }, []);
 
     const fetchBanks = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/payout/banks/${customerId}`);
+            const response = await api.get(`/payout/banks/${customerId}`, {
+                params: {
+                    customerType
+                }
+            });
 
             setBanks(response.data);
         } catch (error) {
@@ -206,8 +210,8 @@ const Payout = () => {
             <AddBankModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onBankAdded={(newBank) => {
-                    setBanks([...banks, newBank]);
+                onBankAdded={() => {
+                    fetchBanks()
                     setIsModalOpen(false);
                 }}
             />
