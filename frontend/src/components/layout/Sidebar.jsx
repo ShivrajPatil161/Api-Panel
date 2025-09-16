@@ -273,13 +273,18 @@ const getMenuItems = (userType) => {
       {
         title: 'Payout',
         key: 'payout',
+        path: '/dashboard/payout',
         icon: Coins,
-        iconColor: ''
+        iconColor: '',
+        // children: [
+        //   { title: 'Payout', icon: Coins }
+        // ]
        
       },
       {
         title: 'Card Details',
         key: 'card-details',
+        path:'/dashboard/credit-card-bill-payment',
         icon: CreditCard,
         iconColor: ''
       },
