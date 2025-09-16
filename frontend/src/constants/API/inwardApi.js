@@ -25,31 +25,58 @@ export const inwardAPI = {
     }
   },
 
-  // Create new inward transaction
-  createInwardTransaction: async (inwardData) => {
-    try {
-      // Transform frontend data to backend format
-      const transformedData = transformToBackendFormat(inwardData);
-      console.log(transformedData)
-      const response = await api.post('/inward-transactions', transformedData);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating inward transaction:', error);
-      throw error;
-    }
-  },
+  // // Create new inward transaction
+  // createInwardTransaction: async (inwardData) => {
+  //   try {
+  //     // Transform frontend data to backend format
+  //     const transformedData = transformToBackendFormat(inwardData);
+  //     //console.log(transformedData)
+  //     const response = await api.post('/inward-transactions', transformedData);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error(response?.data?.message);
+  //     throw error;
+  //   }
+  // },
 
-  // Update inward transaction
-  updateInwardTransaction: async (id, inwardData) => {
-    try {
-      const transformedData = transformToBackendFormat(inwardData);
-      const response = await api.put(`/inward-transactions/${id}`, transformedData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating inward transaction:', error);
-      throw error;
-    }
-  },
+  // // Update inward transaction
+  // updateInwardTransaction: async (id, inwardData) => {
+  //   try {
+  //     const transformedData = transformToBackendFormat(inwardData);
+  //     const response = await api.put(`/inward-transactions/${id}`, transformedData);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Error updating inward transaction:', error);
+  //     throw error;
+  //   }
+  // },
+
+// Create new inward transaction
+createInwardTransaction: async (inwardData) => {
+  try {
+    const transformedData = transformToBackendFormat(inwardData);
+    const response = await api.post('/inward-transactions', transformedData);
+    return response.data;
+  } catch (error) {
+    // Extract backend error message
+    const message = error.response?.data?.message || 'Failed to create inward transaction';
+    console.error(message);
+    throw new Error(message);
+  }
+},
+
+// Update inward transaction
+updateInwardTransaction: async (id, inwardData) => {
+  try {
+    const transformedData = transformToBackendFormat(inwardData);
+    const response = await api.put(`/inward-transactions/${id}`, transformedData);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Failed to update inward transaction';
+    console.error(message);
+    throw new Error(message);
+  }
+},
 
   // Delete inward transaction
   deleteInwardTransaction: async (id) => {

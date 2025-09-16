@@ -18,7 +18,7 @@ public interface OutwardTransactionRepository extends JpaRepository<OutwardTrans
     boolean existsByDeliveryNumber(String deliveryNumber);
 
     List<OutwardTransactions> findByFranchiseId(@Param("franchiseId") Long franchiseId);
-
+    List<OutwardTransactions> findByFranchiseIdAndReceivedDateIsNotNull(@Param("franchiseId") Long franchiseId);
     List<OutwardTransactions> findByMerchantId(Long merchantId);
 
     @Query("SELECT CASE " +

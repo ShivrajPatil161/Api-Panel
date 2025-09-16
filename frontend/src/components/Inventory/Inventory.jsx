@@ -125,7 +125,6 @@ const InventoryManagement = () => {
         try {
             const response = await inwardAPI.getAllInwardTransactions()
            
-            console.log(response)
             setInwardData(response)
         } catch (error) {
             console.error('Error fetching inward data:', error)
@@ -137,31 +136,27 @@ const InventoryManagement = () => {
 
 
     const handleInwardSubmit = async (data) => {
-        setLoading(true)
-        console.log("hi-1")
+        setLoading(true);
         try {
             if (editingInward) {
-                // Update existing entry
-                await inwardAPI.updateInwardTransaction(editingInward.id, data)
-                toast.success('Inward transaction updated successfully!')
+                await inwardAPI.updateInwardTransaction(editingInward.id, data);
+                toast.success('Inward transaction updated successfully!');
             } else {
-                console.log("hi-3")
-                // Create new entry
-                await inwardAPI.createInwardTransaction(data)
-                toast.success('Inward transaction created successfully!')
+                await inwardAPI.createInwardTransaction(data);
+                toast.success('Inward transaction created successfully!');
             }
-console.log("hi-3")
+
             // Refresh data
-            await fetchInwardData()
-            setIsInwardModalOpen(false)
-            setEditingInward(null)
+            await fetchInwardData();
+            setIsInwardModalOpen(false);
+            setEditingInward(null);
         } catch (error) {
-            console.error('Error saving inward transaction:', error)
-            toast.error('Error saving inward transaction. Please try again.')
+            console.error('Error saving inward transaction:', error);
+            toast.error(error.message); // comes from backend ErrorResponse.message
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     const handleEditInward = (inwardEntry) => {
         setEditingInward(inwardEntry)

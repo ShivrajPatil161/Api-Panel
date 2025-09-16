@@ -51,6 +51,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getDescription(false)), HttpStatus.CONFLICT);
     }
 
+    //duplicate TID/MID/SID/VPAID
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResource(
+            DuplicateResourceException ex,
+            WebRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),     // 409
+                ex.getMessage(),                 // "TID already exists: 32971249"
+                request.getDescription(false),   // e.g. URI=/api/v1/transactions
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     // Validation Errors (Bean Validation)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
