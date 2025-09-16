@@ -12,10 +12,9 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
         bankHolderName: ''
     });
     const [loading, setLoading] = useState(false);
-    const [verifyLoading, setVerifyLoading] = useState(false);
-    const [isVerified, setIsVerified] = useState(false);
 
     const customerId = localStorage.getItem('customerId');
+    const customerType = localStorage.getItem('userType');
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -44,52 +43,42 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
         return true;
     };
 
-    const handleVerify = async () => {
-        if (!validateForm()) return;
-
-        try {
-            setVerifyLoading(true);
-            const response = await api.post(`/payout/verify/${customerId}`, {
-                ifscCode: formData.ifscCode,
-                bankName: formData.bankName,
-                accountNumber: formData.accountNumber,
-                bankHolderName: formData.bankHolderName
-            });
-
-            setIsVerified(true);
-            toast.success('Bank details verified successfully');
-        } catch (error) {
-            toast.error('Verification failed. Please check your details');
-            setIsVerified(false);
-        } finally {
-            setVerifyLoading(false);
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!validateForm()) return;
 
-        if (!isVerified) {
-            toast.error('Please verify bank details before submitting');
-            return;
-        }
-
         try {
             setLoading(true);
-            const response = await api.post(`/payout/add-bank/${customerId}`, {
+
+            // Show info toast about the verification process
+            toast.info('Verifying bank details and adding to your account. ₹1 will be debited from your wallet for verification.');
+
+            // Single API call that handles both verification and adding bank
+            const response = await api.post(`/payout/verify-and-add-bank/${customerId}`, {
                 ifscCode: formData.ifscCode,
                 bankName: formData.bankName,
                 accountNumber: formData.accountNumber,
-                bankHolderName: formData.bankHolderName
+                bankHolderName: formData.bankHolderName,
+                customerType
             });
 
-            toast.success('Bank added successfully');
+            toast.success('Bank details verified and added successfully! ₹1 was debited for verification.');
             onBankAdded(response.data);
             resetForm();
+            onClose();
+
         } catch (error) {
-            toast.error('Failed to add bank. Please try again');
+            // Handle different types of errors
+            if (error.response?.status === 400) {
+                toast.error(error.response.data.message || 'Invalid bank details. Please check and try again.');
+            } else if (error.response?.status === 402) {
+                toast.error('Insufficient wallet balance. Minimum ₹1 required for bank verification.');
+            } else if (error.response?.status === 422) {
+                toast.error('Bank verification failed. Please check your bank details.');
+            } else {
+                toast.error('Failed to add bank. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
@@ -103,7 +92,6 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
             confirmAccountNumber: '',
             bankHolderName: ''
         });
-        setIsVerified(false);
     };
 
     const handleClose = () => {
@@ -117,13 +105,26 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold">Add Bank</h2>
+                    <h2 className="text-xl font-bold">Add Bank Account</h2>
                     <button
                         onClick={handleClose}
                         className="text-gray-500 hover:text-gray-700 text-2xl"
                     >
                         ×
                     </button>
+                </div>
+
+                {/* Info banner about verification */}
+                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                    <div className="flex items-start">
+                        <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                            <p className="text-blue-700 text-sm font-medium">Bank Verification Process</p>
+                            <p className="text-blue-600 text-xs mt-1">₹1 will be debited from your wallet and sent to mentioned bank account to verify bank details. This ensures your account details are correct.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -140,6 +141,7 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
                                 placeholder="IFSC Code"
                                 maxLength={11}
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                disabled={loading}
                             />
                         </div>
 
@@ -154,6 +156,7 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
                                 onChange={handleInputChange}
                                 placeholder="Bank Name"
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                disabled={loading}
                             />
                         </div>
                     </div>
@@ -169,6 +172,7 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
                             onChange={handleInputChange}
                             placeholder="Account Number"
                             className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            disabled={loading}
                         />
                     </div>
 
@@ -186,6 +190,7 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
                                     ? 'border-red-500'
                                     : 'border-gray-300'
                                 }`}
+                            disabled={loading}
                         />
                         {formData.confirmAccountNumber && formData.accountNumber !== formData.confirmAccountNumber && (
                             <p className="text-red-500 text-xs mt-1">Account numbers do not match</p>
@@ -194,63 +199,41 @@ const AddBankModal = ({ isOpen, onClose, onBankAdded }) => {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Bank Holder Name *
+                            Account Holder Name *
                         </label>
                         <input
                             type="text"
                             name="bankHolderName"
                             value={formData.bankHolderName}
                             onChange={handleInputChange}
-                            placeholder="Bank Holder Name"
+                            placeholder="Account Holder Name"
                             className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            disabled={loading}
                         />
                     </div>
 
-                    {isVerified && (
-                        <div className="bg-green-50 border border-green-200 rounded p-3">
-                            <div className="flex items-center">
-                                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-green-700 text-sm">Bank details verified successfully</span>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="flex justify-between gap-3 pt-4">
+                    <div className="flex justify-end gap-3 pt-4">
                         <button
                             type="button"
-                            onClick={handleVerify}
-                            disabled={verifyLoading || isVerified}
-                            className={`flex py-2 px-4 rounded font-medium ${isVerified
-                                    ? 'bg-green-500 text-white cursor-not-allowed'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-300'
-                                }`}
+                            onClick={handleClose}
+                            disabled={loading}
+                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded font-medium hover:bg-gray-50 disabled:opacity-50"
                         >
-                            {verifyLoading ? (
-                                <div className="flex items-center justify-center">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Verifying...
-                                </div>
-                            ) : isVerified ? (
-                                'Verified ✓'
-                            ) : (
-                                'Verify'
-                            )}
+                            Cancel
                         </button>
 
                         <button
                             type="submit"
-                            disabled={loading || !isVerified}
-                            className="flex bg-red-500 text-white py-2 px-4 rounded font-medium hover:bg-red-600 disabled:bg-red-300"
+                            disabled={loading}
+                            className="flex items-center bg-blue-500 text-white py-2 px-6 rounded font-medium hover:bg-blue-600 disabled:bg-blue-300"
                         >
                             {loading ? (
-                                <div className="flex items-center justify-center">
+                                <>
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Submitting...
-                                </div>
+                                    Verifying & Adding...
+                                </>
                             ) : (
-                                'Submit'
+                                'Verify & Add Bank'
                             )}
                         </button>
                     </div>
