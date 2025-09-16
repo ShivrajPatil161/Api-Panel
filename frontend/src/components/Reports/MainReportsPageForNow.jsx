@@ -3,6 +3,7 @@ import FranchiseReports from "./FranchiseReports";
 import VendorReports from "./VendorReports";
 import FTransReportDashboard from "./FranhiseTransReports/FTransReportDashboard";
 import MTransReportDashboard from "./MerchantTransReport/MTransReportDashboard";
+import InwardTransactionReport from "./InwardTransactionReports";
 
 const MainReportsPageForNow = () => {
     // null = no tab selected initially
@@ -14,6 +15,8 @@ const MainReportsPageForNow = () => {
         { id: "vendor", label: "Vendor Reports", component: <VendorReports /> },
         { id: "merchant-reports", label: "Direct Merchant Reports", component: <MTransReportDashboard /> },
         { id: "franchise-reports", label: "Franchise Reports", component: <FTransReportDashboard /> },
+        { id: "inward-transaction-reports", label: "Inward Transaction Reports", component: <InwardTransactionReport /> }
+
         // you can keep adding: { id: "sales", label: "Sales Reports", component: <SalesReports /> }
     ];
 
