@@ -87,7 +87,7 @@ const productSchema = z.object({
   status: z.boolean(),
   minOrderQuantity: z.number().min(1, 'Minimum order quantity must be at least 1'),
   maxOrderQuantity: z.number().min(1, 'Maximum order quantity must be at least 1'),
-  remarks: z.string().optional()
+  remarks: z.string().nullable().optional().default("")
 }).refine((data) => data.maxOrderQuantity >= data.minOrderQuantity, {
   message: "Maximum quantity must be greater than or equal to minimum quantity",
   path: ["maxOrderQuantity"],
