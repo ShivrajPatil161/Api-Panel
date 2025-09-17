@@ -5,7 +5,7 @@ import { Trash, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import AddBankModal from './AddBankModal';
 import api from '../../constants/API/axiosInstance';
-import { dummyBanks } from './payoutDummyData';
+//import { dummyBanks } from './payoutDummyData';
 
 
 const Payout = () => {
