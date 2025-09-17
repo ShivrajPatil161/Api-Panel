@@ -296,15 +296,15 @@ const InwardTransactionReport = () => {
     const exportColumns = {
         headers: [
             'Transaction ID', 'Invoice Number', 'Vendor', 'Product Code', 'Product Name',
-            'Received Date', 'Received By', 'Quantity', 'Batch Number', 'Warranty (Months)',
+            'Received Date', 'Received By', 'Batch Number', 'Warranty (Months)',
             'Condition', 'SID', 'MID', 'TID', 'VPAID', 'Serial Status', 'Remarks'
         ],
         keys: [
             'transactionId', 'invoiceNumber', 'vendorName', 'productCode', 'productName',
-            'receivedDate', 'receivedBy', 'quantity', 'batchNumber', 'warrantyPeriod',
+            'receivedDate', 'receivedBy', 'batchNumber', 'warrantyPeriod',
             'productCondition', 'sid', 'mid', 'tid', 'vpaid', 'serialStatus', 'remark'
         ],
-        widths: [12, 15, 20, 15, 25, 12, 15, 8, 12, 10, 12, 15, 15, 15, 15, 12, 30]
+        widths: [12, 15, 20, 15, 25, 12, 15, 12, 10, 12, 15, 15, 15, 15, 12, 30]
     };
 
     const excelTransform = (data) => {
@@ -316,7 +316,6 @@ const InwardTransactionReport = () => {
             'Product Name': item.productName,
             'Received Date': item.receivedDate ? format(new Date(item.receivedDate), 'dd MMM yyyy') : '',
             'Received By': item.receivedBy,
-            'Quantity': item.quantity,
             'Batch Number': item.batchNumber || '',
             'Warranty (Months)': item.warrantyPeriod || '',
             'Condition': item.productCondition,
@@ -324,7 +323,6 @@ const InwardTransactionReport = () => {
             'MID': item.mid,
             'TID': item.tid,
             'VPAID': item.vpaid,
-            'Serial Status': item.serialStatus,
             'Remarks': item.remark || ''
         }));
     };
@@ -399,7 +397,7 @@ const InwardTransactionReport = () => {
                     </div>
                 </div>
 
-            
+                
                 <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
                     <div className="flex items-center justify-between">
                         <div>

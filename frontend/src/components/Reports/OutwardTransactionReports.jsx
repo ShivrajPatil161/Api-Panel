@@ -393,17 +393,17 @@ const OutwardTransactionReport = () => {
     const exportColumns = {
         headers: [
             'Transaction ID', 'Delivery Number', 'Customer Type', 'Customer Name', 'Product Code', 'Product Name',
-            'Dispatch Date', 'Dispatched By', 'Quantity', 'Contact Person', 'Contact Number', 'Delivery Method',
+            'Dispatch Date', 'Dispatched By', 'Contact Person', 'Contact Number', 'Delivery Method',
             'Tracking Number', 'Expected Delivery', 'SID', 'MID', 'TID', 'VPAID', 'Serial Status', 
             'Delivery Address', 'Remarks'
         ],
         keys: [
             'transactionId', 'deliveryNumber', 'customerType', 'customerName', 'productCode', 'productName',
-            'dispatchDate', 'dispatchedBy', 'quantity', 'contactPerson', 'contactPersonNumber', 'deliveryMethod',
+            'dispatchDate', 'dispatchedBy', 'contactPerson', 'contactPersonNumber', 'deliveryMethod',
             'trackingNumber', 'expectedDelivery', 'sid', 'mid', 'tid', 'vpaid', 'serialStatus',
             'deliveryAddress', 'remarks'
         ],
-        widths: [12, 15, 12, 20, 15, 25, 12, 15, 8, 15, 12, 12, 15, 12, 15, 15, 15, 15, 12, 30, 25]
+        widths: [12, 15, 12, 20, 15, 25, 12, 15, 15, 12, 12, 15, 12, 15, 15, 15, 15, 12, 30, 25]
     };
 
     const excelTransform = (data) => {
@@ -416,7 +416,6 @@ const OutwardTransactionReport = () => {
             'Product Name': item.productName,
             'Dispatch Date': item.dispatchDate ? format(new Date(item.dispatchDate), 'dd MMM yyyy') : '',
             'Dispatched By': item.dispatchedBy,
-            'Quantity': item.quantity,
             'Contact Person': item.contactPerson,
             'Contact Number': item.contactPersonNumber,
             'Delivery Method': item.deliveryMethod || '',
@@ -434,11 +433,10 @@ const OutwardTransactionReport = () => {
 
     const summaryConfig = [
         { key: 'totalTransactions', label: 'Total Transactions', formatter: (val) => val.toLocaleString() },
-        { key: 'totalSerialNumbers', label: 'Total Serial Numbers', formatter: (val) => val.toLocaleString() },
+        { key: 'totalSerialNumbers', label: 'Total Quantity', formatter: (val) => val.toLocaleString() },
         { key: 'totalFranchises', label: 'Total Franchises', formatter: (val) => val.toLocaleString() },
         { key: 'totalMerchants', label: 'Total Merchants', formatter: (val) => val.toLocaleString() },
         { key: 'totalProducts', label: 'Total Products', formatter: (val) => val.toLocaleString() },
-        { key: 'totalQuantity', label: 'Total Quantity', formatter: (val) => val.toLocaleString() },
         { key: 'averageQuantityPerTransaction', label: 'Avg Qty/Transaction', formatter: (val) => val }
     ];
 
@@ -507,22 +505,14 @@ const OutwardTransactionReport = () => {
                 <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-emerald-100 text-sm font-medium">Serial Numbers</p>
+                            <p className="text-emerald-100 text-sm font-medium">Total Quantity</p>
                             <p className="text-3xl font-bold">{summary.totalSerialNumbers}</p>
                         </div>
                         <Package className="w-8 h-8 text-emerald-200" />
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-purple-100 text-sm font-medium">Total Quantity</p>
-                            <p className="text-3xl font-bold">{summary.totalQuantity}</p>
-                        </div>
-                        <Package className="w-8 h-8 text-purple-200" />
-                    </div>
-                </div>
+                
 
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
                     <div className="flex items-center justify-between">
