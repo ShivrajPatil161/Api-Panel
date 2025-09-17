@@ -1,6 +1,7 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.Exception.ResourceNotFoundException;
+import com.project2.ism.Model.Vendor.VendorCardRates;
 import com.project2.ism.Model.Vendor.VendorRates;
 import com.project2.ism.Repository.VendorRatesRepository;
 import jakarta.validation.Valid;
@@ -37,14 +38,22 @@ public class VendorRatesService {
     public VendorRates updateVendorRates(Long id, @Valid VendorRates updatedRates) {
         VendorRates existingRates = getVendorRatesById(id);
 
-        //existingRates.setProductName(updatedRates.getProductName());
         existingRates.setMonthlyRent(updatedRates.getMonthlyRent());
         existingRates.setEffectiveDate(updatedRates.getEffectiveDate());
         existingRates.setExpiryDate(updatedRates.getExpiryDate());
         existingRates.setVendor(updatedRates.getVendor());
+        existingRates.setProduct(updatedRates.getProduct());
+        existingRates.setRemark(updatedRates.getRemark());
+
+        // Replace vendorCardRates
+        existingRates.getVendorCardRates().clear();
+        for (VendorCardRates cardRate : updatedRates.getVendorCardRates()) {
+            existingRates.addVendorCardRate(cardRate); // helper method sets back-reference
+        }
 
         return vendorRatesRepository.save(existingRates);
     }
+
 
     // DELETE
     public void deleteVendorRates(Long id) {
