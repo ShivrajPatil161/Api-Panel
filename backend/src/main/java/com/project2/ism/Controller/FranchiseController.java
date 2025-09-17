@@ -108,6 +108,8 @@ public class FranchiseController {
         }
     }
 
+
+    //settlement api .js uses this
     @GetMapping
     public ResponseEntity<List<FranchiseListDTO>> getAllFranchises() {
         try {
@@ -197,6 +199,10 @@ public class FranchiseController {
         return ResponseEntity.ok(dto);
     }
 
+
+
+
+    //settlement api .js uses this
     @GetMapping("/products/{id}")
     public ResponseEntity<?> franchiseProducts(@PathVariable Long id){
         List<?> products = franchiseService.getProductsOfFranchise(id);
