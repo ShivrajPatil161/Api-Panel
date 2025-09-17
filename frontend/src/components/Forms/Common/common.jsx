@@ -3,7 +3,7 @@ import { X, ToggleLeft, ToggleRight, Building2 } from 'lucide-react';
 
 // ==================== BASIC INPUT COMPONENTS ====================
 
-export const FormInput = ({    label,    name,    register,    errors,    type = "text",    placeholder = "",    maxLength,    style,    disabled = false,    required = false,    validation = {},    className = "",    ...props}) => {
+export const FormInput = ({ label, name, register, errors, type = "text", placeholder = "", maxLength, style, disabled = false, required = false, validation = {}, className = "", rightIcon,    ...props}) => {
     // Build dynamic validation rules
     const rules = {
         ...(required && { required: `${label} is required` }),
@@ -24,19 +24,31 @@ export const FormInput = ({    label,    name,    register,    errors,    type =
             )}
 
             {/* Input */}
-            <input
-                {...register(name, rules)}
-                type={type}
-                placeholder={placeholder}
-                maxLength={maxLength}
-                style={style}
-                disabled={disabled}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent
-          ${errors?.[name] ? "border-red-500" : "border-gray-300"}
-          ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
-          ${className}`}
-                {...props}
-            />
+            {/* Input wrapper for relative positioning */}
+            <div className="relative">
+                <input
+                    {...register(name, rules)}
+                    type={type}
+                    placeholder={placeholder}
+                    maxLength={maxLength}
+                    style={style}
+                    disabled={disabled}
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent
+            ${errors?.[name] ? "border-red-500" : "border-gray-300"}
+            ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+            ${rightIcon ? "pr-10" : ""}   // <-- add padding if icon exists
+            ${className}`}
+                    {...props}
+                />
+
+                {/* Right Icon */}
+                {rightIcon && (
+                    <span className="absolute inset-y-0 right-3 flex items-center">
+                        {rightIcon}
+                    </span>
+                )}
+            </div>
+
 
             {/* Error message */}
             {errors?.[name] && (

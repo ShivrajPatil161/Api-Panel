@@ -683,12 +683,7 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
         productSerialNumbers: selectedSerialNumbers
       };
 
-      let result;
-      if (editData && editData.id) {
-        result = await returnTransactionAPI.updateReturnTransaction(editData.id, submissionData);
-      } else {
-        result = await returnTransactionAPI.createReturnTransaction(submissionData);
-      }
+     
 
       // Call parent onSubmit with result
       if (onSubmit) {

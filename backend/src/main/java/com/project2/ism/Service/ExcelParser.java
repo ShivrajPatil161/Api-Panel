@@ -23,7 +23,8 @@ public class ExcelParser {
             DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"),
             DateTimeFormatter.ofPattern("dd-MM-uuuu HH:mm"),
             DateTimeFormatter.ofPattern("dd-MM-yy HH:mm"),      // <── added
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("MM/dd/yy HH:mm")
     };
 
     public static List<VendorTransactions> parse(InputStream in) throws Exception {

@@ -194,24 +194,34 @@ public class MerchantController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
+    //admin approval jsx uses this
     // 1. Get unapproved merchants
     @GetMapping("/unapproved")
     public List<Merchant> getUnapprovedMerchants() {
         return merchantService.getUnapprovedMerchants();
     }
 
+
+    //admin approval jsx uses this
     // 2. Approve merchant
     @PutMapping("/{id}/approve")
     public Merchant approveMerchant(@PathVariable Long id) {
         return merchantService.approveMerchant(id);
     }
 
+    //admin approval jsx uses this
     // 3. Reject merchant
     @DeleteMapping("/{id}/reject")
     public ResponseEntity<String> rejectMerchant(@PathVariable Long id) {
         merchantService.rejectMerchant(id);
         return ResponseEntity.ok("Merchant rejected and deleted successfully.");
     }
+
+
+
+
 
     @GetMapping("/profile")
     public ResponseEntity<?> profile(@RequestParam String email) {
@@ -229,12 +239,17 @@ public class MerchantController {
         return ResponseEntity.ok(dto);
     }
 
+
+    //settlement api .js uses this
     @GetMapping("/products/{id}")
     public ResponseEntity<?> merchantProducts(@PathVariable Long id){
         List<?> products = merchantService.getProductsOfMerchant(id);
         return ResponseEntity.ok(products);
     }
 
+
+
+    //settlement api .js uses this
     @GetMapping("/direct-merchant")
     public ResponseEntity<List<MerchantListDTO>> directMerchant() {
         try {
