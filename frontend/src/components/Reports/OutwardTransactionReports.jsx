@@ -64,7 +64,6 @@ const OutwardTransactionReport = () => {
                             productName: transaction.productName,
                             dispatchDate: transaction.dispatchDate,
                             dispatchedBy: transaction.dispatchedBy,
-                            quantity: transaction.quantity,
                             deliveryAddress: transaction.deliveryAddress,
                             contactPerson: transaction.contactPerson,
                             contactPersonNumber: transaction.contactPersonNumber,
@@ -78,7 +77,6 @@ const OutwardTransactionReport = () => {
                             mid: serial.mid,
                             tid: serial.tid,
                             vpaid: serial.vpaid,
-                            serialStatus: serial.status || 'Assigned'
                         });
                     });
                 } else {
@@ -95,7 +93,6 @@ const OutwardTransactionReport = () => {
                         productName: transaction.productName,
                         dispatchDate: transaction.dispatchDate,
                         dispatchedBy: transaction.dispatchedBy,
-                        quantity: transaction.quantity,
                         deliveryAddress: transaction.deliveryAddress,
                         contactPerson: transaction.contactPerson,
                         contactPersonNumber: transaction.contactPersonNumber,
@@ -109,7 +106,6 @@ const OutwardTransactionReport = () => {
                         mid: '-',
                         tid: '-',
                         vpaid: '-',
-                        serialStatus: '-'
                     });
                 }
             });
@@ -191,13 +187,7 @@ const OutwardTransactionReport = () => {
             header: 'Dispatched By',
             accessorKey: 'dispatchedBy',
         },
-        {
-            header: 'Quantity',
-            accessorKey: 'quantity',
-            cell: ({ getValue }) => (
-                <span className="text-center font-semibold">{getValue()}</span>
-            )
-        },
+      
         {
             header: 'Contact Person',
             accessorKey: 'contactPerson',
@@ -281,24 +271,6 @@ const OutwardTransactionReport = () => {
                     {getValue()}
                 </span>
             )
-        },
-        {
-            header: 'Serial Status',
-            accessorKey: 'serialStatus',
-            cell: ({ getValue }) => {
-                const status = getValue();
-                const colorMap = {
-                    'Assigned': 'bg-blue-100 text-blue-800',
-                    'Delivered': 'bg-green-100 text-green-800',
-                    'In Transit': 'bg-yellow-100 text-yellow-800',
-                    'Returned': 'bg-red-100 text-red-800'
-                };
-                return (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorMap[status] || 'bg-gray-100 text-gray-800'}`}>
-                        {status}
-                    </span>
-                );
-            }
         },
         {
             header: 'Delivery Address',
@@ -394,16 +366,16 @@ const OutwardTransactionReport = () => {
         headers: [
             'Transaction ID', 'Delivery Number', 'Customer Type', 'Customer Name', 'Product Code', 'Product Name',
             'Dispatch Date', 'Dispatched By', 'Contact Person', 'Contact Number', 'Delivery Method',
-            'Tracking Number', 'Expected Delivery', 'SID', 'MID', 'TID', 'VPAID', 'Serial Status', 
+            'Tracking Number', 'Expected Delivery', 'SID', 'MID', 'TID', 'VPAID', 
             'Delivery Address', 'Remarks'
         ],
         keys: [
             'transactionId', 'deliveryNumber', 'customerType', 'customerName', 'productCode', 'productName',
             'dispatchDate', 'dispatchedBy', 'contactPerson', 'contactPersonNumber', 'deliveryMethod',
-            'trackingNumber', 'expectedDelivery', 'sid', 'mid', 'tid', 'vpaid', 'serialStatus',
+            'trackingNumber', 'expectedDelivery', 'sid', 'mid', 'tid', 'vpaid', 
             'deliveryAddress', 'remarks'
         ],
-        widths: [12, 15, 12, 20, 15, 25, 12, 15, 15, 12, 12, 15, 12, 15, 15, 15, 15, 12, 30, 25]
+        widths: [12, 15, 12, 20, 15, 25, 12, 15, 15, 12, 12, 15, 12, 15, 15, 15, 15, 30, 25]
     };
 
     const excelTransform = (data) => {
@@ -425,7 +397,6 @@ const OutwardTransactionReport = () => {
             'MID': item.mid,
             'TID': item.tid,
             'VPAID': item.vpaid,
-            'Serial Status': item.serialStatus,
             'Delivery Address': item.deliveryAddress || '',
             'Remarks': item.remarks || ''
         }));
