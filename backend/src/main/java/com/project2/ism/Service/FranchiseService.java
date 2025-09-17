@@ -305,7 +305,7 @@ public class FranchiseService {
 
 
     public List<ProductSerialNumbers> getValidPSN(Long outwardID){
-        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNullAndReceivedDateIsNotNull(outwardID);
+        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNullAndReceivedDateIsNull(outwardID);
 
     }
     public List<ProductSerialNumbers> getInTransitPSN(Long outwardID) {

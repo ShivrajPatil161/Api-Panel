@@ -76,6 +76,7 @@ const Header = ({ userType }) => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userType');
     localStorage.removeItem('customerId')
+    localStorage.clear()
     navigate('/login');
   };
 
