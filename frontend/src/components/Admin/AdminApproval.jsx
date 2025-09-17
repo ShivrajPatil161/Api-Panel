@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { DocumentPreview } from '../Tables/CustomerList'; 
 import api from '../../constants/API/axiosInstance'; 
+import { toast } from 'react-toastify';
 // Business type mapping
 const businessTypeMap = {
     retail: 'Retail Store',
@@ -319,22 +320,51 @@ const AdminApproval = () => {
             await fetchMerchants();
         } catch (err) {
             console.error('Error approving merchant:', err);
-            alert('Failed to approve merchant. Please try again.');
+            toast.error('Failed to approve merchant. Please try again.');
         }
     };
 
+    // show confirm toast with action buttons
     const handleReject = async (merchant) => {
-        if (window.confirm('Are you sure you want to reject and delete this merchant? This action cannot be undone.')) {
-            try {
-                await api.delete(`/merchants/${merchant.id}/reject`);
-                // Refresh the data
-                await fetchMerchants();
-            } catch (err) {
-                console.error('Error rejecting merchant:', err);
-                alert('Failed to reject merchant. Please try again.');
-            }
-        }
+        toast.warn(
+            ({ closeToast }) => (
+                <div className="space-y-2">
+                    <p>
+                        Are you sure you want to <b>reject and delete</b> this merchant?
+                        <br />
+                        <span className="text-red-500">This action cannot be undone.</span>
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            className="px-3 py-1 bg-red-600 text-white rounded-md"
+                            onClick={async () => {
+                                try {
+                                    await api.delete(`/merchants/${merchant.id}/reject`);
+                                    await fetchMerchants();
+                                    toast.success("Merchant rejected & deleted.");
+                                } catch (err) {
+                                    console.error("Error rejecting merchant:", err);
+                                    toast.error("Failed to reject merchant. Please try again.");
+                                } finally {
+                                    closeToast();
+                                }
+                            }}
+                        >
+                            Yes, Reject
+                        </button>
+                        <button
+                            className="px-3 py-1 bg-gray-300 rounded-md"
+                            onClick={closeToast}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            ),
+            { autoClose: false }
+        );
     };
+
 
     // Table columns
     const columns = useMemo(() => [

@@ -370,7 +370,7 @@ const CustomerProductsList = () => {
                         </span>
                     ),
                 }),
-                columnHelper.accessor('remainingQuantity', {
+                columnHelper.accessor('valid', {
                     header: 'Available',
                     cell: info => {
                         const remaining = info.getValue();
@@ -395,7 +395,7 @@ const CustomerProductsList = () => {
                     header: 'Status',
                     cell: info => (
                         <StockStatus
-                            remaining={info.row.original.remainingQuantity}
+                            remaining={info.row.original.valid}
                             total={info.row.original.totalQuantity}
                         />
                     ),
@@ -404,7 +404,7 @@ const CustomerProductsList = () => {
                     id: 'distributed',
                     header: 'Distributed',
                     cell: info => {
-                        const distributed = info.row.original.totalQuantity - info.row.original.remainingQuantity;
+                        const distributed = info.row.original.totalQuantity - info.row.original.valid;
                         return (
                             <span className="text-sm text-gray-600">
                                 {distributed} units

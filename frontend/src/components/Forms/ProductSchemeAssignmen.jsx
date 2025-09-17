@@ -64,6 +64,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         product: '',
         scheme: '',
         effectiveDate: '',
+        expiryDate:'',
         remarks: ''
     })
 
@@ -237,6 +238,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 productId: parseInt(data.product),
                 schemeId: parseInt(data.scheme),
                 effectiveDate: data.effectiveDate,
+                expiryDate:data.expiryDate,
                 remarks: data.remarks,
                 outwardId: selectedProduct?.outwardId || null
             }
@@ -257,6 +259,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             // TODO: show toast/notification
         } finally {
             setLoading(false)
+           
         }
     }
 
@@ -328,6 +331,14 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                                 <Input
                                     label="Effective Date"
                                     name="effectiveDate"
+                                    register={register}
+                                    errors={errors}
+                                    type="date"
+                                    required
+                                />
+                                <Input
+                                    label="Expiry Date"
+                                    name="expiryDate"
                                     register={register}
                                     errors={errors}
                                     type="date"
