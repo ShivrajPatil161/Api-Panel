@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import UniversalExportButtons from './UniversalExportButtons';
 import { format } from 'date-fns';
-import { getAllInwardTransactions } from '../../constants/API/InwardTransactionAPI'; // Import the API function
+import { getAllInwardTransactions } from '../../constants/API/InwardTransactionAPI';
 
 const InwardTransactionReport = () => {
     const [data, setData] = useState([]);
@@ -40,7 +40,7 @@ const InwardTransactionReport = () => {
         setLoading(true);
         setError(null);
         try {
-            const transactions = await getAllInwardTransactions(); // Use the API function
+            const transactions = await getAllInwardTransactions();
             
             // Transform data to include serial numbers in flat structure
             const transformedData = [];
@@ -68,8 +68,7 @@ const InwardTransactionReport = () => {
                             sid: serial.sid,
                             mid: serial.mid,
                             tid: serial.tid,
-                            vpaid: serial.vpaid,
-                            serialStatus: serial.status || 'Available'
+                            vpaid: serial.vpaid
                         });
                     });
                 } else {
@@ -93,8 +92,7 @@ const InwardTransactionReport = () => {
                         sid: '-',
                         mid: '-',
                         tid: '-',
-                        vpaid: '-',
-                        serialStatus: '-'
+                        vpaid: '-'
                     });
                 }
             });
@@ -156,13 +154,6 @@ const InwardTransactionReport = () => {
         {
             header: 'Received By',
             accessorKey: 'receivedBy',
-        },
-        {
-            header: 'Quantity',
-            accessorKey: 'quantity',
-            cell: ({ getValue }) => (
-                <span className="text-center font-semibold">{getValue()}</span>
-            )
         },
         {
             header: 'Batch Number',
@@ -228,24 +219,7 @@ const InwardTransactionReport = () => {
                 </span>
             )
         },
-        {
-            header: 'Serial Status',
-            accessorKey: 'serialStatus',
-            cell: ({ getValue }) => {
-                const status = getValue();
-                const colorMap = {
-                    'Available': 'bg-green-100 text-green-800',
-                    'Assigned': 'bg-blue-100 text-blue-800',
-                    'Issued': 'bg-orange-100 text-orange-800',
-                    'Damaged': 'bg-red-100 text-red-800'
-                };
-                return (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorMap[status] || 'bg-gray-100 text-gray-800'}`}>
-                        {status}
-                    </span>
-                );
-            }
-        },
+        
         {
             header: 'Remarks',
             accessorKey: 'remark',
@@ -260,27 +234,44 @@ const InwardTransactionReport = () => {
         }
     ], []);
 
-    // Calculate summary data
+    // Calculate summary data - FIXED VERSION
     const summary = useMemo(() => {
-        const uniqueTransactions = [...new Set(data.map(item => item.transactionId))];
+        // Get unique transactions to avoid counting quantity multiple times
+        const uniqueTransactionsMap = new Map();
+        
+        data.forEach(item => {
+            if (!uniqueTransactionsMap.has(item.transactionId)) {
+                uniqueTransactionsMap.set(item.transactionId, {
+                    id: item.transactionId,
+                    vendorName: item.vendorName,
+                    productCode: item.productCode,
+                    productName: item.productName,
+                    productCondition: item.productCondition,
+                    quantity: item.quantity // This is the actual transaction quantity
+                });
+            }
+        });
+        
+        const uniqueTransactions = Array.from(uniqueTransactionsMap.values());
         const totalSerials = data.filter(item => item.serialId).length;
         const uniqueVendors = [...new Set(data.map(item => item.vendorName))];
         const uniqueProducts = [...new Set(data.map(item => item.productCode))];
         
-        const conditionBreakdown = data.reduce((acc, item) => {
-            acc[item.productCondition] = (acc[item.productCondition] || 0) + 1;
+        // Calculate condition breakdown from unique transactions, not flattened data
+        const conditionBreakdown = uniqueTransactions.reduce((acc, transaction) => {
+            acc[transaction.productCondition] = (acc[transaction.productCondition] || 0) + transaction.quantity;
             return acc;
         }, {});
 
-        const totalQuantity = data.reduce((sum, item) => sum + (item.quantity || 0), 0);
+        // Calculate total quantity from unique transactions only
+        const totalQuantity = uniqueTransactions.reduce((sum, transaction) => sum + (transaction.quantity || 0), 0);
 
         return {
             totalTransactions: uniqueTransactions.length,
-            totalSerialNumbers: totalSerials,
             totalVendors: uniqueVendors.length,
             totalProducts: uniqueProducts.length,
-            totalQuantity: totalQuantity,
-            conditionBreakdown,
+            totalQuantity: totalQuantity, // Now correctly calculated
+            conditionBreakdown, // Now shows quantity per condition, not row count
             averageQuantityPerTransaction: uniqueTransactions.length > 0 ? 
                 (totalQuantity / uniqueTransactions.length).toFixed(2) : 0
         };
@@ -340,7 +331,6 @@ const InwardTransactionReport = () => {
 
     const summaryConfig = [
         { key: 'totalTransactions', label: 'Total Transactions', formatter: (val) => val.toLocaleString() },
-        { key: 'totalSerialNumbers', label: 'Total Serial Numbers', formatter: (val) => val.toLocaleString() },
         { key: 'totalVendors', label: 'Total Vendors', formatter: (val) => val.toLocaleString() },
         { key: 'totalProducts', label: 'Total Products', formatter: (val) => val.toLocaleString() },
         { key: 'totalQuantity', label: 'Total Quantity', formatter: (val) => val.toLocaleString() },
@@ -409,16 +399,7 @@ const InwardTransactionReport = () => {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-emerald-100 text-sm font-medium">Serial Numbers</p>
-                            <p className="text-3xl font-bold">{summary.totalSerialNumbers}</p>
-                        </div>
-                        <Package className="w-8 h-8 text-emerald-200" />
-                    </div>
-                </div>
-
+            
                 <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
                     <div className="flex items-center justify-between">
                         <div>
@@ -442,17 +423,18 @@ const InwardTransactionReport = () => {
 
             {/* Condition Breakdown */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Condition Breakdown</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Condition Breakdown (by Quantity)</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(summary.conditionBreakdown).map(([condition, count]) => (
+                    {Object.entries(summary.conditionBreakdown).map(([condition, quantity]) => (
                         <div key={condition} className="text-center">
-                            <div className="text-2xl font-bold text-gray-900">{count}</div>
+                            <div className="text-2xl font-bold text-gray-900">{quantity}</div>
                             <div className="text-sm text-gray-600">{condition}</div>
                         </div>
                     ))}
                 </div>
             </div>
 
+            {/* Rest of the component remains the same... */}
             {/* Filters and Search */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

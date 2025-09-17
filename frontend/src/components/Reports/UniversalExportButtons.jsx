@@ -120,6 +120,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+
 const UniversalExportButtons = ({
     data,
     filename = 'report',
@@ -130,78 +131,103 @@ const UniversalExportButtons = ({
     summary,
     summaryConfig
 }) => {
-    const exportToExcel = () => {
-        const workbook = XLSX.utils.book_new();
+    // In UniversalExportButtons.jsx - Update the Excel export function
+const exportToExcel = () => {
+    const workbook = XLSX.utils.book_new();
 
-        // Create main data worksheet
-        const transformedData = excelTransform ? excelTransform(data) : data;
-        const worksheet = XLSX.utils.json_to_sheet(transformedData);
+    // Create main data worksheet
+    const transformedData = excelTransform ? excelTransform(data) : data;
+    const worksheet = XLSX.utils.json_to_sheet(transformedData);
 
-        // Style the header row
-        const headerRange = XLSX.utils.decode_range(worksheet['!ref']);
-        for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
-            const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
-            if (worksheet[cellAddress]) {
-                worksheet[cellAddress].s = {
-                    font: { bold: true, color: { rgb: "FFFFFF" } },
-                    fill: { fgColor: { rgb: "6366F1" } },
-                    alignment: { horizontal: "center" }
-                };
+    // Style the header row
+    const headerRange = XLSX.utils.decode_range(worksheet['!ref']);
+    for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (worksheet[cellAddress]) {
+            worksheet[cellAddress].s = {
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "6366F1" } },
+                alignment: { horizontal: "center" }
+            };
+        }
+    }
+
+    // Set column widths
+    if (columns && columns.widths) {
+        worksheet['!cols'] = columns.widths.map(width => ({ width }));
+    }
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transaction Data');
+
+    // Add summary sheet if summary exists
+    if (summary && summaryConfig) {
+        console.log('Summary data for Excel:', summary);
+        console.log('Summary config:', summaryConfig);
+        
+        const summaryData = [];
+
+        // Use summaryConfig to build the summary data
+        summaryConfig.forEach(config => {
+            const value = summary[config.key];
+            console.log(`Processing ${config.key}: ${value}`);
+            
+            if (value !== undefined && value !== null) {
+                const formattedValue = config.formatter ? config.formatter(value) : value;
+                summaryData.push({
+                    'Metric': config.label,
+                    'Value': formattedValue
+                });
             }
+        });
+
+        console.log('Final summary data:', summaryData);
+
+        if (summaryData.length > 0) {
+            const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
+
+            // Style summary sheet headers
+            summaryWorksheet['A1'].s = {
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "059669" } },
+                alignment: { horizontal: "center" }
+            };
+            summaryWorksheet['B1'].s = {
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "059669" } },
+                alignment: { horizontal: "center" }
+            };
+
+            summaryWorksheet['!cols'] = [{ width: 30 }, { width: 20 }];
+            XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Summary');
+        } else {
+            console.log('No summary data to export');
         }
-
-        // Set column widths
-        if (columns && columns.widths) {
-            worksheet['!cols'] = columns.widths.map(width => ({ width }));
-        }
-
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Transaction Data');
-
-        // Add summary sheet if summary exists
-        if (summary) {
-            console.log('Summary data:', summary);  // Add this to see what's in summary
-            const summaryData = [];
-            const commonFields = [
-                { key: 'totalTransactions', label: 'Total Transactions' },
-                { key: 'totalAmount', label: 'Total Amount (₹)' },
-                { key: 'totalNetAmount', label: 'Net Amount (₹)' },
-                { key: 'totalCommission', label: 'Total Commission (₹)' },
-                { key: 'totalCharges', label: 'Total Charges (₹)' },
-                { key: 'successRate', label: 'Success Rate (%)' },
-                { key: 'averageAmount', label: 'Average Amount (₹)' }
-            ];
-
-            commonFields.forEach(field => {
-                if (summary[field.key] !== undefined && summary[field.key] !== null) {
+    } else if (summary) {
+        // Fallback - auto-detect summary fields
+        console.log('Using fallback summary detection');
+        const summaryData = [];
+        
+        Object.entries(summary).forEach(([key, value]) => {
+            if (typeof value === 'number' || typeof value === 'string') {
+                // Skip the conditionBreakdown object
+                if (key !== 'conditionBreakdown') {
                     summaryData.push({
-                        'Metric': field.label,
-                        'Value': summary[field.key]
+                        'Metric': key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+                        'Value': typeof value === 'number' ? value.toLocaleString() : value
                     });
                 }
-            });
-
-            if (summaryData.length > 0) {
-                const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
-
-                // Style summary sheet headers
-                summaryWorksheet['A1'].s = {
-                    font: { bold: true, color: { rgb: "FFFFFF" } },
-                    fill: { fgColor: { rgb: "059669" } },
-                    alignment: { horizontal: "center" }
-                };
-                summaryWorksheet['B1'].s = {
-                    font: { bold: true, color: { rgb: "FFFFFF" } },
-                    fill: { fgColor: { rgb: "059669" } },
-                    alignment: { horizontal: "center" }
-                };
-
-                summaryWorksheet['!cols'] = [{ width: 25 }, { width: 20 }];
-                XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Summary');
             }
-        }
+        });
 
-        XLSX.writeFile(workbook, `${filename}.xlsx`);
-    };
+        if (summaryData.length > 0) {
+            const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
+            summaryWorksheet['!cols'] = [{ width: 30 }, { width: 20 }];
+            XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Summary');
+        }
+    }
+
+    XLSX.writeFile(workbook, `${filename}.xlsx`);
+};
 
     const exportToPDF = () => {
         // Use landscape orientation for better column handling
