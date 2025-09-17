@@ -200,6 +200,7 @@ const ProductAssignment = () => {
             
             setIsModalOpen(false)
             setEditingAssignment(null)
+            fetchProductSchemeAssignment()
         } catch (error) {
             console.error('Error saving assignment:', error)
         }

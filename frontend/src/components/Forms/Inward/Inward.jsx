@@ -234,9 +234,7 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
       onClose()
       await onSubmit(submissionData)
 
-    } catch (error) {
-      console.error('Form submission error:', error)
-      toast.error('Failed to submit form. Please try again.')
+    
     } finally {
       setIsSubmitting(false)
     }

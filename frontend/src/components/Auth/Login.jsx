@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import axios from 'axios';
 import { toast } from 'react-toastify'
 import { Button, FormInput } from '../Forms/Common/common';
 import api from '../../constants/API/axiosInstance';
-
+import { Eye, EyeOff } from 'lucide-react';
 
 
 const Login = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const {
     register,
@@ -82,14 +84,23 @@ const Login = () => {
             <FormInput
               label="Password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               register={register}
               errors={errors}
               validation={{
                 required: "Password is required",
                 minLength: { value: 6, message: "Password must be at least 6 characters" }
-              }} />
+              }}
+              rightIcon={ 
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              }/>
             {/* Submit Button */}
             <Button
               type="submit"
