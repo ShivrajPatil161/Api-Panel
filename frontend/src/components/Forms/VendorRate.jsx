@@ -61,225 +61,6 @@ const Select = ({ label, name, register, errors, options, required = false, onCh
   </div>
 )
 
-// Searchable Select Component
-const SearchableSelect = ({
-  label,
-  name,
-  register,
-  errors,
-  options = [],
-  required = false,
-  placeholder = "Search and select...",
-  onChange,
-  disabled = false,
-  ...props
-}) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedOption, setSelectedOption] = useState(null)
-  const [filteredOptions, setFilteredOptions] = useState(options)
-  const dropdownRef = useRef(null)
-  const inputRef = useRef(null)
-
-  useEffect(() => {
-    setFilteredOptions(
-      options.filter(option =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    )
-  }, [searchTerm, options])
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const handleSelect = (option) => {
-    setSelectedOption(option)
-    setSearchTerm(option.label)
-    setIsOpen(false)
-    if (onChange) onChange(option)
-  }
-
-  const handleInputChange = (e) => {
-    setSearchTerm(e.target.value)
-    setIsOpen(true)
-    if (!e.target.value) {
-      setSelectedOption(null)
-      if (onChange) onChange(null)
-    }
-  }
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-
-      <input
-        {...register(name, { required: required ? `${label} is required` : false })}
-        ref={inputRef}
-        type="text"
-        value={searchTerm}
-        onChange={handleInputChange}
-        onFocus={() => setIsOpen(true)}
-        placeholder={placeholder}
-        disabled={disabled}
-        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[name] ? 'border-red-500' : 'border-gray-300'
-          } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-        autoComplete="off"
-        {...props}
-      />
-
-      {/* Hidden input for form submission */}
-      <input
-        type="hidden"
-        {...register(`${name}Id`)}
-        value={selectedOption?.value || ''}
-      />
-
-      {isOpen && !disabled && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((option) => (
-              <div
-                key={option.value}
-                onClick={() => handleSelect(option)}
-                className="px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
-              >
-                {option.label}
-              </div>
-            ))
-          ) : (
-            <div className="px-3 py-2 text-gray-500">No options found</div>
-          )}
-        </div>
-      )}
-
-      {errors[name] && (
-        <p className="mt-1 text-sm text-red-500">{errors[name].message}</p>
-      )}
-    </div>
-  )
-}
-
-// Enhanced Vendor Product Details Component
-const VendorProductDetails = ({ register, errors }) => {
-  const [vendors, setVendors] = useState([])
-  const [products, setProducts] = useState([])
-  const [selectedVendor, setSelectedVendor] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [productsLoading, setProductsLoading] = useState(false)
-
-  // Fetch vendors on component mount
-  useEffect(() => {
-    fetchVendors()
-  }, [])
-
-  const fetchVendors = async () => {
-    try {
-      setLoading(true)
-      const response = await api.get('/vendors/id_name')
-      const vendorOptions = response.data.map(vendor => ({
-        value: vendor.id.toString(),
-        label: vendor.name,
-        id: vendor.id
-      }))
-      setVendors(vendorOptions)
-    } catch (error) {
-      console.error('Error fetching vendors:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchProductsByVendor = async (vendorId) => {
-    try {
-      setProductsLoading(true)
-      const response = await api.get(`/products/vendor/${vendorId}`)
-      const productOptions = response.data.map(product => ({
-        value: product.id.toString(),
-        label: `${product.productCode} - ${product.productName}`
-      }))
-      setProducts(productOptions)
-    } catch (error) {
-      console.error('Error fetching products:', error)
-      setProducts([])
-    } finally {
-      setProductsLoading(false)
-    }
-  }
-
-  const handleVendorChange = (vendor) => {
-    setSelectedVendor(vendor)
-    setProducts([]) // Clear products when vendor changes
-
-    if (vendor && vendor.id) {
-      fetchProductsByVendor(vendor.id)
-    }
-  }
-
-
-  return (
-    <div className="bg-gray-50 p-4 rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">Vendor & Product Details</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Select
-          label="Vendor"
-          name="vendor"
-          register={register}
-          errors={errors}
-          options={vendors}
-          placeholder={loading ? "Loading vendors..." : "Search and select vendor"}
-          onChange={handleVendorChange}
-          disabled={loading}
-          required
-        />
-
-        <Select
-          label="Product Code"
-          name="productId"
-          register={register}
-          errors={errors}
-          options={products}
-          placeholder={
-            !selectedVendor
-              ? "Select vendor first"
-              : productsLoading
-                ? "Loading products..."
-                : "Search and select product"
-          }
-          disabled={!selectedVendor || productsLoading}
-          required
-        />
-
-        <Input
-          label="Effective Date"
-          name="effectiveDate"
-          register={register}
-          errors={errors}
-          type="date"
-          required
-        />
-
-        <Input
-          label="Expiry Date"
-          name="expiryDate"
-          register={register}
-          errors={errors}
-          type="date"
-          required
-        />
-      </div>
-    </div>
-  )
-}
-
 // Monthly Rent Component
 const MonthlyRent = ({ register, errors }) => {
   return (
@@ -353,91 +134,6 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
     </div>
   )
 }
-
-// // Card Rates Component
-// const CardRates = ({ control, register, errors }) => {
-//   const { fields, append, remove } = useFieldArray({
-//     control,
-//     name: "vendorCardRates"
-//   })
-
-//   const [selectedCardType, setSelectedCardType] = useState('')
-
-//   const predefinedCardTypes = [
-//     { value: 'Credit Card', label: 'Credit Card' },
-//     { value: 'Debit Card', label: 'Debit Card' },
-//     { value: 'American Express', label: 'American Express' }
-//   ]
-
-//   const addPredefinedCardRate = () => {
-//     if (selectedCardType) {
-//       append({ cardType: selectedCardType, rate: '' })
-//       setSelectedCardType('')
-//     }
-//   }
-
-//   const addCustomCardRate = () => {
-//     append({ cardType: '', rate: '' })
-//   }
-
-//   return (
-//     <div className="bg-gray-50 p-4 rounded-lg">
-//       <div className="flex justify-between items-center mb-4">
-//         <h3 className="text-lg font-semibold text-gray-700">Card Processing Rates</h3>
-//         <div className="flex gap-3">
-//           <div className="flex gap-2">
-//             <select
-//               value={selectedCardType}
-//               onChange={(e) => setSelectedCardType(e.target.value)}
-//               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-//             >
-//               <option value="">Select predefined type</option>
-//               {predefinedCardTypes.map(option => (
-//                 <option key={option.value} value={option.value}>
-//                   {option.label}
-//                 </option>
-//               ))}
-//             </select>
-//             <button
-//               type="button"
-//               onClick={addPredefinedCardRate}
-//               disabled={!selectedCardType}
-//               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-//             >
-//               Add Selected
-//             </button>
-//           </div>
-
-//           <button
-//             type="button"
-//             onClick={addCustomCardRate}
-//             className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
-//           >
-//             Add Custom Type
-//           </button>
-//         </div>
-//       </div>
-
-//       <div className="space-y-3">
-//         {fields.map((field, index) => (
-//           <CardRateItem
-//             key={field.id}
-//             index={index}
-//             register={register}
-//             errors={errors}
-//             onRemove={() => remove(index)}
-//           />
-//         ))}
-//         {fields.length === 0 && (
-//           <div className="text-center py-8 text-gray-500">
-//             <p className="text-sm">No card types added yet.</p>
-//             <p className="text-xs mt-1">Use the buttons above to add predefined types or create custom ones.</p>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   )
-// }
 
 
 // Card Rates Component in vendor - rates  
@@ -607,7 +303,158 @@ const CardRates = ({ control, register, errors }) => {
   );
 };
 
-//export default CardRates;
+
+// Enhanced Vendor Product Details Component
+const VendorProductDetails = ({ register, errors, editData, control, setValue, watch }) => {
+  const [vendors, setVendors] = useState([])
+  const [products, setProducts] = useState([])
+  const [selectedVendor, setSelectedVendor] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [productsLoading, setProductsLoading] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Watch vendor changes from the form
+  const watchedVendor = watch('vendor')
+
+  // Fetch vendors on component mount
+  useEffect(() => {
+    fetchVendors()
+  }, [])
+  useEffect(() => {
+    if (editData?.productId && products.length > 0 && isInitialized) {
+      const productExists = products.find(product =>
+        product.id === editData.productId || product.value === editData.productId.toString()
+      )
+      if (productExists) {
+        setValue('productId', editData.productId.toString())
+      }
+    }
+  }, [products, editData?.productId, isInitialized, setValue])
+
+  // Handle initial data population when vendors are loaded and we have edit data
+  useEffect(() => {
+    if (editData && vendors.length > 0 && !isInitialized) {
+      // Find and set the initial vendor
+      if (editData.vendorId) {
+        const initialVendor = vendors.find(vendor =>
+          vendor.id === editData.vendorId || vendor.value === editData.vendorId.toString()
+        )
+        if (initialVendor) {
+          setSelectedVendor(initialVendor)
+          // Set the vendor value in the form
+          setValue('vendor', initialVendor.value)
+          // Fetch products for this vendor and set the initial product
+          fetchProductsByVendor(initialVendor.id, editData.productId)
+        }
+      }
+      setIsInitialized(true)
+    }
+  }, [editData, vendors, isInitialized, setValue])
+
+  const fetchVendors = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get('/vendors/id_name')
+      const vendorOptions = response.data.map(vendor => ({
+        value: vendor.id.toString(),
+        label: vendor.name,
+        id: vendor.id
+      }))
+      setVendors(vendorOptions)
+    } catch (error) {
+      console.error('Error fetching vendors:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchProductsByVendor = async (vendorId, preselectedProductId = null) => {
+    try {
+      setProductsLoading(true)
+      const response = await api.get(`/products/vendor/${vendorId}`)
+      const productOptions = response.data.map(product => ({
+        value: product.id.toString(),
+        label: `${product.productCode} - ${product.productName}`,
+        id: product.id
+      }))
+      setProducts(productOptions)
+
+      // If we have a preselected product ID (for edit mode), set it in the form
+      if (preselectedProductId) {
+        setValue('productId', preselectedProductId.toString())
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error)
+      setProducts([])
+    } finally {
+      setProductsLoading(false)
+    }
+  }
+
+  const handleVendorChange = (vendor) => {
+    setSelectedVendor(vendor)
+    setProducts([]) // Clear products when vendor changes
+    setValue('productId', '') // Clear selected product
+
+    if (vendor && vendor.id) {
+      fetchProductsByVendor(vendor.id)
+    }
+  }
+
+  return (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <h3 className="text-lg font-semibold text-gray-700 mb-4">Vendor & Product Details</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Select
+          label="Vendor"
+          name="vendor"
+          register={register}
+          errors={errors}
+          options={vendors}
+          placeholder={loading ? "Loading vendors..." : "Search and select vendor"}
+          onChange={handleVendorChange}
+          disabled={loading}
+          required
+        />
+
+        <Select
+          label="Product Code"
+          name="productId"
+          register={register}
+          errors={errors}
+          options={products}
+          placeholder={
+            !selectedVendor
+              ? "Select vendor first"
+              : productsLoading
+                ? "Loading products..."
+                : "Search and select product"
+          }
+          disabled={!selectedVendor || productsLoading}
+          required
+        />
+
+        <Input
+          label="Effective Date"
+          name="effectiveDate"
+          register={register}
+          errors={errors}
+          type="date"
+          required
+        />
+
+        <Input
+          label="Expiry Date"
+          name="expiryDate"
+          register={register}
+          errors={errors}
+          type="date"
+          required
+        />
+      </div>
+    </div>
+  )
+}
 
 // ==================== VENDOR RATE FORM MODAL ====================
 const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
@@ -625,10 +472,23 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
     control,
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors }
   } = useForm({
-    defaultValues: initialData || getDefaultValues()
+    defaultValues: getDefaultValues()
   })
+
+  // Set form values when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData && isEdit) {
+      Object.keys(initialData).forEach(key => {
+        if (key !== 'vendorId' && key !== 'productId') {
+          setValue(key, initialData[key])
+        }
+      })
+    }
+  }, [initialData, isEdit, setValue])
 
   const onFormSubmit = (data) => {
     console.log(data)
@@ -636,7 +496,9 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
       ...data,
       vendor: { id: Number(data.vendor) },
       product: { id: Number(data.productId) },
-      vendorCardRates: data.vendorCardRates.filter(rate => rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim())
+      vendorCardRates: data.vendorCardRates.filter(rate =>
+        rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim()
+      )
     }
 
     onSubmit(filteredData)
@@ -667,7 +529,19 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
         {/* Modal Body */}
         <div className="p-6">
           <div className="space-y-6">
-            <VendorProductDetails register={register} errors={errors} />
+            <VendorProductDetails
+              register={register}
+              errors={errors}
+              editData={{
+                vendorId: initialData?.vendorId,
+                productId: initialData?.productId,
+                effectiveDate: initialData?.effectiveDate,
+                expiryDate: initialData?.expiryDate
+              }}
+              control={control}
+              setValue={setValue}
+              watch={watch}
+            />
             <MonthlyRent register={register} errors={errors} />
             <CardRates control={control} register={register} errors={errors} />
 
