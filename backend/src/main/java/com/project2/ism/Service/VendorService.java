@@ -59,7 +59,7 @@ public class VendorService {
     }
 
     public List<VendorIDNameDTO> getAllVendorsIdAndName() {
-        return vendorRepository.findAll()
+        return vendorRepository.findByStatusTrue()
                 .stream()
                 .map(v -> new VendorIDNameDTO(v.getId(), v.getName()))
                 .toList();
@@ -85,5 +85,10 @@ public class VendorService {
         dto.cardTypeDistribution = vendorRatesRepository.countGroupByCardType();
 
         return dto;
+    }
+
+    // Get all vendors
+    public List<Vendor> getAllActiveVendors() {
+        return vendorRepository.findByStatusTrue();
     }
 }
