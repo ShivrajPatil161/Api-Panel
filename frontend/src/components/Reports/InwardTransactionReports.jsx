@@ -14,7 +14,8 @@ import {
     Calendar,
     Package,
     TrendingUp,
-    FileBarChart
+    FileBarChart,
+    X
 } from 'lucide-react';
 import UniversalExportButtons from './UniversalExportButtons';
 import { format } from 'date-fns';
@@ -35,17 +36,45 @@ const InwardTransactionReport = () => {
         condition: ''
     });
 
-    // Fetch inward transactions data using the API function
+    // Fetch inward transactions data with date filtering
     const fetchInwardTransactions = async () => {
         setLoading(true);
         setError(null);
         try {
             const transactions = await getAllInwardTransactions();
             
-            // Transform data to include serial numbers in flat structure
+            // Apply date filtering if dates are provided
+            let filteredTransactions = transactions;
+            
+            if (dateRange.startDate || dateRange.endDate) {
+                filteredTransactions = transactions.filter(transaction => {
+                    const transactionDate = new Date(transaction.receivedDate);
+                    const startDate = dateRange.startDate ? new Date(dateRange.startDate) : null;
+                    const endDate = dateRange.endDate ? new Date(dateRange.endDate) : null;
+                    
+                    // Set end date to end of day to include the entire end date
+                    if (endDate) {
+                        endDate.setHours(23, 59, 59, 999);
+                    }
+                    
+                    let withinRange = true;
+                    
+                    if (startDate && transactionDate < startDate) {
+                        withinRange = false;
+                    }
+                    
+                    if (endDate && transactionDate > endDate) {
+                        withinRange = false;
+                    }
+                    
+                    return withinRange;
+                });
+            }
+            
+            // Transform filtered data to include serial numbers in flat structure
             const transformedData = [];
             
-            transactions.forEach(transaction => {
+            filteredTransactions.forEach(transaction => {
                 if (transaction.serialNumbers && transaction.serialNumbers.length > 0) {
                     // Create a row for each serial number
                     transaction.serialNumbers.forEach(serial => {
@@ -106,9 +135,26 @@ const InwardTransactionReport = () => {
         }
     };
 
+    // Initial load without date filters
     useEffect(() => {
         fetchInwardTransactions();
-    }, []);
+    }, []); // Only run on component mount
+
+    // Handle fetch button click
+    const handleFetch = () => {
+        fetchInwardTransactions();
+    };
+
+    // Clear date filters
+    const clearDateFilters = () => {
+        setDateRange({ startDate: '', endDate: '' });
+    };
+
+    // Handle clear all filters
+    const clearAllFilters = () => {
+        setDateRange({ startDate: '', endDate: '' });
+        setGlobalFilter('');
+    };
 
     // Table columns definition
     const columns = useMemo(() => [
@@ -219,7 +265,6 @@ const InwardTransactionReport = () => {
                 </span>
             )
         },
-        
         {
             header: 'Remarks',
             accessorKey: 'remark',
@@ -268,6 +313,7 @@ const InwardTransactionReport = () => {
 
         return {
             totalTransactions: uniqueTransactions.length,
+            totalSerialNumbers: totalSerials,
             totalVendors: uniqueVendors.length,
             totalProducts: uniqueProducts.length,
             totalQuantity: totalQuantity, // Now correctly calculated
@@ -297,14 +343,14 @@ const InwardTransactionReport = () => {
         headers: [
             'Transaction ID', 'Invoice Number', 'Vendor', 'Product Code', 'Product Name',
             'Received Date', 'Received By', 'Batch Number', 'Warranty (Months)',
-            'Condition', 'SID', 'MID', 'TID', 'VPAID', 'Serial Status', 'Remarks'
+            'Condition', 'SID', 'MID', 'TID', 'VPAID', 'Remarks'
         ],
         keys: [
             'transactionId', 'invoiceNumber', 'vendorName', 'productCode', 'productName',
             'receivedDate', 'receivedBy', 'batchNumber', 'warrantyPeriod',
-            'productCondition', 'sid', 'mid', 'tid', 'vpaid', 'serialStatus', 'remark'
+            'productCondition', 'sid', 'mid', 'tid', 'vpaid', 'remark'
         ],
-        widths: [12, 15, 20, 15, 25, 12, 15, 12, 10, 12, 15, 15, 15, 15, 12, 30]
+        widths: [12, 15, 20, 15, 25, 12, 15, 12, 10, 12, 15, 15, 15, 15, 30]
     };
 
     const excelTransform = (data) => {
@@ -373,6 +419,24 @@ const InwardTransactionReport = () => {
                     <p className="text-gray-600 mt-1">
                         Comprehensive report of all inward transactions with serial number details
                     </p>
+                    {/* Date Range Indicator */}
+                    {(dateRange.startDate || dateRange.endDate) && (
+                        <div className="mt-2 flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-indigo-600" />
+                            <span className="text-sm text-indigo-600 font-medium">
+                                Filtered: {dateRange.startDate ? format(new Date(dateRange.startDate), 'dd MMM yyyy') : 'All'} 
+                                {' → '}
+                                {dateRange.endDate ? format(new Date(dateRange.endDate), 'dd MMM yyyy') : 'All'}
+                            </span>
+                            <button
+                                onClick={clearDateFilters}
+                                className="text-red-500 hover:text-red-700 p-1"
+                                title="Clear date filters"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <UniversalExportButtons
                     data={data}
@@ -397,7 +461,16 @@ const InwardTransactionReport = () => {
                     </div>
                 </div>
 
-                
+                {/* <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-emerald-100 text-sm font-medium">Serial Numbers</p>
+                            <p className="text-3xl font-bold">{summary.totalSerialNumbers}</p>
+                        </div>
+                        <Package className="w-8 h-8 text-emerald-200" />
+                    </div>
+                </div> */}
+
                 <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
                     <div className="flex items-center justify-between">
                         <div>
@@ -432,10 +505,9 @@ const InwardTransactionReport = () => {
                 </div>
             </div>
 
-            {/* Rest of the component remains the same... */}
             {/* Filters and Search */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div className="relative">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
@@ -447,32 +519,90 @@ const InwardTransactionReport = () => {
                         />
                     </div>
 
-                    <div>
+                    <div className="relative">
+                        <Calendar className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
                             type="date"
                             placeholder="Start Date"
                             value={dateRange.startDate}
                             onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         />
                     </div>
 
-                    <div>
+                    <div className="relative">
+                        <Calendar className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
                             type="date"
                             placeholder="End Date"
                             value={dateRange.endDate}
                             onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         />
                     </div>
 
                     <button
-                        onClick={fetchInwardTransactions}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                        onClick={handleFetch}
+                        disabled={loading}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        Refresh Data
+                        {loading ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Fetching...
+                            </>
+                        ) : (
+                            <>
+                                <Calendar className="w-4 h-4" />
+                                Fetch
+                            </>
+                        )}
                     </button>
+
+                    <button
+                        onClick={clearAllFilters}
+                        className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <X className="w-4 h-4" />
+                        Clear All
+                    </button>
+                </div>
+
+                {/* Active Filters Display */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                    {dateRange.startDate && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                            From: {format(new Date(dateRange.startDate), 'dd MMM yyyy')}
+                            <button
+                                onClick={() => setDateRange(prev => ({ ...prev, startDate: '' }))}
+                                className="ml-1 text-indigo-600 hover:text-indigo-800"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </span>
+                    )}
+                    {dateRange.endDate && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                            To: {format(new Date(dateRange.endDate), 'dd MMM yyyy')}
+                            <button
+                                onClick={() => setDateRange(prev => ({ ...prev, endDate: '' }))}
+                                className="ml-1 text-indigo-600 hover:text-indigo-800"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </span>
+                    )}
+                    {globalFilter && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+                            Search: "{globalFilter}"
+                            <button
+                                onClick={() => setGlobalFilter('')}
+                                className="ml-1 text-gray-600 hover:text-gray-800"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </span>
+                    )}
                 </div>
             </div>
 
@@ -502,15 +632,26 @@ const InwardTransactionReport = () => {
                             ))}
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {table.getRowModel().rows.map((row) => (
-                                <tr key={row.id} className="hover:bg-gray-50">
-                                    {row.getVisibleCells().map((cell) => (
-                                        <td key={cell.id} className="px-4 py-3 whitespace-nowrap text-sm">
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
-                                    ))}
+                            {table.getRowModel().rows.length === 0 ? (
+                                <tr>
+                                    <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                                        {dateRange.startDate || dateRange.endDate ? 
+                                            'No transactions found for the selected date range.' : 
+                                            'No transactions found.'
+                                        }
+                                    </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                table.getRowModel().rows.map((row) => (
+                                    <tr key={row.id} className="hover:bg-gray-50">
+                                        {row.getVisibleCells().map((cell) => (
+                                            <td key={cell.id} className="px-4 py-3 whitespace-nowrap text-sm">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

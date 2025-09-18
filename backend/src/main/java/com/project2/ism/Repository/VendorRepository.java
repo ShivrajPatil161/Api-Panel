@@ -11,4 +11,7 @@ import java.util.List;
 public interface VendorRepository extends JpaRepository<Vendor, Long> {
 
     Long countByStatus(boolean status);
+
+    List<Vendor> findByStatusTrue();
+
 }

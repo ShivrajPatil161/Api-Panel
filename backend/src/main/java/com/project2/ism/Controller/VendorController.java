@@ -85,5 +85,13 @@ public class VendorController {
     public ResponseEntity<VendorStatsDTO> getVendorStats() {
         return ResponseEntity.ok(vendorService.getVendorStats());
     }
+
+
+    @GetMapping("/active")
+    public ResponseEntity<List<Vendor>> getActiveVendors() {
+        return ResponseEntity.ok(vendorService.getAllActiveVendors());
+    }
 }
+
+
 
