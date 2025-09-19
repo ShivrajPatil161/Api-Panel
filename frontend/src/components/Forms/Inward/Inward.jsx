@@ -185,13 +185,15 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
     { value: 'damaged', label: 'Damaged' }
   ]
 
+  
+
   const handleFormSubmit = async (data) => {
     console.log('Form data:', data)
     console.log('Serial grid data:', serialGridData)
 
     setIsSubmitting(true)
     try {
-      // ✅ FIXED: Transform serial grid to backend format with better logging
+      // ✅ Transform serial grid to backend format
       const transformSerialGridToBackend = (gridData) => {
         console.log('Transforming grid data:', gridData)
 
@@ -201,19 +203,14 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
               row.selectedFields.SID ||
               row.selectedFields.TID ||
               row.selectedFields.VpID;
-            
             return hasAnySelected;
           })
-          .map(row => {
-            const result = {
-              mid: row.selectedFields.MID && row.MID ? row.MID : null,
-              sid: row.selectedFields.SID && row.SID ? row.SID : null,
-              tid: row.selectedFields.TID && row.TID ? row.TID : null,
-              vpaid: row.selectedFields.VpID && row.VpID ? row.VpID : null
-            };
-            
-            return result;
-          });
+          .map(row => ({
+            mid: row.selectedFields.MID && row.MID ? row.MID : null,
+            sid: row.selectedFields.SID && row.SID ? row.SID : null,
+            tid: row.selectedFields.TID && row.TID ? row.TID : null,
+            vpaid: row.selectedFields.VpID && row.VpID ? row.VpID : null
+          }));
 
         console.log('Final transformed array:', transformed);
         return transformed;
@@ -221,20 +218,27 @@ const InwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
 
       const serialNumbers = transformSerialGridToBackend(serialGridData);
 
+      
+
+      // ✅ Validation: serialNumbers length must match quantity
+      if (data.quantity && serialNumbers.length !== Number(data.quantity)) {
+        toast.error(`Number of serial numbers (${serialNumbers.length}) does not match quantity (${data.quantity})!`);
+        return;
+      }
+
       const submissionData = {
         ...data,
         serialNumbers,
-        // Remove the auto-generated ID for new entries
         ...(editData?.id && { id: editData.id })
       }
 
       console.log('Final submission data:', submissionData);
-      reset()
-      setSerialGridData([])
-      onClose()
-      await onSubmit(submissionData)
 
-    
+      reset();
+      setSerialGridData([]);
+      onClose();
+      await onSubmit(submissionData);
+
     } finally {
       setIsSubmitting(false)
     }
