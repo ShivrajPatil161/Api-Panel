@@ -20,7 +20,7 @@ const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenera
             transactionTypeOptions: [
                 { value: 'CREDIT', label: 'Credit' },
                 { value: 'DEBIT', label: 'Debit' },
-                { value: '', label: 'All' }
+                { value: 'All', label: 'All' }
             ],
             showDateFilterType: true,
             dateFilterOptions: [

@@ -25,10 +25,11 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
                 endDate: `${localFilters.endDate}T23:59:59`,
                 franchiseId: localFilters.selectedFranchise,
                 status: 'SETTLED',
-                transactionType: localFilters.transactionType === 'ALL' ? null : localFilters.transactionType,
                 dateFilterType: localFilters.dateFilterType,
                 page: 0,
-                size: 100
+                size: 100,
+                // Only include transactionType if it's not 'ALL'
+                ...(localFilters.transactionType !== 'All' && { transactionType: localFilters.transactionType })
             };
 
             const response = await api.get('/v1/reports/transactions/franchise/enhanced', { params });

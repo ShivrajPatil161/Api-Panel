@@ -14,8 +14,8 @@ const MainReportsPageForNow = () => {
     const tabs = [
         { id: "franchise", label: "Franchise Reports", component: <FranchiseReports /> },
         { id: "vendor", label: "Vendor Reports", component: <VendorReports /> },
-        { id: "merchant-reports", label: "Direct Merchant Reports", component: <MTransReportDashboard /> },
-        { id: "franchise-reports", label: "Franchise Reports", component: <FTransReportDashboard /> },
+        { id: "merchant-reports", label: "Merchant Reports", component: <MTransReportDashboard /> },
+        { id: "franchise-reports", label: "Franchise Transaction Reports", component: <FTransReportDashboard /> },
         { id: "inward-transaction-reports", label: "Inward Transaction Reports", component: <InwardTransactionReport /> },
         { id: "outward-transaction-reports", label: "Outward Transaction Reports", component: <OutwardTransactionReport /> }
 
