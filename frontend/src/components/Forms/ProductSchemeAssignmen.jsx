@@ -49,6 +49,7 @@ const Select = ({ label, name, register, errors, options, required = false, ...p
     </div>
 )
 
+
 // ==================== PRODUCT ASSIGNMENT FORM MODAL ====================
 const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
     const [franchises, setFranchises] = useState([])
@@ -57,14 +58,15 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     const [merchantProducts, setMerchantProducts] = useState([])
     const [pricingSchemes, setPricingSchemes] = useState([])
     const [loading, setLoading] = useState(false)
+    const [dataInitialized, setDataInitialized] = useState(false)
 
     const getDefaultValues = () => ({
         assignedTo: '',
-        assignedType: '', // franchise or merchant
+        assignedType: '',
         product: '',
         scheme: '',
         effectiveDate: '',
-        expiryDate:'',
+        expiryDate: '',
         remarks: ''
     })
 
@@ -76,10 +78,30 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         reset,
         setValue
     } = useForm({
-        defaultValues: initialData || getDefaultValues()
+        defaultValues: getDefaultValues()
     })
 
     const watchedFields = watch(['assignedType', 'assignedTo', 'product'])
+
+    // Initialize form data on mount
+    useEffect(() => {
+        if (isEdit && initialData && !dataInitialized) {
+            // Reset form with initial data - mapping API fields to form fields
+            reset({
+                assignedTo: initialData.customerId?.toString() || '',
+                assignedType: initialData.customerType || '',
+                product: initialData.productId?.toString() || '',
+                scheme: initialData.schemeId?.toString() || '',
+                effectiveDate: initialData.effectiveDate || '',
+                expiryDate: initialData.expiryDate || '',
+                remarks: initialData.remarks || ''
+            })
+            setDataInitialized(true)
+        } else if (!isEdit && !dataInitialized) {
+            reset(getDefaultValues())
+            setDataInitialized(true)
+        }
+    }, [isEdit, initialData, dataInitialized, reset])
 
     // Fetch franchises or merchants when assigned type is selected
     useEffect(() => {
@@ -91,11 +113,11 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 if (watchedFields[0] === 'franchise') {
                     const response = await api.get('/franchise')
                     setFranchises(response.data)
-                    setMerchants([]) // Clear merchants
+                    setMerchants([])
                 } else if (watchedFields[0] === 'merchant') {
                     const response = await api.get('/merchants/direct-merchant')
                     setMerchants(response.data)
-                    setFranchises([]) // Clear franchises
+                    setFranchises([])
                 }
             } catch (error) {
                 console.error(`Error fetching ${watchedFields[0]}s:`, error)
@@ -108,8 +130,11 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 setLoading(false)
             }
         }
-        fetchAssignedToOptions()
-    }, [watchedFields[0]])
+
+        if (dataInitialized) {
+            fetchAssignedToOptions()
+        }
+    }, [watchedFields[0], dataInitialized])
 
     // Fetch franchise products when franchise is selected
     useEffect(() => {
@@ -125,10 +150,15 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 } finally {
                     setLoading(false)
                 }
+            } else if (watchedFields[0] === 'franchise' && !watchedFields[1]) {
+                setFranchiseProducts([])
             }
         }
-        fetchFranchiseProducts()
-    }, [watchedFields[0], watchedFields[1]])
+
+        if (dataInitialized) {
+            fetchFranchiseProducts()
+        }
+    }, [watchedFields[0], watchedFields[1], dataInitialized])
 
     // Fetch merchant products when merchant is selected
     useEffect(() => {
@@ -144,10 +174,15 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 } finally {
                     setLoading(false)
                 }
+            } else if (watchedFields[0] === 'merchant' && !watchedFields[1]) {
+                setMerchantProducts([])
             }
         }
-        fetchMerchantProducts()
-    }, [watchedFields[0], watchedFields[1]])
+
+        if (dataInitialized) {
+            fetchMerchantProducts()
+        }
+    }, [watchedFields[0], watchedFields[1], dataInitialized])
 
     // Fetch pricing schemes when product is selected
     useEffect(() => {
@@ -172,14 +207,19 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 } finally {
                     setLoading(false)
                 }
+            } else if (!watchedFields[2]) {
+                setPricingSchemes([])
             }
         }
-        fetchPricingSchemes()
-    }, [watchedFields[2], watchedFields[0], franchiseProducts, merchantProducts])
 
-    // Reset dependent fields when assigned type changes
+        if (dataInitialized) {
+            fetchPricingSchemes()
+        }
+    }, [watchedFields[2], watchedFields[0], franchiseProducts, merchantProducts, dataInitialized])
+
+    // Clear dependent fields when assigned type changes (only after initialization and not in edit mode during load)
     useEffect(() => {
-        if (watchedFields[0]) {
+        if (dataInitialized && watchedFields[0] && !isEdit) {
             setValue('assignedTo', '')
             setValue('product', '')
             setValue('scheme', '')
@@ -187,7 +227,23 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             setMerchantProducts([])
             setPricingSchemes([])
         }
-    }, [watchedFields[0], setValue])
+    }, [watchedFields[0], setValue, dataInitialized, isEdit])
+
+    // Clear product and scheme when assignedTo changes (only in create mode)
+    useEffect(() => {
+        if (dataInitialized && watchedFields[1] && !isEdit) {
+            setValue('product', '')
+            setValue('scheme', '')
+            setPricingSchemes([])
+        }
+    }, [watchedFields[1], setValue, dataInitialized, isEdit])
+
+    // Clear scheme when product changes (only in create mode)
+    useEffect(() => {
+        if (dataInitialized && watchedFields[2] && !isEdit) {
+            setValue('scheme', '')
+        }
+    }, [watchedFields[2], setValue, dataInitialized, isEdit])
 
     const assignedTypeOptions = [
         { value: 'franchise', label: 'Franchise' },
@@ -238,17 +294,15 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 productId: parseInt(data.product),
                 schemeId: parseInt(data.scheme),
                 effectiveDate: data.effectiveDate,
-                expiryDate:data.expiryDate,
+                expiryDate: data.expiryDate,
                 remarks: data.remarks,
                 outwardId: selectedProduct?.outwardId || null
             }
 
             let response
             if (isEdit && initialData?.id) {
-                // 🔹 UPDATE (PUT)
                 response = await api.put(`/outward-schemes/${initialData.id}`, assignmentData)
             } else {
-                // 🔹 CREATE (POST)
                 response = await api.post('/outward-schemes', assignmentData)
             }
 
@@ -259,13 +313,12 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             // TODO: show toast/notification
         } finally {
             setLoading(false)
-           
         }
     }
 
-
     const handleCancel = () => {
         reset(getDefaultValues())
+        setDataInitialized(false)
         onCancel()
     }
 
@@ -387,5 +440,4 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         </div>
     )
 }
-
 export default ProductAssignmentFormModal;
