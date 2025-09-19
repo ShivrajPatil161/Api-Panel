@@ -2,6 +2,7 @@ package com.project2.ism.Model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import org.springframework.jmx.export.annotation.ManagedNotifications;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,11 +20,11 @@ public class VendorTransactions {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long internalId;
 
-    //@NotBlank(message = "Transaction ID is required")
-    @Column(name = "ID", nullable = false)
+    @NotBlank(message = "Transaction ID is required")
+    @Column(name = "transaction_ref_id", nullable = false)
     private String transactionReferenceId;
 
-    //@NotNull(message = "Date is required")
+    @NotNull(message = "Date is required")
     @Column(name = "Date")
     private LocalDateTime date;
 
@@ -32,7 +33,7 @@ public class VendorTransactions {
     @Column(name = "Mobile")
     private String mobile;
 
-    @Email(message = "Email should be valid")
+//    @Email(message = "Email should be valid")
     @Column(name = "Email")
     private String email;
 
@@ -44,7 +45,7 @@ public class VendorTransactions {
     @Column(name = "Username")
     private String username;
 
-    //@NotBlank(message = "Type is required")
+    @NotBlank(message = "Type is required")
     @Column(name = "Type")
     private String type;
 
@@ -52,7 +53,7 @@ public class VendorTransactions {
     @Column(name = "Mode")
     private String mode;
 
-    //@NotNull(message = "Amount is required")
+    @NotNull(message = "Amount is required")
     @PositiveOrZero(message = "Amount must be zero or positive")
     @Column(name = "Amount")
     private BigDecimal amount;
@@ -62,40 +63,46 @@ public class VendorTransactions {
     private BigDecimal tip;
 
     //@PositiveOrZero(message = "Cash at POS must be zero or positive")
-    @Column(name = "Cash at POS")
+    @Column(name = "Cash_at_POS")
     private BigDecimal cashAtPos;
 
-    @Column(name = "Txn Type")
+    @NotBlank(message = "Txn_Type required")
+    @Column(name = "Txn_Type")
     private String txnType;
 
-    @Column(name = "Auth Code")
+    @Column(name = "Auth_Code")
     private String authCode;
 
+    @NotBlank(message = "card required")
     @Column(name = "Card")
     private String card;
 
-    @Column(name = "Issuing Bank")
+    @NotBlank(message = "Issuing bank required")
+    @Column(name = "Issuing_Bank")
     private String issuingBank;
 
-    @Column(name = "Card Type")
+    @NotBlank(message = "card type required")
+    @Column(name = "Card_Type")
     private String cardType;
 
-    @Column(name = "Brand Type")
+    @NotBlank(message = "Brand Type required")
+    @Column(name = "Brand_Type")
     private String brandType;
 
-    @Column(name = "Card Classification")
+    @Column(name = "Card_Classification")
     private String cardClassification;
 
-    @Column(name = "Card Txn Type")
+    @Column(name = "Card_Txn_Type")
     private String cardTxnType;
 
+    @NotBlank(message = "RRN required")
     @Column(name = "RRN")
     private String rrn;
 
     @Column(name = "Invoice#")
     private String invoiceNumber;
 
-    @Column(name = "Device Serial")
+    @Column(name = "Device_Serial")
     private String deviceSerial;
 
     @Column(name = "Merchant")
@@ -107,15 +114,17 @@ public class VendorTransactions {
     @Column(name = "Status")
     private String status;
 
-    @Column(name = "Settled On")
+    @Column(name = "Settled_On")
     private LocalDateTime settledOn;
 
     @Column(name = "Labels")
     private String labels;
 
+    @NotBlank(message = "MID required")
     @Column(name = "MID")
     private String mid;
 
+    @NotBlank(message = "TID required")
     @Column(name = "TID")
     private String tid;
 
@@ -125,43 +134,43 @@ public class VendorTransactions {
     @Column(name = "Ref#")
     private String ref;
 
-    @Column(name = "Ref# 1")
+    @Column(name = "Ref#_1")
     private String ref1;
 
-    @Column(name = "Ref# 2")
+    @Column(name = "Ref#_2")
     private String ref2;
 
-    @Column(name = "Ref# 3")
+    @Column(name = "Ref#_3")
     private String ref3;
 
-    @Column(name = "Ref# 4")
+    @Column(name = "Ref#_4")
     private String ref4;
 
-    @Column(name = "Ref# 5")
+    @Column(name = "Ref#_5")
     private String ref5;
 
-    @Column(name = "Ref# 6")
+    @Column(name = "Ref#_6")
     private String ref6;
 
-    @Column(name = "Ref# 7")
+    @Column(name = "Ref#_7")
     private String ref7;
 
-    @Column(name = "Original Transaction Id")
+    @Column(name = "original_transaction_id")
     private String originalTransactionId;
 
-    @Column(name = "Receipt No")
+    @Column(name = "Receipt_No")
     private String receiptNo;
 
-    @Column(name = "Error Code")
+    @Column(name = "Error_Code")
     private String errorCode;
 
-    @Column(name = "Additional Information")
+    @Column(name = "Additional_Information")
     private String additionalInformation;
 
-    @Column(name = "PG Error Code")
+    @Column(name = "PG_Error_Code")
     private String pgErrorCode;
 
-    @Column(name = "PG Error Message")
+    @Column(name = "PG_Error_Message")
     private String pgErrorMessage;
 
     @Column(name = "Latitude")
@@ -173,18 +182,17 @@ public class VendorTransactions {
     @Column(name = "Payer")
     private String payer;
 
-    @Column(name = "TID Location")
+    @Column(name = "TID_Location")
     private String tidLocation;
 
-    @Column(name = "DX Mode")
+    @Column(name = "DX_Mode")
     private String dxMode;
 
-    @Column(name = "Acquiring Bank")
+    @Column(name = "Acquiring_Bank")
     private String acquiringBank;
 
-    @Column(name = "Issuing Bank.1")
+    @Column(name = "Issuing_Bank.1")
     private String issuingBankAlt;
-
 
     @Column(name = "settled", nullable = false)
     private Boolean settled = Boolean.FALSE;
