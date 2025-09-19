@@ -10,6 +10,8 @@ import {
 import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import ProductAssignmentFormModal from '../Forms/ProductSchemeAssignmen'
 import api from '../../constants/API/axiosInstance'
+import {toast} from 'react-toastify'
+
 
 // ==================== PRODUCT ASSIGNMENT LIST ====================
 const ProductAssignment = () => {
@@ -184,16 +186,44 @@ const ProductAssignment = () => {
         setViewingAssignment(assignment)
     }
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this product assignment?')) {
-            try {
-                await api.delete(`/outward-schemes/${id}`)
-                setAssignments(assignments.filter(assignment => assignment.id !== id))
-            } catch (error) {
-                console.error('Error deleting assignment:', error)
-            }
-        }
+
+
+    const handleDelete = (id) => {
+        toast.warn(
+            ({ closeToast }) => (
+                <div>
+                    <p>Are you sure you want to delete this product assignment?</p>
+                    <div className="flex gap-2 mt-2">
+                        <button
+                            onClick={async () => {
+                                try {
+                                    await api.delete(`/outward-schemes/${id}`)
+                                    fetchProductSchemeAssignment( )
+                                    toast.success("Product assignment deleted")
+                                } catch (error) {
+                                    console.error("Error deleting assignment:", error)
+                                    toast.error("Failed to delete assignment")
+                                } finally {
+                                    closeToast()
+                                }
+                            }}
+                            className="px-3 py-1 bg-red-500 text-white rounded"
+                        >
+                            Yes
+                        </button>
+                        <button
+                            onClick={closeToast}
+                            className="px-3 py-1 bg-gray-300 rounded"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            ),
+            { autoClose: false } // keep it open until user decides
+        )
     }
+
 
     const handleSubmit = async (data) => {
         try {
