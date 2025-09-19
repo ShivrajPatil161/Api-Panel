@@ -166,6 +166,7 @@ const getMenuItems = (userType) => {
         iconColor: '',
         children: [
           { title: 'Vendor List', path: '/dashboard/vendors', icon: Users },
+          { title: 'Product List', path: '/dashboard/inventory', icon: Package },
           { title: 'Vendor Rates', path: '/dashboard/vendors/rates', icon: DollarSign }
         ]
       },
@@ -175,7 +176,6 @@ const getMenuItems = (userType) => {
         icon: Package,
         iconColor: '',
         children: [
-          { title: 'Product List', path: '/dashboard/inventory', icon: Package },
           { title: 'Pricing Scheme', path: '/dashboard/inventory/pricing', icon: Calculator },
           { title: 'Product Scheme Assign', path: '/dashboard/inventory/products-assign', icon: Calculator },
           { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: ArrowDown },

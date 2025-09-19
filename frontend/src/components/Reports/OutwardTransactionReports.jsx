@@ -16,7 +16,8 @@ import {
     TrendingUp,
     FileBarChart,
     Truck,
-    Users
+    Users,
+    X // Add X icon for clear button
 } from 'lucide-react';
 import UniversalExportButtons from './UniversalExportButtons';
 import { format } from 'date-fns';
@@ -64,6 +65,7 @@ const OutwardTransactionReport = () => {
                             productName: transaction.productName,
                             dispatchDate: transaction.dispatchDate,
                             dispatchedBy: transaction.dispatchedBy,
+                            quantity: transaction.quantity, // Make sure quantity is included here
                             deliveryAddress: transaction.deliveryAddress,
                             contactPerson: transaction.contactPerson,
                             contactPersonNumber: transaction.contactPersonNumber,
@@ -93,6 +95,7 @@ const OutwardTransactionReport = () => {
                         productName: transaction.productName,
                         dispatchDate: transaction.dispatchDate,
                         dispatchedBy: transaction.dispatchedBy,
+                        quantity: transaction.quantity, // Make sure quantity is included here too
                         deliveryAddress: transaction.deliveryAddress,
                         contactPerson: transaction.contactPerson,
                         contactPersonNumber: transaction.contactPersonNumber,
@@ -123,7 +126,38 @@ const OutwardTransactionReport = () => {
         fetchOutwardTransactions();
     }, []);
 
-    // Table columns definition
+    // Filter data based on date range
+    const filteredData = useMemo(() => {
+        let filtered = data;
+        
+        if (dateRange.startDate) {
+            filtered = filtered.filter(item => 
+                !item.dispatchDate || new Date(item.dispatchDate) >= new Date(dateRange.startDate)
+            );
+        }
+        
+        if (dateRange.endDate) {
+            filtered = filtered.filter(item => 
+                !item.dispatchDate || new Date(item.dispatchDate) <= new Date(dateRange.endDate)
+            );
+        }
+        
+        return filtered;
+    }, [data, dateRange]);
+
+    // Clear all filters function
+    const clearFilters = () => {
+        setGlobalFilter('');
+        setDateRange({ startDate: '', endDate: '' });
+        setFilters({
+            franchise: '',
+            merchant: '',
+            product: '',
+            deliveryMethod: ''
+        });
+    };
+
+    // Table columns definition (same as before)
     const columns = useMemo(() => [
         {
             header: 'Transaction ID',
@@ -187,7 +221,6 @@ const OutwardTransactionReport = () => {
             header: 'Dispatched By',
             accessorKey: 'dispatchedBy',
         },
-      
         {
             header: 'Contact Person',
             accessorKey: 'contactPerson',
@@ -298,15 +331,21 @@ const OutwardTransactionReport = () => {
         }
     ], []);
 
-    // Calculate summary data
+    // Calculate summary data - CORRECTED VERSION
     const summary = useMemo(() => {
-        const uniqueTransactions = [...new Set(data.map(item => item.transactionId))];
-        const totalSerials = data.filter(item => item.serialId).length;
-        const uniqueFranchises = [...new Set(data.filter(item => item.franchiseName).map(item => item.franchiseName))];
-        const uniqueMerchants = [...new Set(data.filter(item => item.merchantName).map(item => item.merchantName))];
-        const uniqueProducts = [...new Set(data.map(item => item.productCode))];
+        // Get unique transactions first to avoid double counting
+        const uniqueTransactions = [...new Set(filteredData.map(item => item.transactionId))];
+        const uniqueTransactionData = uniqueTransactions.map(transactionId => 
+            filteredData.find(item => item.transactionId === transactionId)
+        );
         
-        const customerTypeBreakdown = data.reduce((acc, item) => {
+        const totalSerials = filteredData.filter(item => item.serialId).length;
+        const uniqueFranchises = [...new Set(filteredData.filter(item => item.franchiseName).map(item => item.franchiseName))];
+        const uniqueMerchants = [...new Set(filteredData.filter(item => item.merchantName).map(item => item.merchantName))];
+        const uniqueProducts = [...new Set(filteredData.map(item => item.productCode))];
+        
+        // Calculate customer type breakdown based on unique transactions
+        const customerTypeBreakdown = uniqueTransactionData.reduce((acc, item) => {
             if (item.franchiseName) {
                 acc['Franchise'] = (acc['Franchise'] || 0) + 1;
             } else if (item.merchantName) {
@@ -317,19 +356,22 @@ const OutwardTransactionReport = () => {
             return acc;
         }, {});
 
-        const deliveryMethodBreakdown = data.reduce((acc, item) => {
+        // Calculate delivery method breakdown based on unique transactions
+        const deliveryMethodBreakdown = uniqueTransactionData.reduce((acc, item) => {
             const method = item.deliveryMethod || 'Unknown';
             acc[method] = (acc[method] || 0) + 1;
             return acc;
         }, {});
 
-        const serialStatusBreakdown = data.reduce((acc, item) => {
+        // Serial status breakdown should still use all rows since each serial has its own status
+        const serialStatusBreakdown = filteredData.reduce((acc, item) => {
             const status = item.serialStatus || 'Unknown';
             acc[status] = (acc[status] || 0) + 1;
             return acc;
         }, {});
 
-        const totalQuantity = data.reduce((sum, item) => sum + (item.quantity || 0), 0);
+        // Calculate total quantity from unique transactions only
+        const totalQuantity = uniqueTransactionData.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
         return {
             totalTransactions: uniqueTransactions.length,
@@ -337,18 +379,18 @@ const OutwardTransactionReport = () => {
             totalFranchises: uniqueFranchises.length,
             totalMerchants: uniqueMerchants.length,
             totalProducts: uniqueProducts.length,
-            totalQuantity: totalQuantity,
+            totalQuantity: totalQuantity, // Now correctly calculated per transaction
             customerTypeBreakdown,
             deliveryMethodBreakdown,
             serialStatusBreakdown,
             averageQuantityPerTransaction: uniqueTransactions.length > 0 ? 
                 (totalQuantity / uniqueTransactions.length).toFixed(2) : 0
         };
-    }, [data]);
+    }, [filteredData]); // Changed from data to filteredData
 
-    // Initialize table
+    // Initialize table with filtered data
     const table = useReactTable({
-        data,
+        data: filteredData, // Use filtered data instead of raw data
         columns,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
@@ -361,7 +403,7 @@ const OutwardTransactionReport = () => {
         globalFilterFn: 'includesString',
     });
 
-    // Export configurations
+    // Export configurations (same as before)
     const exportColumns = {
         headers: [
             'Transaction ID', 'Delivery Number', 'Customer Type', 'Customer Name', 'Product Code', 'Product Name',
@@ -404,7 +446,7 @@ const OutwardTransactionReport = () => {
 
     const summaryConfig = [
         { key: 'totalTransactions', label: 'Total Transactions', formatter: (val) => val.toLocaleString() },
-        { key: 'totalSerialNumbers', label: 'Total Quantity', formatter: (val) => val.toLocaleString() },
+        { key: 'totalQuantity', label: 'Total Quantity', formatter: (val) => val.toLocaleString() }, // Changed from totalSerialNumbers to totalQuantity
         { key: 'totalFranchises', label: 'Total Franchises', formatter: (val) => val.toLocaleString() },
         { key: 'totalMerchants', label: 'Total Merchants', formatter: (val) => val.toLocaleString() },
         { key: 'totalProducts', label: 'Total Products', formatter: (val) => val.toLocaleString() },
@@ -451,7 +493,7 @@ const OutwardTransactionReport = () => {
                     </p>
                 </div>
                 <UniversalExportButtons
-                    data={data}
+                    data={filteredData} // Export filtered data
                     filename="outward_transactions_report"
                     title="Outward Transaction Report"
                     columns={exportColumns}
@@ -477,13 +519,21 @@ const OutwardTransactionReport = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-emerald-100 text-sm font-medium">Total Quantity</p>
-                            <p className="text-3xl font-bold">{summary.totalSerialNumbers}</p>
+                            <p className="text-3xl font-bold">{summary.totalQuantity}</p>
                         </div>
                         <Package className="w-8 h-8 text-emerald-200" />
                     </div>
                 </div>
 
-                
+                {/* <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-purple-100 text-sm font-medium">Serial Numbers</p>
+                            <p className="text-3xl font-bold">{summary.totalSerialNumbers}</p>
+                        </div>
+                        <Package className="w-8 h-8 text-purple-200" />
+                    </div>
+                </div> */}
 
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
                     <div className="flex items-center justify-between">
@@ -496,7 +546,7 @@ const OutwardTransactionReport = () => {
                 </div>
             </div>
 
-            {/* Breakdown Cards */}
+            {/* Breakdown Cards - same as before */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Customer Type Breakdown */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -538,9 +588,9 @@ const OutwardTransactionReport = () => {
                 </div>
             </div>
 
-            {/* Filters and Search */}
+            {/* Filters and Search - UPDATED */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div className="relative">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
@@ -553,9 +603,9 @@ const OutwardTransactionReport = () => {
                     </div>
 
                     <div>
+                        {/* <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label> */}
                         <input
                             type="date"
-                            placeholder="Start Date"
                             value={dateRange.startDate}
                             onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -563,9 +613,9 @@ const OutwardTransactionReport = () => {
                     </div>
 
                     <div>
+                        {/* <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label> */}
                         <input
                             type="date"
-                            placeholder="End Date"
                             value={dateRange.endDate}
                             onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -574,14 +624,22 @@ const OutwardTransactionReport = () => {
 
                     <button
                         onClick={fetchOutwardTransactions}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
                     >
-                        Refresh Data
+                        Fetch
+                    </button>
+
+                    <button
+                        onClick={clearFilters}
+                        className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium flex items-center gap-2"
+                    >
+                        <X className="w-4 h-4" />
+                        Clear Filters
                     </button>
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Table - same as before but will now show filtered data */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -620,7 +678,7 @@ const OutwardTransactionReport = () => {
                     </table>
                 </div>
 
-                {/* Pagination */}
+                {/* Pagination - same as before */}
                 <div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-700">
@@ -641,9 +699,7 @@ const OutwardTransactionReport = () => {
                         
                         <span className="text-sm text-gray-700">
                             Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                        </span>
-                        
-                        <button
+                        </span><button
                             onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}
                             className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -663,7 +719,8 @@ const OutwardTransactionReport = () => {
                             ))}
                         </select>
                     </div>
-                </div></div>
+                </div>
+            </div>
         </div>
     );
 };
