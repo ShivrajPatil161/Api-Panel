@@ -36,6 +36,7 @@ import ProductOutward from '../components/Tables/ProductOutward.jsx'
 import MainReportsPageForNow from '../components/Reports/MainReportsPageForNow.jsx'
 import Payout from '../components/Payout/Payout.jsx'
 import CreditCardBillPayment from '../components/Payout/CreditCardBillPayment.jsx'
+import AdminRolesDashboard from '../components/Admin/AdminRolesDashboard.jsx'
 
 
 
@@ -86,6 +87,10 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <Dashboard />
+          },
+          {
+            path: "role-management",
+            element:<AdminRolesDashboard />
           },
           // Vendors routes
           {

@@ -6,6 +6,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 @Service
@@ -25,6 +28,17 @@ public class JwtService {
     public boolean validateToken(String token, String email) {
         return extractEmail(token).equals(email) && !isTokenExpired(token);
     }
+    // Enhanced token generation with permissions
+    public String generateTokenWithPermissions(String email, String role, Set<String> permissions) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("role", role)
+                .claim("permissions", permissions)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours expiry
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .compact();
+    }
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -37,7 +51,16 @@ public class JwtService {
                 .getBody();
         return claimsResolver.apply(claims);
     }
-
+    @SuppressWarnings("unchecked")
+    public Set<String> extractPermissions(String token) {
+        try {
+            List<String> permissions = extractClaim(token, claims ->
+                    claims.get("permissions", List.class));
+            return permissions != null ? new HashSet<>(permissions) : new HashSet<>();
+        } catch (Exception e) {
+            return new HashSet<>();
+        }
+    }
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }

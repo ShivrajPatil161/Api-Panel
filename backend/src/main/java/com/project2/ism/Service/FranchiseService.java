@@ -205,7 +205,7 @@ public class FranchiseService {
         franchiseRepository.save(franchise);
 
         // Create login credentials
-        userService.createAndSendCredentials(
+        userService.createOrUpdateCredentials(
                 dto.getPrimaryContactEmail(),
                 "FRANCHISE",
                 null

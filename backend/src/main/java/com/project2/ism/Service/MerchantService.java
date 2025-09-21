@@ -236,7 +236,7 @@ public class MerchantService {
         if(dto.isApproved()){
             merchant.setApproved(dto.isApproved());
 //             Create login credentials
-        userService.createAndSendCredentials(
+        userService.createOrUpdateCredentials(
                 dto.getPrimaryContactEmail(),
                 "MERCHANT",
                 null
@@ -351,7 +351,7 @@ public class MerchantService {
         merchantRepository.save(merchant);
 
         // Create user login credentials when approved
-        userService.createAndSendCredentials(
+        userService.createOrUpdateCredentials(
                 merchant.getContactPerson().getEmail(),
                 "MERCHANT",
                 null

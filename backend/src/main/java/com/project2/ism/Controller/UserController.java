@@ -9,8 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -29,22 +31,46 @@ public class UserController {
 
         if (authenticatedUser.isPresent()) {
             User loggedInUser = authenticatedUser.get();
-            String token = jwtService.generateToken(loggedInUser.getEmail(), loggedInUser.getRole());
 
-            return ResponseEntity.ok(Map.of(
-                    "email", loggedInUser.getEmail(),
-                    "role", loggedInUser.getRole(),
-                    "token", token,
-                    "message", "Login successful"
-            ));
+            // Get primary role name for JWT token
+            String primaryRole = userService.getPrimaryRoleName(loggedInUser);
+
+            // Generate token with primary role
+            String token = jwtService.generateToken(loggedInUser.getEmail(), primaryRole);
+
+            // Prepare response with all roles and permissions
+            Map<String, Object> response = new HashMap<>();
+            response.put("email", loggedInUser.getEmail());
+            response.put("role", primaryRole); // For backward compatibility
+            response.put("roles", loggedInUser.getRoles().stream()
+                    .map(role -> Map.of(
+                            "name", role.getName(),
+                            "permissions", role.getPermissions().stream()
+                                    .map(permission -> Map.of(
+                                            "name", permission.getName(),
+                                            "description", permission.getDescription()
+                                    ))
+                                    .collect(Collectors.toList())
+                    ))
+                    .collect(Collectors.toList()));
+            response.put("token", token);
+            response.put("message", "Login successful");
+
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid Credentials"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid Credentials"));
         }
     }
-
     @PostMapping("/signup")
-    public ResponseEntity<?> signUser(@RequestBody User user) {
-        Optional<User> result = userService.signUpUser(user);
+    public ResponseEntity<?> signUser(@RequestBody Map<String, Object> request) {
+        User user = new User();
+        user.setEmail((String) request.get("email"));
+        user.setPassword((String) request.get("password"));
+
+        String roleName = (String) request.get("roleName"); // Add roleName to request
+
+        Optional<User> result = userService.signUpUser(user, roleName);
 
         if (result.isPresent()) {
             return ResponseEntity.ok(Map.of(
@@ -57,6 +83,7 @@ public class UserController {
                     .body(Map.of("error", "User already exists"));
         }
     }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email) {
         try {
