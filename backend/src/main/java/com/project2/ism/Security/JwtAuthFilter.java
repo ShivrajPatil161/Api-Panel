@@ -1,11 +1,7 @@
 package com.project2.ism.Security;
 
-import com.project2.ism.Model.Users.Permission;
-import com.project2.ism.Model.Users.Role;
-import com.project2.ism.Model.Users.User;
 import com.project2.ism.Service.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project2.ism.Service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,142 +19,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
-
-//@Component
-//public class JwtAuthFilter extends OncePerRequestFilter {
-//
-//    private static final Logger logger = LoggerFactory.getLogger(JwtAuthFilter.class);
-//    private static final String AUTHORIZATION_HEADER = "Authorization";
-//    private static final String BEARER_PREFIX = "Bearer ";
-//
-//    private final JwtService jwtService;
-//    private final ObjectMapper objectMapper;
-//
-//    public JwtAuthFilter(JwtService jwtService, ObjectMapper objectMapper) {
-//        this.jwtService = jwtService;
-//        this.objectMapper = objectMapper;
-//    }
-//
-//    @Override
-//    protected void doFilterInternal(HttpServletRequest request,
-//                                    HttpServletResponse response,
-//                                    FilterChain filterChain)
-//            throws ServletException, IOException {
-//
-//        try {
-//            String token = extractTokenFromRequest(request);
-//
-//            if (!StringUtils.hasText(token)) {
-//                filterChain.doFilter(request, response);
-//                return;
-//            }
-//
-//            String email = jwtService.extractEmail(token);
-//
-//            if (StringUtils.hasText(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
-//                if (jwtService.validateToken(token, email)) {
-//                    String role = jwtService.extractRole(token);
-//
-//                    logger.debug("Authenticating user: {} with role: {}", email, role);
-//
-//                    // Ensure role has proper prefix
-//                    String normalizedRole = normalizeRole(role);
-//                    List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(normalizedRole));
-//
-//                    UsernamePasswordAuthenticationToken authToken =
-//                            new UsernamePasswordAuthenticationToken(email, null, authorities);
-//                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//                    SecurityContextHolder.getContext().setAuthentication(authToken);
-//
-//                    logger.debug("Successfully authenticated user: {} with authorities: {}", email, authorities);
-//                } else {
-//                    logger.warn("Invalid token for user: {}", email);
-//                }
-//            }
-//
-//            filterChain.doFilter(request, response);
-//
-//        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
-//            logger.warn("JWT token expired for request: {}", request.getRequestURI());
-//            handleJwtException(response, request, "JWT token has expired. Please login again.",
-//                    HttpServletResponse.SC_UNAUTHORIZED);
-//
-//        } catch (io.jsonwebtoken.SignatureException ex) {
-//            logger.error("Invalid JWT signature for request: {}", request.getRequestURI());
-//            handleJwtException(response, request, "Invalid token signature.",
-//                    HttpServletResponse.SC_UNAUTHORIZED);
-//
-//        } catch (io.jsonwebtoken.MalformedJwtException ex) {
-//            logger.error("Malformed JWT token for request: {}", request.getRequestURI());
-//            handleJwtException(response, request, "Malformed token.",
-//                    HttpServletResponse.SC_UNAUTHORIZED);
-//
-//        } catch (Exception ex) {
-//            logger.error("JWT filter error for request: {} - Error: {}",
-//                    request.getRequestURI(), ex.getMessage(), ex);
-//            handleJwtException(response, request, "Authentication error occurred.",
-//                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-//        }
-//    }
-//
-//    private String extractTokenFromRequest(HttpServletRequest request) {
-//        String authHeader = request.getHeader(AUTHORIZATION_HEADER);
-//
-//        if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
-//            return authHeader.substring(BEARER_PREFIX.length());
-//        }
-//
-//        return null;
-//    }
-//
-//    private String normalizeRole(String role) {
-//        if (role == null) {
-//            return "ROLE_USER";
-//        }
-//
-//        String upperRole = role.toUpperCase();
-//        return upperRole.startsWith("ROLE_") ? upperRole : "ROLE_" + upperRole;
-//    }
-//
-//    private void handleJwtException(HttpServletResponse response,
-//                                    HttpServletRequest request,
-//                                    String message,
-//                                    int status) throws IOException {
-//        response.setStatus(status);
-//        response.setContentType("application/json;charset=UTF-8");
-//
-//        // Set CORS headers
-//        response.setHeader("Access-Control-Allow-Origin", "http://localhost:5175");
-//        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-//        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-//        response.setHeader("Access-Control-Allow-Credentials", "true");
-//
-//        Map<String, Object> errorResponse = new HashMap<>();
-//        errorResponse.put("timestamp", LocalDateTime.now().toString());
-//        errorResponse.put("status", status);
-//        errorResponse.put("error", status == 401 ? "Unauthorized" : "Internal Server Error");
-//        errorResponse.put("message", message);
-//        errorResponse.put("path", request.getRequestURI());
-//
-//        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-//        response.getWriter().flush();
-//    }
-//
-//    @Override
-//    protected boolean shouldNotFilter(HttpServletRequest request) {
-//        String path = request.getRequestURI();
-//
-//        // Skip JWT validation for public endpoints
-//        return path.equals("/users/login") ||
-//                path.equals("/users/signup") ||
-//                path.startsWith("/actuator/health") ||
-//                request.getMethod().equals("OPTIONS");
-//    }
-//}
-
-
-
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -169,12 +32,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
-    private final UserService userService;
 
-    public JwtAuthFilter(JwtService jwtService, ObjectMapper objectMapper, UserService userService) {
+    public JwtAuthFilter(JwtService jwtService, ObjectMapper objectMapper) {
         this.jwtService = jwtService;
         this.objectMapper = objectMapper;
-        this.userService = userService;
     }
 
     @Override
@@ -195,26 +56,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (StringUtils.hasText(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtService.validateToken(token, email)) {
-                    // Get user from database to get current roles and permissions
-                    Optional<User> userOpt = userService.getUserByEmail(email);
+                    String role = jwtService.extractRole(token);
 
-                    if (userOpt.isPresent()) {
-                        User user = userOpt.get();
+                    logger.debug("Authenticating user: {} with role: {}", email, role);
 
-                        // Create authorities from user's roles and permissions
-                        List<GrantedAuthority> authorities = createAuthoritiesFromUser(user);
+                    // Ensure role has proper prefix
+                    String normalizedRole = normalizeRole(role);
+                    List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(normalizedRole));
 
-                        logger.debug("Authenticating user: {} with authorities: {}", email, authorities);
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(email, null, authorities);
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                        UsernamePasswordAuthenticationToken authToken =
-                                new UsernamePasswordAuthenticationToken(email, null, authorities);
-                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                        logger.debug("Successfully authenticated user: {}", email);
-                    } else {
-                        logger.warn("User not found in database: {}", email);
-                    }
+                    logger.debug("Successfully authenticated user: {} with authorities: {}", email, authorities);
                 } else {
                     logger.warn("Invalid token for user: {}", email);
                 }
@@ -245,22 +100,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
     }
 
-    private List<GrantedAuthority> createAuthoritiesFromUser(User user) {
-        List<GrantedAuthority> authorities = new ArrayList<>();
-
-        // Add role-based authorities
-        for (Role role : user.getRoles()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
-
-            // Add permission-based authorities
-            for (Permission permission : role.getPermissions()) {
-                authorities.add(new SimpleGrantedAuthority(permission.getName()));
-            }
-        }
-
-        return authorities;
-    }
-
     private String extractTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader(AUTHORIZATION_HEADER);
 
@@ -269,6 +108,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null) {
+            return "ROLE_USER";
+        }
+
+        String upperRole = role.toUpperCase();
+        return upperRole.startsWith("ROLE_") ? upperRole : "ROLE_" + upperRole;
     }
 
     private void handleJwtException(HttpServletResponse response,

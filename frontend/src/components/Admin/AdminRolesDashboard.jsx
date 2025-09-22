@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Users, Shield, Settings, Plus, Eye } from 'lucide-react';
+import { UserPlus, Users, Shield, Settings, Plus, Eye, Settings2 } from 'lucide-react';
 import CreateAdminForm from './CreateAdminForm';
 import AdminManagementTable from './AdminManagementTable';
 import EditPermissionsModal from './EditPermissionsModal';
 import UserPermissionsPage from './UserPermissionsPage';
 import api from '../../constants/API/axiosInstance';
+import PermissionsManagement from './PermissionsManagement';
 
 const AdminRolesDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -151,6 +152,11 @@ const AdminRolesDashboard = () => {
                             icon={Eye}
                             label="My Permissions"
                         />
+                        <TabButton
+                            id="permissions-management"
+                            icon={Settings2}
+                            label="Permissions Management"
+                        />
                     </div>
                 </div>
 
@@ -292,6 +298,14 @@ const AdminRolesDashboard = () => {
                 {activeTab === 'permissions' && (
                     <div className="-m-4 md:-m-6">
                         <UserPermissionsPage />
+                        {/* <PermissionsManagement /> */}
+                    </div>
+                )}
+                {/* My Permissions Tab */}
+                {activeTab === 'permissions-management' && (
+                    <div className="-m-4 md:-m-6">
+                        {/* <UserPermissionsPage /> */}
+                        <PermissionsManagement />
                     </div>
                 )}
             </div>

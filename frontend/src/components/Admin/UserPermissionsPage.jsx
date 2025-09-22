@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, User, Clock, CheckCircle, XCircle, Crown, Settings } from 'lucide-react';
+import { Shield, User, Clock, Crown, Settings, CheckCircle, XCircle } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
 import { toast } from 'react-toastify';
 
@@ -15,21 +15,28 @@ const UserPermissionsPage = () => {
 
     const fetchUserPermissions = async () => {
         setLoading(true);
+        setError(null);
+
         try {
-            // Get current user info
-            const response = await api.get("/api/auth/me");
-            const userData = response.data;
-            setUserInfo(userData);
+            const response = await api.get("/admin/admins/my-permissions");
 
-            // Extract permissions from roles
-            const userPermissions =
-                userData.roles?.flatMap((role) => role.permissions || []) || [];
+            // Since the API returns only permissions array, we need to get user info separately
+            // or construct it from localStorage/context
+            const userEmail = localStorage.getItem('userEmail') || 'Unknown';
+            const userType = localStorage.getItem('userType');
+            const userId = localStorage.getItem('userId');
 
-            setPermissions(userPermissions);
+            setUserInfo({
+                email: userEmail,
+                id: userId,
+                userType: userType,
+                createdAt: new Date().toISOString() // Placeholder
+            });
+
+            setPermissions(response.data || []);
         } catch (error) {
-            console.error("Failed to fetch user info:", error);
-            const message =
-                error.response?.data?.message || "Failed to fetch user information";
+            console.error("Failed to fetch user permissions:", error);
+            const message = error.response?.data?.message || "Failed to fetch user information";
             setError(message);
             toast.error(message);
         } finally {
@@ -37,16 +44,30 @@ const UserPermissionsPage = () => {
         }
     };
 
-    const getRoleInfo = (roles) => {
-        const isSuperAdmin = roles?.some(role => role.name === 'SUPER_ADMIN');
-        const isAdmin = roles?.some(role => role.name === 'ADMIN');
+    const getRoleInfo = () => {
+        const userType = userInfo?.userType || localStorage.getItem('userType');
 
-        if (isSuperAdmin) {
-            return { type: 'SUPER_ADMIN', label: 'Super Administrator', color: 'red', icon: Crown };
-        } else if (isAdmin) {
-            return { type: 'ADMIN', label: 'Administrator', color: 'blue', icon: Shield };
+        if (userType === 'SUPER_ADMIN') {
+            return {
+                type: 'SUPER_ADMIN',
+                label: 'Super Administrator',
+                color: 'red',
+                icon: Crown
+            };
+        } else if (userType === 'ADMIN') {
+            return {
+                type: 'ADMIN',
+                label: 'Administrator',
+                color: 'blue',
+                icon: Shield
+            };
         } else {
-            return { type: 'USER', label: 'User', color: 'gray', icon: User };
+            return {
+                type: 'USER',
+                label: 'User',
+                color: 'gray',
+                icon: User
+            };
         }
     };
 
@@ -105,7 +126,7 @@ const UserPermissionsPage = () => {
         );
     }
 
-    const roleInfo = getRoleInfo(userInfo?.roles);
+    const roleInfo = getRoleInfo();
     const RoleIcon = roleInfo.icon;
     const permissionGroups = groupPermissionsByCategory(permissions);
     const isSuperAdmin = roleInfo.type === 'SUPER_ADMIN';
@@ -123,7 +144,7 @@ const UserPermissionsPage = () => {
                         <div className="flex items-center space-x-3">
                             <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">
                                 <span className="text-lg font-semibold text-gray-700">
-                                    {userInfo?.email?.charAt(0).toUpperCase()}
+                                    {userInfo?.email?.charAt(0).toUpperCase() || 'U'}
                                 </span>
                             </div>
                             <div>
@@ -161,7 +182,7 @@ const UserPermissionsPage = () => {
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                             <div className="flex items-center space-x-1">
                                 <Clock className="w-4 h-4" />
-                                <span>Member since {new Date(userInfo?.createdAt).toLocaleDateString()}</span>
+                                <span>Current session</span>
                             </div>
                         </div>
                     </div>

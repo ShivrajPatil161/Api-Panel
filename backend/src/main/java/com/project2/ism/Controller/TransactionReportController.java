@@ -2,10 +2,8 @@ package com.project2.ism.Controller;
 
 import com.project2.ism.DTO.ReportDTO.ApiResponse;
 import com.project2.ism.DTO.ReportDTO.TransactionReportDTO;
-import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.TransactionReportRequest;
-import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.TransactionSummary;
-import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.TransactionReportResponse;
-import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.FranchiseTransactionSummary;
+
+import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.*;
 import com.project2.ism.Service.TransactionReportService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -671,4 +669,190 @@ public class TransactionReportController {
         return ResponseEntity.ok(summary);
     }
 
+
+
+    /// new ones with detailed for merchant  only 22-09
+    /**
+     * Get merchant-only transaction details report by transaction date
+     * GET /api/v1/reports/transactions/merchant-only/details
+     */
+    @GetMapping("/merchant-only/details")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<Page<DetailedTransactionReportDTO>> getMerchantOnlyTransactionDetails(
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+
+            @RequestParam(required = false) Long merchantId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String cardType,
+            @RequestParam(required = false) String brandType,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<DetailedTransactionReportDTO> report = transactionReportService
+                .getMerchantOnlyTransactionDetails(startDate, endDate, merchantId,
+                        status, cardType, brandType, pageable);
+
+        return ResponseEntity.ok(report);
+    }
+
+    /**
+     * Get merchant-only transaction details report by settlement date
+     * GET /api/v1/reports/transactions/merchant-only/details/settlement-date
+     */
+    @GetMapping("/merchant-only/details/settlement-date")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<Page<DetailedTransactionReportDTO>> getMerchantOnlyTransactionDetailsBySettlementDate(
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+
+            @RequestParam(required = false) Long merchantId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String cardType,
+            @RequestParam(required = false) String brandType,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<DetailedTransactionReportDTO> report = transactionReportService
+                .getMerchantOnlyTransactionDetailsBySettlementDate(startDate, endDate, merchantId,
+                        status, cardType, brandType, pageable);
+
+        return ResponseEntity.ok(report);
+    }
+
+    /**
+     * Get merchant-only card type brand summary by transaction date
+     * GET /api/v1/reports/transactions/merchant-only/card-brand-summary
+     */
+    @GetMapping("/merchant-only/card-brand-summary")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<List<CardTypeBrandSummaryDTO>> getMerchantOnlyCardTypeBrandSummary(
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+
+            @RequestParam(required = false) Long merchantId) {
+
+        List<CardTypeBrandSummaryDTO> summary = transactionReportService
+                .getMerchantOnlyCardTypeBrandSummary(startDate, endDate, merchantId);
+
+        return ResponseEntity.ok(summary);
+    }
+
+    /**
+     * Get merchant-only card type brand summary by settlement date
+     * GET /api/v1/reports/transactions/merchant-only/card-brand-summary/settlement-date
+     */
+    @GetMapping("/merchant-only/card-brand-summary/settlement-date")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<List<CardTypeBrandSummaryDTO>> getMerchantOnlyCardTypeBrandSummaryBySettlementDate(
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+
+            @RequestParam(required = false) Long merchantId) {
+
+        List<CardTypeBrandSummaryDTO> summary = transactionReportService
+                .getMerchantOnlyCardTypeBrandSummaryBySettlementDate(startDate, endDate, merchantId);
+
+        return ResponseEntity.ok(summary);
+    }
+
+    /**
+     * Get merchant-only daily summary by transaction date
+     * GET /api/v1/reports/transactions/merchant-only/daily-summary
+     */
+    @GetMapping("/merchant-only/daily-summary")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<List<DailySummaryReportDTO>> getMerchantOnlyDailySummary(
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+
+            @RequestParam(required = false) Long merchantId) {
+
+        List<DailySummaryReportDTO> summary = transactionReportService
+                .getMerchantOnlyDailySummary(startDate, endDate, merchantId);
+
+        return ResponseEntity.ok(summary);
+    }
+
+    /**
+     * Get merchant-only daily summary by settlement date
+     * GET /api/v1/reports/transactions/merchant-only/daily-summary/settlement-date
+     */
+    @GetMapping("/merchant-only/daily-summary/settlement-date")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<List<DailySummaryReportDTO>> getMerchantOnlyDailySummaryBySettlementDate(
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+
+            @RequestParam(required = false) Long merchantId) {
+
+        List<DailySummaryReportDTO> summary = transactionReportService
+                .getMerchantOnlyDailySummaryBySettlementDate(startDate, endDate, merchantId);
+
+        return ResponseEntity.ok(summary);
+    }
+
+    /**
+     * Get merchant-only terminal analysis by transaction date
+     * GET /api/v1/reports/transactions/merchant-only/terminal-analysis
+     */
+    @GetMapping("/merchant-only/terminal-analysis")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<List<TerminalAnalysisDTO>> getMerchantOnlyTerminalAnalysis(
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+
+            @RequestParam(required = false) Long merchantId) {
+
+        List<TerminalAnalysisDTO> analysis = transactionReportService
+                .getMerchantOnlyTerminalAnalysis(startDate, endDate, merchantId);
+
+        return ResponseEntity.ok(analysis);
+    }
+
+    /**
+     * Get merchant-only terminal analysis by settlement date
+     * GET /api/v1/reports/transactions/merchant-only/terminal-analysis/settlement-date
+     */
+    @GetMapping("/merchant-only/terminal-analysis/settlement-date")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+    public ResponseEntity<List<TransactionReportDTO.TerminalAnalysisDTO>> getMerchantOnlyTerminalAnalysisBySettlementDate(
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+
+            @RequestParam(required = false) Long merchantId) {
+
+        List<TransactionReportDTO.TerminalAnalysisDTO> analysis = transactionReportService
+                .getMerchantOnlyTerminalAnalysisBySettlementDate(startDate, endDate, merchantId);
+
+        return ResponseEntity.ok(analysis);
+    }
 }

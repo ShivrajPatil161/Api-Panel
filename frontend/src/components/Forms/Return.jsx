@@ -687,7 +687,7 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
 
       // Call parent onSubmit with result
       if (onSubmit) {
-        await onSubmit(result);
+        await onSubmit(submissionData);
       }
 
       handleClose();

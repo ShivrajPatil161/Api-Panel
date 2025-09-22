@@ -27,26 +27,23 @@ public class User {
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
+    @Column
+    private String role; // Simple string field: "USER", "ADMIN", "SUPER_ADMIN"
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_permissions",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    private Set<Permission> permissions = new HashSet<>();
+
 
     private String resetToken;
     @Column
     private LocalDateTime resetTokenExpiry;
 
-    public LocalDateTime getResetTokenExpiry() {
-        return resetTokenExpiry;
-    }
 
-    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
-        this.resetTokenExpiry = resetTokenExpiry;
-    }
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
     @Column
     private LocalDateTime createdAt;
 
@@ -62,6 +59,14 @@ public class User {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
+    public LocalDateTime getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
+    }
+
     public int getId() {
         return id;
     }
@@ -95,14 +100,6 @@ public class User {
     }
 
 
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -119,34 +116,12 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    // Helper methods
-    public void addRole(Role role) {
-        this.roles.add(role);
+    public String getRole() {
+        return role;
     }
 
-    public void removeRole(Role role) {
-        this.roles.remove(role);
-    }
-
-    // Get all permissions from all roles
-    public Set<Permission> getAllPermissions() {
-        Set<Permission> allPermissions = new HashSet<>();
-        for (Role role : roles) {
-            allPermissions.addAll(role.getPermissions());
-        }
-        return allPermissions;
-    }
-
-    // Check if user has specific permission
-    public boolean hasPermission(String permissionName) {
-        return getAllPermissions().stream()
-                .anyMatch(permission -> permission.getName().equals(permissionName));
-    }
-
-    // Check if user has specific role
-    public boolean hasRole(String roleName) {
-        return roles.stream()
-                .anyMatch(role -> role.getName().equals(roleName));
+    public void setRole(String role) {
+        this.role = role;
     }
 
     @PrePersist
@@ -158,5 +133,27 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Update helper methods:
+    public void addPermission(Permission permission) {
+        this.permissions.add(permission);
+    }
+
+    public void removePermission(Permission permission) {
+        this.permissions.remove(permission);
+    }
+
+    public Set<Permission> getAllPermissions() {
+        return permissions; // Direct return instead of collecting from roles
+    }
+
+    public boolean hasPermission(String permissionName) {
+        return permissions.stream()
+                .anyMatch(permission -> permission.getName().equals(permissionName));
+    }
+
+    public boolean hasRole(String roleName) {
+        return roleName.equals(this.role); // Simple string comparison
     }
 }

@@ -221,8 +221,8 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             "vt.authCode as authCode, " +
             "vt.tid as tid, " +
             "CASE WHEN ftd.amount > 0 THEN ((ftd.amount - ftd.netAmount) / ftd.amount * 100) ELSE 0 END as settlementPercentage, " +
-            "ftd.netAmount as settleAmount, " +
-            "mtd.grossCharge as retailorMDR, " +
+            "mtd.netAmount as settleAmount, " +
+            "mtd.grossCharge as systemFee, " +
             "CASE WHEN ftd.amount > 0 THEN (mtd.grossCharge / ftd.amount * 100) ELSE 0 END as retailorPercentage, " +
             "ftd.netAmount as commissionAmount, " +
             "vt.cardType as cardType, " +
@@ -259,8 +259,8 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             "vt.authCode as authCode, " +
             "vt.tid as tid, " +
             "CASE WHEN ftd.amount > 0 THEN ((ftd.amount - ftd.netAmount) / ftd.amount * 100) ELSE 0 END as settlementPercentage, " +
-            "ftd.netAmount as settleAmount, " +
-            "mtd.grossCharge as retailorMDR, " +
+            "mtd.netAmount as settleAmount, " +
+            "mtd.grossCharge as systemFee, " +
             "CASE WHEN ftd.amount > 0 THEN (mtd.grossCharge / ftd.amount * 100) ELSE 0 END as retailorPercentage, " +
             "mtd.charge as commissionAmount, " +
             "vt.cardType as cardType, " +
@@ -290,28 +290,6 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             Pageable pageable);
 
     // 3. AGGREGATED SUMMARY BY CARD TYPE AND BRAND
-//    @Query("SELECT " +
-//            "vt.cardType, " +
-//            "vt.brandType, " +
-//            "COUNT(ftd) as transactionCount, " +
-//            "SUM(ftd.amount) as totalAmount, " +
-//            "SUM(ftd.netAmount) as totalSettleAmount, " +
-//            "SUM(mtd.charge) as totalCommission, " +
-//            "SUM(mtd.grossCharge) as totalMDR, " +
-//            "AVG(ftd.amount) as averageAmount, " +
-//            "AVG(CASE WHEN ftd.amount > 0 THEN (mtd.grossCharge / ftd.amount * 100) ELSE 0 END) as averageMDRPercentage " +
-//            "FROM FranchiseTransactionDetails ftd " +
-//            "JOIN ftd.merchantTransactionDetail mtd " +
-//            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
-//            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
-//            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
-//            "AND ftd.tranStatus = 'SETTLED' " +
-//            "GROUP BY vt.cardType, vt.brandType " +
-//            "ORDER BY SUM(ftd.amount) DESC")
-//    List<Object[]> getCardTypeBrandSummary(
-//            @Param("startDate") LocalDateTime startDate,
-//            @Param("endDate") LocalDateTime endDate,
-//            @Param("franchiseId") Long franchiseId);
 
     @Query("SELECT " +
             "vt.cardType, " +
@@ -336,14 +314,39 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             @Param("endDate") LocalDateTime endDate,
             @Param("franchiseId") Long franchiseId);
 
+    @Query("SELECT " +
+            "vt.cardType, " +
+            "vt.brandType, " +
+            "COUNT(ftd) as transactionCount, " +
+            "CAST(SUM(ftd.amount) as bigdecimal), " +
+            "CAST(SUM(ftd.netAmount) as bigdecimal), " +
+            "CAST(SUM(mtd.charge) as bigdecimal), " +
+            "CAST(SUM(mtd.grossCharge) as bigdecimal), " +
+            "CAST(AVG(ftd.amount) as bigdecimal), " +
+            "CAST(AVG(CASE WHEN ftd.amount > 0 THEN (mtd.grossCharge / ftd.amount * 100) ELSE 0 END) as bigdecimal) " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "AND ftd.tranStatus = 'SETTLED' " +
+            "GROUP BY vt.cardType, vt.brandType " +
+            "ORDER BY SUM(ftd.amount) DESC")
+    List<Object[]> getCardTypeBrandSummaryBySettleDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId);
+
+
     // 4. DAILY TRANSACTION SUMMARY WITH BREAKDOWN
     @Query("SELECT " +
             "DATE(ftd.transactionDate) as txnDate, " +
             "COUNT(ftd) as totalTransactions, " +
             "CAST(SUM(ftd.amount) as bigdecimal) as totalAmount, " +
-            "CAST(SUM(ftd.netAmount) as bigdecimal) as totalSettleAmount, " +
-            "CAST(SUM(mtd.charge) as bigdecimal) as totalCommission, " +
-            "CAST(SUM(mtd.grossCharge) as bigdecimal) as totalMDR, " +
+            "CAST(SUM(mtd.netAmount) as bigdecimal) as totalSettleAmount, " +
+            "CAST(SUM(ftd.netAmount) as bigdecimal) as totalCommission, " +
+            "CAST(SUM(mtd.charge) as bigdecimal) as totalSystemFee, " +
+            "CAST(SUM(mtd.grossCharge) as bigdecimal) as totalMerchantFee, " +
             "COUNT(CASE WHEN ftd.tranStatus = 'SETTLED' THEN 1 END) as settledCount, " +
             "COUNT(CASE WHEN ftd.tranStatus != 'SETTLED' THEN 1 END) as failedCount, " +
             "CAST(AVG(ftd.amount) as bigdecimal) as averageAmount, " +

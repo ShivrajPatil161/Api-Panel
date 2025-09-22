@@ -681,6 +681,213 @@ public class TransactionReportService {
         return mapToTransactionSummaryDTO(summaryData);
     }
 
+    //// 22-09-25 - with detailed fields
+    /**
+     * Get merchant-only transaction details by transaction date
+     */
+    public Page<DetailedTransactionReportDTO> getMerchantOnlyTransactionDetails(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Long merchantId,
+            String status,
+            String cardType,
+            String brandType,
+            Pageable pageable) {
+
+        Page<Object[]> results = merchantTransactionRepository.getMerchantTransactionReportByTxnDate(
+                startDate, endDate, merchantId, status, cardType, brandType, pageable);
+
+        List<DetailedTransactionReportDTO> reportData = results.getContent().stream()
+                .map(this::mapMerchantOnlyToDetailedTransactionDTO)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(reportData, pageable, results.getTotalElements());
+    }
+
+    /**
+     * Get merchant-only transaction details by settlement date
+     */
+    public Page<DetailedTransactionReportDTO> getMerchantOnlyTransactionDetailsBySettlementDate(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Long merchantId,
+            String status,
+            String cardType,
+            String brandType,
+            Pageable pageable) {
+
+        Page<Object[]> results = merchantTransactionRepository.getMerchantTransactionReportBySettleDate(
+                startDate, endDate, merchantId, status, cardType, brandType, pageable);
+
+        List<DetailedTransactionReportDTO> reportData = results.getContent().stream()
+                .map(this::mapMerchantOnlyToDetailedTransactionDTO)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(reportData, pageable, results.getTotalElements());
+    }
+
+    /**
+     * Get merchant-only card type brand summary by transaction date
+     */
+    public List<CardTypeBrandSummaryDTO> getMerchantOnlyCardTypeBrandSummary(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Long merchantId) {
+
+        List<Object[]> results = merchantTransactionRepository.getMerchantCardTypeBrandSummaryByTxnDate(
+                startDate, endDate, merchantId);
+
+        return results.stream()
+                .map(this::mapMerchantOnlyToCardTypeBrandSummaryDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get merchant-only card type brand summary by settlement date
+     */
+    public List<CardTypeBrandSummaryDTO> getMerchantOnlyCardTypeBrandSummaryBySettlementDate(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Long merchantId) {
+
+        List<Object[]> results = merchantTransactionRepository.getMerchantCardTypeBrandSummaryBySettleDate(
+                startDate, endDate, merchantId);
+
+        return results.stream()
+                .map(this::mapMerchantOnlyToCardTypeBrandSummaryDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get merchant-only daily summary by transaction date
+     */
+    public List<DailySummaryReportDTO> getMerchantOnlyDailySummary(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Long merchantId) {
+
+        List<Object[]> results = merchantTransactionRepository.getMerchantDailySummaryByTxnDate(
+                startDate, endDate, merchantId);
+
+        return results.stream()
+                .map(this::mapMerchantOnlyToDailySummaryDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get merchant-only daily summary by settlement date
+     */
+    public List<DailySummaryReportDTO> getMerchantOnlyDailySummaryBySettlementDate(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Long merchantId) {
+
+        List<Object[]> results = merchantTransactionRepository.getMerchantDailySummaryBySettleDate(
+                startDate, endDate, merchantId);
+
+        return results.stream()
+                .map(this::mapMerchantOnlyToDailySummaryDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get merchant-only terminal analysis by transaction date
+     */
+    public List<TerminalAnalysisDTO> getMerchantOnlyTerminalAnalysis(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Long merchantId) {
+
+        List<Object[]> results = merchantTransactionRepository.getTerminalWiseAnalysisByTxnDate(
+                startDate, endDate, merchantId);
+
+        return results.stream()
+                .map(this::mapMerchantOnlyToTerminalAnalysisDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get merchant-only terminal analysis by settlement date
+     */
+    public List<TerminalAnalysisDTO> getMerchantOnlyTerminalAnalysisBySettlementDate(
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Long merchantId) {
+
+        List<Object[]> results = merchantTransactionRepository.getTerminalWiseAnalysisBySettleDate(
+                startDate, endDate, merchantId);
+
+        return results.stream()
+                .map(this::mapMerchantOnlyToTerminalAnalysisDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Private mapping methods for merchant-only data
+    private DetailedTransactionReportDTO mapMerchantOnlyToDetailedTransactionDTO(Object[] row) {
+        DetailedTransactionReportDTO dto = new DetailedTransactionReportDTO();
+        dto.setTxnDate((LocalDateTime) row[0]);
+        dto.setTxnAmount((BigDecimal) row[1]);
+        dto.setSettleDate((LocalDateTime) row[2]);
+        dto.setAuthCode((String) row[3]);
+        dto.setTid((String) row[4]);
+        dto.setSettlementPercentage(row[5] != null ? ((Number) row[5]).doubleValue() : 0.0);
+        dto.setSettleAmount((BigDecimal) row[6]);
+        dto.setRetailorMDR((BigDecimal) row[7]); // system fee
+        dto.setRetailorPercentage(row[8] != null ? ((Number) row[8]).doubleValue() : 0.0);
+        dto.setCommissionAmount(BigDecimal.ZERO); // No commission for merchant-only
+        dto.setCardType((String) row[9]);
+        dto.setBrandType((String) row[10]);
+        dto.setCardClassification((String) row[11]);
+        dto.setMerchantName((String) row[12]);
+        dto.setFranchiseName(null); // No franchise for merchant-only
+        dto.setState(null); // State not available in merchant query
+        return dto;
+    }
+
+    private CardTypeBrandSummaryDTO mapMerchantOnlyToCardTypeBrandSummaryDTO(Object[] row) {
+        CardTypeBrandSummaryDTO dto = new CardTypeBrandSummaryDTO();
+        dto.setCardType((String) row[0]);
+        dto.setBrandType((String) row[1]);
+        dto.setTransactionCount(((Number) row[2]).longValue());
+        dto.setTotalAmount((BigDecimal) row[3]);
+        dto.setTotalSettleAmount((BigDecimal) row[4]);
+        dto.setTotalCommission(BigDecimal.ZERO); // No commission for merchant-only
+        dto.setTotalMDR((BigDecimal) row[5]);
+        dto.setAverageAmount((BigDecimal) row[6]);
+        dto.setAverageMDRPercentage(row[7] != null ? ((Number) row[7]).doubleValue() : 0.0);
+        return dto;
+    }
+
+    private DailySummaryReportDTO mapMerchantOnlyToDailySummaryDTO(Object[] row) {
+        DailySummaryReportDTO dto = new DailySummaryReportDTO();
+        dto.setTxnDate(((java.sql.Date) row[0]).toLocalDate().atStartOfDay());
+        dto.setTotalTransactions(((Number) row[1]).longValue());
+        dto.setTotalAmount((BigDecimal) row[2]);
+        dto.setTotalSettleAmount((BigDecimal) row[3]);
+        dto.setTotalCommission(BigDecimal.ZERO); // No commission for merchant-only
+        dto.setTotalMDR((BigDecimal) row[4]);
+        dto.setSettledCount(((Number) row[5]).longValue());
+        dto.setFailedCount(((Number) row[6]).longValue());
+        dto.setAverageAmount((BigDecimal) row[7]);
+        dto.setUniqueMerchants(((Number) row[8]).longValue());
+        return dto;
+    }
+
+    private TerminalAnalysisDTO mapMerchantOnlyToTerminalAnalysisDTO(Object[] row) {
+        TerminalAnalysisDTO dto = new TerminalAnalysisDTO();
+        dto.setTerminalId((String) row[0]);
+        dto.setMerchantName((String) row[1]);
+        dto.setFranchiseName(null); // No franchise for merchant-only
+        dto.setTransactionCount(((Number) row[2]).longValue());
+        dto.setTotalAmount((BigDecimal) row[3]);
+        dto.setTotalSettleAmount((BigDecimal) row[4]);
+        dto.setTotalCommission(BigDecimal.ZERO); // No commission for merchant-only
+        dto.setAverageAmount((BigDecimal) row[6]);
+        dto.setSuccessCount(((Number) row[7]).longValue());
+        dto.setFailureCount(((Number) row[8]).longValue());
+        return dto;
+    }
+    ////
     // Private mapping methods
     private DetailedTransactionReportDTO mapToDetailedTransactionDTO(Object[] row) {
         DetailedTransactionReportDTO dto = new DetailedTransactionReportDTO();

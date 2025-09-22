@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll() // Health check
 
                         // Admin only endpoints
-                        .requestMatchers("/vendors/**", "/vendor-rates/**").hasRole("ADMIN")
+                        .requestMatchers("/vendors/**", "/vendor-rates/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/products/**").hasRole("ADMIN")
 
 

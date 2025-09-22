@@ -2,9 +2,9 @@ package com.project2.ism.Service.AdminServices;
 
 import com.project2.ism.DTO.AdminDTO.CreatePermissionRequest;
 import com.project2.ism.Model.Users.Permission;
-import com.project2.ism.Model.Users.Role;
+import com.project2.ism.Model.Users.User;
 import com.project2.ism.Repository.PermissionRepository;
-import com.project2.ism.Repository.RoleRepository;
+import com.project2.ism.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,7 @@ public class PermissionService {
     private PermissionRepository permissionRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private UserRepository userRepository;
 
     public List<Permission> getAllPermissions() {
         return permissionRepository.findAll();
@@ -56,14 +56,16 @@ public class PermissionService {
         Permission permission = permissionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Permission not found"));
 
-        // Check if permission is being used by any role
-        List<Role> rolesUsingPermission = roleRepository.findAll().stream()
-                .filter(role -> role.getPermissions().contains(permission))
+        // UPDATED: Check if permission is being used by any user directly
+        List<User> usersUsingPermission = userRepository.findAll().stream()
+                .filter(user -> user.getAllPermissions().contains(permission))
                 .toList();
 
-        if (!rolesUsingPermission.isEmpty()) {
-            throw new IllegalStateException("Cannot delete permission. It's being used by roles: " +
-                    rolesUsingPermission.stream().map(Role::getName).collect(Collectors.joining(", ")));
+        if (!usersUsingPermission.isEmpty()) {
+            String userEmails = usersUsingPermission.stream()
+                    .map(User::getEmail)
+                    .collect(Collectors.joining(", "));
+            throw new IllegalStateException("Cannot delete permission. It's being used by users: " + userEmails);
         }
 
         permissionRepository.delete(permission);

@@ -157,6 +157,7 @@ const getMenuItems = (userType) => {
     admin: [
       {
         title: 'Dashboard',
+        key:"dashboard",
         icon: Home,
         iconColor: '',
         children: [
@@ -214,6 +215,7 @@ const getMenuItems = (userType) => {
       {
         title: 'Reports',
         path: '/dashboard/reports',
+        key:"reports",
         icon: BarChart3,
         iconColor: ''
       }
