@@ -45,4 +45,10 @@ public class ProductSchemeAssignmentController {
         return ResponseEntity.ok(assignmentService.updateAssignment(id, dto));
     }
 
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        assignmentService.deleteAssignment(id);
+        return ResponseEntity.noContent().build();
+    }
 }

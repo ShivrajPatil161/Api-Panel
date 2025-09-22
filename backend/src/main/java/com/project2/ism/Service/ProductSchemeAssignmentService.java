@@ -101,4 +101,11 @@ public class ProductSchemeAssignmentService {
         return toDTO(saved);
     }
 
+
+    public void deleteAssignment(Long id) {
+        ProductSchemeAssignment entity = assignmentRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found with id: " + id));
+
+        assignmentRepo.delete(entity);
+    }
 }

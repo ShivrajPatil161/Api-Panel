@@ -210,35 +210,5 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             @Param("endDate") LocalDateTime endDate,
             @Param("franchiseId") Long franchiseId);
 
-//    // Direct merchants (franchise_id is null) - transaction date
-//    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
-//            "mtd.transactionDate BETWEEN :startDate AND :endDate " +
-//            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
-//            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
-//            "ORDER BY mtd.transactionDate DESC")
-//    Page<MerchantTransactionDetails> findDirectMerchantTransactionsByFilters(
-//            @Param("startDate") LocalDateTime startDate,
-//            @Param("endDate") LocalDateTime endDate,
-//            @Param("status") String status,
-//            @Param("transactionType") String transactionType,
-//            Pageable pageable);
-//
-//    // Direct merchants summary - transaction date
-//    @Query("SELECT " +
-//            "COUNT(mtd) as totalTransactions, " +
-//            "COALESCE(SUM(mtd.amount), 0) as totalAmount, " +
-//            "COALESCE(SUM(mtd.netAmount), 0) as totalNetAmount, " +
-//            "COALESCE(SUM(mtd.charge), 0) as totalCharges, " +
-//            "COALESCE(AVG(mtd.amount), 0) as averageAmount, " +
-//            "COUNT(CASE WHEN mtd.tranStatus = 'SETTLED' THEN 1 END) as successCount, " +
-//            "COUNT(CASE WHEN mtd.tranStatus != 'SETTLED' THEN 1 END) as failureCount " +
-//            "FROM MerchantTransactionDetails mtd WHERE " +
-//            "mtd.transactionDate BETWEEN :startDate AND :endDate " +
-//            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
-//            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType)")
-//    Map<String, Object> getDirectMerchantTransactionSummary(
-//            @Param("startDate") LocalDateTime startDate,
-//            @Param("endDate") LocalDateTime endDate,
-//            @Param("status") String status,
-//            @Param("transactionType") String transactionType);
+
 }

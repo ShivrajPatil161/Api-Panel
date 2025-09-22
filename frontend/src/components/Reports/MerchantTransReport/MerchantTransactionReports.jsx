@@ -437,10 +437,10 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                 endDate: `${localFilters.endDate}T23:59:59`,
                 merchantId: isMerchant ? customerId : localFilters.selectedMerchant,
                 status: 'SETTLED',
-                transactionType: localFilters.transactionType,
                 dateFilterType: localFilters.dateFilterType,
                 page: 0,
-                size: 100
+                size: 100,
+                ...(localFilters.transactionType !== 'All' && { transactionType: localFilters.transactionType })
             };
 
             const response = await api.get('/v1/reports/transactions/merchant/enhanced', { params });
