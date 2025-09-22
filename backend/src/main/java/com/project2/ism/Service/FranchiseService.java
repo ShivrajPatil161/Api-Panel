@@ -118,6 +118,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -212,13 +213,19 @@ public class FranchiseService {
     }
 
     public List<FranchiseListDTO> getAllFranchisesForList() {
+        Map<Long, BigDecimal> walletBalances = franchiseWalletRepository.findAll().stream()
+                .collect(Collectors.toMap(wallet -> wallet.getFranchise().getId(),
+                        FranchiseWallet::getAvailableBalance));
+
         return franchiseRepository.findAll()
                 .stream()
                 .map(franchise -> {
                     Long merchantCount = merchantRepository.countByFranchiseId(franchise.getId());
-                    return mapToListDTO(franchise, merchantCount);
+                    BigDecimal walletBalance = walletBalances.getOrDefault(franchise.getId(), BigDecimal.ZERO);
+                    return mapToListDTO(franchise, walletBalance, merchantCount);
                 })
                 .collect(Collectors.toList());
+
     }
 
     public List<FranchiseListDTO> getAllFranchisesWithMerchantCount() {
@@ -282,7 +289,7 @@ public class FranchiseService {
         }
     }
 
-    private FranchiseListDTO mapToListDTO(Franchise franchise, Long merchantCount) {
+    private FranchiseListDTO mapToListDTO(Franchise franchise,BigDecimal walletBalance, Long merchantCount) {
         return new FranchiseListDTO(
                 franchise.getId(),
                 franchise.getFranchiseName(),
@@ -291,7 +298,7 @@ public class FranchiseService {
                 franchise.getContactPerson() != null ? franchise.getContactPerson().getPhoneNumber() : null,
                 franchise.getAddress(),
                 merchantCount,
-                franchise.getWalletBalance() != null ? franchise.getWalletBalance() : BigDecimal.ZERO,
+                walletBalance != null ? walletBalance : BigDecimal.ZERO,
                 franchise.getStatus() != null ? franchise.getStatus() : "ACTIVE",
                 franchise.getCreatedAt()
         );
@@ -359,8 +366,8 @@ public class FranchiseService {
         return dto;
     }
 
-    public BigDecimal getWalletBalance(Long merchantId) {
-        return franchiseWalletRepository.findByFranchiseId(merchantId)
+    public BigDecimal getWalletBalance(Long franchiseId) {
+        return franchiseWalletRepository.findByFranchiseId(franchiseId)
                 .map(FranchiseWallet::getAvailableBalance)
                 .orElse(BigDecimal.ZERO); // if wallet row not present yet
     }

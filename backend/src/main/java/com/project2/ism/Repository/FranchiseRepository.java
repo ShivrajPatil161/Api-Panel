@@ -27,18 +27,18 @@ public interface FranchiseRepository extends JpaRepository<Franchise, Long> {
         cp.phoneNumber,
         f.address,
         COUNT(m.id),
-        COALESCE(f.walletBalance, 0),
+        COALESCE(w.availableBalance, 0),
         COALESCE(f.status, 'ACTIVE'),
         f.createdAt
     )
     FROM Franchise f
     LEFT JOIN f.contactPerson cp
     LEFT JOIN f.merchants m
+    LEFT JOIN FranchiseWallet w ON w.franchise = f
     GROUP BY f.id, f.franchiseName, cp.name, cp.email, cp.phoneNumber, 
-             f.address, f.walletBalance, f.status, f.createdAt
+             f.address, w.availableBalance, f.status, f.createdAt
 """)
     List<FranchiseListDTO> findAllWithMerchantCount();
-
 
     //stats
     @Query("SELECT SUM(f.walletBalance) FROM Franchise f")

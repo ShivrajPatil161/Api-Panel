@@ -68,13 +68,24 @@ public class InwardTransactionDTO {
         inward.setProductCondition(this.productCondition);
         inward.setRemark(this.remark);
 
-        if (this.serialNumbers != null) {
-            inward.setProductSerialNumbers(
-                    this.serialNumbers.stream()
-                            .map(sn -> sn.toInwardEntity(inward, product))
-                            .collect(Collectors.toList())
+        // ✅ Validation: serialNumbers should not be null/empty
+        if (this.serialNumbers == null || this.serialNumbers.isEmpty()) {
+            throw new IllegalArgumentException("Serial numbers are required for inward transactions");
+        }
+
+        // ✅ Validation: length must match quantity
+        if (this.quantity != null && this.serialNumbers.size() != this.quantity) {
+            throw new IllegalArgumentException(
+                    String.format("Quantity (%d) does not match number of serial numbers provided (%d)",
+                            this.quantity, this.serialNumbers.size())
             );
         }
+
+        inward.setProductSerialNumbers(
+                this.serialNumbers.stream()
+                        .map(sn -> sn.toInwardEntity(inward, product))
+                        .collect(Collectors.toList())
+        );
         return inward;
     }
 }

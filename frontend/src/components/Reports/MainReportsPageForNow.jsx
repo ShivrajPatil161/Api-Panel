@@ -20,8 +20,7 @@ const MainReportsPageForNow = () => {
         { id: "inward-transaction-reports", label: "Inward Transaction Reports", component: <InwardTransactionReport /> },
         { id: "outward-transaction-reports", label: "Outward Transaction Reports", component: <OutwardTransactionReport /> },
         { id: "return-transaction-reports", label: "Return Transaction Reports", component: <ReturnTransactionReport/> },
-
-        { id: "product-reports", label: "Product Reports", component: <ProductReport /> } // Add the Product Report tab
+        { id: "product-reports", label: "Product Reports", component: <ProductReport /> } 
 
 
 
