@@ -55,6 +55,14 @@ const Login = () => {
     navigate("/forgot-pass")
   };
 
+  // Handle Enter key press
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter' && !isSubmitting) {
+      event.preventDefault();
+      handleSubmit(onSubmit)();
+    }
+  };
+
 
 
   return (
@@ -67,57 +75,58 @@ const Login = () => {
         </div>
         {/* Form */}
         <div className="p-8">
-          <div className="space-y-6">
-            {/* Email Field */}
-            <FormInput
-              label="Email Address"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              register={register}
-              errors={errors}
-              validation={{
-                required: "Email is required",
-                pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Invalid email address" }
-              }} />
-            {/* Password Field */}
-            <FormInput
-              label="Password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              register={register}
-              errors={errors}
-              validation={{
-                required: "Password is required",
-                minLength: { value: 6, message: "Password must be at least 6 characters" }
-              }}
-              rightIcon={ 
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              }/>
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              variant="primary"
-              onClick={handleSubmit(onSubmit)} >
-              {isSubmitting ? 'Signing In...' : 'Sign In'}
-            </Button>
-            {/* Forgot Password */}
-            <div className="text-center">
-              <Button variant="link" onClick={handleForgotPassword} > Forgot your password? </Button>
+          <form onSubmit={handleSubmit(onSubmit)} onKeyPress={handleKeyPress}>
+            <div className="space-y-6">
+              {/* Email Field */}
+              <FormInput
+                label="Email Address"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                register={register}
+                errors={errors}
+                validation={{
+                  required: "Email is required",
+                  pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Invalid email address" }
+                }} />
+              {/* Password Field */}
+              <FormInput
+                label="Password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                register={register}
+                errors={errors}
+                validation={{
+                  required: "Password is required",
+                  minLength: { value: 6, message: "Password must be at least 6 characters" }
+                }}
+                rightIcon={ 
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                }/>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                variant="primary">
+                {isSubmitting ? 'Signing In...' : 'Sign In'}
+              </Button>
+              {/* Forgot Password */}
+              <div className="text-center">
+                <Button variant="link" onClick={handleForgotPassword} > Forgot your password? </Button>
+              </div>
+              {/* Signup Link */}
+              {/* <div className="pt-6 border-t border-gray-200 text-center text-sm text-gray-600"> Don't have an account?{' '}
+                <Button variant="link" onClick={handleSignup} className="inline" > Sign up here </Button>
+              </div> */}
             </div>
-            {/* Signup Link */}
-            {/* <div className="pt-6 border-t border-gray-200 text-center text-sm text-gray-600"> Don't have an account?{' '}
-              <Button variant="link" onClick={handleSignup} className="inline" > Sign up here </Button>
-            </div> */}
-          </div>
+          </form>
         </div>
       </div>
     </div>
