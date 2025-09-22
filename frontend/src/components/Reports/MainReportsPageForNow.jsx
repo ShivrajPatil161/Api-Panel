@@ -5,7 +5,8 @@ import FTransReportDashboard from "./FranhiseTransReports/FTransReportDashboard"
 import MTransReportDashboard from "./MerchantTransReport/MTransReportDashboard";
 import InwardTransactionReport from "./InwardTransactionReports";
 import OutwardTransactionReport from "./OutwardTransactionReports";
-
+import ProductReport from "./productReports/ProductReport";
+import ReturnTransactionReport from "./ReturnTransactionReports";
 const MainReportsPageForNow = () => {
     // null = no tab selected initially
     const [activeTab, setActiveTab] = useState(null);
@@ -14,10 +15,13 @@ const MainReportsPageForNow = () => {
     const tabs = [
         { id: "franchise", label: "Franchise Reports", component: <FranchiseReports /> },
         { id: "vendor", label: "Vendor Reports", component: <VendorReports /> },
-        { id: "merchant-reports", label: "Merchant Reports", component: <MTransReportDashboard /> },
+        { id: "merchant-reports", label: "Merchant Transaction Reports", component: <MTransReportDashboard /> },
         { id: "franchise-reports", label: "Franchise Transaction Reports", component: <FTransReportDashboard /> },
         { id: "inward-transaction-reports", label: "Inward Transaction Reports", component: <InwardTransactionReport /> },
-        { id: "outward-transaction-reports", label: "Outward Transaction Reports", component: <OutwardTransactionReport /> }
+        { id: "outward-transaction-reports", label: "Outward Transaction Reports", component: <OutwardTransactionReport /> },
+        { id: "return-transaction-reports", label: "Return Transaction Reports", component: <ReturnTransactionReport/> },
+        { id: "product-reports", label: "Product Reports", component: <ProductReport /> } 
+
 
 
         // you can keep adding: { id: "sales", label: "Sales Reports", component: <SalesReports /> }
