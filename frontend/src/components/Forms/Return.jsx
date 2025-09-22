@@ -6,7 +6,7 @@ import { AlertCircle, X, Loader2, ChevronDown } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
 import returnTransactionAPI from '../../constants/API/returnTransactionApi';
 
-// Updated Zod validation schema to match backend DTO
+// Updated Zod validation schema
 const returnSchema = z.object({
   returnNumber: z.string().min(1, "Return number is required"),
   originalDeliveryNumber: z.string().min(1, "Original delivery number is required"),
@@ -331,7 +331,7 @@ const SerialNumberGrid = ({ availableSerials = [], returnedQuantity, onSelection
   );
 };
 
-const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
+const OptimizedReturns = ({ onSubmit, onCancel, editData = null, showToast }) => {
   const [selectedSerialNumbers, setSelectedSerialNumbers] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -360,13 +360,13 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
     formState: { errors }
   } = useForm({
     resolver: zodResolver(returnSchema),
-    defaultValues: editData || {
+    defaultValues: {
+      returnDate: new Date().toISOString().split('T')[0],
       quantity: 0,
       returnedQuantity: 0,
       refundAmount: 0,
       isWarranty: false,
       replacementRequired: false,
-      returnDate: new Date().toISOString().split('T')[0]
     }
   });
 
@@ -380,8 +380,9 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
 
   // API Functions with proper error handling
   const fetchCategories = useCallback(async () => {
+    if (categoriesLoading) return; // Prevent multiple simultaneous calls
+    
     setCategoriesLoading(true);
-    setError(null);
     try {
       const response = await api.get('/product-categories');
       if (response.data && Array.isArray(response.data)) {
@@ -395,21 +396,21 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
-      setError(`Failed to load categories: ${error.response?.data?.message || error.message}`);
+      const errorMsg = `Failed to load categories: ${error.response?.data?.message || error.message}`;
+      setError(errorMsg);
+      if (showToast) {
+        showToast(errorMsg, 'error');
+      }
       setCategories([]);
     } finally {
       setCategoriesLoading(false);
     }
-  }, []);
+  }, [categoriesLoading, showToast]);
 
   const fetchProductsByCategory = useCallback(async (categoryId) => {
-    if (!categoryId) {
-      setProducts([]);
-      return;
-    }
+    if (!categoryId || productsLoading) return;
 
     setProductsLoading(true);
-    setError(null);
     try {
       const response = await api.get(`/products/category/${categoryId}`);
       if (response.data && Array.isArray(response.data)) {
@@ -424,24 +425,26 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
       } else {
         throw new Error('Invalid response format for products');
       }
-      setValue('productId', ''); // Clear product selection when category changes
+      setValue('productId', '');
+      setValue('productName', '');
+      setValue('productType', '');
     } catch (error) {
       console.error('Error fetching products:', error);
-      setError(`Failed to load products: ${error.response?.data?.message || error.message}`);
+      const errorMsg = `Failed to load products: ${error.response?.data?.message || error.message}`;
+      setError(errorMsg);
+      if (showToast) {
+        showToast(errorMsg, 'error');
+      }
       setProducts([]);
     } finally {
       setProductsLoading(false);
     }
-  }, [setValue]);
+  }, [productsLoading, setValue, showToast]);
 
   const fetchCustomers = useCallback(async (customerType) => {
-    if (!customerType) {
-      setCustomers([]);
-      return;
-    }
+    if (!customerType || customersLoading) return;
 
     setCustomersLoading(true);
-    setError(null);
     try {
       const endpoint = customerType === 'franchise' ? '/franchise' : '/merchants/direct-merchant';
       const response = await api.get(endpoint);
@@ -461,28 +464,28 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
       } else {
         throw new Error('Invalid response format for customers');
       }
-      setValue('customerId', ''); // Clear customer selection when type changes
+      setValue('customerId', '');
+      setValue('customerName', '');
     } catch (error) {
       console.error(`Error fetching ${customerType}s:`, error);
-      setError(`Failed to load ${customerType}s: ${error.response?.data?.message || error.message}`);
+      const errorMsg = `Failed to load ${customerType}s: ${error.response?.data?.message || error.message}`;
+      setError(errorMsg);
+      if (showToast) {
+        showToast(errorMsg, 'error');
+      }
       setCustomers([]);
     } finally {
       setCustomersLoading(false);
     }
-  }, [setValue]);
+  }, [customersLoading, setValue, showToast]);
 
   const fetchOutwardTransactions = useCallback(async (productId, customerId, customerType) => {
-    if (!productId || !customerId || !customerType) {
-      setOutwardTransactions([]);
-      return;
-    }
+    if (!productId || !customerId || !customerType || outwardTransactionsLoading) return;
 
     setOutwardTransactionsLoading(true);
-    setError(null);
     try {
       const response = await api.get('/outward-transactions');
       if (response.data && Array.isArray(response.data)) {
-        // Filter transactions based on product and customer
         const filteredTransactions = response.data.filter(transaction => {
           const productMatch = transaction.productId === parseInt(productId);
           let customerMatch = false;
@@ -502,43 +505,79 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
       }
     } catch (error) {
       console.error('Error fetching outward transactions:', error);
-      setError(`Failed to load delivery records: ${error.response?.data?.message || error.message}`);
+      const errorMsg = `Failed to load delivery records: ${error.response?.data?.message || error.message}`;
+      setError(errorMsg);
+      if (showToast) {
+        showToast(errorMsg, 'error');
+      }
       setOutwardTransactions([]);
     } finally {
       setOutwardTransactionsLoading(false);
     }
-  }, []);
+  }, [outwardTransactionsLoading, showToast]);
 
-  // Effects with proper dependency management
+  // Effects with proper cleanup
   useEffect(() => {
-    fetchCategories();
-    setError(null);
-  }, [fetchCategories]);
+    let isMounted = true;
+    
+    const loadCategories = async () => {
+      if (isMounted) {
+        await fetchCategories();
+      }
+    };
+    
+    loadCategories();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Run only once on mount
 
   useEffect(() => {
-    if (selectedCategoryId) {
+    let isMounted = true;
+    
+    if (selectedCategoryId && isMounted) {
       fetchProductsByCategory(selectedCategoryId);
+    } else {
+      setProducts([]);
     }
-  }, [selectedCategoryId, fetchProductsByCategory]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCategoryId]);
 
   useEffect(() => {
-    if (selectedCustomerType) {
+    let isMounted = true;
+    
+    if (selectedCustomerType && isMounted) {
       fetchCustomers(selectedCustomerType);
+    } else {
+      setCustomers([]);
     }
-  }, [selectedCustomerType, fetchCustomers]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCustomerType]);
 
-  // Fetch outward transactions when all required fields are filled
   useEffect(() => {
-    if (selectedProductId && selectedCustomerId && selectedCustomerType) {
+    let isMounted = true;
+    
+    if (selectedProductId && selectedCustomerId && selectedCustomerType && isMounted) {
       fetchOutwardTransactions(selectedProductId, selectedCustomerId, selectedCustomerType);
     } else {
       setOutwardTransactions([]);
     }
-  }, [selectedProductId, selectedCustomerId, selectedCustomerType, fetchOutwardTransactions]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedProductId, selectedCustomerId, selectedCustomerType]);
 
+  // Auto-fill product details
   useEffect(() => {
-    if (selectedProductId) {
-      // Auto-fill product name and type when product is selected
+    if (selectedProductId && products.length > 0) {
       const selectedProduct = products.find(p => p.value === selectedProductId);
       if (selectedProduct) {
         setValue('productName', selectedProduct.productName);
@@ -547,9 +586,9 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
     }
   }, [selectedProductId, products, setValue]);
 
-  // Auto-fill customer name when customer is selected
+  // Auto-fill customer name
   useEffect(() => {
-    if (selectedCustomerId) {
+    if (selectedCustomerId && customers.length > 0) {
       const selectedCustomer = customers.find(c => c.value === selectedCustomerId);
       if (selectedCustomer) {
         setValue('customerName', selectedCustomer.label);
@@ -557,7 +596,7 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
     }
   }, [selectedCustomerId, customers, setValue]);
 
-  // Handle delivery number selection
+  // Handle delivery selection
   useEffect(() => {
     if (selectedDeliveryNumber && outwardTransactions.length > 0) {
       const selectedTransaction = outwardTransactions.find(t => t.deliveryNumber === selectedDeliveryNumber);
@@ -578,22 +617,17 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
   // Load edit data
   useEffect(() => {
     if (editData) {
-      // Load form values
       Object.keys(editData).forEach(key => {
         if (!['selectedSerials', 'productSerialNumbers'].includes(key)) {
           if (editData[key] !== null && editData[key] !== undefined) {
-            setValue(key, editData[key].toString());
+            setValue(key, editData[key]);
           }
         }
       });
 
-      // Handle existing serial selections
       if (editData.productSerialNumbers && Array.isArray(editData.productSerialNumbers)) {
         setSelectedSerialNumbers(editData.productSerialNumbers);
       }
-    } else {
-      setSelectedSerialNumbers([]);
-      setError(null);
     }
   }, [editData, setValue]);
 
@@ -640,27 +674,34 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
     { value: 'pending', label: 'Pending Review' }
   ];
 
-  // Prepare delivery number options
   const deliveryNumberOptions = outwardTransactions.map(transaction => ({
     value: transaction.deliveryNumber,
     label: `${transaction.deliveryNumber} - Qty: ${transaction.quantity} (${new Date(transaction.dispatchDate).toLocaleDateString()})`
   }));
 
-  const handleSerialSelectionChange = (selectedSerials) => {
+  const handleSerialSelectionChange = useCallback((selectedSerials) => {
     setSelectedSerialNumbers(selectedSerials);
-  };
+  }, []);
 
   const handleFormSubmit = async (data) => {
     const maxQuantity = parseInt(data.returnedQuantity) || 0;
 
     // Validation
     if (selectedSerialNumbers.length === 0) {
-      setError('Please select at least one serial number for return');
+      const errorMsg = 'Please select at least one serial number for return';
+      setError(errorMsg);
+      if (showToast) {
+        showToast(errorMsg, 'error');
+      }
       return;
     }
 
     if (selectedSerialNumbers.length !== maxQuantity) {
-      setError(`Please select exactly ${maxQuantity} serial numbers for return`);
+      const errorMsg = `Please select exactly ${maxQuantity} serial numbers for return`;
+      setError(errorMsg);
+      if (showToast) {
+        showToast(errorMsg, 'error');
+      }
       return;
     }
 
@@ -668,26 +709,40 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
     setError(null);
 
     try {
+      // Prepare submission data to match backend DTO
       const submissionData = {
-        ...data,
-        // Convert string values to appropriate types
-        customerId: parseInt(data.customerId),
-        productCategoryId: parseInt(data.productCategoryId),
+        returnNumber: data.returnNumber,
+        originalDeliveryNumber: data.originalDeliveryNumber,
+        franchiseId: data.customerType === 'franchise' ? parseInt(data.customerId) : null,
+        merchantId: data.customerType === 'merchant' ? parseInt(data.customerId) : null,
         productId: parseInt(data.productId),
-        quantity: parseInt(data.quantity),
+        returnDate: data.returnDate,
+        receivedBy: data.receivedBy,
+        originalQuantity: parseInt(data.quantity),
         returnedQuantity: parseInt(data.returnedQuantity),
+        returnReason: data.returnReason,
+        returnCondition: data.returnCondition,
+        actionTaken: data.actionTaken,
         refundAmount: data.refundAmount ? parseFloat(data.refundAmount) : 0,
-        isWarranty: data.isWarranty || false,
-        replacementRequired: data.replacementRequired || false,
-        // Include selected serial numbers
-        productSerialNumbers: selectedSerialNumbers
+        approvedBy: data.approvedBy || null,
+        isWarrantyReturn: data.isWarranty || false,
+        isReplacementRequired: data.replacementRequired || false,
+        inspectionNotes: data.inspectionNotes || null,
+        remarks: data.remarks || null,
+        serialNumbers: selectedSerialNumbers.map(serial => ({
+          id: serial.id,
+          mid: serial.mid,
+          sid: serial.sid,
+          tid: serial.tid,
+          vpaid: serial.vpaid
+        }))
       };
 
-     
+      
 
-      // Call parent onSubmit with result
+      // Call parent onSubmit
       if (onSubmit) {
-        await onSubmit(result);
+        await onSubmit(submissionData);
       }
 
       handleClose();
@@ -705,12 +760,15 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
       }
       
       setError(errorMessage);
+      if (showToast) {
+        showToast(errorMessage, 'error');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     reset();
     setSelectedSerialNumbers([]);
     setProducts([]);
@@ -719,8 +777,11 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
     setAvailableSerials([]);
     setSelectedDeliveryTransaction(null);
     setError(null);
-    onCancel();
-  };
+    setIsSubmitting(false);
+    if (onCancel) {
+      onCancel();
+    }
+  }, [reset, onCancel]);
 
   return (
     <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md">
@@ -788,15 +849,7 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
                   disabled={isSubmitting || !selectedCustomerType}
                 />
 
-                <FormInput
-                  label="Customer Name"
-                  name="customerName"
-                  register={register}
-                  errors={errors}
-                  required
-                  placeholder="Customer name (auto-filled)"
-                  disabled={true}
-                />
+                
 
                 <FormInput
                   label="Return Date"
@@ -848,25 +901,9 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
                   disabled={isSubmitting || !selectedCategoryId}
                 />
 
-                <FormInput
-                  label="Product Name"
-                  name="productName"
-                  register={register}
-                  errors={errors}
-                  required
-                  placeholder="Product name (auto-filled)"
-                  disabled={true}
-                />
+                
 
-                <FormSelect
-                  label="Product Type"
-                  name="productType"
-                  register={register}
-                  errors={errors}
-                  required
-                  options={productTypes}
-                  disabled={true}
-                />
+                
 
                 <FormSelect
                   label="Original Delivery Number"
@@ -1090,7 +1127,11 @@ const OptimizedReturns = ({ onSubmit, onCancel, editData = null }) => {
               className={`px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
                 isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
               }`}
-              disabled={isSubmitting || !selectedDeliveryNumber || (returnedQuantity && selectedSerialNumbers.length !== parseInt(returnedQuantity))}
+              disabled={
+                isSubmitting || 
+                !selectedDeliveryNumber || 
+                (returnedQuantity && selectedSerialNumbers.length !== parseInt(returnedQuantity))
+              }
             >
               {isSubmitting && <LoadingSpinner />}
               <span>
