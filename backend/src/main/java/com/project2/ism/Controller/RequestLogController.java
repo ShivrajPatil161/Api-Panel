@@ -152,4 +152,58 @@ public class RequestLogController {
         requestLogService.deleteOldLogs(cutoffDate);
         return ResponseEntity.ok("Cleaned up logs older than " + days + " days");
     }
+
+    @GetMapping("/business/logins")
+    public ResponseEntity<List<RequestLog>> getLoginLogs() {
+        List<RequestLog> logs = requestLogService.getLoginLogs();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/business/logouts")
+    public ResponseEntity<List<RequestLog>> getLogoutLogs() {
+        List<RequestLog> logs = requestLogService.getLogoutLogs();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/business/creates")
+    public ResponseEntity<List<RequestLog>> getCreateLogs() {
+        List<RequestLog> logs = requestLogService.getCreateLogs();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/business/edits")
+    public ResponseEntity<List<RequestLog>> getEditLogs() {
+        List<RequestLog> logs = requestLogService.getEditLogs();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/business/deletes")
+    public ResponseEntity<List<RequestLog>> getDeleteLogs() {
+        List<RequestLog> logs = requestLogService.getDeleteLogs();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/business/failed-attempts")
+    public ResponseEntity<List<RequestLog>> getFailedAttempts() {
+        List<RequestLog> logs = requestLogService.getFailedAttempts();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/business/admin-actions")
+    public ResponseEntity<List<RequestLog>> getAdminActions() {
+        List<RequestLog> logs = requestLogService.getAdminActions();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/business/user-management")
+    public ResponseEntity<List<RequestLog>> getUserManagementLogs() {
+        List<RequestLog> logs = requestLogService.getUserManagementLogs();
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/business/data-exports")
+    public ResponseEntity<List<RequestLog>> getDataExports() {
+        List<RequestLog> logs = requestLogService.getDataExports();
+        return ResponseEntity.ok(logs);
+    }
 }

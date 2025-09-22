@@ -161,7 +161,8 @@ const getMenuItems = (userType) => {
         iconColor: '',
         children: [
           { title: 'DashBoard', path: '/dashboard', icon: Users },
-          { title: 'Admin Management', path: '/dashboard/role-management', icon: Users }
+          { title: 'Admin Management', path: '/dashboard/role-management', icon: Users },
+          { title: 'Logs', path: '/dashboard/logs', icon: Users }
         ]
       },
       {

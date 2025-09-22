@@ -76,4 +76,14 @@ public interface RequestLogRepository extends JpaRepository<RequestLog, Long> {
 
     // Delete old logs
     void deleteByCreatedAtBefore(LocalDateTime cutoffDate);
+
+    List<RequestLog> findByRequestUrlContainingOrderByCreatedAtDesc(String urlPart);
+
+    List<RequestLog> findByRequestMethodAndResponseStatusBetweenOrderByCreatedAtDesc(
+            String method, Integer startStatus, Integer endStatus);
+
+    List<RequestLog> findByResponseStatusGreaterThanEqualOrderByCreatedAtDesc(Integer status);
+
+    List<RequestLog> findByRequestUrlContainingAndResponseStatusBetweenOrderByCreatedAtDesc(
+            String urlPart, Integer startStatus, Integer endStatus);
 }

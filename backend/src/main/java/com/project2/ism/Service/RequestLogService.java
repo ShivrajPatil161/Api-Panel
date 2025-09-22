@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RequestLogService {
@@ -129,5 +131,47 @@ public class RequestLogService {
                 .stream()
                 .filter(log -> log.getResponseStatus() != null && log.getResponseStatus() >= 400)
                 .toList();
+    }
+
+    public List<RequestLog> getLoginLogs() {
+        return requestLogRepository.findByRequestUrlContainingOrderByCreatedAtDesc("/login");
+    }
+
+    public List<RequestLog> getLogoutLogs() {
+        return requestLogRepository.findByRequestUrlContainingOrderByCreatedAtDesc("/logout");
+    }
+
+    public List<RequestLog> getCreateLogs() {
+        return requestLogRepository.findByRequestMethodAndResponseStatusBetweenOrderByCreatedAtDesc("POST", 200, 299);
+    }
+
+    public List<RequestLog> getEditLogs() {
+        return requestLogRepository.findByRequestMethodAndResponseStatusBetweenOrderByCreatedAtDesc("PUT", 200, 299);
+    }
+
+    public List<RequestLog> getDeleteLogs() {
+        return requestLogRepository.findByRequestMethodAndResponseStatusBetweenOrderByCreatedAtDesc("DELETE", 200, 299);
+    }
+
+    public List<RequestLog> getFailedAttempts() {
+        return requestLogRepository.findByResponseStatusGreaterThanEqualOrderByCreatedAtDesc(400);
+    }
+
+    public List<RequestLog> getAdminActions() {
+        return requestLogRepository.findByRequestUrlContainingAndResponseStatusBetweenOrderByCreatedAtDesc("/admin", 200, 299);
+    }
+
+    public List<RequestLog> getUserManagementLogs() {
+        List<RequestLog> logs = new ArrayList<>();
+        logs.addAll(requestLogRepository.findByRequestUrlContainingOrderByCreatedAtDesc("/users"));
+        logs.addAll(requestLogRepository.findByRequestUrlContainingOrderByCreatedAtDesc("/admins"));
+        return logs.stream().sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt())).collect(Collectors.toList());
+    }
+
+    public List<RequestLog> getDataExports() {
+        List<RequestLog> logs = new ArrayList<>();
+        logs.addAll(requestLogRepository.findByRequestUrlContainingOrderByCreatedAtDesc("/export"));
+        logs.addAll(requestLogRepository.findByRequestUrlContainingOrderByCreatedAtDesc("/download"));
+        return logs.stream().sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt())).collect(Collectors.toList());
     }
 }

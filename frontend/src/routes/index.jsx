@@ -37,6 +37,7 @@ import MainReportsPageForNow from '../components/Reports/MainReportsPageForNow.j
 import Payout from '../components/Payout/Payout.jsx'
 import CreditCardBillPayment from '../components/Payout/CreditCardBillPayment.jsx'
 import AdminRolesDashboard from '../components/Admin/AdminRolesDashboard.jsx'
+import BusinessLogs from '../components/Admin/BusinessLogs.jsx'
 
 
 
@@ -91,6 +92,10 @@ export const router = createBrowserRouter([
           {
             path: "role-management",
             element:<AdminRolesDashboard />
+          },
+          {
+            path: "logs",
+            element: <BusinessLogs />
           },
           // Vendors routes
           {
