@@ -116,6 +116,7 @@ const SidebarHeader = ({ sidebarCollapsed, onToggle, userType }) => {
   const getUserTypeDisplay = (type) => {
     switch (type) {
       case 'admin': return 'Admin Panel';
+      case 'super_admin': return 'Admin Panel';
       case 'franchise': return 'Franchise Portal';
       case 'merchant': return 'Merchant Portal';
       default: return 'Management System';
@@ -151,13 +152,19 @@ const SidebarHeader = ({ sidebarCollapsed, onToggle, userType }) => {
 
 // Menu configurations for different user types
 const getMenuItems = (userType) => {
+  const normalizedUserType = userType === "super_admin" ? "admin" : userType;
   const baseMenuItems = {
     admin: [
       {
         title: 'Dashboard',
-        path: '/dashboard',
+        key:"dashboard",
         icon: Home,
-        iconColor: ''
+        iconColor: '',
+        children: [
+          { title: 'DashBoard', path: '/dashboard', icon: Users },
+          { title: 'Admin Management', path: '/dashboard/role-management', icon: Users },
+          { title: 'Logs', path: '/dashboard/logs', icon: Users }
+        ]
       },
       {
         title: 'Vendors',
@@ -208,6 +215,7 @@ const getMenuItems = (userType) => {
       {
         title: 'Reports',
         path: '/dashboard/reports',
+        key:"reports",
         icon: BarChart3,
         iconColor: ''
       }
@@ -298,7 +306,7 @@ const getMenuItems = (userType) => {
     ]
   };
 
-  return baseMenuItems[userType] || baseMenuItems.merchant;
+  return baseMenuItems[normalizedUserType] || baseMenuItems.merchant;
 };
 
 // Main Sidebar Component

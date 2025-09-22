@@ -144,7 +144,7 @@ const Dashboard = () => {
   // Main render logic based on user type
   return (
     <div className="min-h-screen bg-gray-50">
-      {userType === 'admin' ? (
+      {userType === 'admin' || 'super_admin' ? (
         <div className="">
          <AdminDashboard />
         </div>

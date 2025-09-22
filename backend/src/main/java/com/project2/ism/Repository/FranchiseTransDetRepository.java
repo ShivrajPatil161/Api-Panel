@@ -210,5 +210,296 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             @Param("endDate") LocalDateTime endDate,
             @Param("franchiseId") Long franchiseId);
 
+///////////
 
+
+    // 1. COMPREHENSIVE TRANSACTION DETAILS REPORT
+    @Query("SELECT " +
+            "ftd.transactionDate as txnDate, " +
+            "ftd.amount as txnAmount, " +
+            "ftd.updatedDateAndTimeOfTransaction as settleDate, " +
+            "vt.authCode as authCode, " +
+            "vt.tid as tid, " +
+            "CASE WHEN ftd.amount > 0 THEN ((ftd.amount - ftd.netAmount) / ftd.amount * 100) ELSE 0 END as settlementPercentage, " +
+            "mtd.netAmount as settleAmount, " +
+            "mtd.grossCharge as systemFee, " +
+            "CASE WHEN ftd.amount > 0 THEN (mtd.grossCharge / ftd.amount * 100) ELSE 0 END as retailorPercentage, " +
+            "ftd.netAmount as commissionAmount, " +
+            "vt.cardType as cardType, " +
+            "vt.brandType as brandType, " +
+            "vt.cardClassification as cardClassification, " +
+            "mtd.merchant.businessName as merchantName, " +
+            "ftd.franchise.franchiseName, " +
+            "ftd.franchise.status as state " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND (:status IS NULL OR ftd.tranStatus = :status) " +
+            "AND (:cardType IS NULL OR vt.cardType = :cardType) " +
+            "AND (:brandType IS NULL OR vt.brandType = :brandType) " +
+            "ORDER BY ftd.transactionDate DESC")
+    Page<Object[]> getDetailedTransactionReport(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId,
+            @Param("merchantId") Long merchantId,
+            @Param("status") String status,
+            @Param("cardType") String cardType,
+            @Param("brandType") String brandType,
+            Pageable pageable);
+
+    // 2. SETTLEMENT DATE BASED DETAILED REPORT
+    @Query("SELECT " +
+            "ftd.transactionDate as txnDate, " +
+            "ftd.amount as txnAmount, " +
+            "ftd.updatedDateAndTimeOfTransaction as settleDate, " +
+            "vt.authCode as authCode, " +
+            "vt.tid as tid, " +
+            "CASE WHEN ftd.amount > 0 THEN ((ftd.amount - ftd.netAmount) / ftd.amount * 100) ELSE 0 END as settlementPercentage, " +
+            "mtd.netAmount as settleAmount, " +
+            "mtd.grossCharge as systemFee, " +
+            "CASE WHEN ftd.amount > 0 THEN (mtd.grossCharge / ftd.amount * 100) ELSE 0 END as retailorPercentage, " +
+            "mtd.charge as commissionAmount, " +
+            "vt.cardType as cardType, " +
+            "vt.brandType as brandType, " +
+            "vt.cardClassification as cardClassification, " +
+            "mtd.merchant.businessName as merchantName, " +
+            "ftd.franchise.franchiseName, " +
+            "ftd.franchise.status as state " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND (:status IS NULL OR ftd.tranStatus = :status) " +
+            "AND (:cardType IS NULL OR vt.cardType = :cardType) " +
+            "AND (:brandType IS NULL OR vt.brandType = :brandType) " +
+            "ORDER BY ftd.updatedDateAndTimeOfTransaction DESC")
+    Page<Object[]> getDetailedTransactionReportBySettlementDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId,
+            @Param("merchantId") Long merchantId,
+            @Param("status") String status,
+            @Param("cardType") String cardType,
+            @Param("brandType") String brandType,
+            Pageable pageable);
+
+    // 3. AGGREGATED SUMMARY BY CARD TYPE AND BRAND
+
+    @Query("SELECT " +
+            "vt.cardType, " +
+            "vt.brandType, " +
+            "COUNT(ftd) as transactionCount, " +
+            "CAST(SUM(ftd.amount) as bigdecimal), " +
+            "CAST(SUM(ftd.netAmount) as bigdecimal), " +
+            "CAST(SUM(mtd.charge) as bigdecimal), " +
+            "CAST(SUM(mtd.grossCharge) as bigdecimal), " +
+            "CAST(AVG(ftd.amount) as bigdecimal), " +
+            "CAST(AVG(CASE WHEN ftd.amount > 0 THEN (mtd.grossCharge / ftd.amount * 100) ELSE 0 END) as bigdecimal) " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "AND ftd.tranStatus = 'SETTLED' " +
+            "GROUP BY vt.cardType, vt.brandType " +
+            "ORDER BY SUM(ftd.amount) DESC")
+    List<Object[]> getCardTypeBrandSummary(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId);
+
+    @Query("SELECT " +
+            "vt.cardType, " +
+            "vt.brandType, " +
+            "COUNT(ftd) as transactionCount, " +
+            "CAST(SUM(ftd.amount) as bigdecimal), " +
+            "CAST(SUM(ftd.netAmount) as bigdecimal), " +
+            "CAST(SUM(mtd.charge) as bigdecimal), " +
+            "CAST(SUM(mtd.grossCharge) as bigdecimal), " +
+            "CAST(AVG(ftd.amount) as bigdecimal), " +
+            "CAST(AVG(CASE WHEN ftd.amount > 0 THEN (mtd.grossCharge / ftd.amount * 100) ELSE 0 END) as bigdecimal) " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "AND ftd.tranStatus = 'SETTLED' " +
+            "GROUP BY vt.cardType, vt.brandType " +
+            "ORDER BY SUM(ftd.amount) DESC")
+    List<Object[]> getCardTypeBrandSummaryBySettleDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId);
+
+
+    // 4. DAILY TRANSACTION SUMMARY WITH BREAKDOWN
+    @Query("SELECT " +
+            "DATE(ftd.transactionDate) as txnDate, " +
+            "COUNT(ftd) as totalTransactions, " +
+            "CAST(SUM(ftd.amount) as bigdecimal) as totalAmount, " +
+            "CAST(SUM(mtd.netAmount) as bigdecimal) as totalSettleAmount, " +
+            "CAST(SUM(ftd.netAmount) as bigdecimal) as totalCommission, " +
+            "CAST(SUM(mtd.charge) as bigdecimal) as totalSystemFee, " +
+            "CAST(SUM(mtd.grossCharge) as bigdecimal) as totalMerchantFee, " +
+            "COUNT(CASE WHEN ftd.tranStatus = 'SETTLED' THEN 1 END) as settledCount, " +
+            "COUNT(CASE WHEN ftd.tranStatus != 'SETTLED' THEN 1 END) as failedCount, " +
+            "CAST(AVG(ftd.amount) as bigdecimal) as averageAmount, " +
+            "COUNT(DISTINCT mtd.merchant.id) as uniqueMerchants " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "GROUP BY DATE(ftd.transactionDate) " +
+            "ORDER BY DATE(ftd.transactionDate) DESC")
+    List<Object[]> getDailySummaryReport(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId);
+
+    // 5. MERCHANT WISE DETAILED PERFORMANCE
+    @Query("SELECT " +
+            "mtd.merchant.id as merchantId, " +
+            "mtd.merchant.businessName as merchantName, " +
+            "COUNT(ftd) as transactionCount, " +
+            "SUM(ftd.amount) as totalAmount, " +
+            "SUM(mtd.netAmount) as totalSettleAmount, " +
+            "SUM(ftd.netAmount) as totalCommission, " +
+            "SUM(mtd.grossCharge) as totalMDR, " +
+            "AVG(ftd.amount) as averageAmount, " +
+            "COUNT(CASE WHEN ftd.tranStatus = 'SETTLED' THEN 1 END) as successCount, " +
+            "COUNT(CASE WHEN ftd.tranStatus != 'SETTLED' THEN 1 END) as failureCount, " +
+            "CASE WHEN COUNT(ftd) > 0 THEN (COUNT(CASE WHEN ftd.tranStatus = 'SETTLED' THEN 1 END) * 100.0 / COUNT(ftd)) ELSE 0 END as successRate " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "GROUP BY mtd.merchant.id, mtd.merchant.businessName " +
+            "ORDER BY SUM(ftd.amount) DESC")
+    List<Object[]> getMerchantWiseDetailedPerformance(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId);
+
+    // 6. FRANCHISE COMPARISON REPORT
+    @Query("SELECT " +
+            "ftd.franchise.id as franchiseId, " +
+            "ftd.franchise.franchiseName, " +
+            "ftd.franchise.status as state, " +
+            "COUNT(ftd) as transactionCount, " +
+            "SUM(ftd.amount) as totalAmount, " +
+            "SUM(mtd.netAmount) as totalSettleAmount, " +
+            "SUM(ftd.netAmount) as totalCommission, " +
+            "COUNT(DISTINCT mtd.merchant.id) as uniqueMerchants, " +
+            "AVG(ftd.amount) as averageAmount, " +
+            "COUNT(CASE WHEN ftd.tranStatus = 'SETTLED' THEN 1 END) as successCount, " +
+            "CASE WHEN COUNT(ftd) > 0 THEN (COUNT(CASE WHEN ftd.tranStatus = 'SETTLED' THEN 1 END) * 100.0 / COUNT(ftd)) ELSE 0 END as successRate " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "GROUP BY ftd.franchise.id, ftd.franchise.franchiseName, ftd.franchise.status " +
+            "ORDER BY SUM(ftd.amount) DESC")
+    List<Object[]> getFranchiseComparisonReport(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    // 7. TERMINAL WISE TRANSACTION ANALYSIS
+    @Query("SELECT " +
+            "vt.tid as terminalId, " +
+            "mtd.merchant.businessName as merchantName, " +
+            "ftd.franchise.franchiseName, " +
+            "COUNT(ftd) as transactionCount, " +
+            "SUM(ftd.amount) as totalAmount, " +
+            "SUM(ftd.netAmount) as totalSettleAmount, " +
+            "SUM(mtd.charge) as totalCommission, " +
+            "AVG(ftd.amount) as averageAmount, " +
+            "COUNT(CASE WHEN ftd.tranStatus = 'SETTLED' THEN 1 END) as successCount, " +
+            "COUNT(CASE WHEN ftd.tranStatus != 'SETTLED' THEN 1 END) as failureCount " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "GROUP BY vt.tid, mtd.merchant.businessName, ftd.franchise.franchiseName " +
+            "ORDER BY SUM(ftd.amount) DESC")
+    List<Object[]> getTerminalWiseAnalysis(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId,
+            @Param("merchantId") Long merchantId);
+
+    // 8. TRANSACTION TREND ANALYSIS (HOURLY BREAKDOWN)
+    @Query("SELECT " +
+            "DATE(ftd.transactionDate) as txnDate, " +
+            "HOUR(ftd.transactionDate) as txnHour, " +
+            "COUNT(ftd) as transactionCount, " +
+            "SUM(ftd.amount) as totalAmount, " +
+            "AVG(ftd.amount) as averageAmount, " +
+            "COUNT(CASE WHEN ftd.tranStatus = 'SETTLED' THEN 1 END) as successCount " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "GROUP BY DATE(ftd.transactionDate), HOUR(ftd.transactionDate) " +
+            "ORDER BY DATE(ftd.transactionDate) DESC, HOUR(ftd.transactionDate)")
+    List<Object[]> getHourlyTransactionTrend(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId);
+
+    // 9. FAILED TRANSACTION ANALYSIS
+    @Query("SELECT " +
+            "ftd.transactionDate, " +
+            "ftd.amount, " +
+            "ftd.tranStatus, " +
+            "ftd.failureRemarks, " +
+            "vt.errorCode, " +
+            "vt.pgErrorMessage, " +
+            "vt.tid, " +
+            "vt.cardType, " +
+            "vt.brandType, " +
+            "mtd.merchant.businessName as merchantName, " +
+            "ftd.franchise.franchiseName " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND ftd.tranStatus != 'SETTLED' " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "ORDER BY ftd.transactionDate DESC")
+    Page<Object[]> getFailedTransactionAnalysis(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId,
+            @Param("merchantId") Long merchantId,
+            Pageable pageable);
+
+    // 10. SETTLEMENT DELAY ANALYSIS
+    @Query("SELECT " +
+            "ftd.transactionDate, " +
+            "ftd.updatedDateAndTimeOfTransaction as settlementDate, " +
+            "TIMESTAMPDIFF(HOUR, ftd.transactionDate, ftd.updatedDateAndTimeOfTransaction) as settlementDelayHours, " +
+            "ftd.amount, " +
+            "ftd.netAmount, " +
+            "vt.tid, " +
+            "mtd.merchant.businessName as merchantName, " +
+            "ftd.franchise.franchiseName " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND ftd.tranStatus = 'SETTLED' " +
+            "AND ftd.updatedDateAndTimeOfTransaction IS NOT NULL " +
+            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            "ORDER BY TIMESTAMPDIFF(HOUR, ftd.transactionDate, ftd.updatedDateAndTimeOfTransaction) DESC")
+    List<Object[]> getSettlementDelayAnalysis(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("franchiseId") Long franchiseId);
 }

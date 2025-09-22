@@ -127,9 +127,205 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
 
 // NEW QUERIES - Add these to your existing MerchantTransDetRepository.java
 
+//1
+    // MERCHANT-ONLY TRANSACTION DETAILS REPORT (Transaction Date Based)
+    @Query("SELECT " +
+            "mtd.transactionDate as txnDate, " +
+            "mtd.amount as txnAmount, " +
+            "mtd.updatedDateAndTimeOfTransaction as settleDate, " +
+            "vt.authCode as authCode, " +
+            "vt.tid as tid, " +
+            "CASE WHEN mtd.amount > 0 THEN ((mtd.amount - mtd.netAmount) / mtd.amount * 100) ELSE 0 END as settlementPercentage, " +
+            "mtd.netAmount as settleAmount, " +
+            "COALESCE(mtd.charge, 0) as systemFee, " +
+            "CASE WHEN mtd.amount > 0 THEN (COALESCE(mtd.charge,0) / mtd.amount * 100) ELSE 0 END as systemFeePercentage, " +
+            "vt.cardType as cardType, " +
+            "vt.brandType as brandType, " +
+            "vt.cardClassification as cardClassification, " +
+            "mtd.merchant.businessName as merchantName " +
+            "FROM MerchantTransactionDetails mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE mtd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+            "AND (:cardType IS NULL OR vt.cardType = :cardType) " +
+            "AND (:brandType IS NULL OR vt.brandType = :brandType) " +
+            "ORDER BY mtd.transactionDate DESC")
+    Page<Object[]> getMerchantTransactionReportByTxnDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId,
+            @Param("status") String status,
+            @Param("cardType") String cardType,
+            @Param("brandType") String brandType,
+            Pageable pageable);
+
+    // MERCHANT-ONLY TRANSACTION DETAILS REPORT (Settlement Date Based)
+    @Query("SELECT " +
+            "mtd.transactionDate as txnDate, " +
+            "mtd.amount as txnAmount, " +
+            "mtd.updatedDateAndTimeOfTransaction as settleDate, " +
+            "vt.authCode as authCode, " +
+            "vt.tid as tid, " +
+            "CASE WHEN mtd.amount > 0 THEN ((mtd.amount - mtd.netAmount) / mtd.amount * 100) ELSE 0 END as settlementPercentage, " +
+            "mtd.netAmount as settleAmount, " +
+            "COALESCE(mtd.charge, 0) as systemFee, " +
+            "CASE WHEN mtd.amount > 0 THEN (COALESCE(mtd.charge,0) / mtd.amount * 100) ELSE 0 END as systemFeePercentage, " +
+            "vt.cardType as cardType, " +
+            "vt.brandType as brandType, " +
+            "vt.cardClassification as cardClassification, " +
+            "mtd.merchant.businessName as merchantName " +
+            "FROM MerchantTransactionDetails mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+            "AND (:cardType IS NULL OR vt.cardType = :cardType) " +
+            "AND (:brandType IS NULL OR vt.brandType = :brandType) " +
+            "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
+    Page<Object[]> getMerchantTransactionReportBySettleDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId,
+            @Param("status") String status,
+            @Param("cardType") String cardType,
+            @Param("brandType") String brandType,
+            Pageable pageable);
+
+ //2
+    // AGGREGATED SUMMARY BY CARD TYPE AND BRAND (Transaction Date)
+    @Query("SELECT " +
+            "vt.cardType, " +
+            "vt.brandType, " +
+            "COUNT(mtd) as transactionCount, " +
+            "CAST(SUM(mtd.amount) as bigdecimal), " +
+            "CAST(SUM(mtd.netAmount) as bigdecimal), " +
+            "CAST(SUM(mtd.charge) as bigdecimal), " +
+            "CAST(AVG(mtd.amount) as bigdecimal), " +
+            "CAST(AVG(CASE WHEN mtd.amount > 0 THEN (mtd.charge / mtd.amount * 100) ELSE 0 END) as bigdecimal) " +
+            "FROM MerchantTransactionDetails mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE mtd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND mtd.tranStatus = 'SETTLED' " +
+            "GROUP BY vt.cardType, vt.brandType " +
+            "ORDER BY SUM(mtd.amount) DESC")
+    List<Object[]> getMerchantCardTypeBrandSummaryByTxnDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId);
+
+    // AGGREGATED SUMMARY BY CARD TYPE AND BRAND (Settlement Date)
+    @Query("SELECT " +
+            "vt.cardType, " +
+            "vt.brandType, " +
+            "COUNT(mtd) as transactionCount, " +
+            "CAST(SUM(mtd.amount) as bigdecimal), " +
+            "CAST(SUM(mtd.netAmount) as bigdecimal), " +
+            "CAST(SUM(mtd.charge) as bigdecimal), " +
+            "CAST(AVG(mtd.amount) as bigdecimal), " +
+            "CAST(AVG(CASE WHEN mtd.amount > 0 THEN (mtd.charge / mtd.amount * 100) ELSE 0 END) as bigdecimal) " +
+            "FROM MerchantTransactionDetails mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND mtd.tranStatus = 'SETTLED' " +
+            "GROUP BY vt.cardType, vt.brandType " +
+            "ORDER BY SUM(mtd.amount) DESC")
+    List<Object[]> getMerchantCardTypeBrandSummaryBySettleDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId);
+
+ //3
+
+    // DAILY TRANSACTION SUMMARY (Merchant Only, Transaction Date)
+    @Query("SELECT " +
+            "DATE(mtd.transactionDate) as txnDate, " +
+            "COUNT(mtd) as totalTransactions, " +
+            "CAST(SUM(mtd.amount) as bigdecimal) as totalAmount, " +
+            "CAST(SUM(mtd.netAmount) as bigdecimal) as totalSettleAmount, " +
+            "CAST(SUM(mtd.charge) as bigdecimal) as totalSystemFee, " +
+            "COUNT(CASE WHEN mtd.tranStatus = 'SETTLED' THEN 1 END) as settledCount, " +
+            "COUNT(CASE WHEN mtd.tranStatus != 'SETTLED' THEN 1 END) as failedCount, " +
+            "CAST(AVG(mtd.amount) as bigdecimal) as averageAmount, " +
+            "COUNT(DISTINCT mtd.merchant.id) as uniqueMerchants " +
+            "FROM MerchantTransactionDetails mtd " +
+            "WHERE mtd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "GROUP BY DATE(mtd.transactionDate) " +
+            "ORDER BY DATE(mtd.transactionDate) DESC")
+    List<Object[]> getMerchantDailySummaryByTxnDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId);
+
+    // DAILY TRANSACTION SUMMARY (Merchant Only, Settlement Date)
+    @Query("SELECT " +
+            "DATE(mtd.updatedDateAndTimeOfTransaction) as settleDate, " +
+            "COUNT(mtd) as totalTransactions, " +
+            "CAST(SUM(mtd.amount) as bigdecimal) as totalAmount, " +
+            "CAST(SUM(mtd.netAmount) as bigdecimal) as totalSettleAmount, " +
+            "CAST(SUM(mtd.charge) as bigdecimal) as totalSystemFee, " +
+            "COUNT(CASE WHEN mtd.tranStatus = 'SETTLED' THEN 1 END) as settledCount, " +
+            "COUNT(CASE WHEN mtd.tranStatus != 'SETTLED' THEN 1 END) as failedCount, " +
+            "CAST(AVG(mtd.amount) as bigdecimal) as averageAmount, " +
+            "COUNT(DISTINCT mtd.merchant.id) as uniqueMerchants " +
+            "FROM MerchantTransactionDetails mtd " +
+            "WHERE mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "GROUP BY DATE(mtd.updatedDateAndTimeOfTransaction) " +
+            "ORDER BY DATE(mtd.updatedDateAndTimeOfTransaction) DESC")
+    List<Object[]> getMerchantDailySummaryBySettleDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId);
 
 
+//4
+  // TERMINAL WISE TRANSACTION ANALYSIS (Merchant Only, Transaction Date)
+    @Query("SELECT " +
+        "vt.tid as terminalId, " +
+        "mtd.merchant.businessName as merchantName, " +
+        "COUNT(mtd) as transactionCount, " +
+        "CAST(SUM(mtd.amount) as bigdecimal) as totalAmount, " +
+        "CAST(SUM(mtd.netAmount) as bigdecimal) as totalSettleAmount, " +
+        "CAST(SUM(mtd.charge) as bigdecimal) as totalSystemFee, " +
+        "CAST(AVG(mtd.amount) as bigdecimal) as averageAmount, " +
+        "COUNT(CASE WHEN mtd.tranStatus = 'SETTLED' THEN 1 END) as successCount, " +
+        "COUNT(CASE WHEN mtd.tranStatus != 'SETTLED' THEN 1 END) as failureCount " +
+        "FROM MerchantTransactionDetails mtd " +
+        "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+        "WHERE mtd.transactionDate BETWEEN :startDate AND :endDate " +
+        "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+        "GROUP BY vt.tid, mtd.merchant.businessName " +
+        "ORDER BY SUM(mtd.amount) DESC")
+    List<Object[]> getTerminalWiseAnalysisByTxnDate(
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
+        @Param("merchantId") Long merchantId);
 
+    // TERMINAL WISE TRANSACTION ANALYSIS (Merchant Only, Settlement Date)
+    @Query("SELECT " +
+            "vt.tid as terminalId, " +
+            "mtd.merchant.businessName as merchantName, " +
+            "COUNT(mtd) as transactionCount, " +
+            "CAST(SUM(mtd.amount) as bigdecimal) as totalAmount, " +
+            "CAST(SUM(mtd.netAmount) as bigdecimal) as totalSettleAmount, " +
+            "CAST(SUM(mtd.charge) as bigdecimal) as totalSystemFee, " +
+            "CAST(AVG(mtd.amount) as bigdecimal) as averageAmount, " +
+            "COUNT(CASE WHEN mtd.tranStatus = 'SETTLED' THEN 1 END) as successCount, " +
+            "COUNT(CASE WHEN mtd.tranStatus != 'SETTLED' THEN 1 END) as failureCount " +
+            "FROM MerchantTransactionDetails mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "GROUP BY vt.tid, mtd.merchant.businessName " +
+            "ORDER BY SUM(mtd.amount) DESC")
+    List<Object[]> getTerminalWiseAnalysisBySettleDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId);
 
 
 

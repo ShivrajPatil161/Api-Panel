@@ -18,7 +18,7 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme="light"
         toastClassName="text-sm"
         bodyClassName="text-sm"
         limit={5}
