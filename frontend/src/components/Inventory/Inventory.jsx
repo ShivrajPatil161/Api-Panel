@@ -1,4 +1,4 @@
-import { useState,useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import InventoryTable from './InventoryTable' 
 import InwardTable from './InwardTable' 
@@ -6,13 +6,11 @@ import OutwardTable from './OutwardTable'
 import ReturnTable from './ReturnTable' 
 import InwardFormModal from '../Forms/Inward/Inward'
 import OutwardFormModal from '../Forms/Outward'
-import ReturnsForm from '../Forms/Return'
+import OptimizedReturns from '../Forms/Return'
 import inwardAPI from '../../constants/API/inwardApi'
 import { createOutwardTransaction, deleteOutwardTransaction, getAllOutwardTransactions, updateOutwardTransaction } from '../../constants/API/OutwardTransAPI'
 import { toast } from 'react-toastify'
-import OptimizedReturns from '../Forms/Return'
 import returnTransactionAPI from '../../constants/API/returnTransactionApi'
-
 
 const InventoryManagement = () => {
     const [activeTab, setActiveTab] = useState('inventory')
@@ -33,7 +31,7 @@ const InventoryManagement = () => {
     const [loading, setLoading] = useState(false)
     const [editingInward, setEditingInward] = useState(null)
     const [editingOutward, setEditingOutward] = useState(null)
-
+    const [editingReturn, setEditingReturn] = useState(null)
 
     const tabs = [
         { id: 'inventory', label: 'Inventory', count: inventoryData.length },
@@ -41,6 +39,17 @@ const InventoryManagement = () => {
         { id: 'outward', label: 'Outward Entry', count: outwardData.length },
         { id: 'returns', label: 'Returns', count: returnData.length }
     ]
+
+    // Toast helper function
+    const showToast = (message, type) => {
+        if (type === 'success') {
+            toast.success(message)
+        } else if (type === 'error') {
+            toast.error(message)
+        } else {
+            toast(message)
+        }
+    }
 
     const fetchOutwardData = async () => {
         setLoading(true)
@@ -92,39 +101,33 @@ const InventoryManagement = () => {
             setLoading(true)
             try {
                 await deleteOutwardTransaction(id)
-                alert("Outward transaction deleted successfully!")
+                toast.success("Outward transaction deleted successfully!")
                 await fetchOutwardData()
             } catch (error) {
                 console.error("Error deleting outward transaction:", error)
-                alert("Error deleting outward transaction. Please try again.")
+                toast.error("Error deleting outward transaction. Please try again.")
             } finally {
                 setLoading(false)
             }
         }
     }
 
-    // Update the useEffect to fetch outward data when tab changes
+    // Update the useEffect to fetch data when tab changes
     useEffect(() => {
-    if (activeTab === 'inward') {
-        fetchInwardData()
-    } else if (activeTab === 'outward') {
-        fetchOutwardData()
-    } else if (activeTab === 'returns') {
-        fetchReturnData()
-    }
-}, [activeTab])
+        if (activeTab === 'inward') {
+            fetchInwardData()
+        } else if (activeTab === 'outward') {
+            fetchOutwardData()
+        } else if (activeTab === 'returns') {
+            fetchReturnData()
+        }
+    }, [activeTab])
 
-   
-
-
-
-   
     // 4. Add API functions
     const fetchInwardData = async () => {
         setLoading(true)
         try {
             const response = await inwardAPI.getAllInwardTransactions()
-           
             setInwardData(response)
         } catch (error) {
             console.error('Error fetching inward data:', error)
@@ -133,7 +136,6 @@ const InventoryManagement = () => {
             setLoading(false)
         }
     }
-
 
     const handleInwardSubmit = async (data) => {
         setLoading(true);
@@ -173,79 +175,85 @@ const InventoryManagement = () => {
             setLoading(true)
             try {
                 await inwardAPI.deleteInwardTransaction(id)
-                alert('Inward transaction deleted successfully!')
+                toast.success('Inward transaction deleted successfully!')
                 await fetchInwardData()
             } catch (error) {
                 console.error('Error deleting inward transaction:', error)
-                alert('Error deleting inward transaction. Please try again.')
+                toast.error('Error deleting inward transaction. Please try again.')
             } finally {
                 setLoading(false)
             }
         }
     }
 
-    const [editingReturn, setEditingReturn] = useState(null)
-
     const fetchReturnData = async () => {
-    setLoading(true)
-    try {
-        const data = await returnTransactionAPI.getAllReturnTransactions()
-        console.log('Return data:', data)
-        setReturnData(Array.isArray(data) ? data : [])
-    } catch (error) {
-        console.error("Error fetching return data:", error)
-        toast.error("Error fetching return transactions. Please try again.")
-    } finally {
-        setLoading(false)
-    }
-}
-
-const handleReturnSubmit = async (data) => {
-    setLoading(true)
-    try {
-        if (editingReturn) {
-            await returnTransactionAPI.updateReturnTransaction(editingReturn.id, data)
-            toast.success("Return transaction updated successfully!")
-        } else {
-            await returnTransactionAPI.createReturnTransaction(data)
-            toast.success("Return transaction created successfully!")
-        }
-
-        await fetchReturnData()
-        setIsReturnModalOpen(false)
-        setEditingReturn(null)
-    } catch (error) {
-        console.error("Error saving return transaction:", error)
-        toast.error("Error saving return transaction. Please try again.")
-    } finally {
-        setLoading(false)
-    }
-}
-
-const handleEditReturn = (returnEntry) => {
-    setEditingReturn(returnEntry)
-    setIsReturnModalOpen(true)
-}
-
-const handleViewReturn = (returnEntry) => {
-    console.log("View return entry:", returnEntry)
-}
-
-const handleDeleteReturn = async (id) => {
-    if (window.confirm("Are you sure you want to delete this return transaction?")) {
         setLoading(true)
         try {
-            await returnTransactionAPI.deleteReturnTransaction(id)
-            toast.success("Return transaction deleted successfully!")
-            await fetchReturnData()
+            const data = await returnTransactionAPI.getAllReturnTransactions()
+            console.log('Return data:', data)
+            setReturnData(Array.isArray(data) ? data : [])
         } catch (error) {
-            console.error("Error deleting return transaction:", error)
-            toast.error("Error deleting return transaction. Please try again.")
+            console.error("Error fetching return data:", error)
+            toast.error("Error fetching return transactions. Please try again.")
         } finally {
             setLoading(false)
         }
     }
-}
+
+    const handleReturnSubmit = async (data) => {
+    try {
+        let result;
+        if (editingReturn) {
+            result = await returnTransactionAPI.updateReturnTransaction(editingReturn.id, data);
+            toast.success("Return Transaction updated Successfully!")
+
+    } else {
+        result = await returnTransactionAPI.createReturnTransaction(data);
+        toast.success("Return Transaction Created Successfully!")
+    }
+
+    // Refresh data after successful submission
+    await fetchReturnData();
+    
+    // Return the result to the form
+    return result;
+  } catch (error) {
+    console.error("Error saving return transaction:", error);
+    // Re-throw to let the form handle the error display
+    throw error;
+  }
+};
+
+const handleReturnCancel = () => {
+  setIsReturnModalOpen(false);
+  setEditingReturn(null);
+};
+
+    const handleEditReturn = (returnEntry) => {
+        setEditingReturn(returnEntry)
+        setIsReturnModalOpen(true)
+    }
+
+    const handleViewReturn = (returnEntry) => {
+        console.log("View return entry:", returnEntry)
+        // You can implement a view modal here
+    }
+
+    const handleDeleteReturn = async (id) => {
+        if (window.confirm("Are you sure you want to delete this return transaction?")) {
+            setLoading(true)
+            try {
+                await returnTransactionAPI.deleteReturnTransaction(id)
+                toast.success("Return transaction deleted successfully!")
+                await fetchReturnData()
+            } catch (error) {
+                console.error("Error deleting return transaction:", error)
+                toast.error("Error deleting return transaction. Please try again.")
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
 
     const getActionButtons = () => {
         switch (activeTab) {
@@ -284,7 +292,7 @@ const handleDeleteReturn = async (id) => {
         }
     }
 
-    // Update the renderActiveTable function to pass the new handlers for outward
+    // Update the renderActiveTable function
     const renderActiveTable = () => {
         switch (activeTab) {
             case 'inventory':
@@ -310,22 +318,22 @@ const handleDeleteReturn = async (id) => {
                     />
                 )
             case 'returns':
-            return (
-                <ReturnTable 
-                    data={returnData} 
-                    onEdit={handleEditReturn}
-                    onView={handleViewReturn}
-                    onDelete={handleDeleteReturn}
-                    loading={loading}
-                />
-            )
+                return (
+                    <ReturnTable 
+                        data={returnData} 
+                        onEdit={handleEditReturn}
+                        onView={handleViewReturn}
+                        onDelete={handleDeleteReturn}
+                        loading={loading}
+                    />
+                )
             default:
                 return <InventoryTable data={inventoryData} />
         }
     }
 
     return (
-        <div className="min-h-screen ">
+        <div className="min-h-screen">
             <div className="max-w-8xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="bg-white shadow-sm rounded-lg mb-6">
@@ -389,7 +397,6 @@ const handleDeleteReturn = async (id) => {
                 {isOutwardModalOpen && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
                         <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-                            {/* Outward Form Modal */}
                             <OutwardFormModal
                                 isOpen={isOutwardModalOpen}
                                 onClose={() => {
@@ -404,19 +411,17 @@ const handleDeleteReturn = async (id) => {
                 )}
 
                 {isReturnModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
-                        <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-                            <OptimizedReturns
-                                onSubmit={handleReturnSubmit}
-                                onCancel={() => {
-                                    setIsReturnModalOpen(false)
-                                    setEditingReturn(null)
-                                }}
-                                editData={editingReturn}
-                            />
-                        </div>
-                    </div>
-                )}
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
+    <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+      <OptimizedReturns
+        onSubmit={handleReturnSubmit}
+        onCancel={handleReturnCancel}
+        editData={editingReturn}
+        showToast={showToast}
+      />
+    </div>
+  </div>
+)}
             </div>
         </div>
     )
