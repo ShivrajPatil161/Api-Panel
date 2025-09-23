@@ -1,6 +1,3 @@
-
- 
-
 import React, { useState, useEffect, useMemo } from 'react'
 import {
     useReactTable,
@@ -34,9 +31,17 @@ import {
     FileText,
     Image as ImageIcon
 } from 'lucide-react'
-import api from '../../constants/API/axiosInstance'
+import { toast } from 'react-toastify'
+
+// Import API functions
+import { 
+    franchiseApi, 
+    merchantApi, 
+    customerApi, 
+    fileApi, 
+    handleApiError 
+} from '../../constants/API/customerApi'
 import CustomerOnboarding from '../Forms/CustomerOnboarding/CustomerOnborading'
-import { toast } from 'react-toastify';
 
 // Utility Components
 const StatusBadge = ({ status }) => {
@@ -79,6 +84,154 @@ const LoadingSpinner = () => (
     </div>
 )
 
+// Document Preview Component
+const DocumentPreview = ({ documentPath, documentName, onClose }) => {
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [blobUrl, setBlobUrl] = useState(null)
+
+    // Clean up the document path
+    const cleanPath = documentPath
+        ?.replace(/\\\\/g, '/')
+        ?.replace(/\\/g, '/')
+        ?.replace(/^\/+/, '')
+
+    const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(cleanPath || '')
+    const isPdf = /\.pdf$/i.test(cleanPath || '')
+    const filename = cleanPath?.split('/').pop()
+
+    // Fetch file data on component mount
+    useEffect(() => {
+        if (!cleanPath) return
+
+        const fetchFile = async () => {
+            try {
+                setLoading(true)
+                const response = await fileApi.getFile(cleanPath)
+                const blob = response.data
+                const url = window.URL.createObjectURL(blob)
+                setBlobUrl(url)
+                setLoading(false)
+            } catch (error) {
+                console.error('File fetch error:', error)
+                const errorInfo = handleApiError(error, 'Failed to load document')
+                setError(errorInfo.message)
+                setLoading(false)
+            }
+        }
+
+        fetchFile()
+
+        // Cleanup blob URL on unmount
+        return () => {
+            if (blobUrl) {
+                window.URL.revokeObjectURL(blobUrl)
+            }
+        }
+    }, [cleanPath])
+
+    const handleDownload = async () => {
+        try {
+            const response = await fileApi.downloadFile(cleanPath)
+            const blob = response.data
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = filename || 'download'
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            window.URL.revokeObjectURL(url)
+        } catch (error) {
+            const errorInfo = handleApiError(error, 'Download failed')
+            toast.error(errorInfo.message)
+        }
+    }
+
+    if (!cleanPath) {
+        return (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-md w-full p-6 text-center">
+                    <h3 className="text-lg font-semibold mb-2">Document Not Found</h3>
+                    <p className="text-gray-600 mb-4">The document path is invalid or missing.</p>
+                    <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Close
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b">
+                    <div>
+                        <h3 className="text-lg font-semibold">{documentName}</h3>
+                        <p className="text-sm text-gray-500">{filename}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <button onClick={handleDownload} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100" title="Download">
+                            <Download className="w-5 h-5" />
+                        </button>
+                        <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100" title="Close">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-auto p-4">
+                    {loading && (
+                        <div className="flex items-center justify-center h-64">
+                            <span className="text-gray-600">Loading document...</span>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="text-center py-8">
+                            <h4 className="text-lg font-semibold mb-2">Error Loading Document</h4>
+                            <p className="text-gray-600 mb-4">{error}</p>
+                            <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                Try Download
+                            </button>
+                        </div>
+                    )}
+
+                    {isImage && !error && blobUrl && (
+                        <div className="flex justify-center">
+                            <img
+                                src={blobUrl}
+                                alt={documentName}
+                                className="max-w-full h-auto rounded-lg shadow-lg"
+                            />
+                        </div>
+                    )}
+
+                    {isPdf && !error && blobUrl && (
+                        <iframe
+                            src={`${blobUrl}#toolbar=1`}
+                            className="w-full h-[600px] border-0 rounded-lg shadow-lg"
+                            title={documentName}
+                        />
+                    )}
+
+                    {!isImage && !isPdf && !error && !loading && (
+                        <div className="text-center py-8">
+                            <h4 className="text-lg font-semibold mb-2">Preview Not Available</h4>
+                            <p className="text-gray-600 mb-4">This document type cannot be previewed. You can download it to view.</p>
+                            <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                Download Document
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
+
 // Enhanced View Modal Component
 const ViewModal = ({ customer, customerType, onClose }) => {
     const [documents, setDocuments] = useState({})
@@ -86,10 +239,8 @@ const ViewModal = ({ customer, customerType, onClose }) => {
     // Helper function to get the correct data structure
     const getCustomerData = () => {
         if (customerType === 'franchise') {
-            // For franchise data, the main details are in the 'franchise' nested object
             return customer?.franchise || customer
         } else {
-            // For direct merchants, data is at root level
             return customer
         }
     }
@@ -129,13 +280,29 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                         >
                             Preview
                         </button>
-                        <a
-                            href={`/api/${docPath}`}
-                            download
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const cleanPath = docPath?.replace(/\\\\/g, '/')?.replace(/\\/g, '/')?.replace(/^\/+/, '')
+                                    const response = await fileApi.downloadFile(cleanPath)
+                                    const blob = response.data
+                                    const url = window.URL.createObjectURL(blob)
+                                    const link = document.createElement('a')
+                                    link.href = url
+                                    link.download = cleanPath?.split('/').pop() || 'download'
+                                    document.body.appendChild(link)
+                                    link.click()
+                                    document.body.removeChild(link)
+                                    window.URL.revokeObjectURL(url)
+                                } catch (error) {
+                                    const errorInfo = handleApiError(error, 'Download failed')
+                                    toast.error(errorInfo.message)
+                                }
+                            }}
                             className="text-green-600 hover:text-green-800 text-sm"
                         >
                             Download
-                        </a>
+                        </button>
                     </div>
                 </div>
 
@@ -150,7 +317,7 @@ const ViewModal = ({ customer, customerType, onClose }) => {
         )
     }
 
-    // Helper function to get display name
+    // Helper functions for display
     const getDisplayName = () => {
         if (customerType === 'franchise') {
             return customerData?.franchiseName || customerData?.businessName || 'N/A'
@@ -159,12 +326,10 @@ const ViewModal = ({ customer, customerType, onClose }) => {
         }
     }
 
-    // Helper function to get contact person data
     const getContactPerson = () => {
         if (customerType === 'franchise') {
             return customerData?.contactPerson
         } else {
-            // For direct merchants, contact person data might be at root level
             return customerData?.contactPerson || {
                 name: customerData?.contactPersonName,
                 phoneNumber: customerData?.contactPersonPhone,
@@ -256,7 +421,7 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                         </div>
                     </div>
 
-                    {/* Franchise Merchants Section - Only show for franchise */}
+                    {/* Franchise Merchants Section */}
                     {customerType === 'franchise' && customer?.merchants && customer.merchants.length > 0 && (
                         <div>
                             <h3 className="font-semibold mb-3">Associated Merchants ({customer.merchants.length})</h3>
@@ -313,8 +478,7 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                         <div className="pt-4 border-t">
                             <div className="flex items-center space-x-2">
                                 <strong>Approval Status:</strong>
-                                <span className={`px-2 py-1 rounded text-sm ${customer.approved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                    }`}>
+                                <span className={`px-2 py-1 rounded text-sm ${customer.approved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                     {customer.approved ? 'Approved' : 'Pending Approval'}
                                 </span>
                             </div>
@@ -325,170 +489,6 @@ const ViewModal = ({ customer, customerType, onClose }) => {
         </div>
     )
 }
-
-
-// Document Preview Component
-export const DocumentPreview = ({ documentPath, documentName, onClose }) => {
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-    const [blobUrl, setBlobUrl] = useState(null)
-
-    // Clean up the document path
-    const cleanPath = documentPath
-        ?.replace(/\\\\/g, '/')
-        ?.replace(/\\/g, '/')
-        ?.replace(/^\/+/, '')
-
-    const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(cleanPath || '')
-    const isPdf = /\.pdf$/i.test(cleanPath || '')
-
-    const filename = cleanPath?.split('/').pop()
-
-    // API endpoint URL
-    const apiUrl = cleanPath ? `/file/files/${cleanPath}` : null
-
-    // Fetch file data on component mount
-    useEffect(() => {
-        if (!apiUrl) return
-
-        const fetchFile = async () => {
-            try {
-                setLoading(true)
-                const response = await api.get(apiUrl, {
-                    responseType: 'blob'
-                })
-
-                const blob = response.data
-                const url = window.URL.createObjectURL(blob)
-                setBlobUrl(url)
-                setLoading(false)
-            } catch (error) {
-                console.error('File fetch error:', error)
-                setError('Failed to load document.')
-                setLoading(false)
-            }
-        }
-
-        fetchFile()
-
-        // Cleanup blob URL on unmount
-        return () => {
-            if (blobUrl) {
-                window.URL.revokeObjectURL(blobUrl)
-            }
-        }
-    }, [apiUrl])
-
-    const handleDownload = async () => {
-        try {
-            const response = await api.get(apiUrl, {
-                responseType: 'blob'
-            })
-
-            const blob = response.data
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = filename || 'download'
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            window.URL.revokeObjectURL(url)
-        } catch (error) {
-            alert('Download failed. Please try again.')
-        }
-    }
-
-    const handleDocumentLoad = () => setLoading(false)
-    const handleDocumentError = () => {
-        setLoading(false)
-        setError('Failed to load document.')
-    }
-
-    if (!cleanPath) {
-        return (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg max-w-md w-full p-6 text-center">
-                    <h3 className="text-lg font-semibold mb-2">Document Not Found</h3>
-                    <p className="text-gray-600 mb-4">The document path is invalid or missing.</p>
-                    <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Close
-                    </button>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b">
-                    <div>
-                        <h3 className="text-lg font-semibold">{documentName}</h3>
-                        <p className="text-sm text-gray-500">{filename}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <button onClick={handleDownload} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100" title="Download">
-                            <Download className="w-5 h-5" />
-                        </button>
-                        <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100" title="Close">
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-auto p-4">
-                    {loading && (
-                        <div className="flex items-center justify-center h-64">
-                            <span className="text-gray-600">Loading document...</span>
-                        </div>
-                    )}
-
-                    {error && (
-                        <div className="text-center py-8">
-                            <h4 className="text-lg font-semibold mb-2">Error Loading Document</h4>
-                            <p className="text-gray-600 mb-4">{error}</p>
-                            <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                                Try Download
-                            </button>
-                        </div>
-                    )}
-
-                    {isImage && !error && blobUrl && (
-                        <div className="flex justify-center">
-                            <img
-                                src={blobUrl}
-                                alt={documentName}
-                                className="max-w-full h-auto rounded-lg shadow-lg"
-                            />
-                        </div>
-                    )}
-
-                    {isPdf && !error && blobUrl && (
-                        <iframe
-                            src={`${blobUrl}#toolbar=1`}
-                            className="w-full h-[600px] border-0 rounded-lg shadow-lg"
-                            title={documentName}
-                        />
-                    )}
-
-                    {!isImage && !isPdf && !error && !loading && (
-                        <div className="text-center py-8">
-                            <h4 className="text-lg font-semibold mb-2">Preview Not Available</h4>
-                            <p className="text-gray-600 mb-4">This document type cannot be previewed. You can download it to view.</p>
-                            <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                                Download Document
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    )
-}
-
 
 // Main Customer List Component
 const CustomerListComponent = () => {
@@ -504,22 +504,81 @@ const CustomerListComponent = () => {
     const [documentPreview, setDocumentPreview] = useState(null)
 
     const columnHelper = createColumnHelper()
-    // Add this function to handle edit action
+
+    // API Functions using the modular API
+    const fetchFranchises = async () => {
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await franchiseApi.getAll()
+            setFranchises(response.data)
+        } catch (err) {
+            const errorInfo = handleApiError(err, 'Failed to load franchises')
+            setError(errorInfo.message)
+            toast.error(errorInfo.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const fetchMerchants = async () => {
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await merchantApi.getAllDirect()
+            setMerchants(response.data)
+        } catch (err) {
+            const errorInfo = handleApiError(err, 'Failed to load merchants')
+            setError(errorInfo.message)
+            toast.error(errorInfo.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const fetchCustomerDetails = async (id, type) => {
+        try {
+            const response = await customerApi.getCustomerDetails(id, type)
+            setViewModal({ customer: response.data, type })
+        } catch (err) {
+            const errorInfo = handleApiError(err, 'Failed to load customer details')
+            toast.error(errorInfo.message)
+        }
+    }
+
     const handleEditCustomer = async (id, type) => {
         try {
             setLoading(true)
-            const endpoint = type === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`
-            const response = await api.get(endpoint)
+            const response = await customerApi.getCustomerDetails(id, type)
             setEditModal({
                 customer: response.data,
                 type,
                 customerId: id
             })
         } catch (err) {
-            console.error('Error fetching customer for edit:', err)
-            toast.error('Failed to load customer data for editing')
+            const errorInfo = handleApiError(err, 'Failed to load customer data for editing')
+            toast.error(errorInfo.message)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleDeleteCustomer = async (id, type) => {
+        if (window.confirm(`Are you sure you want to delete this ${type}?`)) {
+            try {
+                await customerApi.deleteCustomer(id, type)
+                toast.success(`${type === 'franchise' ? 'Franchise' : 'Merchant'} deleted successfully`)
+
+                // Refresh data
+                if (type === 'franchise') {
+                    fetchFranchises()
+                } else {
+                    fetchMerchants()
+                }
+            } catch (err) {
+                const errorInfo = handleApiError(err, 'Failed to delete customer')
+                toast.error(errorInfo.message)
+            }
         }
     }
 
@@ -537,63 +596,6 @@ const CustomerListComponent = () => {
     // Handle document preview
     const handleDocumentPreview = (filePath, documentName) => {
         setDocumentPreview({ documentPath: filePath, documentName })
-    }
-    // Fetch data functions
-    const fetchFranchises = async () => {
-        try {
-            setLoading(true)
-            setError(null)
-            const response = await api.get('/franchise')
-            setFranchises(response.data)
-        } catch (err) {
-            setError('Failed to load franchises')
-            console.error('Error fetching franchises:', err)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const fetchMerchants = async () => {
-        try {
-            setLoading(true)
-            setError(null)
-            const response = await api.get('/merchants/direct-merchant')
-            setMerchants(response.data)
-        } catch (err) {
-            setError('Failed to load merchants')
-            console.error('Error fetching merchants:', err)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const fetchCustomerDetails = async (id, type) => {
-        try {
-            const endpoint = type === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`
-            const response = await api.get(endpoint)
-            setViewModal({ customer: response.data, type })
-        } catch (err) {
-            console.error('Error fetching customer details:', err)
-        }
-    }
-    const handleDeleteCustomer = async (id, type) => {
-        if (window.confirm(`Are you sure you want to delete this ${type}?`)) {
-            try {
-                const endpoint = type === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`
-                await api.delete(endpoint)
-                toast.success(`${type === 'franchise' ? 'Franchise' : 'Merchant'} deleted successfully`)
-
-                // Refresh data
-                if (type === 'franchise') {
-                    fetchFranchises()
-                } else {
-                    fetchMerchants()
-                }
-            } catch (err) {
-                console.error('Delete error:', err)
-                toast.error('Failed to delete. Please try again.')
-            }
-        }
     }
 
     // Load initial data
@@ -996,7 +998,8 @@ const CustomerListComponent = () => {
                         </>
                     )}
                 </div>
-                {/* Add Edit Modal */}
+
+                {/* Edit Modal */}
                 {editModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
                         <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full overflow-auto">
@@ -1049,3 +1052,4 @@ const CustomerListComponent = () => {
 }
 
 export default CustomerListComponent
+export { DocumentPreview }
