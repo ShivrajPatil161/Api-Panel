@@ -20,8 +20,14 @@ export const franchiseApi = {
 
 // Merchant APIs
 export const merchantApi = {
-  // Get all direct merchants
+  // Get all merchants (including both franchise and direct merchants)
+  getAll: () => api.get('/merchants'),
+
+  // Get all direct merchants only
   getAllDirect: () => api.get('/merchants/direct-merchant'),
+
+  // Get all franchise merchants only (merchants under franchises)
+  getAllFranchiseMerchants: () => api.get('/merchants/franchise-merchant'),
 
   // Get merchant by ID
   getById: (id) => api.get(`/merchants/${id}`),
@@ -63,19 +69,25 @@ export const fileApi = {
 export const customerApi = {
   // Get customer details (automatically determines type)
   getCustomerDetails: async (id, type) => {
-    const endpoint = type === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
+    // Handle franchiseMerchant type as merchant for API call
+    const apiType = type === 'franchiseMerchant' ? 'merchant' : type;
+    const endpoint = apiType === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
     return api.get(endpoint);
   },
 
   // Delete customer (automatically determines type)
   deleteCustomer: async (id, type) => {
-    const endpoint = type === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
+    // Handle franchiseMerchant type as merchant for API call
+    const apiType = type === 'franchiseMerchant' ? 'merchant' : type;
+    const endpoint = apiType === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
     return api.delete(endpoint);
   },
 
   // Update customer (automatically determines type)
   updateCustomer: async (id, type, data) => {
-    const endpoint = type === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
+    // Handle franchiseMerchant type as merchant for API call
+    const apiType = type === 'franchiseMerchant' ? 'merchant' : type;
+    const endpoint = apiType === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
     return api.put(endpoint, data);
   },
 };

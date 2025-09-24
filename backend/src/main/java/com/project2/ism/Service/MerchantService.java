@@ -433,4 +433,11 @@ public class MerchantService {
                 .map(this::mapToListDTO)
                 .collect(Collectors.toList());
     }
+
+    public List<MerchantListDTO> getAllFranchiseMerchantsForList() {
+        return merchantRepository.findByFranchiseIsNotNull()
+                .stream()
+                .map(this::mapToListDTO)
+                .collect(Collectors.toList());
+    }
 }
