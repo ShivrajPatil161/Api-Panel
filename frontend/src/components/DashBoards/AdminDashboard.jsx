@@ -230,46 +230,7 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Vendor & Financial Overview */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Vendor & Financial</h3>
-                            <CreditCard className="w-6 h-6 text-purple-600" />
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
-                                <div>
-                                    <p className="text-sm text-purple-700">Monthly Rent</p>
-                                    <p className="text-2xl font-bold text-purple-600">₹{vendorStats?.totalMonthlyRent || 0}</p>
-                                </div>
-                                <Wallet className="w-8 h-8 text-purple-500" />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="text-center p-3 bg-slate-50 rounded-lg">
-                                    <p className="text-lg font-bold text-slate-700">{pricingStats?.totalSchemes || 0}</p>
-                                    <p className="text-xs text-slate-500">Pricing Schemes</p>
-                                </div>
-                                <div className="text-center p-3 bg-slate-50 rounded-lg">
-                                    <p className="text-lg font-bold text-slate-700">{vendorStats?.totalVendorRates || 0}</p>
-                                    <p className="text-xs text-slate-500">Vendor Rates</p>
-                                </div>
-                            </div>
-
-                            {vendorStats?.cardTypeDistribution && (
-                                <div className="mt-4">
-                                    <p className="text-sm font-medium text-slate-600 mb-2">Card Types:</p>
-                                    {Object.entries(vendorStats.cardTypeDistribution).map(([type, count]) => (
-                                        <div key={type} className="flex justify-between text-sm py-1">
-                                            <span className="text-slate-600">{type}:</span>
-                                            <span className="font-medium">{count}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                   
                 </div>
 
                 {/* Product Categories & Franchise Details */}

@@ -20,9 +20,49 @@ public class PermissionController {
     @Autowired
     private PermissionService permissionService;
 
+//    @GetMapping
+//    public ResponseEntity<List<Permission>> getAllPermissions() {
+//        return ResponseEntity.ok(permissionService.getAllPermissions());
+//    }
+//
+//    @PostMapping
+//    public ResponseEntity<Permission> createPermission(@Valid @RequestBody CreatePermissionRequest request) {
+//        Permission permission = permissionService.createPermission(request);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(permission);
+//    }
+//
+//    @PutMapping("/{id}")
+//    public ResponseEntity<Permission> updatePermission(
+//            @PathVariable Long id,
+//            @Valid @RequestBody CreatePermissionRequest request) {
+//        Permission permission = permissionService.updatePermission(id, request);
+//        return ResponseEntity.ok(permission);
+//    }
+//
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<Void> deletePermission(@PathVariable Long id) {
+//        permissionService.deletePermission(id);
+//        return ResponseEntity.noContent().build();
+//    }
+
     @GetMapping
     public ResponseEntity<List<Permission>> getAllPermissions() {
         return ResponseEntity.ok(permissionService.getAllPermissions());
+    }
+
+    @GetMapping("/hierarchical")
+    public ResponseEntity<List<Permission>> getAllPermissionsHierarchical() {
+        return ResponseEntity.ok(permissionService.getAllPermissionsHierarchical());
+    }
+
+    @GetMapping("/roots")
+    public ResponseEntity<List<Permission>> getRootPermissions() {
+        return ResponseEntity.ok(permissionService.getRootPermissions());
+    }
+
+    @GetMapping("/{parentId}/children")
+    public ResponseEntity<List<Permission>> getChildrenByParentId(@PathVariable Long parentId) {
+        return ResponseEntity.ok(permissionService.getChildrenByParentId(parentId));
     }
 
     @PostMapping
@@ -44,4 +84,10 @@ public class PermissionController {
         permissionService.deletePermission(id);
         return ResponseEntity.noContent().build();
     }
+
+//    @PostMapping("/initialize")
+//    public ResponseEntity<String> initializePredefinedPermissions() {
+//        permissionService.initializePredefinedPermissions();
+//        return ResponseEntity.ok("Predefined permissions initialized successfully");
+//    }
 }

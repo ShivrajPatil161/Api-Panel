@@ -5,7 +5,7 @@ import FTransReportDashboard from "./FranhiseTransReports/FTransReportDashboard"
 import MTransReportDashboard from "./MerchantTransReport/MTransReportDashboard";
 import InwardTransactionReport from "./InwardTransactionReports";
 import OutwardTransactionReport from "./OutwardTransactionReports";
-import ProductReport from "./productReports/ProductReport";
+//import ProductReport from "./productReports/ProductReport";
 import ReturnTransactionReport from "./ReturnTransactionReports";
 const MainReportsPageForNow = () => {
     // null = no tab selected initially
@@ -20,7 +20,7 @@ const MainReportsPageForNow = () => {
         { id: "inward-transaction-reports", label: "Inward Transaction Reports", component: <InwardTransactionReport /> },
         { id: "outward-transaction-reports", label: "Outward Transaction Reports", component: <OutwardTransactionReport /> },
         { id: "return-transaction-reports", label: "Return Transaction Reports", component: <ReturnTransactionReport/> },
-        { id: "product-reports", label: "Product Reports", component: <ProductReport /> } 
+       // { id: "product-reports", label: "Product Reports", component: <ProductReport /> } 
 
 
 

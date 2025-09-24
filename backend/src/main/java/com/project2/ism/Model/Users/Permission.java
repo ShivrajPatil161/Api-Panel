@@ -1,6 +1,11 @@
 package com.project2.ism.Model.Users;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "permissions")
@@ -14,6 +19,15 @@ public class Permission {
 
     @Column
     private String description;
+
+    @ManyToOne
+    @JsonBackReference
+    @JoinColumn(name = "parent_id")
+    private Permission parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Permission> children = new ArrayList<>();
 
     // Constructors
     public Permission() {}
@@ -32,4 +46,20 @@ public class Permission {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public Permission getParent() {
+        return parent;
+    }
+
+    public void setParent(Permission parent) {
+        this.parent = parent;
+    }
+
+    public List<Permission> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<Permission> children) {
+        this.children = children;
+    }
 }

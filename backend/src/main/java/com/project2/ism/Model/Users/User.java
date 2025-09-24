@@ -59,14 +59,7 @@ public class User {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
-    public LocalDateTime getResetTokenExpiry() {
-        return resetTokenExpiry;
-    }
-
-    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
-        this.resetTokenExpiry = resetTokenExpiry;
-    }
-
+    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -91,6 +84,26 @@ public class User {
         this.password = password;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    /**
+     * Gets the stored permissions (explicitly granted only)
+     * This is the source of truth for what permissions are actually assigned
+     */
+    public Set<Permission> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(Set<Permission> permissions) {
+        this.permissions = permissions;
+    }
+
     public String getResetToken() {
         return resetToken;
     }
@@ -99,6 +112,13 @@ public class User {
         this.resetToken = resetToken;
     }
 
+    public LocalDateTime getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
+    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -116,14 +136,7 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
+    // JPA Lifecycle methods
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -135,7 +148,7 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
-    // Update helper methods:
+    // Permission helper methods
     public void addPermission(Permission permission) {
         this.permissions.add(permission);
     }
@@ -144,16 +157,17 @@ public class User {
         this.permissions.remove(permission);
     }
 
-    public Set<Permission> getAllPermissions() {
-        return permissions; // Direct return instead of collecting from roles
-    }
-
-    public boolean hasPermission(String permissionName) {
+    /**
+     * Checks if user has a specific permission by name
+     * This checks ONLY stored permissions, not inherited ones
+     * Use AdminService.hasPermission() for inheritance checks
+     */
+    public boolean hasDirectPermission(String permissionName) {
         return permissions.stream()
                 .anyMatch(permission -> permission.getName().equals(permissionName));
     }
 
     public boolean hasRole(String roleName) {
-        return roleName.equals(this.role); // Simple string comparison
+        return roleName.equals(this.role);
     }
 }

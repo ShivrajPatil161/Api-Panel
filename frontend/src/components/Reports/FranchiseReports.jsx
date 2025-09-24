@@ -71,7 +71,7 @@ const FranchiseReports = () => {
             header: 'Wallet Balance',
             cell: info => (
                 <div className="text-center text-gray-700">
-                    ${(info.getValue() || 0).toLocaleString()}
+                    ₹{(info.getValue() || 0).toLocaleString()}
                 </div>
             ),
         }),

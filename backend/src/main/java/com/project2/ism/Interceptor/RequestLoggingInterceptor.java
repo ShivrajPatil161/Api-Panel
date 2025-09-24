@@ -1,6 +1,8 @@
 package com.project2.ism.Interceptor;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.project2.ism.Model.RequestLog;
 import com.project2.ism.Service.JwtService;
 import com.project2.ism.Service.RequestLogService;
@@ -76,19 +78,19 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         // Set request headers
         requestLog.setRequestHeaders(getHeadersAsString(request));
 
-        // Set request body if available
-        if (request instanceof ContentCachingRequestWrapper) {
-            ContentCachingRequestWrapper wrapper = (ContentCachingRequestWrapper) request;
-            byte[] content = wrapper.getContentAsByteArray();
-            if (content.length > 0) {
-                String requestBody = new String(content, StandardCharsets.UTF_8);
-                // Limit body size to prevent database issues
-                if (requestBody.length() > 5000) {
-                    requestBody = requestBody.substring(0, 5000) + "... [truncated]";
-                }
-                requestLog.setRequestBody(requestBody);
-            }
-        }
+//        // Set request body if available
+//        if (request instanceof ContentCachingRequestWrapper) {
+//            ContentCachingRequestWrapper wrapper = (ContentCachingRequestWrapper) request;
+//            byte[] content = wrapper.getContentAsByteArray();
+//            if (content.length > 0) {
+//                String requestBody = new String(content, StandardCharsets.UTF_8);
+//                // Limit body size to prevent database issues
+//                if (requestBody.length() > 5000) {
+//                    requestBody = requestBody.substring(0, 5000) + "... [truncated]";
+//                }
+//                requestLog.setRequestBody(requestBody);
+//            }
+//        }
 
         request.setAttribute(REQUEST_LOG_ATTR, requestLog);
         return true;
@@ -120,6 +122,34 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         // Set response headers
         requestLog.setResponseHeaders(getResponseHeadersAsString(response));
 
+        // Set request body if available
+        if (request instanceof ContentCachingRequestWrapper) {
+            ContentCachingRequestWrapper wrapper = (ContentCachingRequestWrapper) request;
+            byte[] content = wrapper.getContentAsByteArray();
+            if (content.length > 0) {
+                String requestBody = new String(content, StandardCharsets.UTF_8);
+                // Limit body size to prevent database issues
+                if (requestBody.length() > 5000) {
+                    requestBody = requestBody.substring(0, 5000) + "... [truncated]";
+                }
+                if (request.getRequestURI().contains("/login")) {
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode node = mapper.readTree(requestBody);
+                        ObjectNode masked = mapper.createObjectNode();
+                        masked.put("email", node.has("email") ? node.get("email").asText() : "[UNKNOWN]");
+                        masked.put("password", "[PROTECTED]");
+                        requestLog.setRequestBody(masked.toString());
+                    } catch (Exception e) {
+                        requestLog.setRequestBody("{\"password\":\"[PROTECTED]\"}");
+                    }
+                } else {
+                    requestLog.setRequestBody(requestBody);
+                }
+
+
+            }
+        }
         // Set response body if available
         if (response instanceof ContentCachingResponseWrapper) {
             ContentCachingResponseWrapper wrapper = (ContentCachingResponseWrapper) response;
