@@ -497,6 +497,7 @@ const CustomerListComponent = () => {
     const [expanded, setExpanded] = useState({})
     const [franchises, setFranchises] = useState([])
     const [merchants, setMerchants] = useState([])
+    const [directMerchants, setDirectMerchants] = useState([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [viewModal, setViewModal] = useState(null)
@@ -527,6 +528,21 @@ const CustomerListComponent = () => {
             setError(null)
             const response = await merchantApi.getAllDirect()
             setMerchants(response.data)
+        } catch (err) {
+            const errorInfo = handleApiError(err, 'Failed to load merchants')
+            setError(errorInfo.message)
+            toast.error(errorInfo.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const fetchDirectMerchants = async () => {
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await merchantApi.getAllFranchiseMerchants()
+            setDirectMerchants(response.data)
         } catch (err) {
             const errorInfo = handleApiError(err, 'Failed to load merchants')
             setError(errorInfo.message)
@@ -586,10 +602,13 @@ const CustomerListComponent = () => {
     const handleEditSuccess = () => {
         setEditModal(null)
         // Refresh the data
-        if (activeTab === 'franchises') {
+        if (activeTab === 'franchises'){
             fetchFranchises()
-        } else {
-            fetchMerchants()
+        }
+        else if (activeTab === 'merchants') {
+                fetchMerchants()
+        }
+        else {fetchDirectMerchants()
         }
     }
 
@@ -600,12 +619,17 @@ const CustomerListComponent = () => {
 
     // Load initial data
     useEffect(() => {
-        fetchFranchises()
+        fetchFranchises(),
+        fetchDirectMerchants(),
+        fetchMerchants()
     }, [])
 
     // Handle tab changes
     const handleTabChange = (tab) => {
         setActiveTab(tab)
+        if (tab === 'direct merchants' && directMerchants.length === 0) {
+            fetchDirectMerchants()
+        }
         if (tab === 'merchants' && merchants.length === 0) {
             fetchMerchants()
         }
@@ -710,6 +734,98 @@ const CustomerListComponent = () => {
                     </div>
                     <div>
                         <div className="font-medium text-gray-900">{info.getValue()}</div>
+                        <div className="text-sm text-gray-500">Franchise : {info.row.original.franchiseName}</div>
+                    </div>
+                </div>
+            ),
+            size: 250,
+        }),
+        
+        columnHelper.accessor('address', {
+            header: 'Location',
+            cell: (info) => (
+                <div className="flex items-center space-x-2">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">{info.getValue()}</span>
+                </div>
+            ),
+        }),
+        columnHelper.accessor('products', {
+            header: 'Products',
+            cell: (info) => (
+                <div className="flex items-center space-x-2">
+                    <Package className="w-4 h-4 text-gray-400" />
+                    <span className="font-medium">{info.getValue() || 0}</span>
+                </div>
+            ),
+            size: 100,
+        }),
+        columnHelper.accessor('walletBalance', {
+            header: 'Wallet Balance',
+            cell: (info) => (
+                <div className="flex items-center space-x-2">
+                    <Wallet className="w-4 h-4 text-gray-400" />
+                    <span className="font-medium">₹{(info.getValue() || 0).toLocaleString()}</span>
+                </div>
+            ),
+        }),
+        columnHelper.accessor('monthlyRevenue', {
+            header: 'Monthly Revenue',
+            cell: (info) => (
+                <div className="flex items-center space-x-2">
+                    <TrendingUp className="w-4 h-4 text-gray-400" />
+                    <span className="font-medium">₹{(info.getValue() || 0).toLocaleString()}</span>
+                </div>
+            ),
+        }),
+        columnHelper.accessor('status', {
+            header: 'Status',
+            cell: (info) => <StatusBadge status={info.getValue() || 'active'} />,
+            size: 100,
+        }),
+        columnHelper.display({
+            id: 'actions',
+            header: 'Actions',
+            cell: ({ row }) => (
+                <div className="flex items-center space-x-1">
+                    <ActionButton
+                        icon={Eye}
+                        onClick={() => fetchCustomerDetails(row.original.id, 'merchant')}
+                        variants="primary"
+                    />
+                    <ActionButton
+                        icon={Edit}
+                        onClick={() => handleEditCustomer(row.original.id, 'merchant')}
+                        variants='ghost'
+                    />
+                    <ActionButton
+                        icon={Trash2}
+                        onClick={() => handleDeleteCustomer(row.original.id, 'merchant')}
+                        variant="danger"
+                    />
+                </div>
+            ),
+            size: 120,
+        }),
+    ], [columnHelper])
+
+     const directMerchantColumns = useMemo(() => [
+        columnHelper.accessor('id', {
+            header: 'ID',
+            cell: (info) => (
+                <span className="font-mono text-sm text-gray-600">#{info.getValue()}</span>
+            ),
+            size: 80,
+        }),
+        columnHelper.accessor('businessName', {
+            header: 'Business Name',
+            cell: (info) => (
+                <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-green-50 rounded-lg">
+                        <Store className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                        <div className="font-medium text-gray-900">{info.getValue()}</div>
                         <div className="text-sm text-gray-500">{info.row.original.businessType}</div>
                     </div>
                 </div>
@@ -771,9 +887,11 @@ const CustomerListComponent = () => {
                     <ActionButton
                         icon={Edit}
                         onClick={() => handleEditCustomer(row.original.id, 'merchant')}
+                        // variant=
                     />
                     <ActionButton
                         icon={Trash2}
+                        className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
                         onClick={() => handleDeleteCustomer(row.original.id, 'merchant')}
                         variant="danger"
                     />
@@ -785,8 +903,18 @@ const CustomerListComponent = () => {
 
     // Table instance
     const table = useReactTable({
-        data: activeTab === 'franchises' ? franchises : merchants,
-        columns: activeTab === 'franchises' ? franchiseColumns : merchantColumns,
+          data:
+    activeTab === "franchises"
+      ? franchises
+      : activeTab === "direct merchants"
+      ? merchants
+      : directMerchants,
+  columns:
+    activeTab === "franchises"
+      ? franchiseColumns
+      : activeTab === "merchants"
+      ? merchantColumns
+      : directMerchantColumns,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
@@ -859,9 +987,20 @@ const CustomerListComponent = () => {
                         >
                             Franchises
                         </button>
-                        <button
+                        
+                         <button
                             onClick={() => handleTabChange('merchants')}
                             className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'merchants'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            Merchants
+                        </button>
+
+                        <button
+                            onClick={() => handleTabChange('direct merchants')}
+                            className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'direct merchants'
                                 ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
@@ -873,8 +1012,8 @@ const CustomerListComponent = () => {
 
                 {/* Header */}
                 <TableHeader
-                    title={activeTab === 'franchises' ? 'Franchise Management' : 'Direct Merchant Management'}
-                    count={activeTab === 'franchises' ? franchises.length : merchants.length}
+                    title={activeTab === 'franchises' ? 'Franchise Management' : activeTab === 'direct merchants' ? 'Direct Merchant Management':'Merchant Management'}
+                    count={activeTab === 'franchises' ? franchises.length : activeTab === 'merchants' ?  directMerchants.length : merchants.length}
                 />
 
                 {/* Table */}

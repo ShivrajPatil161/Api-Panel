@@ -259,4 +259,14 @@ public class MerchantController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @GetMapping("/franchise-merchant")
+    public ResponseEntity<List<MerchantListDTO>> franchiseMerchant() {
+        try {
+            List<MerchantListDTO> merchants = merchantService.getAllFranchiseMerchantsForList();
+            return ResponseEntity.ok(merchants);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
