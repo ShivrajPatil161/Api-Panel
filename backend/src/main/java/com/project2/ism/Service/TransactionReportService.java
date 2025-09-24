@@ -2,6 +2,8 @@ package com.project2.ism.Service;
 
 
 
+import com.project2.ism.DTO.ReportDTO.FranchiseTransactionReportDTO;
+import com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO;
 import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.TransactionDetailResponse;
 import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.TransactionReportRequest;
 import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.TransactionReportResponse;
@@ -63,7 +65,7 @@ public class TransactionReportService {
         try {
             Pageable pageable = createPageable(request);
 
-            Page<MerchantTransactionDetails> transactionPage;
+            Page<MerchantTransactionReportDTO> transactionPage;
 
             // Choose query based on date filter type and merchant type
             if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
@@ -89,17 +91,17 @@ public class TransactionReportService {
             }
 
             // Convert to DTOs
-            List<TransactionDetailResponse> transactionDetails = transactionPage.getContent()
-                    .stream()
-                    .map(this::mapToTransactionDetailResponse)
-                    .collect(Collectors.toList());
+//            List<TransactionDetailResponse> transactionDetails = transactionPage.getContent()
+//                    .stream()
+//                    .map(this::mapToTransactionDetailResponse)
+//                    .collect(Collectors.toList());
 
             // Get summary data
             TransactionSummary summary = getEnhancedMerchantTransactionSummary(request);
 
             // Build response
-            TransactionReportResponse response = new TransactionReportResponse();
-            response.setTransactions(transactionDetails);
+            TransactionReportResponse<MerchantTransactionReportDTO> response = new TransactionReportResponse<>();
+            response.setTransactions(transactionPage.getContent());
             response.setSummary(summary);
             response.setReportGeneratedAt(LocalDateTime.now());
             response.setReportType("MERCHANT_TRANSACTION_REPORT");
@@ -109,7 +111,7 @@ public class TransactionReportService {
             response.setHasPrevious(transactionPage.hasPrevious());
 
             logger.info("Successfully generated enhanced merchant transaction report with {} transactions",
-                    transactionDetails.size());
+                    transactionPage.getNumberOfElements());
             return response;
 
         } catch (Exception e) {
@@ -130,7 +132,7 @@ public class TransactionReportService {
         try {
             Pageable pageable = createPageable(request);
 
-            Page<FranchiseTransactionDetails> transactionPage;
+            Page<FranchiseTransactionReportDTO> transactionPage;
 
             // Choose query based on date filter type
             if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
@@ -155,17 +157,17 @@ public class TransactionReportService {
             }
 
             // Convert to DTOs
-            List<TransactionDetailResponse> transactionDetails = transactionPage.getContent()
-                    .stream()
-                    .map(this::mapToTransactionDetailResponse)
-                    .collect(Collectors.toList());
+//            List<TransactionDetailResponse> transactionDetails = transactionPage.getContent()
+//                    .stream()
+//                    .map(this::mapToTransactionDetailResponse)
+//                    .collect(Collectors.toList());
 
             // Get franchise summary with commission data
             FranchiseTransactionSummary summary = getEnhancedFranchiseTransactionSummary(request);
 
             // Build response
-            TransactionReportResponse response = new TransactionReportResponse();
-            response.setTransactions(transactionDetails);
+            TransactionReportResponse<FranchiseTransactionReportDTO> response = new TransactionReportResponse<>();
+            response.setTransactions(transactionPage.getContent());
             response.setSummary(summary);
             response.setReportGeneratedAt(LocalDateTime.now());
             response.setReportType("ENHANCED_FRANCHISE_TRANSACTION_REPORT");
@@ -175,7 +177,7 @@ public class TransactionReportService {
             response.setHasPrevious(transactionPage.hasPrevious());
 
             logger.info("Successfully generated enhanced franchise transaction report with {} transactions",
-                    transactionDetails.size());
+                    transactionPage.getNumberOfElements());
             return response;
 
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.project2.ism.Repository;
 
+import com.project2.ism.DTO.ReportDTO.FranchiseTransactionReportDTO;
 import com.project2.ism.Model.FranchiseTransactionDetails;
 import com.project2.ism.Model.MerchantTransactionDetails;
 import org.springframework.data.domain.Page;
@@ -36,13 +37,53 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
 
 //new for reports lets see if they work
 
-    @Query("SELECT ftd FROM FranchiseTransactionDetails ftd WHERE " +
-            "ftd.transactionDate BETWEEN :startDate AND :endDate " +
+//    @Query("SELECT ftd FROM FranchiseTransactionDetails ftd WHERE " +
+//            "ftd.transactionDate BETWEEN :startDate AND :endDate " +
+//            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+//            "AND (:status IS NULL OR ftd.tranStatus = :status) " +
+//            "AND (:transactionType IS NULL OR ftd.transactionType = :transactionType) " +
+//            "ORDER BY ftd.transactionDate DESC")
+//    Page<FranchiseTransactionDetails> findFranchiseTransactionsByFilters(
+//            @Param("startDate") LocalDateTime startDate,
+//            @Param("endDate") LocalDateTime endDate,
+//            @Param("franchiseId") Long franchiseId,
+//            @Param("status") String status,
+//            @Param("transactionType") String transactionType,
+//            Pageable pageable);
+//
+//    // Query based on settlement date instead of transaction date
+//    @Query("SELECT ftd FROM FranchiseTransactionDetails ftd WHERE " +
+//            "ftd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+//            "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+//            "AND (:status IS NULL OR ftd.tranStatus = :status) " +
+//            "AND (:transactionType IS NULL OR ftd.transactionType = :transactionType) " +
+//            "ORDER BY ftd.updatedDateAndTimeOfTransaction DESC")
+//    Page<FranchiseTransactionDetails> findFranchiseTransactionsBySettlementDateFilters(
+//            @Param("startDate") LocalDateTime startDate,
+//            @Param("endDate") LocalDateTime endDate,
+//            @Param("franchiseId") Long franchiseId,
+//            @Param("status") String status,
+//            @Param("transactionType") String transactionType,
+//            Pageable pageable);
+//
+
+
+    // Transaction date based
+    @Query("SELECT new com.project2.ism.DTO.ReportDTO.FranchiseTransactionReportDTO(" +
+            "mtd.vendorTransactionId, ftd.transactionDate, ftd.amount, " +
+            "ftd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
+            "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
+            "vt.brandType, vt.cardType, vt.cardClassification, " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, ftd.franchise.status) " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
             "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
             "AND (:status IS NULL OR ftd.tranStatus = :status) " +
             "AND (:transactionType IS NULL OR ftd.transactionType = :transactionType) " +
             "ORDER BY ftd.transactionDate DESC")
-    Page<FranchiseTransactionDetails> findFranchiseTransactionsByFilters(
+    Page<FranchiseTransactionReportDTO> findFranchiseTransactionsByFilters(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             @Param("franchiseId") Long franchiseId,
@@ -50,21 +91,32 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             @Param("transactionType") String transactionType,
             Pageable pageable);
 
-    // Query based on settlement date instead of transaction date
-    @Query("SELECT ftd FROM FranchiseTransactionDetails ftd WHERE " +
-            "ftd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+
+
+    // Settlement date based
+    @Query("SELECT new com.project2.ism.DTO.ReportDTO.FranchiseTransactionReportDTO(" +
+            "mtd.vendorTransactionId, ftd.transactionDate, ftd.amount, " +
+            "ftd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
+            "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
+            "vt.brandType, vt.cardType, vt.cardClassification, " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, ftd.franchise.status) " +
+            "FROM FranchiseTransactionDetails ftd " +
+            "JOIN ftd.merchantTransactionDetail mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "WHERE ftd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
             "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
+            //"AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
             "AND (:status IS NULL OR ftd.tranStatus = :status) " +
             "AND (:transactionType IS NULL OR ftd.transactionType = :transactionType) " +
             "ORDER BY ftd.updatedDateAndTimeOfTransaction DESC")
-    Page<FranchiseTransactionDetails> findFranchiseTransactionsBySettlementDateFilters(
+    Page<FranchiseTransactionReportDTO> findFranchiseTransactionsBySettlementDateFilters(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             @Param("franchiseId") Long franchiseId,
+            //@Param("merchantId") Long merchantId,
             @Param("status") String status,
             @Param("transactionType") String transactionType,
             Pageable pageable);
-
 
 
 

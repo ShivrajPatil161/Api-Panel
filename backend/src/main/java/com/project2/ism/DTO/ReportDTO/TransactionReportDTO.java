@@ -5,6 +5,7 @@ package com.project2.ism.DTO.ReportDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -380,8 +381,8 @@ public class TransactionReportDTO {
         }
     }
 
-    public static class TransactionReportResponse {
-        private List<TransactionDetailResponse> transactions;
+    public static class TransactionReportResponse<T> {
+        private List<T> transactions;
         private TransactionSummary summary;
         private LocalDateTime reportGeneratedAt;
         private String reportType;
@@ -395,7 +396,7 @@ public class TransactionReportDTO {
         public TransactionReportResponse() {
         }
 
-        public TransactionReportResponse(List<TransactionDetailResponse> transactions, TransactionSummary summary, LocalDateTime reportGeneratedAt, String reportType, int totalPages, long totalElements, boolean hasNext, boolean hasPrevious) {
+        public TransactionReportResponse(List<T> transactions, TransactionSummary summary, LocalDateTime reportGeneratedAt, String reportType, int totalPages, long totalElements, boolean hasNext, boolean hasPrevious) {
             this.transactions = transactions;
             this.summary = summary;
             this.reportGeneratedAt = reportGeneratedAt;
@@ -406,11 +407,11 @@ public class TransactionReportDTO {
             this.hasPrevious = hasPrevious;
         }
 
-        public List<TransactionDetailResponse> getTransactions() {
+        public List<T> getTransactions() {
             return transactions;
         }
 
-        public void setTransactions(List<TransactionDetailResponse> transactions) {
+        public void setTransactions(List<T> transactions) {
             this.transactions = transactions;
         }
 

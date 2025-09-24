@@ -1,5 +1,6 @@
 package com.project2.ism.Repository;
 
+import com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO;
 import com.project2.ism.Model.MerchantTransactionDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,27 +32,50 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
 
 
 //new for reports lets see if they work
-    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
-            "mtd.transactionDate BETWEEN :startDate AND :endDate " +
+//    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
+//            "mtd.transactionDate BETWEEN :startDate AND :endDate " +
+//            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+//            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+//            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
+//            "ORDER BY mtd.transactionDate DESC")
+//    Page<MerchantTransactionDetails> findMerchantTransactionsByFilters(
+//            @Param("startDate") LocalDateTime startDate,
+//            @Param("endDate") LocalDateTime endDate,
+//            @Param("merchantId") Long merchantId,
+//            @Param("status") String status,
+//            @Param("transactionType") String transactionType,
+//            Pageable pageable);
+//    // Query based on settlement date instead of transaction date
+//    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
+//            "mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+//            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+//            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+//            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
+//            "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
+//    Page<MerchantTransactionDetails> findMerchantTransactionsBySettlementDateFilters(
+//            @Param("startDate") LocalDateTime startDate,
+//            @Param("endDate") LocalDateTime endDate,
+//            @Param("merchantId") Long merchantId,
+//            @Param("status") String status,
+//            @Param("transactionType") String transactionType,
+//            Pageable pageable);
+
+    @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
+            "mtd.vendorTransactionId, mtd.transactionDate, mtd.amount, " +
+            "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
+            "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " + // left join ftd for franchise commission
+            "vt.brandType, vt.cardType, vt.cardClassification, " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, mtd.merchant.status) " +
+            "FROM MerchantTransactionDetails mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "LEFT JOIN FranchiseTransactionDetails ftd ON ftd.vendorTransactionId = mtd.vendorTransactionId " +
+            "AND ftd.franchise.id = mtd.merchant.franchise.id " +
+            "WHERE mtd.transactionDate BETWEEN :startDate AND :endDate " +
             "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
             "AND (:status IS NULL OR mtd.tranStatus = :status) " +
             "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
             "ORDER BY mtd.transactionDate DESC")
-    Page<MerchantTransactionDetails> findMerchantTransactionsByFilters(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
-            @Param("merchantId") Long merchantId,
-            @Param("status") String status,
-            @Param("transactionType") String transactionType,
-            Pageable pageable);
-    // Query based on settlement date instead of transaction date
-    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
-            "mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
-            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
-            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
-            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
-            "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
-    Page<MerchantTransactionDetails> findMerchantTransactionsBySettlementDateFilters(
+    Page<MerchantTransactionReportDTO> findMerchantTransactionsByFilters(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             @Param("merchantId") Long merchantId,
@@ -59,6 +83,28 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             @Param("transactionType") String transactionType,
             Pageable pageable);
 
+    @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
+            "mtd.vendorTransactionId, mtd.transactionDate, mtd.amount, " +
+            "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
+            "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
+            "vt.brandType, vt.cardType, vt.cardClassification, " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, mtd.merchant.status) " +
+            "FROM MerchantTransactionDetails mtd " +
+            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "LEFT JOIN FranchiseTransactionDetails ftd ON ftd.vendorTransactionId = mtd.vendorTransactionId " +
+            "AND ftd.franchise.id = mtd.merchant.franchise.id " +
+            "WHERE mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
+            "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
+    Page<MerchantTransactionReportDTO> findMerchantTransactionsBySettlementDateFilters(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("merchantId") Long merchantId,
+            @Param("status") String status,
+            @Param("transactionType") String transactionType,
+            Pageable pageable);
 
 
     @Query("SELECT " +
