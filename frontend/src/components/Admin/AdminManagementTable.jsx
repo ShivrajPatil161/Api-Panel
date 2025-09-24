@@ -10,18 +10,16 @@ import {
 } from '@tanstack/react-table';
 import {
     Search,
-    MoreVertical,
     Edit3,
     Trash2,
-    UserX,
-    UserCheck,
     Shield,
     ChevronDown,
     ChevronUp,
     ChevronLeft,
     ChevronRight,
     Filter,
-    RefreshCw
+    RefreshCw,
+    AlertTriangle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../constants/API/axiosInstance';
@@ -35,7 +33,6 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
         pageIndex: 0,
         pageSize: 10
     });
-    const [dropdownOpen, setDropdownOpen] = useState(null);
 
     const columnHelper = createColumnHelper();
 
@@ -47,60 +44,43 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
         setLoading(true);
         try {
             const response = await api.get("/admin/admins");
-            setData(response.data);
+            setData(response.data || []);
         } catch (error) {
             console.error("Failed to fetch admins:", error);
-            toast.error("Failed to load admins");
+            toast.error("Failed to load administrators");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleStatusToggle = async (userId, currentStatus) => {
+    const handleDeleteAdmin = async (userId, adminEmail) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete admin "${adminEmail}"? This action cannot be undone.`
+        );
+
+        if (!confirmed) return;
+
         try {
-            await api.patch(`/admin/admins/${userId}/status`, {
-                enabled: !currentStatus,
-            });
-
-            setData((prev) =>
-                prev.map((admin) =>
-                    admin.id === userId ? { ...admin, enabled: !currentStatus } : admin
-                )
-            );
-
-            toast.success(
-                `Admin ${!currentStatus ? "enabled" : "disabled"} successfully`
-            );
+            await api.delete(`/admin/admins/${userId}`);
+            setData((prev) => prev.filter((admin) => admin.id !== userId));
+            toast.success("Admin deleted successfully");
         } catch (error) {
-            console.error("Failed to update admin status:", error);
-            toast.error("Failed to update admin status");
+            console.error("Failed to delete admin:", error);
+            const message = error.response?.data?.message || "Failed to delete admin";
+            toast.error(message);
         }
     };
 
-    const handleDeleteAdmin = async (userId) => {
-        toast.info(
-            <div>
-                <p>Are you sure you want to delete this admin?</p>
-                <button
-                    onClick={async () => {
-                        try {
-                            await api.delete(`/admin/admins/${userId}`);
-                            setData((prev) =>
-                                prev.filter((admin) => admin.id !== userId)
-                            );
-                            toast.success("Admin deleted successfully");
-                        } catch (error) {
-                            console.error("Failed to delete admin:", error);
-                            toast.error("Failed to delete admin");
-                        }
-                    }}
-                    className="bg-red-500 text-white px-3 py-1 rounded ml-2"
-                >
-                    Yes, delete
-                </button>
-            </div>,
-            { autoClose: false }
-        );
+    const getRoleDisplay = (user) => {
+        const userType = user.role || localStorage.getItem('userType');
+
+        if (userType === 'SUPER_ADMIN') {
+            return { label: 'SUPER ADMIN', color: 'bg-red-100 text-red-800' };
+        } else if (userType === 'ADMIN') {
+            return { label: 'ADMIN', color: 'bg-blue-100 text-blue-800' };
+        } else {
+            return { label: 'USER', color: 'bg-gray-100 text-gray-800' };
+        }
     };
 
     const columns = useMemo(() => [
@@ -111,7 +91,7 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
                     <div className="flex-shrink-0">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                             <span className="text-white text-sm font-medium">
-                                {row.original.email.charAt(0).toUpperCase()}
+                                {row.original.email?.charAt(0).toUpperCase() || 'U'}
                             </span>
                         </div>
                     </div>
@@ -127,27 +107,23 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
             )
         }),
 
-        columnHelper.accessor('roles', {
-            header: 'Role & Permissions',
+        columnHelper.accessor('role', {
+            header: 'Role',
             cell: ({ row }) => {
-                const roles = row.original.roles || [];
-                const isSuperAdmin = roles.some(role => role.name === 'SUPER_ADMIN');
-                const permissions = roles.flatMap(role => role.permissions || []);
+                const roleInfo = getRoleDisplay(row.original);
+                const isSuperAdmin = row.original.role === 'SUPER_ADMIN';
 
                 return (
                     <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                             <Shield className="w-4 h-4 text-gray-400" />
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${isSuperAdmin
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                {isSuperAdmin ? 'SUPER ADMIN' : 'ADMIN'}
+                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${roleInfo.color}`}>
+                                {roleInfo.label}
                             </span>
                         </div>
                         {!isSuperAdmin && (
                             <div className="text-xs text-gray-500">
-                                {permissions.length} permission(s)
+                                {row.original.allPermissions?.length || 0} permissions
                             </div>
                         )}
                     </div>
@@ -155,23 +131,34 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
             }
         }),
 
-        columnHelper.accessor('enabled', {
-            header: 'Status',
-            cell: ({ row }) => (
-                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${row.original.enabled
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                    {row.original.enabled ? 'Active' : 'Inactive'}
-                </span>
-            )
-        }),
-
         columnHelper.accessor('createdAt', {
             header: 'Created',
             cell: ({ row }) => (
                 <div className="text-sm text-gray-900">
-                    {new Date(row.original.createdAt).toLocaleDateString()}
+                    {row.original.createdAt ?
+                        new Date(row.original.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        }) :
+                        'N/A'
+                    }
+                </div>
+            )
+        }),
+
+        columnHelper.accessor('updatedAt', {
+            header: 'Last Updated',
+            cell: ({ row }) => (
+                <div className="text-sm text-gray-900">
+                    {row.original.updatedAt ?
+                        new Date(row.original.updatedAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        }) :
+                        'N/A'
+                    }
                 </div>
             )
         }),
@@ -180,81 +167,43 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
             id: 'actions',
             header: 'Actions',
             cell: ({ row }) => {
-                const isSuperAdmin = row.original.roles?.some(role => role.name === 'SUPER_ADMIN');
-                const isCurrentUser = row.original.email === localStorage.getItem('userEmail');
+                const isSuperAdmin = row.original.role === 'SUPER_ADMIN';
+                const currentUserEmail = localStorage.getItem('userEmail');
+                const isCurrentUser = row.original.email === currentUserEmail;
+
+                if (isSuperAdmin && !isCurrentUser) {
+                    return (
+                        <div className="flex items-center space-x-1 text-gray-400">
+                            <AlertTriangle className="w-4 h-4" />
+                            <span className="text-xs">Protected</span>
+                        </div>
+                    );
+                }
 
                 return (
-                    <div className="relative">
+                    <div className="flex items-center space-x-2">
                         <button
-                            onClick={() => setDropdownOpen(dropdownOpen === row.original.id ? null : row.original.id)}
-                            className="p-1 hover:bg-gray-100 rounded-full"
-                            disabled={isSuperAdmin && !isCurrentUser}
+                            onClick={() => onEditPermissions(row.original)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit Permissions"
                         >
-                            <MoreVertical className="w-4 h-4" />
+                            <Edit3 className="w-4 h-4" />
                         </button>
-
-                        {dropdownOpen === row.original.id && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                                <div className="py-1">
-                                    {!isSuperAdmin && (
-                                        <>
-                                            <button
-                                                onClick={() => {
-                                                    onEditPermissions(row.original);
-                                                    setDropdownOpen(null);
-                                                }}
-                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                            >
-                                                <Edit3 className="w-4 h-4 mr-2" />
-                                                Edit Permissions
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    handleStatusToggle(row.original.id, row.original.enabled);
-                                                    setDropdownOpen(null);
-                                                }}
-                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                            >
-                                                {row.original.enabled ? (
-                                                    <>
-                                                        <UserX className="w-4 h-4 mr-2" />
-                                                        Deactivate
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <UserCheck className="w-4 h-4 mr-2" />
-                                                        Activate
-                                                    </>
-                                                )}
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    handleDeleteAdmin(row.original.id);
-                                                    setDropdownOpen(null);
-                                                }}
-                                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                            >
-                                                <Trash2 className="w-4 h-4 mr-2" />
-                                                Delete Admin
-                                            </button>
-                                        </>
-                                    )}
-
-                                    {isSuperAdmin && (
-                                        <div className="px-4 py-2 text-sm text-gray-500">
-                                            Super Admin - Cannot be modified
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                        
+                        {!isSuperAdmin && (
+                            <button
+                                onClick={() => handleDeleteAdmin(row.original.id, row.original.email)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete Admin"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
                         )}
                     </div>
                 );
             }
         })
-    ], [dropdownOpen, onEditPermissions]);
+    ], [onEditPermissions]);
 
     const table = useReactTable({
         data,
@@ -279,18 +228,14 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
         if (onRefresh) onRefresh();
     };
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = () => setDropdownOpen(null);
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, []);
-
     if (loading) {
         return (
             <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-center h-64">
-                    <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-gray-600">Loading administrators...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -301,7 +246,9 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                    <h3 className="text-lg font-medium text-gray-900">Admin Management</h3>
+                    <h3 className="text-lg font-medium text-gray-900">
+                        Administrator Management ({data.length})
+                    </h3>
                     <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                         {/* Search */}
                         <div className="relative">
@@ -310,14 +257,14 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
                                 value={globalFilter ?? ''}
                                 onChange={(e) => setGlobalFilter(e.target.value)}
                                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Search admins..."
+                                placeholder="Search administrators..."
                             />
                         </div>
 
                         {/* Refresh */}
                         <button
                             onClick={handleRefresh}
-                            className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                         >
                             <RefreshCw className="w-4 h-4 mr-2" />
                             Refresh
@@ -335,7 +282,7 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
                                 {headerGroup.headers.map(header => (
                                     <th
                                         key={header.id}
-                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                                         onClick={header.column.getToggleSortingHandler()}
                                     >
                                         <div className="flex items-center space-x-1">
@@ -358,7 +305,7 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {table.getRowModel().rows.map(row => (
-                            <tr key={row.id} className="hover:bg-gray-50">
+                            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                                 {row.getVisibleCells().map(cell => (
                                     <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -371,11 +318,15 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
             </div>
 
             {/* Empty State */}
-            {table.getRowModel().rows.length === 0 && (
+            {table.getRowModel().rows.length === 0 && !loading && (
                 <div className="text-center py-12">
                     <Filter className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No admins found</h3>
-                    <p className="text-gray-500">Try adjusting your search criteria</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        {globalFilter ? 'No administrators found' : 'No administrators yet'}
+                    </h3>
+                    <p className="text-gray-500">
+                        {globalFilter ? 'Try adjusting your search criteria' : 'Create your first administrator to get started'}
+                    </p>
                 </div>
             )}
 
@@ -396,7 +347,7 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
                             <button
                                 onClick={() => table.previousPage()}
                                 disabled={!table.getCanPreviousPage()}
-                                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                             </button>
@@ -408,7 +359,7 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
                             <button
                                 onClick={() => table.nextPage()}
                                 disabled={!table.getCanNextPage()}
-                                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronRight className="w-4 h-4" />
                             </button>

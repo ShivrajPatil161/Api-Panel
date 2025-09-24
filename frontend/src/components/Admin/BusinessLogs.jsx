@@ -63,11 +63,21 @@ const BusinessLogs = () => {
 
     const getResourceFromUrl = (url) => {
         const parts = url.split('/').filter(part => part);
-        if (parts.length >= 3) {
-            return parts[2].charAt(0).toUpperCase() + parts[2].slice(1);
+
+        // Remove query params or hashes if present
+        const cleanParts = parts.map(p => p.split('?')[0].split('#')[0]);
+
+        // Assume the resource is the segment after "api"
+        const apiIndex = cleanParts.findIndex(part => part.toLowerCase() === 'api');
+
+        if (apiIndex !== -1 && apiIndex + 1 < cleanParts.length) {
+            const resource = cleanParts[apiIndex + 1];
+            return resource.charAt(0).toUpperCase() + resource.slice(1);
         }
+
         return 'System';
     };
+
 
     const columns = [
         {
@@ -104,10 +114,29 @@ const BusinessLogs = () => {
             ),
         },
         {
-            header: 'Resource',
+            header: 'Request Url',
             cell: ({ row }) => (
                 <div className="text-sm text-gray-900">
                     {getResourceFromUrl(row.original.requestUrl)}
+                    {console.log(row.original)}
+                </div>
+            ),
+        },
+        {
+            header: 'Request Body',
+            cell: ({ row }) => (
+                <div className="text-sm text-gray-900">
+                    {(row.original.requestBody)}
+                    {console.log(row.original)}
+                </div>
+            ),
+        },
+        {
+            header: 'Response Body',
+            cell: ({ row }) => (
+                <div className="text-sm text-gray-900">
+                    {(row.original.responseBody)}
+                    {console.log(row.original)}
                 </div>
             ),
         },

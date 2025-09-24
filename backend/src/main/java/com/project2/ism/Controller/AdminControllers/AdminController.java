@@ -1,6 +1,8 @@
 package com.project2.ism.Controller.AdminControllers;
 
+import com.project2.ism.DTO.AdminDTO.AdminDTO;
 import com.project2.ism.DTO.AdminDTO.CreateAdminRequest;
+import com.project2.ism.DTO.AdminDTO.PermissionDTO;
 import com.project2.ism.Model.Users.Permission;
 import com.project2.ism.Model.Users.User;
 import com.project2.ism.Service.AdminServices.AdminService;
@@ -25,28 +27,28 @@ public class AdminController {
     // Only SUPER_ADMIN can manage other admins
     @GetMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<User>> getAllAdmins() {
+    public ResponseEntity<List<AdminDTO>> getAllAdmins() {
         return ResponseEntity.ok(adminService.getAllAdmins());
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN') or (hasRole('ADMIN') and hasAuthority('CREATE_ADMIN'))")
-    public ResponseEntity<User> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
-        User admin = adminService.createAdmin(request);
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    public ResponseEntity<AdminDTO> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
+        AdminDTO admin = adminService.createAdmin(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(admin);
     }
 
     @PutMapping("/{userId}/permissions")
-    @PreAuthorize("hasRole('SUPER_ADMIN') and hasAuthority('MANAGE_ADMIN_PERMISSIONS')")
-    public ResponseEntity<User> updateAdminPermissions(
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<AdminDTO> updateAdminPermissions(
             @PathVariable Long userId,
             @RequestBody List<String> permissionNames) {
-        User admin = adminService.updateAdminPermissions(userId, permissionNames);
+        AdminDTO admin = adminService.updateAdminPermissions(userId, permissionNames);
         return ResponseEntity.ok(admin);
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('SUPER_ADMIN') and hasAuthority('DELETE_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> deleteAdmin(@PathVariable Long userId) {
         adminService.deleteAdmin(userId);
         return ResponseEntity.noContent().build();
@@ -55,10 +57,11 @@ public class AdminController {
     // NEW: Get current user's permissions (JWT-based)
     @GetMapping("/my-permissions")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<Permission>> getMyPermissions() {
+    public ResponseEntity<List<PermissionDTO>> getMyPermissions() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(auth.getName());
         String userEmail = auth.getName(); // Get email from JWT
-        List<Permission> permissions = adminService.getCurrentUserPermissions(userEmail);
+        List<PermissionDTO> permissions = adminService.getCurrentUserPermissions(userEmail);
         return ResponseEntity.ok(permissions);
     }
 }
