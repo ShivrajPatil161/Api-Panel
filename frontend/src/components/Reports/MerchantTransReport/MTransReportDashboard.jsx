@@ -64,8 +64,8 @@ const MTransReportDashboard = () => {
         <div className="p-6 bg-gray-50 min-h-screen">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
+                <div className="bg-white rounded-lg shadow-sm border p-6 mb-2">
+                    <div className="flex items-center gap-3 mb-2">
                         <Store className="w-8 h-8 text-blue-600" />
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">Merchant Reports Dashboard</h1>
@@ -74,7 +74,7 @@ const MTransReportDashboard = () => {
                     </div>
 
                     {/* Tab Navigation */}
-                    <div className="border-b border-gray-200 mb-6">
+                    <div className="border-b border-gray-200 mb-2">
                         <nav className="-mb-px flex space-x-8">
                             {reportTabs.map((tab) => {
                                 const Icon = tab.icon;
@@ -97,7 +97,7 @@ const MTransReportDashboard = () => {
 
                     {/* Current Tab Description */}
                     {currentReport && (
-                        <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                        <div className="bg-blue-50 rounded-lg p-4 mb-2">
                             <div className="flex items-center gap-2">
                                 <currentReport.icon className="w-5 h-5 text-blue-600" />
                                 <h3 className="font-medium text-blue-900">{currentReport.name}</h3>
@@ -108,7 +108,7 @@ const MTransReportDashboard = () => {
 
                     {/* User Type Info */}
                     {userType && (
-                        <div className="bg-gray-100 rounded-lg p-3 mb-4">
+                        <div className="bg-gray-100 rounded-lg p-3 mb-">
                             <div className="flex items-center gap-2 text-sm text-gray-700">
                                 <Users className="w-4 h-4" />
                                 <span>User Type: <span className="font-medium capitalize">{userType}</span></span>

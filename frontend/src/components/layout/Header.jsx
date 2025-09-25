@@ -59,7 +59,7 @@ const Header = ({ userType }) => {
         // Admin → no API call
         setProfileData({
           name: 'Admin User',
-          email: 'admin@ism.com',
+          email: userEmail,
           initials: 'AD'
         });
       }
