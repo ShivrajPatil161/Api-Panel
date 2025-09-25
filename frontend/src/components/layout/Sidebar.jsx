@@ -157,9 +157,34 @@ const hasPermission = (permissionSet, permissionName) => {
 };
 
 // Filter menu items based on permissions
-const filterMenuItemsByPermissions = (menuItems, permissionSet) => {
+const filterMenuItemsByPermissions = (menuItems, permissionSet, userType) => {
   return menuItems.filter(item => {
-    // If item has children, filter children first
+    // Always show Dashboard parent for all admin types
+    if (item.key === 'dashboard') {
+      // Filter dashboard children based on user type and permissions
+      if (item.children) {
+        const filteredChildren = item.children.filter(child => {
+          // Always show the main Dashboard child for all admins
+          if (child.title === 'DashBoard') return true;
+
+          // Show Admin Management and Logs only for super_admin
+          if (child.title === 'Admin Management' || child.title === 'Logs') {
+            return userType === 'super_admin';
+          }
+
+          // Show My Permissions only for regular admin
+          if (child.title === 'My Permissions') {
+            return userType === 'admin';
+          }
+
+          return hasPermission(permissionSet, child.permission || child.title);
+        });
+        item.children = filteredChildren;
+      }
+      return true;
+    }
+
+    // For other menu items, apply normal permission filtering
     if (item.children) {
       // Filter children based on permissions
       const filteredChildren = item.children.filter(child =>
@@ -184,6 +209,27 @@ const filterMenuItemsByPermissions = (menuItems, permissionSet) => {
 // Menu configurations for different user types with permission mapping
 const getMenuItems = (userType) => {
   const normalizedUserType = userType === "super_admin" ? "admin" : userType;
+
+  // Build dashboard children based on user type
+  const getDashboardChildren = (userType) => {
+    const children = [
+      { title: 'DashBoard', path: '/dashboard', icon: Users, permission: 'Dashboard' }
+    ];
+
+    if (userType === 'super_admin') {
+      children.push(
+        { title: 'Admin Management', path: '/dashboard/role-management', icon: Users, permission: 'Admin Management' },
+        { title: 'Logs', path: '/dashboard/logs', icon: Users, permission: 'Logs' }
+      );
+    } else if (userType === 'admin') {
+      children.push(
+        { title: 'My Permissions', path: '/dashboard/role-management', icon: Users, permission: 'My Permissions' }
+      );
+    }
+
+    return children;
+  };
+
   const baseMenuItems = {
     admin: [
       {
@@ -191,12 +237,8 @@ const getMenuItems = (userType) => {
         key: "dashboard",
         icon: Home,
         iconColor: '',
-        permission: 'Dashboard', // Add permission field
-        children: [
-          { title: 'DashBoard', path: '/dashboard', icon: Users, permission: 'Dashboard' },
-          { title: 'Admin Management', path: '/dashboard/role-management', icon: Users, permission: 'Admin Management' },
-          { title: 'Logs', path: '/dashboard/logs', icon: Users, permission: 'Logs' }
-        ]
+        permission: 'Dashboard',
+        children: getDashboardChildren(userType)
       },
       {
         title: 'Vendors',
@@ -352,15 +394,30 @@ const Sidebar = ({ userType }) => {
     customers: false,
     transactions: false,
     merchants: false,
-    other: false
+    other: false,
+    dashboard: false
   });
 
   // Get permissions from localStorage and create permission set
   const [permissionSet, setPermissionSet] = useState(new Set());
 
   useEffect(() => {
-    // Only apply permissions for admin users
-    if (userType === 'admin' || userType === 'super_admin') {
+    // For super admin, don't apply permission filtering (they have all permissions)
+    if (userType === 'super_admin') {
+      // Super admin gets all permissions - no filtering needed
+      setPermissionSet(new Set([
+        'Dashboard', 'Admin Management', 'Logs',
+        'Vendors', 'Vendor List', 'Product List', 'Vendor Rates',
+        'Inventory', 'Pricing Scheme', 'Product Scheme Assign', 'Inventory Management',
+        'Customers', 'Customer List', 'Onboard Customer', 'Merchant Approval', 'Products Distribution',
+        'Other', 'File Upload', 'Charge Calculation', 'Batch Status',
+        'Reports'
+      ]));
+      return;
+    }
+
+    // Only apply permission filtering for regular admin users
+    if (userType === 'admin') {
       try {
         const storedPermissions = localStorage.getItem('permissions');
         if (storedPermissions) {
@@ -368,10 +425,13 @@ const Sidebar = ({ userType }) => {
           const flatPermissionSet = flattenPermissions(permissions);
           setPermissionSet(flatPermissionSet);
           console.log('Permission Set:', flatPermissionSet);
+        } else {
+          // No permissions in localStorage for admin - only show Dashboard
+          setPermissionSet(new Set(['Dashboard']));
         }
       } catch (error) {
         console.error('Error parsing permissions from localStorage:', error);
-        setPermissionSet(new Set()); // Empty set if error
+        setPermissionSet(new Set(['Dashboard'])); // Only Dashboard if error
       }
     } else {
       // For non-admin users, set an empty permission set (no filtering)
@@ -398,7 +458,8 @@ const Sidebar = ({ userType }) => {
         customers: false,
         transactions: false,
         merchants: false,
-        other: false
+        other: false,
+        dashboard: false
       });
     }
   };
@@ -422,11 +483,12 @@ const Sidebar = ({ userType }) => {
     return children?.some(child => location.pathname === child.path);
   };
 
-  // Get menu items and apply permission filtering for admin users
+  // Get menu items and apply permission filtering
   let menuItems = getMenuItems(userType);
 
-  if ((userType === 'admin' || userType === 'super_admin') && permissionSet.size > 0) {
-    menuItems = filterMenuItemsByPermissions(menuItems, permissionSet);
+  // Apply permission filtering based on user type
+  if (userType === 'admin' || userType === 'super_admin') {
+    menuItems = filterMenuItemsByPermissions(menuItems, permissionSet, userType);
   }
 
   return (

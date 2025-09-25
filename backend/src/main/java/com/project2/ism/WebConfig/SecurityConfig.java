@@ -39,7 +39,7 @@ public class SecurityConfig {
 
                         // Admin only endpoints
                         .requestMatchers("/vendors/**", "/vendor-rates/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/products/**").hasRole("ADMIN")
+                        .requestMatchers("/products/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
 
                         // Default - all other requests require authentication
