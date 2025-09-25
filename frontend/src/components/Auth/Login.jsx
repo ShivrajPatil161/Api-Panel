@@ -24,31 +24,29 @@ const Login = () => {
 
   const onSubmit = async (formData) => {
     try {
-      const { data, status } = await api.post(
-        "/users/login",
-        formData
-      );
+      const { data, status } = await api.post("/users/login", formData);
 
-
-      
       if (status === 200) {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("userType", data.role);
         localStorage.setItem("userEmail", data.email);
-        
+
+        if (data.role === "ADMIN" || data.role === "SUPER_ADMIN") {
+          // save permissions only for admins
+          localStorage.setItem("permissions", JSON.stringify(data.permissions));
+        } else {
+          localStorage.removeItem("permissions"); // cleanup
+        }
+
         toast.success("Login successful!");
         reset();
         navigate("/dashboard");
       }
     } catch (error) {
-      console.error(
-        "Login Error:",
-        error?.response?.data?.error || error.message
-      );
-      toast.error(
-        error?.response?.data?.error || "Login failed. Please try again."
-      );
+      console.error("Login Error:", error?.response?.data?.error || error.message);
+      toast.error(error?.response?.data?.error || "Login failed. Please try again.");
     }
+
   };
 
   const handleForgotPassword = () => {

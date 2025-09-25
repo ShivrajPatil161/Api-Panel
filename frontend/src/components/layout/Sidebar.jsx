@@ -23,6 +23,7 @@ import {
   Coins,
   Eye
 } from 'lucide-react';
+import { flattenPermissions } from "./permissionHelper";
 
 // Reusable Menu Item Component
 const MenuItem = ({
@@ -75,8 +76,8 @@ const MenuItem = ({
                 key={child.path}
                 to={child.path}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${isActiveLink(child.path)
-                    ? 'bg-gray-500 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-gray-500 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
               >
                 <child.icon className="w-4 h-4" />
@@ -150,20 +151,51 @@ const SidebarHeader = ({ sidebarCollapsed, onToggle, userType }) => {
   );
 };
 
-// Menu configurations for different user types
+// Permission checker function
+const hasPermission = (permissionSet, permissionName) => {
+  return permissionSet.has(permissionName);
+};
+
+// Filter menu items based on permissions
+const filterMenuItemsByPermissions = (menuItems, permissionSet) => {
+  return menuItems.filter(item => {
+    // If item has children, filter children first
+    if (item.children) {
+      // Filter children based on permissions
+      const filteredChildren = item.children.filter(child =>
+        hasPermission(permissionSet, child.permission || child.title)
+      );
+
+      // If no children remain after filtering, hide the parent
+      if (filteredChildren.length === 0) {
+        return false;
+      }
+
+      // Update the item with filtered children
+      item.children = filteredChildren;
+      return true;
+    }
+
+    // For items without children, check their permission
+    return hasPermission(permissionSet, item.permission || item.title);
+  });
+};
+
+// Menu configurations for different user types with permission mapping
 const getMenuItems = (userType) => {
   const normalizedUserType = userType === "super_admin" ? "admin" : userType;
   const baseMenuItems = {
     admin: [
       {
         title: 'Dashboard',
-        key:"dashboard",
+        key: "dashboard",
         icon: Home,
         iconColor: '',
+        permission: 'Dashboard', // Add permission field
         children: [
-          { title: 'DashBoard', path: '/dashboard', icon: Users },
-          { title: 'Admin Management', path: '/dashboard/role-management', icon: Users },
-          { title: 'Logs', path: '/dashboard/logs', icon: Users }
+          { title: 'DashBoard', path: '/dashboard', icon: Users, permission: 'Dashboard' },
+          { title: 'Admin Management', path: '/dashboard/role-management', icon: Users, permission: 'Admin Management' },
+          { title: 'Logs', path: '/dashboard/logs', icon: Users, permission: 'Logs' }
         ]
       },
       {
@@ -171,10 +203,11 @@ const getMenuItems = (userType) => {
         key: 'vendors',
         icon: Users,
         iconColor: '',
+        permission: 'Vendors',
         children: [
-          { title: 'Vendor List', path: '/dashboard/vendors', icon: Users },
-          { title: 'Product List', path: '/dashboard/inventory', icon: Package },
-          { title: 'Vendor Rates', path: '/dashboard/vendors/rates', icon: DollarSign }
+          { title: 'Vendor List', path: '/dashboard/vendors', icon: Users, permission: 'Vendor List' },
+          { title: 'Product List', path: '/dashboard/inventory', icon: Package, permission: 'Product List' },
+          { title: 'Vendor Rates', path: '/dashboard/vendors/rates', icon: DollarSign, permission: 'Vendor Rates' }
         ]
       },
       {
@@ -182,11 +215,11 @@ const getMenuItems = (userType) => {
         key: 'inventory',
         icon: Package,
         iconColor: '',
+        permission: 'Inventory',
         children: [
-          { title: 'Pricing Scheme', path: '/dashboard/inventory/pricing', icon: Calculator },
-          { title: 'Product Scheme Assign', path: '/dashboard/inventory/products-assign', icon: Calculator },
-          { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: ArrowDown },
-          
+          { title: 'Pricing Scheme', path: '/dashboard/inventory/pricing', icon: Calculator, permission: 'Pricing Scheme' },
+          { title: 'Product Scheme Assign', path: '/dashboard/inventory/products-assign', icon: Calculator, permission: 'Product Scheme Assign' },
+          { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: ArrowDown, permission: 'Inventory Management' },
         ]
       },
       {
@@ -194,11 +227,12 @@ const getMenuItems = (userType) => {
         key: 'customers',
         icon: Users,
         iconColor: '',
+        permission: 'Customers',
         children: [
-          { title: 'Customer List', path: '/dashboard/customers', icon: Users },
-          { title: 'Onboard Customer', path: '/dashboard/customers/onboard', icon: UserPlus },
-          { title: 'Merchant Approval', path: '/dashboard/customers/admin-approval', icon: UserPlus },
-          { title: 'Products Distribution', path: '/dashboard/customers/products-distribution', icon: Package }
+          { title: 'Customer List', path: '/dashboard/customers', icon: Users, permission: 'Customer List' },
+          { title: 'Onboard Customer', path: '/dashboard/customers/onboard', icon: UserPlus, permission: 'Onboard Customer' },
+          { title: 'Merchant Approval', path: '/dashboard/customers/admin-approval', icon: UserPlus, permission: 'Merchant Approval' },
+          { title: 'Products Distribution', path: '/dashboard/customers/products-distribution', icon: Package, permission: 'Products Distribution' }
         ]
       },
       {
@@ -206,18 +240,20 @@ const getMenuItems = (userType) => {
         key: 'other',
         icon: CreditCard,
         iconColor: '',
+        permission: 'Other',
         children: [
-          { title: 'File Upload', path: '/dashboard/others/upload', icon: Upload },
-          { title: 'Charge Calculation', path: '/dashboard/others/charges', icon: Calculator },
-          { title: 'Batch Status', path: '/dashboard/others/batch-status', icon: Eye }
+          { title: 'File Upload', path: '/dashboard/others/upload', icon: Upload, permission: 'File Upload' },
+          { title: 'Charge Calculation', path: '/dashboard/others/charges', icon: Calculator, permission: 'Charge Calculation' },
+          { title: 'Batch Status', path: '/dashboard/others/batch-status', icon: Eye, permission: 'Batch Status' }
         ]
       },
       {
         title: 'Reports',
         path: '/dashboard/reports',
-        key:"reports",
+        key: "reports",
         icon: BarChart3,
-        iconColor: ''
+        iconColor: '',
+        permission: 'Reports'
       }
     ],
     franchise: [
@@ -277,7 +313,6 @@ const getMenuItems = (userType) => {
         path: '/dashboard/credit-card-bill-payment',
         icon: Banknote,
         iconColor: ''
-      
       },
       {
         title: 'Payout',
@@ -285,15 +320,10 @@ const getMenuItems = (userType) => {
         path: '/dashboard/payout',
         icon: Coins,
         iconColor: '',
-        // children: [
-        //   { title: 'Payout', icon: Coins }
-        // ]
-       
       },
       {
         title: 'Card Details',
         key: 'card-details',
-        
         icon: CreditCard,
         iconColor: ''
       },
@@ -310,9 +340,10 @@ const getMenuItems = (userType) => {
 };
 
 // Main Sidebar Component
-const Sidebar = ({userType}) => {
+const Sidebar = ({ userType }) => {
   const location = useLocation();
- console.log(userType)
+  console.log(userType);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState({
     vendors: false,
@@ -324,7 +355,30 @@ const Sidebar = ({userType}) => {
     other: false
   });
 
- 
+  // Get permissions from localStorage and create permission set
+  const [permissionSet, setPermissionSet] = useState(new Set());
+
+  useEffect(() => {
+    // Only apply permissions for admin users
+    if (userType === 'admin' || userType === 'super_admin') {
+      try {
+        const storedPermissions = localStorage.getItem('permissions');
+        if (storedPermissions) {
+          const permissions = JSON.parse(storedPermissions);
+          const flatPermissionSet = flattenPermissions(permissions);
+          setPermissionSet(flatPermissionSet);
+          console.log('Permission Set:', flatPermissionSet);
+        }
+      } catch (error) {
+        console.error('Error parsing permissions from localStorage:', error);
+        setPermissionSet(new Set()); // Empty set if error
+      }
+    } else {
+      // For non-admin users, set an empty permission set (no filtering)
+      setPermissionSet(new Set());
+    }
+  }, [userType]);
+
   const toggleMenu = (menuKey) => {
     setExpandedMenus(prev => ({
       ...prev,
@@ -368,7 +422,12 @@ const Sidebar = ({userType}) => {
     return children?.some(child => location.pathname === child.path);
   };
 
-  const menuItems = getMenuItems(userType);
+  // Get menu items and apply permission filtering for admin users
+  let menuItems = getMenuItems(userType);
+
+  if ((userType === 'admin' || userType === 'super_admin') && permissionSet.size > 0) {
+    menuItems = filterMenuItemsByPermissions(menuItems, permissionSet);
+  }
 
   return (
     <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200`}>
@@ -380,19 +439,25 @@ const Sidebar = ({userType}) => {
       />
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 ">
+      <nav className="flex-1 overflow-y-auto py-4">
         <div className="space-y-2">
-          {menuItems.map((item) => (
-            <div key={item.key || item.path}>
-              <MenuItem
-                item={item}
-                isActive={expandedMenus[item.key]}
-                isParentActive={isActiveParent(item.children)}
-                sidebarCollapsed={sidebarCollapsed}
-                onMenuClick={handleMenuClick}
-              />
+          {menuItems.length > 0 ? (
+            menuItems.map((item) => (
+              <div key={item.key || item.path}>
+                <MenuItem
+                  item={item}
+                  isActive={expandedMenus[item.key]}
+                  isParentActive={isActiveParent(item.children)}
+                  sidebarCollapsed={sidebarCollapsed}
+                  onMenuClick={handleMenuClick}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="px-4 py-2 text-gray-500 text-sm">
+              {!sidebarCollapsed && "No permissions available"}
             </div>
-          ))}
+          )}
         </div>
       </nav>
     </div>

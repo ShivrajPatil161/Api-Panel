@@ -1,7 +1,9 @@
 package com.project2.ism.Controller;
 
+import com.project2.ism.DTO.AdminDTO.PermissionDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.Users.User;
+import com.project2.ism.Service.AdminServices.AdminService;
 import com.project2.ism.Service.JwtService;
 import com.project2.ism.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,6 +26,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private AdminService adminService;
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User user) {
@@ -31,16 +37,27 @@ public class UserController {
             User loggedInUser = authenticatedUser.get();
             String token = jwtService.generateToken(loggedInUser.getEmail(), loggedInUser.getRole());
 
-            return ResponseEntity.ok(Map.of(
-                    "email", loggedInUser.getEmail(),
-                    "role", loggedInUser.getRole(),
-                    "token", token,
-                    "message", "Login successful"
-            ));
+            Map<String, Object> response = new HashMap<>();
+            response.put("email", loggedInUser.getEmail());
+            response.put("role", loggedInUser.getRole());
+            response.put("token", token);
+            response.put("message", "Login successful");
+
+            // Only admins need hierarchical permissions
+            if ("ADMIN".equalsIgnoreCase(loggedInUser.getRole())
+                    || "SUPER_ADMIN".equalsIgnoreCase(loggedInUser.getRole())) {
+                List<PermissionDTO> permissions =
+                        adminService.getCurrentUserPermissions(loggedInUser.getEmail());
+                response.put("permissions", permissions);
+            }
+
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid Credentials"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Invalid Credentials"));
         }
     }
+
 
     @PostMapping("/signup")
     public ResponseEntity<?> signUser(@RequestBody User user) {
