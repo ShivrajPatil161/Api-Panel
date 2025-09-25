@@ -9,7 +9,7 @@ const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenera
     const [loading, setLoading] = useState(false);
     const [merchantType, setMerchantType] = useState('direct'); // 'direct' or 'franchise'
 
-    const isAdmin = userType === 'admin';
+    const isAdmin = ['admin', 'super_admin'].includes(userType);
     const isFranchise = userType === 'franchise';
     const isMerchant = userType === 'merchant';
 
