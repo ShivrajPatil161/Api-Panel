@@ -15,6 +15,7 @@ import java.util.Optional;
 public interface MerchantRepository extends JpaRepository<Merchant, Long> {
 
     List<Merchant> findByFranchiseIsNull();
+    List<Merchant> findByFranchiseIsNotNull();
     List<Merchant> findByIsApprovedFalse();
 
     Optional<Merchant> findByContactPerson_Email(String email);
