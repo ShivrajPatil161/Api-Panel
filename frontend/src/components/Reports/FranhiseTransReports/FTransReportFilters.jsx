@@ -56,7 +56,11 @@ const FTransReportFilters = ({ filters, onChange, isFranchise, reportType, onGen
     };
 
     const handleGenerate = async () => {
-        if (!filters.selectedFranchise || !filters.startDate || !filters.endDate) {
+        if ((!isFranchise & !filters.selectedFranchise) || !filters.startDate || !filters.endDate) {
+            alert('Please fill all required fields');
+            return;
+        }
+        if (!filters.startDate || !filters.endDate) {
             alert('Please fill all required fields');
             return;
         }

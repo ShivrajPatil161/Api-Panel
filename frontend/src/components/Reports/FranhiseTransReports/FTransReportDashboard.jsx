@@ -8,17 +8,18 @@ import FTransReportFilters from './FTransReportFilters';
 
 const FTransReportDashboard = () => {
     const [activeTab, setActiveTab] = useState('transactions');
+    const userType = localStorage.getItem('userType')?.toLowerCase();
+    const customerId = localStorage.getItem('customerId');
+    const isFranchise = userType === 'franchise';
     const [commonFilters, setCommonFilters] = useState({
-        selectedFranchise: '',
+        selectedFranchise: isFranchise ? customerId : '',
         startDate: '',
         endDate: '',
         dateFilterType: 'SETTLEMENT_DATE'
     });
 
     // Check if user is a franchise
-    const userType = localStorage.getItem('userType')?.toLowerCase();
-    const customerId = localStorage.getItem('customerId');
-    const isFranchise = userType === 'franchise';
+    
 
     useEffect(() => {
         if (isFranchise) {

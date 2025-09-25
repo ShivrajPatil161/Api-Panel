@@ -50,7 +50,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant/enhanced
      */
     @GetMapping("/merchant/enhanced")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT') or hasRole('FRANCHISE')")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT') or hasRole('FRANCHISE')")
     public ResponseEntity<ApiResponse<TransactionReportResponse>> generateEnhancedMerchantTransactionReport(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
@@ -101,7 +101,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/franchise/enhanced
      */
     @GetMapping("/franchise/enhanced")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
     public ResponseEntity<ApiResponse<TransactionReportResponse>> generateEnhancedFranchiseTransactionReport(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
@@ -153,7 +153,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant/summary/enhanced
      */
     @GetMapping("/merchant/summary/enhanced")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT') or hasRole('FRANCHISE')")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT') or hasRole('FRANCHISE')")
     public ResponseEntity<ApiResponse<TransactionSummary>> getEnhancedMerchantTransactionSummary(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
@@ -201,7 +201,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/franchise/summary/enhanced
      */
     @GetMapping("/franchise/summary/enhanced")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
     public ResponseEntity<ApiResponse<FranchiseTransactionSummary>> getEnhancedFranchiseTransactionSummary(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
@@ -248,7 +248,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/franchise/merchant-performance/enhanced
      */
     @GetMapping("/franchise/merchant-performance/enhanced")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getEnhancedFranchiseMerchantPerformance(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
@@ -340,7 +340,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant/breakdown
      */
     @GetMapping("/merchant/breakdown")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getEnhancedMerchantTransactionTypeBreakdown(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
@@ -382,7 +382,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/franchise/top-merchants
      */
     @GetMapping("/franchise/top-merchants")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('FRANCHISE')")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getEnhancedTopMerchantsByCommission(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
@@ -677,7 +677,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant-only/details
      */
     @GetMapping("/merchant-only/details")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+   // @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<Page<DetailedTransactionReportDTO>> getMerchantOnlyTransactionDetails(
             @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -706,7 +706,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant-only/details/settlement-date
      */
     @GetMapping("/merchant-only/details/settlement-date")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+   // @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<Page<DetailedTransactionReportDTO>> getMerchantOnlyTransactionDetailsBySettlementDate(
             @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -735,7 +735,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant-only/card-brand-summary
      */
     @GetMapping("/merchant-only/card-brand-summary")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+   // @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<List<CardTypeBrandSummaryDTO>> getMerchantOnlyCardTypeBrandSummary(
             @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -756,7 +756,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant-only/card-brand-summary/settlement-date
      */
     @GetMapping("/merchant-only/card-brand-summary/settlement-date")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+   // @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<List<CardTypeBrandSummaryDTO>> getMerchantOnlyCardTypeBrandSummaryBySettlementDate(
             @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -777,7 +777,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant-only/daily-summary
      */
     @GetMapping("/merchant-only/daily-summary")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+   // @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<List<DailySummaryReportDTO>> getMerchantOnlyDailySummary(
             @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -798,7 +798,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant-only/daily-summary/settlement-date
      */
     @GetMapping("/merchant-only/daily-summary/settlement-date")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+   // @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<List<DailySummaryReportDTO>> getMerchantOnlyDailySummaryBySettlementDate(
             @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -819,7 +819,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant-only/terminal-analysis
      */
     @GetMapping("/merchant-only/terminal-analysis")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+  //  @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<List<TerminalAnalysisDTO>> getMerchantOnlyTerminalAnalysis(
             @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -840,7 +840,7 @@ public class TransactionReportController {
      * GET /api/v1/reports/transactions/merchant-only/terminal-analysis/settlement-date
      */
     @GetMapping("/merchant-only/terminal-analysis/settlement-date")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
+   // @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or hasRole('MERCHANT')")
     public ResponseEntity<List<TransactionReportDTO.TerminalAnalysisDTO>> getMerchantOnlyTerminalAnalysisBySettlementDate(
             @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
