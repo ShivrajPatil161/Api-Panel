@@ -77,7 +77,7 @@ public class VendorTransactions {
     @Column(name = "Card")
     private String card;
 
-    @NotBlank(message = "Issuing bank required")
+//    @NotBlank(message = "Issuing bank required")
     @Column(name = "Issuing_Bank")
     private String issuingBank;
 
