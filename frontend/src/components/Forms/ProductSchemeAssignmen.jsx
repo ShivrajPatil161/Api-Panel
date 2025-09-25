@@ -49,7 +49,6 @@ const Select = ({ label, name, register, errors, options, required = false, ...p
     </div>
 )
 
-
 // ==================== PRODUCT ASSIGNMENT FORM MODAL ====================
 const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
     const [franchises, setFranchises] = useState([])
@@ -61,10 +60,10 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     const [dataInitialized, setDataInitialized] = useState(false)
 
     const getDefaultValues = () => ({
-        assignedTo: '',
-        assignedType: '',
-        product: '',
-        scheme: '',
+        customerType: '',        // Changed from assignedType
+        customerId: '',          // Changed from assignedTo
+        productId: '',           // Changed from product
+        schemeId: '',            // Changed from scheme
         effectiveDate: '',
         expiryDate: '',
         remarks: ''
@@ -81,17 +80,17 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         defaultValues: getDefaultValues()
     })
 
-    const watchedFields = watch(['assignedType', 'assignedTo', 'product'])
+    const watchedFields = watch(['customerType', 'customerId', 'productId'])
 
     // Initialize form data on mount
     useEffect(() => {
         if (isEdit && initialData && !dataInitialized) {
-            // Reset form with initial data - mapping API fields to form fields
+            // Reset form with initial data - using exact API field names
             reset({
-                assignedTo: initialData.customerId?.toString() || '',
-                assignedType: initialData.customerType || '',
-                product: initialData.productId?.toString() || '',
-                scheme: initialData.schemeId?.toString() || '',
+                customerType: initialData.customerType || '',
+                customerId: initialData.customerId?.toString() || '',
+                productId: initialData.productId?.toString() || '',
+                schemeId: initialData.schemeId?.toString() || '',
                 effectiveDate: initialData.effectiveDate || '',
                 expiryDate: initialData.expiryDate || '',
                 remarks: initialData.remarks || ''
@@ -103,25 +102,25 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         }
     }, [isEdit, initialData, dataInitialized, reset])
 
-    // Fetch franchises or merchants when assigned type is selected
+    // Fetch franchises or merchants when customer type is selected
     useEffect(() => {
-        const fetchAssignedToOptions = async () => {
+        const fetchCustomerOptions = async () => {
             if (!watchedFields[0]) return
 
             try {
                 setLoading(true)
-                if (watchedFields[0] === 'franchise') {
+                if (watchedFields[0] === 'FRANCHISE') {
                     const response = await api.get('/franchise')
                     setFranchises(response.data)
                     setMerchants([])
-                } else if (watchedFields[0] === 'merchant') {
+                } else if (watchedFields[0] === 'MERCHANT') {
                     const response = await api.get('/merchants/direct-merchant')
                     setMerchants(response.data)
                     setFranchises([])
                 }
             } catch (error) {
-                console.error(`Error fetching ${watchedFields[0]}s:`, error)
-                if (watchedFields[0] === 'franchise') {
+                console.error(`Error fetching ${watchedFields[0].toLowerCase()}s:`, error)
+                if (watchedFields[0] === 'FRANCHISE') {
                     setFranchises([])
                 } else {
                     setMerchants([])
@@ -132,14 +131,14 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         }
 
         if (dataInitialized) {
-            fetchAssignedToOptions()
+            fetchCustomerOptions()
         }
     }, [watchedFields[0], dataInitialized])
 
     // Fetch franchise products when franchise is selected
     useEffect(() => {
         const fetchFranchiseProducts = async () => {
-            if (watchedFields[0] === 'franchise' && watchedFields[1]) {
+            if (watchedFields[0] === 'FRANCHISE' && watchedFields[1]) {
                 try {
                     setLoading(true)
                     const response = await api.get(`/franchise/products/${watchedFields[1]}`)
@@ -150,7 +149,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 } finally {
                     setLoading(false)
                 }
-            } else if (watchedFields[0] === 'franchise' && !watchedFields[1]) {
+            } else if (watchedFields[0] === 'FRANCHISE' && !watchedFields[1]) {
                 setFranchiseProducts([])
             }
         }
@@ -163,7 +162,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     // Fetch merchant products when merchant is selected
     useEffect(() => {
         const fetchMerchantProducts = async () => {
-            if (watchedFields[0] === 'merchant' && watchedFields[1]) {
+            if (watchedFields[0] === 'MERCHANT' && watchedFields[1]) {
                 try {
                     setLoading(true)
                     const response = await api.get(`/merchants/products/${watchedFields[1]}`)
@@ -174,7 +173,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 } finally {
                     setLoading(false)
                 }
-            } else if (watchedFields[0] === 'merchant' && !watchedFields[1]) {
+            } else if (watchedFields[0] === 'MERCHANT' && !watchedFields[1]) {
                 setMerchantProducts([])
             }
         }
@@ -190,12 +189,12 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             if (watchedFields[2] && watchedFields[0]) {
                 try {
                     setLoading(true)
-                    const selectedProduct = watchedFields[0] === 'franchise'
+                    const selectedProduct = watchedFields[0] === 'FRANCHISE'
                         ? franchiseProducts.find(p => p.productId.toString() === watchedFields[2])
                         : merchantProducts.find(p => p.productId.toString() === watchedFields[2])
 
                     if (selectedProduct) {
-                        const customerType = watchedFields[0] === 'franchise' ? 'franchise' : 'direct_merchant'
+                        const customerType = watchedFields[0] === 'FRANCHISE' ? 'franchise' : 'direct_merchant'
                         const response = await api.get(
                             `/pricing-schemes/valid-pricing-scheme?productId=${selectedProduct.productId}&productCategory=${selectedProduct.productCategory}&customerType=${customerType}`
                         )
@@ -217,23 +216,23 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         }
     }, [watchedFields[2], watchedFields[0], franchiseProducts, merchantProducts, dataInitialized])
 
-    // Clear dependent fields when assigned type changes (only after initialization and not in edit mode during load)
+    // Clear dependent fields when customer type changes (only after initialization and not in edit mode during load)
     useEffect(() => {
         if (dataInitialized && watchedFields[0] && !isEdit) {
-            setValue('assignedTo', '')
-            setValue('product', '')
-            setValue('scheme', '')
+            setValue('customerId', '')
+            setValue('productId', '')
+            setValue('schemeId', '')
             setFranchiseProducts([])
             setMerchantProducts([])
             setPricingSchemes([])
         }
     }, [watchedFields[0], setValue, dataInitialized, isEdit])
 
-    // Clear product and scheme when assignedTo changes (only in create mode)
+    // Clear product and scheme when customerId changes (only in create mode)
     useEffect(() => {
         if (dataInitialized && watchedFields[1] && !isEdit) {
-            setValue('product', '')
-            setValue('scheme', '')
+            setValue('productId', '')
+            setValue('schemeId', '')
             setPricingSchemes([])
         }
     }, [watchedFields[1], setValue, dataInitialized, isEdit])
@@ -241,23 +240,23 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     // Clear scheme when product changes (only in create mode)
     useEffect(() => {
         if (dataInitialized && watchedFields[2] && !isEdit) {
-            setValue('scheme', '')
+            setValue('schemeId', '')
         }
     }, [watchedFields[2], setValue, dataInitialized, isEdit])
 
-    const assignedTypeOptions = [
-        { value: 'franchise', label: 'Franchise' },
-        { value: 'merchant', label: 'Merchant' }
+    const customerTypeOptions = [
+        { value: 'FRANCHISE', label: 'Franchise' },
+        { value: 'MERCHANT', label: 'Merchant' }
     ]
 
-    // Dynamic options based on assigned type
-    const getAssignedToOptions = () => {
-        if (watchedFields[0] === 'franchise') {
+    // Dynamic options based on customer type
+    const getCustomerOptions = () => {
+        if (watchedFields[0] === 'FRANCHISE') {
             return franchises.map(franchise => ({
                 value: franchise.id.toString(),
                 label: `${franchise.franchiseName} (ID: ${franchise.id})`
             }))
-        } else if (watchedFields[0] === 'merchant') {
+        } else if (watchedFields[0] === 'MERCHANT') {
             return merchants.map(merchant => ({
                 value: merchant.id.toString(),
                 label: `${merchant.businessName} (ID: ${merchant.id})`
@@ -267,7 +266,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     }
 
     const getProductOptions = () => {
-        const products = watchedFields[0] === 'franchise' ? franchiseProducts : merchantProducts
+        const products = watchedFields[0] === 'FRANCHISE' ? franchiseProducts : merchantProducts
         return products.map(product => ({
             value: product.productId.toString(),
             label: `${product.productName} (${product.productCode}) - Qty: ${product.totalQuantity}`
@@ -284,19 +283,16 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     const onFormSubmit = async (data) => {
         try {
             setLoading(true)
-            const selectedProduct = watchedFields[0] === 'franchise'
-                ? franchiseProducts.find(p => p.productId.toString() === data.product)
-                : merchantProducts.find(p => p.productId.toString() === data.product)
 
+            // Convert string IDs to numbers and prepare the exact payload expected by backend
             const assignmentData = {
-                customerType: data.assignedType,
-                customerId: parseInt(data.assignedTo),
-                productId: parseInt(data.product),
-                schemeId: parseInt(data.scheme),
+                customerType: data.customerType,
+                customerId: parseInt(data.customerId),
+                productId: parseInt(data.productId),
+                schemeId: parseInt(data.schemeId),
                 effectiveDate: data.effectiveDate,
-                expiryDate: data.expiryDate,
-                remarks: data.remarks,
-                outwardId: selectedProduct?.outwardId || null
+                expiryDate: data.expiryDate || null,  // Send null if empty
+                remarks: data.remarks || null         // Send null if empty
             }
 
             let response
@@ -310,7 +306,8 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             onCancel()
         } catch (error) {
             console.error('Error saving assignment:', error)
-            // TODO: show toast/notification
+            // You might want to show an error message to the user here
+            alert('Error saving assignment. Please try again.')
         } finally {
             setLoading(false)
         }
@@ -328,7 +325,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                 {/* Modal Header */}
                 <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg">
                     <h2 className="text-2xl font-bold text-gray-800">
-                        {isEdit ? 'Edit Product Assignment' : 'Add New Product Assignment'}
+                        {isEdit ? 'Edit Customer Scheme Assignment' : 'Add New Customer Scheme Assignment'}
                     </h2>
                     <button
                         onClick={handleCancel}
@@ -347,25 +344,25 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">Assignment Details</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Select
-                                    label="Assigned Type"
-                                    name="assignedType"
+                                    label="Customer Type"
+                                    name="customerType"
                                     register={register}
                                     errors={errors}
-                                    options={assignedTypeOptions}
+                                    options={customerTypeOptions}
                                     required
                                 />
                                 <Select
-                                    label="Assigned To"
-                                    name="assignedTo"
+                                    label="Customer"
+                                    name="customerId"
                                     register={register}
                                     errors={errors}
-                                    options={getAssignedToOptions()}
+                                    options={getCustomerOptions()}
                                     required
-                                    disabled={!watchedFields[0]}
+                                    disabled={!watchedFields[0] || loading}
                                 />
                                 <Select
                                     label="Product"
-                                    name="product"
+                                    name="productId"
                                     register={register}
                                     errors={errors}
                                     options={getProductOptions()}
@@ -374,7 +371,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                                 />
                                 <Select
                                     label="Pricing Scheme"
-                                    name="scheme"
+                                    name="schemeId"
                                     register={register}
                                     errors={errors}
                                     options={getSchemeOptions()}
@@ -395,7 +392,6 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                                     register={register}
                                     errors={errors}
                                     type="date"
-                                    required
                                 />
                             </div>
                         </div>
@@ -440,4 +436,5 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         </div>
     )
 }
+
 export default ProductAssignmentFormModal;
