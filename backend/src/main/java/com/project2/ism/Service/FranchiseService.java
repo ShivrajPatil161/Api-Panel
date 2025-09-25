@@ -359,8 +359,8 @@ public class FranchiseService {
 
         dto.merchantsPerFranchise = merchantRepository.countByFranchise().stream()
                 .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (Long) row[1]
+                        row -> (String) row[0],   // franchise name
+                        row -> (Long) row[1]      // merchant count
                 ));
 
         return dto;

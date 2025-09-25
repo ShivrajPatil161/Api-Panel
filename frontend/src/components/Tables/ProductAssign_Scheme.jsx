@@ -10,87 +10,76 @@ import {
 import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import ProductAssignmentFormModal from '../Forms/ProductSchemeAssignmen'
 import api from '../../constants/API/axiosInstance'
-import {toast} from 'react-toastify'
-
+import { toast } from 'react-toastify'
 
 // ==================== PRODUCT ASSIGNMENT LIST ====================
 const ProductAssignment = () => {
     const [assignments, setAssignments] = useState([])
-    const [customers, setCustomers] = useState([]) // To store customer data for lookup
-    const [schemes, setSchemes] = useState([]) // To store scheme data for lookup
-
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingAssignment, setEditingAssignment] = useState(null)
     const [viewingAssignment, setViewingAssignment] = useState(null)
     const [globalFilter, setGlobalFilter] = useState('')
     const [sorting, setSorting] = useState([])
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         fetchProductSchemeAssignment()
-   
-        
     }, [])
 
     const fetchProductSchemeAssignment = async () => {
         try {
+            setLoading(true)
             const response = await api.get("/outward-schemes")
-            setAssignments(response?.data)
+            setAssignments(response?.data || [])
         } catch (error) {
             console.error('Error fetching assignments:', error)
+            toast.error('Failed to fetch assignments')
+            setAssignments([])
+        } finally {
+            setLoading(false)
         }
     }
 
-  
-
-
-    const getCustomerName = (customerId) => {
-        const customer = customers.find(c => c.id === customerId)
-        return customer ? customer.name : `Customer ${customerId}`
-    }
-
-    const getSchemeName = (schemeId) => {
-        const scheme = schemes.find(s => s.id === schemeId)
-        return scheme ? scheme.name : `Scheme ${schemeId}`
-    }
-
-   
     const columns = useMemo(() => [
         {
-            accessorKey: 'customerId',
-            header: 'Assigned To',
+            accessorKey: 'customerName',
+            header: 'Customer',
             cell: ({ row }) => (
                 <div className="font-medium text-gray-900">
-                    {getCustomerName(row.getValue('customerId'))}
+                    <div>{row.getValue('customerName') || 'Unknown Customer'}</div>
+                    <div className="text-xs text-gray-500">ID: {row.original.customerId}</div>
                 </div>
             ),
         },
         {
             accessorKey: 'customerType',
-            header: 'Type',
+            header: 'Customer Type',
             cell: ({ row }) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.getValue('customerType') === 'franchise'
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.getValue('customerType')?.toLowerCase() === 'franchise'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
                     }`}>
-                    {row.getValue('customerType') === 'franchise' ? 'Franchise' : 'Merchant'}
+                    {row.getValue('customerType').toUpperCase() === 'FRANCHISE' ? 'Franchise' : 'Merchant'}
                 </span>
             ),
         },
         {
-            accessorKey: 'outwardId',
-            header: 'Product/Outward',
+            accessorKey: 'productName',
+            header: 'Product',
             cell: ({ row }) => (
                 <div className="text-gray-900 font-medium">
-                    Outward ID: {row.getValue('outwardId')}
+                    <div>{row.getValue('productName') || 'Unknown Product'}</div>
+                    <div className="text-xs text-gray-500">ID: {row.original.productId}</div>
                 </div>
             ),
         },
         {
-            accessorKey: 'schemeId',
-            header: 'Scheme',
+            accessorKey: 'schemeCode',
+            header: 'Pricing Scheme',
             cell: ({ row }) => (
                 <div className="text-gray-900 font-mono text-sm">
-                    {getSchemeName(row.getValue('schemeId'))}
+                    <div>{row.getValue('schemeCode') || 'Unknown Scheme'}</div>
+                    <div className="text-xs text-gray-500">ID: {row.original.schemeId}</div>
                 </div>
             ),
         },
@@ -99,7 +88,10 @@ const ProductAssignment = () => {
             header: 'Effective Date',
             cell: ({ row }) => (
                 <div className="text-gray-600">
-                    {new Date(row.getValue('effectiveDate')).toLocaleDateString()}
+                    {row.getValue('effectiveDate')
+                        ? new Date(row.getValue('effectiveDate')).toLocaleDateString()
+                        : '-'
+                    }
                 </div>
             ),
         },
@@ -108,7 +100,10 @@ const ProductAssignment = () => {
             header: 'Expiry Date',
             cell: ({ row }) => (
                 <div className="text-gray-600">
-                    {row.getValue('expiryDate') ? new Date(row.getValue('expiryDate')).toLocaleDateString() : 'No Expiry'}
+                    {row.getValue('expiryDate')
+                        ? new Date(row.getValue('expiryDate')).toLocaleDateString()
+                        : 'No Expiry'
+                    }
                 </div>
             ),
         },
@@ -116,7 +111,7 @@ const ProductAssignment = () => {
             accessorKey: 'remarks',
             header: 'Remarks',
             cell: ({ row }) => (
-                <div className="text-gray-600 max-w-xs truncate">
+                <div className="text-gray-600 max-w-xs truncate" title={row.getValue('remarks')}>
                     {row.getValue('remarks') || '-'}
                 </div>
             ),
@@ -150,7 +145,7 @@ const ProductAssignment = () => {
                 </div>
             ),
         },
-    ], [customers, schemes])
+    ], [])
 
     const table = useReactTable({
         data: assignments,
@@ -167,7 +162,7 @@ const ProductAssignment = () => {
         },
         initialState: {
             pagination: {
-                pageSize: 5,
+                pageSize: 10,
             },
         },
     })
@@ -186,8 +181,6 @@ const ProductAssignment = () => {
         setViewingAssignment(assignment)
     }
 
-
-
     const handleDelete = (id) => {
         toast.warn(
             ({ closeToast }) => (
@@ -198,8 +191,8 @@ const ProductAssignment = () => {
                             onClick={async () => {
                                 try {
                                     await api.delete(`/outward-schemes/${id}`)
-                                    fetchProductSchemeAssignment( )
-                                    toast.success("Product assignment deleted")
+                                    await fetchProductSchemeAssignment()
+                                    toast.success("Product assignment deleted successfully")
                                 } catch (error) {
                                     console.error("Error deleting assignment:", error)
                                     toast.error("Failed to delete assignment")
@@ -207,38 +200,50 @@ const ProductAssignment = () => {
                                     closeToast()
                                 }
                             }}
-                            className="px-3 py-1 bg-red-500 text-white rounded"
+                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                         >
-                            Yes
+                            Yes, Delete
                         </button>
                         <button
                             onClick={closeToast}
-                            className="px-3 py-1 bg-gray-300 rounded"
+                            className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
                         >
                             Cancel
                         </button>
                     </div>
                 </div>
             ),
-            { autoClose: false } // keep it open until user decides
+            { autoClose: false }
         )
     }
 
-
     const handleSubmit = async (data) => {
         try {
-            
             setIsModalOpen(false)
             setEditingAssignment(null)
-            fetchProductSchemeAssignment()
+            await fetchProductSchemeAssignment()
+            toast.success(editingAssignment ? 'Assignment updated successfully' : 'Assignment created successfully')
         } catch (error) {
             console.error('Error saving assignment:', error)
+            toast.error('Failed to save assignment')
         }
     }
 
     const handleCancel = () => {
         setIsModalOpen(false)
         setEditingAssignment(null)
+    }
+
+    if (loading) {
+        return (
+            <div className="max-w-8xl mx-auto p-6">
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                    <div className="flex items-center justify-center h-64">
+                        <div className="text-gray-500">Loading assignments...</div>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -248,8 +253,8 @@ const ProductAssignment = () => {
                 <div className="bg-white text-black p-6 rounded-t-lg">
                     <div className="flex justify-between items-center">
                         <div>
-                            <h1 className="text-3xl font-bold">Product Assignments</h1>
-                            <p className="text-black mt-2">Manage product assignments for franchises and merchants</p>
+                            <h1 className="text-3xl font-bold">Customer Scheme Assignments</h1>
+                            <p className="text-black mt-2">Manage pricing scheme assignments for franchises and merchants</p>
                         </div>
                         <button
                             onClick={handleCreate}
@@ -304,15 +309,23 @@ const ProductAssignment = () => {
                             ))}
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {table.getRowModel().rows.map((row) => (
-                                <tr key={row.id} className="hover:bg-gray-50">
-                                    {row.getVisibleCells().map((cell) => (
-                                        <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
-                                    ))}
+                            {table.getRowModel().rows.length === 0 ? (
+                                <tr>
+                                    <td colSpan={columns.length} className="px-6 py-4 text-center text-gray-500">
+                                        No assignments found
+                                    </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                table.getRowModel().rows.map((row) => (
+                                    <tr key={row.id} className="hover:bg-gray-50">
+                                        {row.getVisibleCells().map((cell) => (
+                                            <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -367,24 +380,40 @@ const ProductAssignment = () => {
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
-                                    <p className="text-gray-900">{getCustomerName(viewingAssignment.customerId)}</p>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                                    <p className="text-gray-900">
+                                        {viewingAssignment.customerName || 'Unknown Customer'}
+                                        <span className="text-gray-500 text-sm"> (ID: {viewingAssignment.customerId})</span>
+                                    </p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                    <p className="text-gray-900 capitalize">{viewingAssignment.customerType}</p>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer Type</label>
+                                    <p className="text-gray-900 capitalize">
+                                        {viewingAssignment.customerType === 'FRANCHISE' ? 'Franchise' : 'Merchant'}
+                                    </p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Outward ID</label>
-                                    <p className="text-gray-900">{viewingAssignment.outwardId}</p>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                                    <p className="text-gray-900">
+                                        {viewingAssignment.productName || 'Unknown Product'}
+                                        <span className="text-gray-500 text-sm"> (ID: {viewingAssignment.productId})</span>
+                                    </p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Pricing Scheme</label>
-                                    <p className="text-gray-900">{getSchemeName(viewingAssignment.schemeId)}</p>
+                                    <p className="text-gray-900">
+                                        {viewingAssignment.schemeCode || 'Unknown Scheme'}
+                                        <span className="text-gray-500 text-sm"> (ID: {viewingAssignment.schemeId})</span>
+                                    </p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
-                                    <p className="text-gray-900">{new Date(viewingAssignment.effectiveDate).toLocaleDateString()}</p>
+                                    <p className="text-gray-900">
+                                        {viewingAssignment.effectiveDate
+                                            ? new Date(viewingAssignment.effectiveDate).toLocaleDateString()
+                                            : '-'
+                                        }
+                                    </p>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
@@ -400,7 +429,9 @@ const ProductAssignment = () => {
                             {viewingAssignment.remarks && (
                                 <div className="mt-6">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-                                    <p className="text-gray-900">{viewingAssignment.remarks}</p>
+                                    <p className="text-gray-900 bg-gray-50 p-3 rounded-md">
+                                        {viewingAssignment.remarks}
+                                    </p>
                                 </div>
                             )}
                         </div>

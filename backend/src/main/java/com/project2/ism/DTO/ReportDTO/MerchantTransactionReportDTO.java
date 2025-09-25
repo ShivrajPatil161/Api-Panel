@@ -47,8 +47,18 @@ public class MerchantTransactionReportDTO {
             String franchiseName,
             String state
     ) {
+        // Debug prints - Add these to see what values are coming from query
+        System.out.println("=== Constructor Debug for TxnId: " + txnId + " ===");
+        System.out.println("txnAmount: " + txnAmount);
+        System.out.println("merchantNetAmount: " + merchantNetAmount);
+        System.out.println("grossCharge: " + grossCharge);
+        System.out.println("franchiseCommission: " + franchiseCommission);
+        System.out.println("systemFee: " + systemFee);
+        System.out.println("franchiseName: " + franchiseName);
+
         this.txnId = txnId;
         this.txnDate = txnDate;
+        this.txnAmount = txnAmount;
         this.settleDate = settleDate;
         this.authCode = authCode;
         this.tid = tid;
@@ -65,6 +75,8 @@ public class MerchantTransactionReportDTO {
         if (txnAmount != null && txnAmount.compareTo(BigDecimal.ZERO) > 0) {
             if (franchiseCommission != null) {
                 // Dependent merchant (has franchise commission)
+                System.out.println("Branch: Dependent merchant (with franchise)");
+
                 this.merchantRate = txnAmount
                         .subtract(settleAmount)
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
@@ -77,8 +89,14 @@ public class MerchantTransactionReportDTO {
 
                 this.commissionRate = merchantRate.subtract(franchiseRate);
                 this.settlementPercentage = this.merchantRate;
+
+                System.out.println("Calculated merchantRate: " + this.merchantRate);
+                System.out.println("Calculated franchiseRate: " + this.franchiseRate);
+                System.out.println("Calculated commissionRate: " + this.commissionRate);
             } else {
                 // Direct merchant (no franchise)
+                System.out.println("Branch: Direct merchant (no franchise)");
+
                 this.merchantRate = txnAmount
                         .subtract(settleAmount)
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
@@ -87,15 +105,19 @@ public class MerchantTransactionReportDTO {
                 this.franchiseRate = null;
                 this.commissionRate = null;
                 this.settlementPercentage = this.merchantRate;
+
+                System.out.println("Calculated merchantRate: " + this.merchantRate);
             }
         } else {
+            System.out.println("Branch: Zero or null transaction amount");
             this.merchantRate = BigDecimal.ZERO;
             this.franchiseRate = BigDecimal.ZERO;
             this.commissionRate = BigDecimal.ZERO;
             this.settlementPercentage = BigDecimal.ZERO;
         }
-    }
 
+        System.out.println("=== End Debug ===\n");
+    }
 
     public String getTxnId() {
         return txnId;
