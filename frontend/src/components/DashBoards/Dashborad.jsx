@@ -144,7 +144,6 @@ const Dashboard = () => {
   // Main render logic based on user type
   return (
     <div className="min-h-screen bg-gray-50">
-
       {['admin', 'super_admin'].includes(userType) ? (
         <AdminDashboard />
       ) : (
