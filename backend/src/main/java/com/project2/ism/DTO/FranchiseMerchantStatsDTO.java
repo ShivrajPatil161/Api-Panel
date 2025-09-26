@@ -9,7 +9,7 @@ public class FranchiseMerchantStatsDTO {
     public Long totalDirectMerchants;
     public Long totalFranchiseMerchants;
 
-    public Map<Long, Long> merchantsPerFranchise;   // franchiseId -> merchant count
+    public Map<String, Long> merchantsPerFranchise;   // franchiseId -> merchant count
     public BigDecimal totalFranchiseWalletBalance;
     public BigDecimal totalDirectMerchantWalletBalance;
     public BigDecimal totalFranchiseMerchantWalletBalance;

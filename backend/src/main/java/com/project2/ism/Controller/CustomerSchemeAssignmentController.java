@@ -1,7 +1,7 @@
 package com.project2.ism.Controller;
 
-import com.project2.ism.DTO.ProductSchemeAssignmentDTO;
-import com.project2.ism.Service.ProductSchemeAssignmentService;
+import com.project2.ism.DTO.CustomerSchemeAssignmentDTO;
+import com.project2.ism.Service.CustomerSchemeAssignmentService;
 import org.springframework.http.ResponseEntity;
         import org.springframework.web.bind.annotation.*;
 
@@ -9,28 +9,28 @@ import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/outward-schemes")
-public class ProductSchemeAssignmentController {
+public class CustomerSchemeAssignmentController {
 
-    private final ProductSchemeAssignmentService assignmentService;
+    private final CustomerSchemeAssignmentService assignmentService;
 
 
 
-    public ProductSchemeAssignmentController(ProductSchemeAssignmentService assignmentService) {
+    public CustomerSchemeAssignmentController(CustomerSchemeAssignmentService assignmentService) {
         this.assignmentService = assignmentService;
     }
 
     @PostMapping
-    public ResponseEntity<ProductSchemeAssignmentDTO> create(@RequestBody ProductSchemeAssignmentDTO dto) {
+    public ResponseEntity<CustomerSchemeAssignmentDTO> create(@RequestBody CustomerSchemeAssignmentDTO dto) {
         return ResponseEntity.ok(assignmentService.createAssignment(dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductSchemeAssignmentDTO>> getALL() {
+    public ResponseEntity<List<CustomerSchemeAssignmentDTO>> getALL() {
         return ResponseEntity.ok(assignmentService.getAll());
     }
 
     @GetMapping("/customer/{type}/{id}")
-    public ResponseEntity<List<ProductSchemeAssignmentDTO>> getByCustomer(
+    public ResponseEntity<List<CustomerSchemeAssignmentDTO>> getByCustomer(
             @PathVariable String type,
             @PathVariable Long id
     ) {
@@ -38,9 +38,9 @@ public class ProductSchemeAssignmentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductSchemeAssignmentDTO> update(
+    public ResponseEntity<CustomerSchemeAssignmentDTO> update(
             @PathVariable Long id,
-            @RequestBody ProductSchemeAssignmentDTO dto
+            @RequestBody CustomerSchemeAssignmentDTO dto
     ) {
         return ResponseEntity.ok(assignmentService.updateAssignment(id, dto));
     }
