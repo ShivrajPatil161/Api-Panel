@@ -30,10 +30,7 @@ public class StatsController {
     public ResponseEntity<MerchantStatsDTO> getMerchantStats(@PathVariable Long id) {
         return ResponseEntity.ok(statsService.getMerchantStats(id));
     }
-    @GetMapping("/transactions-stats")
-    public ResponseEntity<InventoryTransactionStatsDTO> getTransactionStats() {
-        return ResponseEntity.ok(statsService.getTransactionStats());
-    }
+
 
     @GetMapping("/vendor-reports")
     public ResponseEntity<VendorReportsDTO> getVendorReports() {

@@ -208,21 +208,21 @@ public class PricingSchemeController {
     }
 
     /**
-     * Get schemes by customer type
+     * Get schemes by customer type - no one using , so removed , changing return method of method getAllSchemesForCustomerType
      */
-    @GetMapping("/customer-type/{customerType}")
-    public ResponseEntity<?> getSchemesByCustomerType(@PathVariable String customerType) {
-        try {
-            logger.debug("REST request to get Pricing Schemes by customer type: {}", customerType);
-            List<PricingScheme> schemes = pricingSchemeService.getAllSchemesForCustomerType(customerType);
-            return ResponseEntity.ok(schemes);
-        } catch (Exception e) {
-            logger.error("Error fetching schemes by customer type: {}", e.getMessage());
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Failed to fetch schemes");
-            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+//    @GetMapping("/customer-type/{customerType}")
+//    public ResponseEntity<?> getSchemesByCustomerType(@PathVariable String customerType) {
+//        try {
+//            logger.debug("REST request to get Pricing Schemes by customer type: {}", customerType);
+//            List<PricingScheme> schemes = pricingSchemeService.getAllSchemesForCustomerType(customerType);
+//            return ResponseEntity.ok(schemes);
+//        } catch (Exception e) {
+//            logger.error("Error fetching schemes by customer type: {}", e.getMessage());
+//            Map<String, String> error = new HashMap<>();
+//            error.put("error", "Failed to fetch schemes");
+//            return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
     /**
      * Check if scheme code exists
@@ -246,9 +246,10 @@ public class PricingSchemeController {
             logger.debug("REST request to get pricing scheme statistics");
 
             Map<String, Object> stats = new HashMap<>();
-            stats.put("totalSchemes", pricingSchemeService.getTotalSchemesCount());
-            stats.put("totalFranchiseSchemes", pricingSchemeService.getAllSchemesForCustomerType("franchise").size());
-            stats.put("totalDirectMerchantSchemes", pricingSchemeService.getAllSchemesForCustomerType("direct_merchant").size());
+            stats.put("totalSchemes", pricingSchemeService.getTotalSchemesCount());// Usage
+            Map<String, Long> counts = pricingSchemeService.getSchemeCountsByCustomerType();
+            stats.put("totalFranchiseSchemes", counts.getOrDefault("franchise", 0L));
+            stats.put("totalDirectMerchantSchemes", counts.getOrDefault("direct_merchant", 0L));
 
             return ResponseEntity.ok(stats);
         } catch (Exception e) {

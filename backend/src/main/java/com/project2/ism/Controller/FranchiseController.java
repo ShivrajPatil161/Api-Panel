@@ -220,10 +220,7 @@ public class FranchiseController {
     }
 
 
-    @GetMapping("/franchises-merchants")
-    public ResponseEntity<FranchiseMerchantStatsDTO> getStats() {
-        return ResponseEntity.ok(franchiseService.getStats());
-    }
+
 
 
 }

@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.LockModeType;
+
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Repository
@@ -18,4 +20,6 @@ public interface FranchiseWalletRepository extends JpaRepository<FranchiseWallet
     Optional<FranchiseWallet> findByFranchiseIdForUpdate(@Param("franchiseId") Long franchiseId);
 
     Optional<FranchiseWallet> findByFranchiseId(Long franchiseId);
+    @Query("SELECT COALESCE(SUM(fw.availableBalance), 0) FROM FranchiseWallet fw")
+    BigDecimal getTotalFranchiseWalletBalance();
 }
