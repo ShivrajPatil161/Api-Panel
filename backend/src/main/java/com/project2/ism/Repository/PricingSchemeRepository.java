@@ -46,4 +46,8 @@ public interface PricingSchemeRepository extends JpaRepository<PricingScheme, Lo
 
 
     List<PricingScheme> findByProductCategory_IdAndCustomerType(Long productCategoryId, String customerType);
+
+    // Repository method
+    @Query("SELECT p.customerType, COUNT(p) FROM PricingScheme p GROUP BY p.customerType")
+    List<Object[]> countByCustomerType();
 }

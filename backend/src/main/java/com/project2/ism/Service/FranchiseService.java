@@ -102,7 +102,6 @@ package com.project2.ism.Service;
 import com.project2.ism.DTO.*;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.*;
-import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
@@ -127,6 +126,7 @@ public class FranchiseService {
     private final FileStorageService fileStorageService;
     private final UserService userService;
     private final MerchantRepository merchantRepository;
+    private final MerchantWalletRepository merchantWalletRepository;
 
     private final ProductSerialsRepository serialRepo;
     private final OutwardTransactionRepository outwardRepo;
@@ -134,11 +134,12 @@ public class FranchiseService {
     private final FranchiseWalletRepository franchiseWalletRepository;
     public FranchiseService(FranchiseRepository franchiseRepository,
                             FileStorageService fileStorageService,
-                            UserService userService, MerchantRepository merchantRepository, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo, FranchiseWalletRepository franchiseWalletRepository) {
+                            UserService userService, MerchantRepository merchantRepository, MerchantWalletRepository merchantWalletRepository, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo, FranchiseWalletRepository franchiseWalletRepository) {
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.merchantRepository = merchantRepository;
+        this.merchantWalletRepository = merchantWalletRepository;
         this.serialRepo = serialRepo;
         this.outwardRepo = outwardRepo;
         this.franchiseWalletRepository = franchiseWalletRepository;
@@ -395,9 +396,9 @@ public class FranchiseService {
         dto.totalDirectMerchants = merchantRepository.countDirectMerchants();
         dto.totalFranchiseMerchants = merchantRepository.countFranchiseMerchants();
 
-        dto.totalFranchiseWalletBalance = franchiseRepository.sumWalletBalances();
-        dto.totalDirectMerchantWalletBalance = merchantRepository.sumDirectMerchantWallets();
-        dto.totalFranchiseMerchantWalletBalance = merchantRepository.sumFranchiseMerchantWallets();
+        dto.totalFranchiseWalletBalance = franchiseWalletRepository.getTotalFranchiseWalletBalance();
+        dto.totalDirectMerchantWalletBalance = merchantWalletRepository.getTotalDirectMerchantWalletBalance();
+        dto.totalFranchiseMerchantWalletBalance = merchantWalletRepository.getTotalFranchiseMerchantWalletBalance();
 
         dto.merchantsPerFranchise = merchantRepository.countByFranchise().stream()
                 .collect(Collectors.toMap(

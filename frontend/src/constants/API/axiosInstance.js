@@ -27,6 +27,7 @@ api.interceptors.response.use(
         localStorage.removeItem("authToken");
         localStorage.removeItem("userType");
         localStorage.removeItem("customerId");
+        localStorage.clear();
         window.location.href = "/login";
        
       }
