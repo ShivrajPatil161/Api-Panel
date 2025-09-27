@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, CheckCircle, Search, Download } from 'lucide-react';
 import distributionApi from "../../constants/API/distributionsAPI"
+import { toast } from 'react-toastify';
 
 const ProductDistribution = () => {
   // User context
@@ -37,7 +38,7 @@ const ProductDistribution = () => {
 
   // Load initial data
   useEffect(() => {
-    if (userType === 'admin') {
+    if (userType === 'admin' || userType === 'super_admin') {
       loadFranchises();
     } else if (userType === 'franchise' && customerId) {
       loadFranchiseData(customerId);
@@ -94,11 +95,14 @@ const ProductDistribution = () => {
   const loadDevices = async () => {
     if (!formData.product) return;
 
+    const franchiseId = getCurrentFranchiseId();
+    if (!franchiseId) return;
+
     setLoading(prev => ({ ...prev, devices: true }));
     try {
-      const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+      const selectedProduct = data.products.find(p => p.productId.toString() === formData.product);
       if (selectedProduct) {
-        const devices = await distributionApi.getSerialNumbersToDispatch(selectedProduct.outwardId);
+        const devices = await distributionApi.getSerialNumbersToDispatch(selectedProduct.productId, franchiseId);
         setData(prev => ({ ...prev, devices }));
         setSelectedDevices([]);
         setDevicesFetched(true);
@@ -119,7 +123,7 @@ const ProductDistribution = () => {
 
     // Validate quantity against available stock
     if (field === 'quantity') {
-      const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+      const selectedProduct = data.products.find(p => p.productId.toString() === formData.product);
       if (selectedProduct && parseInt(value) > selectedProduct.valid) {
         setErrors(prev => ({
           ...prev,
@@ -145,7 +149,7 @@ const ProductDistribution = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (userType === 'admin' && !formData.franchise) {
+    if ((userType === 'admin' || userType === 'super_admin') && !formData.franchise) {
       newErrors.franchise = 'Please select a franchise';
     }
     if (!formData.product) {
@@ -155,7 +159,7 @@ const ProductDistribution = () => {
       newErrors.quantity = 'Please enter a valid quantity';
     } else {
       // Check quantity against available stock
-      const selectedProduct = data.products.find(p => p.outwardId.toString() === formData.product);
+      const selectedProduct = data.products.find(p => p.productId.toString() === formData.product);
       if (selectedProduct && parseInt(formData.quantity) > selectedProduct.valid) {
         newErrors.quantity = `Quantity cannot exceed available stock (${selectedProduct.valid})`;
       }
@@ -170,15 +174,17 @@ const ProductDistribution = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
   // Helper function to get current franchise ID
   const getCurrentFranchiseId = () => {
     if (userType === 'franchise') {
       return customerId; // For franchise users, use their customerId
-    } else if (userType === 'admin') {
+    } else if ((userType === 'admin' || userType === 'super_admin')) {
       return formData.franchise; // For admin users, use selected franchise
     }
     return null;
   };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -192,6 +198,8 @@ const ProductDistribution = () => {
       };
 
       await distributionApi.submitDistribution(distributionData);
+      toast.success('Products distributed successfully!');
+
       // Reset form
       setFormData({
         franchise: userType === 'franchise' ? customerId || '' : '',
@@ -203,7 +211,7 @@ const ProductDistribution = () => {
       setData(prev => ({ ...prev, devices: [] }));
       setDevicesFetched(false);
     } catch (error) {
-      alert('Distribution failed. Please try again.');
+      toast.error(error?.message || 'Failed to distribute products');
     } finally {
       setLoading(prev => ({ ...prev, submitting: false }));
     }
@@ -214,7 +222,8 @@ const ProductDistribution = () => {
     return formData.product &&
       formData.quantity &&
       parseInt(formData.quantity) > 0 &&
-      !errors.quantity;
+      !errors.quantity &&
+      getCurrentFranchiseId();
   };
 
   // Check if form is valid for distribution
@@ -237,7 +246,7 @@ const ProductDistribution = () => {
     device.tid.toLowerCase().includes(deviceSearch.toLowerCase())
   );
 
-  const selectedProduct = data.products.find(p => p?.outwardId?.toString() === formData.product);
+  const selectedProduct = data.products.find(p => p?.productId?.toString() === formData.product);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -260,7 +269,7 @@ const ProductDistribution = () => {
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Franchise Selection (Admin only) */}
-          {userType === 'admin' && (
+          {(userType === 'admin' || userType === 'super_admin') && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Franchise <span className="text-red-500">*</span>
@@ -295,7 +304,7 @@ const ProductDistribution = () => {
             >
               <option value="">{loading.products ? 'Loading...' : 'Select Product'}</option>
               {data.products.map(product => (
-                <option key={product.outwardId} value={product.outwardId}>
+                <option key={product.productId} value={product.productId}>
                   {product.productName} (Available: {product.valid})
                 </option>
               ))}

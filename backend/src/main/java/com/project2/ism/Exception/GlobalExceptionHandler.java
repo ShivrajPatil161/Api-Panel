@@ -5,6 +5,7 @@ import com.project2.ism.DTO.ReportDTO.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -17,6 +18,8 @@ import jakarta.validation.ConstraintViolation;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +54,46 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getDescription(false)), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex,
+            WebRequest request) {
+
+        String message = "Database constraint violation";
+        HttpStatus status = HttpStatus.CONFLICT; // default
+
+        Throwable rootCause = ex.getRootCause();
+        if (rootCause != null && rootCause instanceof SQLException sqlEx) {
+            String sqlMessage = sqlEx.getMessage();
+
+            if (sqlMessage.contains("Duplicate entry")) {
+                message = "A record with the same unique fields already exists.";
+                status = HttpStatus.CONFLICT;
+            } else if (sqlMessage.contains("cannot be null")) {
+                message = "A required field is missing.";
+                status = HttpStatus.BAD_REQUEST;
+            } else if (sqlMessage.contains("foreign key constraint fails")) {
+                message = "This record is linked to another resource and cannot be saved/deleted.";
+                status = HttpStatus.CONFLICT;
+            } else if (sqlMessage.contains("check constraint")) {
+                message = "Data does not meet required validation rules.";
+                status = HttpStatus.BAD_REQUEST;
+            } else {
+                // fallback for other DB errors
+                message = "Database error: " + sqlMessage;
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+        }
+
+        ErrorResponse error = new ErrorResponse(
+                status.value(),
+                message,
+                request.getDescription(false),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(status).body(error);
+    }
     //duplicate TID/MID/SID/VPAID
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateResource(

@@ -132,13 +132,26 @@ public class OutwardTransactionService {
         }
 
 
-        @Transactional
-        public void receivedDateService (Long outwardId){
-            OutwardTransactions outward = outwardTransactionRepository.findById(outwardId)
-                    .orElseThrow(() ->new IllegalArgumentException("Outward transaction not found: "+ outwardId));
-            outward.setReceivedDate(LocalDateTime.now());
-            outwardTransactionRepository.save(outward);
+    @Transactional
+    public void receivedDateService(Long outwardId) {
+        OutwardTransactions outward = outwardTransactionRepository.findById(outwardId)
+                .orElseThrow(() -> new IllegalArgumentException("Outward transaction not found: " + outwardId));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Set received date for outward
+        outward.setReceivedDate(now);
+        outwardTransactionRepository.save(outward);
+
+        // Update all associated ProductSerialNumbers
+        if (outward.getProductSerialNumbers() != null && !outward.getProductSerialNumbers().isEmpty()) {
+            for (ProductSerialNumbers psn : outward.getProductSerialNumbers()) {
+                psn.setReceivedDateByFranchise(now); // make sure this field exists in PSN entity
+            }
+            serialRepo.saveAll(outward.getProductSerialNumbers());
         }
+    }
+
 
     public List<FranchiseInwardDTO> getFranchiseInward(Long franchiseId) {
         List<OutwardTransactions> list = outwardTransactionRepository.findByFranchiseId(franchiseId);
@@ -173,5 +186,38 @@ public class OutwardTransactionService {
             return dto;
         }).toList();
     }
+
+
+
+    //only for updating the database one time
+    @Transactional
+    public int backfillReceivedDateByFranchise(Long franchiseId) {
+        // Get all outward transactions for this franchise that have a receivedDate
+        List<OutwardTransactions> outwards = outwardTransactionRepository.findByFranchiseIdAndReceivedDateIsNotNull(franchiseId);
+
+        int updatedCount = 0;
+
+        for (OutwardTransactions outward : outwards) {
+            LocalDateTime receivedDate = outward.getReceivedDate();
+            if (receivedDate == null || outward.getProductSerialNumbers() == null) continue;
+
+            for (ProductSerialNumbers psn : outward.getProductSerialNumbers()) {
+                // Only update if null to avoid overwriting
+                if (psn.getReceivedDateByFranchise() == null) {
+                    psn.setReceivedDateByFranchise(receivedDate);
+                }
+                if (psn.getFranchise() == null) {
+                    psn.setFranchise(outward.getFranchise());
+                }
+            }
+
+            serialRepo.saveAll(outward.getProductSerialNumbers());
+            updatedCount += outward.getProductSerialNumbers().size();
+        }
+
+        return updatedCount;
     }
+
+
+}
 
