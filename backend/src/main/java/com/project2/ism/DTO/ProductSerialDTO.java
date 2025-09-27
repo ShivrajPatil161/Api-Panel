@@ -55,7 +55,7 @@ public class ProductSerialDTO {
 
         // Update only the outward transaction reference
         existingSerial.setOutwardTransaction(outward);
-
+        existingSerial.setFranchise(outward.getFranchise());
         // Set merchant if this is a merchant transaction
         if (outward.getMerchant() != null) {
             existingSerial.setMerchant(outward.getMerchant());
@@ -78,6 +78,7 @@ public class ProductSerialDTO {
         // Link to return transaction
         existingSerial.setReturnTransaction(ret);
 
+        existingSerial.setFranchise(ret.getFranchise());
         // Clear merchant (product is back from field)
         existingSerial.setMerchant(null);
 

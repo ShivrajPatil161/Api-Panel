@@ -222,10 +222,10 @@ const ProductAssignment = () => {
             setIsModalOpen(false)
             setEditingAssignment(null)
             await fetchProductSchemeAssignment()
-            toast.success(editingAssignment ? 'Assignment updated successfully' : 'Assignment created successfully')
+            //toast.success(editingAssignment ? 'Assignment updated successfully' : 'Assignment created successfully')
         } catch (error) {
             console.error('Error saving assignment:', error)
-            toast.error('Failed to save assignment')
+            //toast.error('Failed to save assignment')
         }
     }
 

@@ -30,7 +30,9 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
     List<ProductSerialNumbers> findByOutwardTransaction_IdAndMerchantIsNullAndReceivedDateIsNull(Long outwardID);
     List<ProductSerialNumbers> findByOutwardTransaction_IdAndMerchantIsNullAndReceivedDateIsNotNull(Long outwardID);
 
+    List<ProductSerialNumbers> findByFranchise_IdAndProduct_IdAndMerchant_IdIsNullAndReceivedDateByFranchiseIsNotNull(Long franchiseId,Long productId);
     List<ProductSerialNumbers> findByMerchant_Id(Long merchantId);
+    List<ProductSerialNumbers> findByFranchise_IdAndReceivedDateByFranchiseIsNotNull(Long franchiseId);
     @Modifying
     @Query("UPDATE ProductSerialNumbers ps SET ps.merchant.id = :merchantId, ps.productDistribution.id = :distributionId WHERE ps.id IN :serialIds")
     int assignMerchantToSerials(@Param("merchantId") Long merchantId,

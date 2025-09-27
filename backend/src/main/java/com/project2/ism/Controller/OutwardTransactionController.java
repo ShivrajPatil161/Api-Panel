@@ -75,4 +75,10 @@ public class OutwardTransactionController {
     public ResponseEntity<List<MerchantInwardDTO>> getMerchantInward(@PathVariable Long merchantId) {
         return ResponseEntity.ok(service.getMerchantInward(merchantId));
     }
+
+    @PostMapping("/backfill-received-date/{franchiseId}")
+    public ResponseEntity<String> backfillReceivedDate(@PathVariable Long franchiseId) {
+        int updated = service.backfillReceivedDateByFranchise(franchiseId);
+        return ResponseEntity.ok("Updated receivedDateByFranchise for " + updated + " product serial numbers.");
+    }
 }

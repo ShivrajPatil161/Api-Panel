@@ -65,6 +65,7 @@ public class CustomerSchemeAssignmentService {
         return toDTO(saved);
     }
 
+
     public List<CustomerSchemeAssignmentDTO> getAssignmentsByCustomer(Long customerId, String customerType) {
         List<CustomerSchemeAssignment> assignments;
 

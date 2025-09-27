@@ -1,8 +1,6 @@
 package com.project2.ism.DTO;
 
 public class FranchiseProductSummaryDTO {
-
-    private long outwardId;
     private Long productId;
     private String productName;
     private String productCode;
@@ -12,10 +10,9 @@ public class FranchiseProductSummaryDTO {
     private Integer valid;
 
     private Integer inTransit;
-    public FranchiseProductSummaryDTO(Long outwardId,Long productId, String productName, String productCode, String productCategory,
+    public FranchiseProductSummaryDTO(Long productId, String productName, String productCode, String productCategory,
                                       Integer totalQuantity,Integer valid, Integer inTransit) {
 
-        this.outwardId = outwardId;
         this.productId = productId;
         this.productName = productName;
         this.productCode = productCode;
@@ -41,14 +38,6 @@ public class FranchiseProductSummaryDTO {
 
     public void setInTransit(Integer inTransit) {
         this.inTransit = inTransit;
-    }
-
-    public long getOutwardId() {
-        return outwardId;
-    }
-
-    public void setOutwardId(long outwardId) {
-        this.outwardId = outwardId;
     }
 
     public Long getProductId() {

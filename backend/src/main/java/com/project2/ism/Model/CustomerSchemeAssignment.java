@@ -15,10 +15,16 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "customer_scheme_assignments",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_customer_product_date_range",
-                columnNames = {"franchise_id", "merchant_id", "product_id", "scheme_id", "effective_date", "expiry_date"}
-        )
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_franchise_product_scheme_date_range",
+                        columnNames = {"franchise_id", "product_id", "scheme_id", "effective_date", "expiry_date"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_merchant_product_scheme_date_range",
+                        columnNames = {"merchant_id", "product_id", "scheme_id", "effective_date", "expiry_date"}
+                )
+        }
 )
 public class CustomerSchemeAssignment {
 
