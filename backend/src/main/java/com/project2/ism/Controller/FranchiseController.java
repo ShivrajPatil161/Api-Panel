@@ -209,9 +209,9 @@ public class FranchiseController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/serial-num-to-dispatch/{id}") // outwardId
-    public ResponseEntity<List<ProductSerialDTO>> getSerialNums(@PathVariable Long id) {
-        List<ProductSerialDTO> serialNums = franchiseService.getValidPSN(id)
+    @GetMapping("/serial-num-to-dispatch") // outwardId
+    public ResponseEntity<List<ProductSerialDTO>> getSerialNums(@RequestParam Long productId, @RequestParam Long franchiseId) {
+        List<ProductSerialDTO> serialNums = franchiseService.getValidPSN(productId,franchiseId)
                 .stream()
                 .map(ProductSerialDTO::fromEntity)
                 .toList();
@@ -220,10 +220,7 @@ public class FranchiseController {
     }
 
 
-    @GetMapping("/franchises-merchants")
-    public ResponseEntity<FranchiseMerchantStatsDTO> getStats() {
-        return ResponseEntity.ok(franchiseService.getStats());
-    }
+
 
 
 }

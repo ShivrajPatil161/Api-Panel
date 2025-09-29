@@ -268,7 +268,7 @@ const ProductList = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [sorting, setSorting] = useState([]);
 
-  const userType = localStorage.getItem('userType');
+  const userType = localStorage.getItem('userType').toLowerCase();
   const columnHelper = createColumnHelper();
 
   // Fetch products from backend
@@ -508,7 +508,7 @@ const ProductList = () => {
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg">
       <div className="mb-6">
-        {userType === 'admin' && (
+        {(userType === 'admin' || userType==="super_admin") && (
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-gray-800">Product Master</h1>
             <button

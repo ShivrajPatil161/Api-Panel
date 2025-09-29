@@ -1,6 +1,7 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.DTO.CustomerSchemeAssignmentDTO;
+import com.project2.ism.DTO.SchemeGroupedResponseDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.CustomerSchemeAssignment;
 import com.project2.ism.Model.PricingScheme.PricingScheme;
@@ -10,7 +11,9 @@ import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,6 +68,7 @@ public class CustomerSchemeAssignmentService {
         return toDTO(saved);
     }
 
+
     public List<CustomerSchemeAssignmentDTO> getAssignmentsByCustomer(Long customerId, String customerType) {
         List<CustomerSchemeAssignment> assignments;
 
@@ -85,6 +89,31 @@ public class CustomerSchemeAssignmentService {
         return assignmentRepo.findAll()
                 .stream()
                 .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<SchemeGroupedResponseDTO> getAllGroupedByScheme() {
+        List<PricingScheme> allSchemes = schemeRepo.findAll();
+        Map<Long, List<CustomerSchemeAssignment>> assignmentsByScheme =
+                assignmentRepo.findAll().stream()
+                        .collect(Collectors.groupingBy(a -> a.getScheme().getId()));
+
+        return allSchemes.stream()
+                .map(scheme -> {
+                    SchemeGroupedResponseDTO dto = new SchemeGroupedResponseDTO();
+                    dto.setSchemeCode(scheme.getSchemeCode());
+                    dto.setDescription(scheme.getDescription());
+                    dto.setCustomerType(scheme.getCustomerType());
+                    dto.setRentalByMonth(scheme.getRentalByMonth());
+
+                    List<CustomerSchemeAssignment> assignments =
+                            assignmentsByScheme.getOrDefault(scheme.getId(), Collections.emptyList());
+                    dto.setAssignments(assignments.stream()
+                            .map(this::toDTO)
+                            .collect(Collectors.toList()));
+
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

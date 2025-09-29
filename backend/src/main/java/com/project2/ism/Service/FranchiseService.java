@@ -101,12 +101,8 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.*;
 import com.project2.ism.Exception.ResourceNotFoundException;
-import com.project2.ism.Model.ContactPerson;
-import com.project2.ism.Model.FranchiseWallet;
-import com.project2.ism.Model.InventoryTransactions.OutwardTransactions;
+import com.project2.ism.Model.*;
 import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
-import com.project2.ism.Model.MerchantWallet;
-import com.project2.ism.Model.UploadDocuments;
 import com.project2.ism.Model.Users.BankDetails;
 import com.project2.ism.Model.Users.Franchise;
 
@@ -117,6 +113,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -129,6 +126,7 @@ public class FranchiseService {
     private final FileStorageService fileStorageService;
     private final UserService userService;
     private final MerchantRepository merchantRepository;
+    private final MerchantWalletRepository merchantWalletRepository;
 
     private final ProductSerialsRepository serialRepo;
     private final OutwardTransactionRepository outwardRepo;
@@ -136,11 +134,12 @@ public class FranchiseService {
     private final FranchiseWalletRepository franchiseWalletRepository;
     public FranchiseService(FranchiseRepository franchiseRepository,
                             FileStorageService fileStorageService,
-                            UserService userService, MerchantRepository merchantRepository, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo, FranchiseWalletRepository franchiseWalletRepository) {
+                            UserService userService, MerchantRepository merchantRepository, MerchantWalletRepository merchantWalletRepository, ProductSerialsRepository serialRepo, OutwardTransactionRepository outwardRepo, FranchiseWalletRepository franchiseWalletRepository) {
         this.franchiseRepository = franchiseRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.merchantRepository = merchantRepository;
+        this.merchantWalletRepository = merchantWalletRepository;
         this.serialRepo = serialRepo;
         this.outwardRepo = outwardRepo;
         this.franchiseWalletRepository = franchiseWalletRepository;
@@ -311,38 +310,82 @@ public class FranchiseService {
     }
 
 
-    public List<ProductSerialNumbers> getValidPSN(Long outwardID){
-        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNullAndReceivedDateIsNull(outwardID);
+    public List<ProductSerialNumbers> getValidPSN(Long productId,Long franchiseId){
+        return serialRepo.findByFranchise_IdAndProduct_IdAndMerchant_IdIsNullAndReceivedDateByFranchiseIsNotNull(franchiseId,productId);
 
     }
-    public List<ProductSerialNumbers> getInTransitPSN(Long outwardID) {
-        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNotNullAndReceivedDateIsNull(outwardID);
-    }
+//    public List<ProductSerialNumbers> getInTransitPSN(Long outwardID) {
+//        return serialRepo.findByOutwardTransaction_IdAndMerchantIsNotNullAndReceivedDateIsNull(outwardID);
+//    }
 
 
+
+//    public List<FranchiseProductSummaryDTO> getProductsOfFranchise(Long franchiseId) {
+//        List<OutwardTransactions> outwardList = outwardRepo.findByFranchiseIdAndReceivedDateIsNotNull(franchiseId);
+//
+//        List<FranchiseProductSummaryDTO> result = new ArrayList<>();
+//        for (OutwardTransactions o : outwardList) {
+//            int totalQty = o.getQuantity();
+//            int valid = getValidPSN(o.getId()).size();
+//            int inTransit = getInTransitPSN(o.getId()).size();
+//
+//            result.add(new FranchiseProductSummaryDTO(
+//                    o.getProduct().getId(),
+//                    o.getProduct().getProductName(),
+//                    o.getProduct().getProductCode(),
+//                    o.getProduct().getProductCategory().getCategoryName(), // assuming you have category relation
+//                    totalQty,
+//                    valid,
+//                    inTransit
+//            ));
+//        }
+//        return result;
+//    }
 
     public List<FranchiseProductSummaryDTO> getProductsOfFranchise(Long franchiseId) {
-        List<OutwardTransactions> outwardList = outwardRepo.findByFranchiseIdAndReceivedDateIsNotNull(franchiseId);
 
-        List<FranchiseProductSummaryDTO> result = new ArrayList<>();
-        for (OutwardTransactions o : outwardList) {
-            int totalQty = o.getQuantity();
-            int valid = getValidPSN(o.getId()).size();
-            int inTransit = getInTransitPSN(o.getId()).size();
+        // Fetch all PSNs for the franchise
+        List<ProductSerialNumbers> psns = serialRepo.findByFranchise_IdAndReceivedDateByFranchiseIsNotNull(franchiseId);
 
-            result.add(new FranchiseProductSummaryDTO(
-                    o.getId(),
-                    o.getProduct().getId(),
-                    o.getProduct().getProductName(),
-                    o.getProduct().getProductCode(),
-                    o.getProduct().getProductCategory().getCategoryName(), // assuming you have category relation
-                    totalQty,
-                    valid,
-                    inTransit
-            ));
+        // Map<productId, DTO> for aggregation
+        Map<Long, FranchiseProductSummaryDTO> summaryMap = new HashMap<>();
+
+        for (ProductSerialNumbers psn : psns) {
+            Product product = psn.getProduct();
+            Long productId = product.getId();
+
+            // Aggregate per product
+            FranchiseProductSummaryDTO dto = summaryMap.get(productId);
+            if (dto == null) {
+                dto = new FranchiseProductSummaryDTO(
+                        productId,
+                        product.getProductName(),
+                        product.getProductCode(),
+                        product.getProductCategory().getCategoryName(),
+                        0,
+                        0,
+                        0
+                );
+                summaryMap.put(productId, dto);
+            }
+
+            // Total quantity = all PSNs
+            dto.setTotalQuantity(dto.getTotalQuantity() + 1);
+
+            // Valid = franchise has received, but merchant is still null
+            if (psn.getReceivedDateByFranchise() != null && psn.getMerchant() == null) {
+                dto.setValid(dto.getValid() + 1);
+            }
+
+            // In transit = franchise has received and merchant assigned, but merchant hasn't received physically
+            if (psn.getReceivedDateByFranchise() != null && psn.getMerchant() != null && psn.getReceivedDate() == null) {
+                dto.setInTransit(dto.getInTransit() + 1);
+            }
         }
-        return result;
+
+        return new ArrayList<>(summaryMap.values());
     }
+
 
 
     public FranchiseMerchantStatsDTO getStats() {
@@ -353,9 +396,9 @@ public class FranchiseService {
         dto.totalDirectMerchants = merchantRepository.countDirectMerchants();
         dto.totalFranchiseMerchants = merchantRepository.countFranchiseMerchants();
 
-        dto.totalFranchiseWalletBalance = franchiseRepository.sumWalletBalances();
-        dto.totalDirectMerchantWalletBalance = merchantRepository.sumDirectMerchantWallets();
-        dto.totalFranchiseMerchantWalletBalance = merchantRepository.sumFranchiseMerchantWallets();
+        dto.totalFranchiseWalletBalance = franchiseWalletRepository.getTotalFranchiseWalletBalance();
+        dto.totalDirectMerchantWalletBalance = merchantWalletRepository.getTotalDirectMerchantWalletBalance();
+        dto.totalFranchiseMerchantWalletBalance = merchantWalletRepository.getTotalFranchiseMerchantWalletBalance();
 
         dto.merchantsPerFranchise = merchantRepository.countByFranchise().stream()
                 .collect(Collectors.toMap(

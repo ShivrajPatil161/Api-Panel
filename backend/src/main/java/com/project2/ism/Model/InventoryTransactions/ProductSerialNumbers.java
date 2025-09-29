@@ -2,6 +2,7 @@ package com.project2.ism.Model.InventoryTransactions;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.project2.ism.Model.Product;
+import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
@@ -65,12 +66,16 @@ public class ProductSerialNumbers {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "franchise_id")
+    private Franchise franchise;
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "merchant_id")
     private Merchant merchant;
 
     private LocalDateTime receivedDate;// unit received by merchant
 
+    private LocalDateTime receivedDateByFranchise;
     @ManyToOne
     @JoinColumn(name = "product_distribution_id")
     private ProductDistribution productDistribution;
@@ -190,5 +195,21 @@ public class ProductSerialNumbers {
 
     public void setProductDistribution(ProductDistribution productDistribution) {
         this.productDistribution = productDistribution;
+    }
+
+    public Franchise getFranchise() {
+        return franchise;
+    }
+
+    public void setFranchise(Franchise franchise) {
+        this.franchise = franchise;
+    }
+
+    public LocalDateTime getReceivedDateByFranchise() {
+        return receivedDateByFranchise;
+    }
+
+    public void setReceivedDateByFranchise(LocalDateTime receivedDateByFranchise) {
+        this.receivedDateByFranchise = receivedDateByFranchise;
     }
 }

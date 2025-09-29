@@ -127,11 +127,14 @@
             return pricingSchemeRepository.count();
         }
 
+        // Service method
         @Transactional(readOnly = true)
-        public List<PricingScheme> getAllSchemesForCustomerType(String customerType) {
-            return pricingSchemeRepository.findAll().stream()
-                    .filter(scheme -> scheme.getCustomerType().equals(customerType))
-                    .toList();
+        public Map<String, Long> getSchemeCountsByCustomerType() {
+            return pricingSchemeRepository.countByCustomerType().stream()
+                    .collect(Collectors.toMap(
+                            result -> (String) result[0],
+                            result -> (Long) result[1]
+                    ));
         }
 
 

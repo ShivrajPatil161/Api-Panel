@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form'
 import { X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import api from "../../constants/API/axiosInstance"
+import { toast } from 'react-toastify'
 
 // ==================== FORM COMPONENTS ====================
 
@@ -202,6 +203,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                     }
                 } catch (error) {
                     console.error('Error fetching pricing schemes:', error)
+                    toast.error(error?.response?.data?.message || 'Failed to fetch pricing schemes. Please try again.' )
                     setPricingSchemes([])
                 } finally {
                     setLoading(false)
@@ -307,7 +309,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         } catch (error) {
             console.error('Error saving assignment:', error)
             // You might want to show an error message to the user here
-            alert('Error saving assignment. Please try again.')
+            toast.error(error?.response?.data?.message || 'Failed to save assignment. Please try again.')
         } finally {
             setLoading(false)
         }

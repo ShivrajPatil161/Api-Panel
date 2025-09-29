@@ -1,6 +1,7 @@
 package com.project2.ism.Controller;
 
 import com.project2.ism.DTO.CustomerSchemeAssignmentDTO;
+import com.project2.ism.DTO.SchemeGroupedResponseDTO;
 import com.project2.ism.Service.CustomerSchemeAssignmentService;
 import org.springframework.http.ResponseEntity;
         import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,10 @@ public class CustomerSchemeAssignmentController {
         return ResponseEntity.ok(assignmentService.getAll());
     }
 
+//    @GetMapping
+//    public ResponseEntity<List<SchemeGroupedResponseDTO>> getALL() {
+//        return ResponseEntity.ok(assignmentService.getAllGroupedByScheme());
+//    }
     @GetMapping("/customer/{type}/{id}")
     public ResponseEntity<List<CustomerSchemeAssignmentDTO>> getByCustomer(
             @PathVariable String type,

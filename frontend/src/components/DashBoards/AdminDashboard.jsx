@@ -17,11 +17,7 @@ import {
 import api from '../../constants/API/axiosInstance';
 
 const AdminDashboard = () => {
-    const [franchiseData, setFranchiseData] = useState(null);
-    const [transactionStats, setTransactionStats] = useState(null);
-    const [pricingStats, setPricingStats] = useState(null);
-    const [vendorStats, setVendorStats] = useState(null);
-    const [productStats, setProductStats] = useState(null);
+    const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -34,19 +30,8 @@ const AdminDashboard = () => {
         setError(null);
 
         try {
-            const [franchise, transactions, pricing, vendors, products] = await Promise.all([
-                api.get('/franchise/franchises-merchants'),
-                api.get('/stats/transactions-stats'),
-                api.get('/pricing-schemes/stats'),
-                api.get('/vendors/stats'),
-                api.get('/products/stats')
-            ]);
-
-            setFranchiseData(franchise.data);
-            setTransactionStats(transactions.data);
-            setPricingStats(pricing.data);
-            setVendorStats(vendors.data);
-            setProductStats(products.data);
+            const response = await api.get('/admin-dashboard/stats');
+            setDashboardData(response.data);
         } catch (err) {
             setError('Failed to fetch dashboard data');
             console.error('Dashboard fetch error:', err);
@@ -84,6 +69,9 @@ const AdminDashboard = () => {
             </div>
         );
     }
+
+    // Destructure the consolidated data
+    const { franchiseStats, transactionStats, pricingSchemeStats, productStats } = dashboardData || {};
 
     const StatCard = ({ title, value, icon: Icon, color = "blue", subtitle = null, trend = null }) => (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
@@ -166,17 +154,17 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <StatCard
                         title="Total Franchises"
-                        value={franchiseData?.totalFranchises || 0}
+                        value={franchiseStats?.totalFranchises || 0}
                         icon={Store}
                         color="blue"
                         subtitle="Active franchise locations"
                     />
                     <StatCard
                         title="Total Merchants"
-                        value={franchiseData?.totalMerchants || 0}
+                        value={franchiseStats?.totalMerchants || 0}
                         icon={Users}
                         color="green"
-                        subtitle={`${franchiseData?.totalDirectMerchants || 0} direct, ${franchiseData?.totalFranchiseMerchants || 0} franchise`}
+                        subtitle={`${franchiseStats?.totalDirectMerchants || 0} direct, ${franchiseStats?.totalFranchiseMerchants || 0} franchise`}
                     />
                     <StatCard
                         title="Total Products"
@@ -186,15 +174,15 @@ const AdminDashboard = () => {
                         subtitle={`${productStats?.activeProducts || 0} active, ${productStats?.inactiveProducts || 0} inactive`}
                     />
                     <StatCard
-                        title="Active Vendors"
-                        value={vendorStats?.activeVendors || 0}
-                        icon={Wallet}
+                        title="Pricing Schemes"
+                        value={pricingSchemeStats?.totalSchemes || 0}
+                        icon={CreditCard}
                         color="orange"
-                        subtitle={`${vendorStats?.totalVendors || 0} total vendors`}
+                        subtitle={`${pricingSchemeStats?.totalDirectMerchantSchemes || 0} direct, ${pricingSchemeStats?.totalFranchiseSchemes || 0} franchise`}
                     />
                 </div>
 
-                {/* Transaction & Inventory Overview */}
+                {/* Transaction & Pricing Overview */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     {/* Transaction Stats */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -230,7 +218,42 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                   
+                    {/* Wallet Balance Overview */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Wallet Balances</h3>
+                            <Wallet className="w-6 h-6 text-green-600" />
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="p-4 bg-blue-50 rounded-lg">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-blue-700 font-medium">Franchise Wallets</span>
+                                        <span className="text-2xl font-bold text-blue-600">
+                                            ₹{franchiseStats?.totalFranchiseWalletBalance?.toFixed(2) || '0.00'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-green-50 rounded-lg">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-green-700 font-medium">Direct Merchant Wallets</span>
+                                        <span className="text-2xl font-bold text-green-600">
+                                            ₹{franchiseStats?.totalDirectMerchantWalletBalance?.toFixed(2) || '0.00'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-purple-50 rounded-lg">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-purple-700 font-medium">Franchise Merchant Wallets</span>
+                                        <span className="text-2xl font-bold text-purple-600">
+                                            ₹{franchiseStats?.totalFranchiseMerchantWalletBalance?.toFixed(2) || '0.00'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Product Categories & Franchise Details */}
@@ -259,26 +282,26 @@ const AdminDashboard = () => {
                         <div className="space-y-4">
                             <div className="grid grid-cols-3 gap-4 text-center">
                                 <div className="p-3 bg-blue-50 rounded-lg">
-                                    <p className="text-2xl font-bold text-blue-600">{franchiseData?.totalDirectMerchants || 0}</p>
+                                    <p className="text-2xl font-bold text-blue-600">{franchiseStats?.totalDirectMerchants || 0}</p>
                                     <p className="text-xs text-blue-700">Direct</p>
                                 </div>
                                 <div className="p-3 bg-green-50 rounded-lg">
-                                    <p className="text-2xl font-bold text-green-600">{franchiseData?.totalFranchiseMerchants || 0}</p>
+                                    <p className="text-2xl font-bold text-green-600">{franchiseStats?.totalFranchiseMerchants || 0}</p>
                                     <p className="text-xs text-green-700">Franchise</p>
                                 </div>
                                 <div className="p-3 bg-purple-50 rounded-lg">
-                                    <p className="text-2xl font-bold text-purple-600">{franchiseData?.totalFranchises || 0}</p>
+                                    <p className="text-2xl font-bold text-purple-600">{franchiseStats?.totalFranchises || 0}</p>
                                     <p className="text-xs text-purple-700">Locations</p>
                                 </div>
                             </div>
 
-                            {franchiseData?.merchantsPerFranchise && (
+                            {franchiseStats?.merchantsPerFranchise && (
                                 <div className="mt-6">
                                     <p className="text-sm font-medium text-slate-600 mb-3">Merchants per Franchise:</p>
                                     <div className="space-y-2">
-                                        {Object.entries(franchiseData.merchantsPerFranchise).map(([franchiseId, count]) => (
-                                            <div key={franchiseId} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                                                <span className="text-slate-700">Franchise #{franchiseId}</span>
+                                        {Object.entries(franchiseStats.merchantsPerFranchise).map(([franchiseName, count]) => (
+                                            <div key={franchiseName} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                                <span className="text-slate-700">{franchiseName}</span>
                                                 <span className="font-semibold text-slate-900">{count} merchants</span>
                                             </div>
                                         ))}
