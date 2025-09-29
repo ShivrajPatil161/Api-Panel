@@ -25,15 +25,15 @@ public class CustomerSchemeAssignmentController {
         return ResponseEntity.ok(assignmentService.createAssignment(dto));
     }
 
-    @GetMapping
-    public ResponseEntity<List<CustomerSchemeAssignmentDTO>> getALL() {
-        return ResponseEntity.ok(assignmentService.getAll());
-    }
-
 //    @GetMapping
-//    public ResponseEntity<List<SchemeGroupedResponseDTO>> getALL() {
-//        return ResponseEntity.ok(assignmentService.getAllGroupedByScheme());
+//    public ResponseEntity<List<CustomerSchemeAssignmentDTO>> getALL() {
+//        return ResponseEntity.ok(assignmentService.getAll());
 //    }
+
+    @GetMapping
+    public ResponseEntity<List<SchemeGroupedResponseDTO>> getALL() {
+        return ResponseEntity.ok(assignmentService.getAllGroupedByScheme());
+    }
     @GetMapping("/customer/{type}/{id}")
     public ResponseEntity<List<CustomerSchemeAssignmentDTO>> getByCustomer(
             @PathVariable String type,

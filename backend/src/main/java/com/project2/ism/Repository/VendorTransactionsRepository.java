@@ -18,7 +18,7 @@ public interface VendorTransactionsRepository extends JpaRepository<VendorTransa
     WHERE vt.settled = 0
       AND vt.date BETWEEN :from AND :to
       AND (
-        ( :#{#mids.size()} > 0 AND vt.mid IN (:mids) ) OR
+        ( :#{#mids.size()} > 0 AND vt.mid IN (:mids) ) AND
         ( :#{#tids.size()} > 0 AND vt.tid IN (:tids) )
       )
     """, nativeQuery = true)

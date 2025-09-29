@@ -54,6 +54,36 @@ public class VendorRatesService {
         return vendorRatesRepository.save(existingRates);
     }
 
+//    public VendorRates updateVendorRates(Long id, @Valid VendorRates updatedRates) {
+//        System.out.println("========== UPDATE SERVICE METHOD START ==========");
+//
+//        VendorRates existingRates = getVendorRatesById(id);
+//        System.out.println("Loaded existing rates: " + existingRates.getId());
+//        //System.out.println("Is managed? " + entityManager.contains(existingRates));
+//
+//        System.out.println("Old monthlyRent: " + existingRates.getMonthlyRent());
+//        existingRates.setMonthlyRent(updatedRates.getMonthlyRent());
+//        System.out.println("New monthlyRent: " + existingRates.getMonthlyRent());
+//
+//        existingRates.setEffectiveDate(updatedRates.getEffectiveDate());
+//        existingRates.setExpiryDate(updatedRates.getExpiryDate());
+//        existingRates.setVendor(updatedRates.getVendor());
+//        existingRates.setProduct(updatedRates.getProduct());
+//        existingRates.setRemark(updatedRates.getRemark());
+//
+//        // Replace vendorCardRates
+//        existingRates.getVendorCardRates().clear();
+//        for (VendorCardRates cardRate : updatedRates.getVendorCardRates()) {
+//            existingRates.addVendorCardRate(cardRate);
+//        }
+//
+//        System.out.println("About to save...");
+//        VendorRates saved = vendorRatesRepository.save(existingRates);
+//        System.out.println("Save completed");
+//        System.out.println("========== UPDATE SERVICE METHOD END ==========");
+//
+//        return saved;
+//    }
 
     // DELETE
     public void deleteVendorRates(Long id) {
