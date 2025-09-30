@@ -161,27 +161,65 @@ const ProductReport = () => {
             )
         },
         {
-            header: 'Scheme',
-            accessorKey: 'schemeCode',
-            cell: ({ row }) => (
-                <div className="min-w-[180px]">
-                    <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded inline-block mb-1">
-                        {row.original.schemeCode}
-                    </div>
-                    {row.original.schemeDescription && (
-                        <div className="text-xs text-gray-600 mt-1" title={row.original.schemeDescription}>
-                            {row.original.schemeDescription.length > 40 
-                                ? row.original.schemeDescription.substring(0, 40) + '...' 
-                                : row.original.schemeDescription}
-                        </div>
-                    )}
-                    <div className="text-sm font-semibold text-green-600 mt-1">
-                        ₹{row.original.rentalByMonth?.toLocaleString()}/month
-                    </div>
+            header: 'Product Status',
+            accessorKey: 'productStatus',
+            cell: ({ getValue }) => {
+                const status = getValue();
+                return (
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        status
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-gray-100 text-gray-800'
+                    }`}>
+                        {status ? (
+                            <>
+                                <CheckCircle className="w-3 h-3" />
+                                Active
+                            </>
+                        ) : (
+                            <>
+                                <XCircle className="w-3 h-3" />
+                                Inactive
+                            </>
+                        )}
+                    </span>
+                );
+            }
+        },
+        {
+            header: 'HSN',
+            accessorKey: 'hsn',
+            cell: ({ getValue }) => (
+                <span className="font-mono text-xs bg-yellow-50 px-2 py-1 rounded">
+                    {getValue()}
+                </span>
+            )
+        },
+        {
+            header: 'Vendor',
+            accessorKey: 'vendorName',
+            cell: ({ getValue }) => (
+                <div className="flex items-center gap-2">
+                    <Building className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-700">{getValue() || 'N/A'}</span>
                 </div>
             )
         },
         {
+            header: 'Warranty',
+            accessorKey: 'warrantyPeriod',
+            cell: ({ row }) => (
+                <div className="text-sm">
+                    <div className="text-gray-700 font-medium">
+                        {row.original.warrantyPeriod} months
+                    </div>
+                    <div className="text-xs text-gray-500 capitalize">
+                        {row.original.warrantyType || 'N/A'}
+                    </div>
+                </div>
+            )
+        },
+         {
             header: 'Customer Type',
             accessorKey: 'customerType',
             cell: ({ getValue }) => {
@@ -230,16 +268,29 @@ const ProductReport = () => {
                 </div>
             )
         },
+        
         {
-            header: 'Vendor',
-            accessorKey: 'vendorName',
-            cell: ({ getValue }) => (
-                <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700">{getValue() || 'N/A'}</span>
+            header: 'Scheme',
+            accessorKey: 'schemeCode',
+            cell: ({ row }) => (
+                <div className="min-w-[180px]">
+                    <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded inline-block mb-1">
+                        {row.original.schemeCode}
+                    </div>
+                    {row.original.schemeDescription && (
+                        <div className="text-xs text-gray-600 mt-1" title={row.original.schemeDescription}>
+                            {row.original.schemeDescription.length > 40 
+                                ? row.original.schemeDescription.substring(0, 40) + '...' 
+                                : row.original.schemeDescription}
+                        </div>
+                    )}
+                    <div className="text-sm font-semibold text-green-600 mt-1">
+                        ₹{row.original.rentalByMonth?.toLocaleString()}/month
+                    </div>
                 </div>
             )
         },
+        
         {
             header: 'Effective Date',
             accessorKey: 'effectiveDate',
@@ -266,82 +317,7 @@ const ProductReport = () => {
                 );
             }
         },
-        {
-            header: 'Status',
-            accessorKey: 'active',
-            cell: ({ getValue }) => {
-                const isActive = getValue();
-                return (
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                        isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                    }`}>
-                        {isActive ? (
-                            <>
-                                <div className="w-1.5 h-1.5 bg-green-600 rounded-full"></div>
-                                Active
-                            </>
-                        ) : (
-                            <>
-                                <div className="w-1.5 h-1.5 bg-red-600 rounded-full"></div>
-                                Inactive
-                            </>
-                        )}
-                    </span>
-                );
-            }
-        },
-        {
-            header: 'Product Status',
-            accessorKey: 'productStatus',
-            cell: ({ getValue }) => {
-                const status = getValue();
-                return (
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                        status
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-gray-100 text-gray-800'
-                    }`}>
-                        {status ? (
-                            <>
-                                <CheckCircle className="w-3 h-3" />
-                                Active
-                            </>
-                        ) : (
-                            <>
-                                <XCircle className="w-3 h-3" />
-                                Inactive
-                            </>
-                        )}
-                    </span>
-                );
-            }
-        },
-        {
-            header: 'Warranty',
-            accessorKey: 'warrantyPeriod',
-            cell: ({ row }) => (
-                <div className="text-sm">
-                    <div className="text-gray-700 font-medium">
-                        {row.original.warrantyPeriod} months
-                    </div>
-                    <div className="text-xs text-gray-500 capitalize">
-                        {row.original.warrantyType || 'N/A'}
-                    </div>
-                </div>
-            )
-        },
-        {
-            header: 'HSN',
-            accessorKey: 'hsn',
-            cell: ({ getValue }) => (
-                <span className="font-mono text-xs bg-yellow-50 px-2 py-1 rounded">
-                    {getValue()}
-                </span>
-            )
-        },
-        {
+         {
             header: 'Remarks',
             accessorKey: 'remarks',
             cell: ({ getValue }) => (
@@ -356,6 +332,9 @@ const ProductReport = () => {
                 </div>
             )
         }
+       
+        
+       
     ], []);
 
     // Calculate summary data
