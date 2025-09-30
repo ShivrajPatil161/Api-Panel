@@ -166,30 +166,3 @@ public class CustomerSchemeAssignment {
         this.updatedAt = updatedAt;
     }
 }
-
-//
-//    // --- Getters & Setters ---
-//    public Long getId() { return id; }
-//    public void setId(Long id) { this.id = id; }
-//
-//    public PricingScheme getScheme() { return scheme; }
-//    public void setScheme(PricingScheme scheme) { this.scheme = scheme; }
-//
-//    public OutwardTransactions getOutwardTransaction() { return outwardTransaction; }
-//    public void setOutwardTransaction(OutwardTransactions outwardTransaction) { this.outwardTransaction = outwardTransaction; }
-//
-//    public String getCustomerType() { return customerType; }
-//    public void setCustomerType(String customerType) { this.customerType = customerType; }
-//
-//    public Long getCustomerId() { return customerId; }
-//    public void setCustomerId(Long customerId) { this.customerId = customerId; }
-//
-//    public LocalDate getEffectiveDate() { return effectiveDate; }
-//    public void setEffectiveDate(LocalDate effectiveDate) { this.effectiveDate = effectiveDate; }
-//
-//    public LocalDate getExpiryDate() { return expiryDate; }
-//    public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
-//
-//    public String getRemarks() { return remarks; }
-//    public void setRemarks(String remarks) { this.remarks = remarks; }
-//}

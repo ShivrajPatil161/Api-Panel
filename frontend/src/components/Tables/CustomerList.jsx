@@ -63,8 +63,8 @@ const StatusBadge = ({ status }) => {
 
 const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', size = 'sm', className = '' }) => {
     const variants = {
-        ghost: 'hover:bg-gray-50 text-gray-600 hover:text-gray-900',
-        primary: 'bg-blue-600 text-white hover:bg-blue-700',
+        ghost: 'hover:bg-green-100 text-green-600 hover:text-green-900',
+        primary: ' text-blue-700 hover:bg-blue-100',
         danger: 'hover:bg-red-50 text-red-600 hover:text-red-700'
     }
 
@@ -700,10 +700,13 @@ const CustomerListComponent = () => {
                     <ActionButton
                         icon={Eye}
                         onClick={() => fetchCustomerDetails(row.original.id, 'franchise')}
+                        variant="primary"
+
                     />
                     <ActionButton
                         icon={Edit}
                         onClick={() => handleEditCustomer(row.original.id, 'franchise')}
+                        variant="ghost"
                     />
                     <ActionButton
                         icon={Trash2}
