@@ -21,8 +21,6 @@ public abstract class TransactionDetailsBase {
     @Column(name = "transaction_id", unique = true, nullable = false)
     private Long transactionId;
 
-
-
     @Column(name = "action_on_balance")
     private String actionOnBalance;
 
@@ -98,8 +96,6 @@ public abstract class TransactionDetailsBase {
     @Column(name = "tran_status")
     private String tranStatus;
 
-
-
     @Column(name = "transaction_type")
     private String transactionType;
 
@@ -111,7 +107,6 @@ public abstract class TransactionDetailsBase {
 
     @Column(name = "vendor_transaction_id")
     private String vendorTransactionId;
-
 
     @Column(name = "net_amount", precision = 38, scale = 2)
     private BigDecimal netAmount;

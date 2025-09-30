@@ -13,7 +13,12 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_vt_mid", columnList = "mid"),
                 @Index(name = "idx_vt_tid", columnList = "tid"),
                 @Index(name = "idx_vt_settled", columnList = "settled")
-        })
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_vendor_txn", columnNames = {"transactionReferenceId", "date","amount","mid","tid","txnType"})
+        }
+)
+
 public class VendorTransactions {
 
     @Id
@@ -21,7 +26,7 @@ public class VendorTransactions {
     private Long internalId;
 
     @NotBlank(message = "Transaction ID is required")
-    @Column(name = "transaction_ref_id", nullable = false)
+    @Column(name = "transaction_ref_id", nullable = false, unique = true)
     private String transactionReferenceId;
 
     @NotNull(message = "Date is required")
@@ -77,7 +82,7 @@ public class VendorTransactions {
     @Column(name = "Card")
     private String card;
 
-//    @NotBlank(message = "Issuing bank required")
+//  @NotBlank(message = "Issuing bank required")
     @Column(name = "Issuing_Bank")
     private String issuingBank;
 
