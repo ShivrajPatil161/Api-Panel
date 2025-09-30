@@ -3,6 +3,7 @@ package com.project2.ism.Service;
 import com.project2.ism.DTO.CustomerSchemeAssignmentDTO;
 import com.project2.ism.DTO.ProductSchemeReportDTO;
 import com.project2.ism.DTO.SchemeGroupedResponseDTO;
+import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.CustomerSchemeAssignment;
 import com.project2.ism.Model.PricingScheme.PricingScheme;
@@ -60,7 +61,7 @@ public class CustomerSchemeAssignmentService {
         );
 
         if (!overlaps.isEmpty()) {
-            throw new IllegalStateException("Customer already has a scheme assigned for this product during the given period.");
+            throw new DuplicateResourceException("Customer already has a scheme assigned for this product during the given period.");
         }
 
 
