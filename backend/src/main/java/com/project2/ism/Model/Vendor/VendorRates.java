@@ -1,7 +1,7 @@
 package com.project2.ism.Model.Vendor;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.project2.ism.Model.PricingScheme.CardRate;
+
 import com.project2.ism.Model.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
