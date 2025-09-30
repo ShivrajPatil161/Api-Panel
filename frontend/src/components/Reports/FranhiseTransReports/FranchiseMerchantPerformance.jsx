@@ -130,7 +130,7 @@ const FranchiseMerchantPerformanceReport = ({ filters: commonFilters, isFranchis
             'Transactions': merchant.transactionCount,
             'Total Amount': merchant.totalAmount,
             'Total Commission': merchant.totalCommission,
-            'Commission Rate (%)': (merchant.totalCommission / merchant.totalAmount * 100).toFixed(2),
+            'Commission Rate (%)': `${(merchant.totalCommission / merchant.totalAmount * 100).toFixed(2)}`,
             
         }));
     };

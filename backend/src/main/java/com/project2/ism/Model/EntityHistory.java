@@ -32,12 +32,19 @@ public class EntityHistory {
     @Column(name = "changed_at", nullable = false)
     private LocalDateTime changedAt;
 
+    @Column(name = "parent_entity_name")
+    private String parentEntityName;
+
+    @Column(name = "parent_entity_id")
+    private String parentEntityId;
+
     // Constructors
     public EntityHistory() {
     }
 
     public EntityHistory(String entityName, String entityId, String fieldName,
-                         String oldValue, String newValue, String changedBy, LocalDateTime changedAt) {
+                         String oldValue, String newValue, String changedBy, LocalDateTime changedAt,
+                         String parentEntityName, String parentEntityId) {
         this.entityName = entityName;
         this.entityId = entityId;
         this.fieldName = fieldName;
@@ -45,6 +52,8 @@ public class EntityHistory {
         this.newValue = newValue;
         this.changedBy = changedBy;
         this.changedAt = changedAt;
+        this.parentEntityName = parentEntityName;
+        this.parentEntityId = parentEntityId;
     }
 
     // Getters and Setters
@@ -110,5 +119,21 @@ public class EntityHistory {
 
     public void setChangedAt(LocalDateTime changedAt) {
         this.changedAt = changedAt;
+    }
+
+    public String getParentEntityName() {
+        return parentEntityName;
+    }
+
+    public void setParentEntityName(String parentEntityName) {
+        this.parentEntityName = parentEntityName;
+    }
+
+    public String getParentEntityId() {
+        return parentEntityId;
+    }
+
+    public void setParentEntityId(String parentEntityId) {
+        this.parentEntityId = parentEntityId;
     }
 }

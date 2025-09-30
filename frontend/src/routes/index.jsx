@@ -38,6 +38,7 @@ import Payout from '../components/Payout/Payout.jsx'
 import CreditCardBillPayment from '../components/Payout/CreditCardBillPayment.jsx'
 import AdminRolesDashboard from '../components/Admin/AdminRolesDashboard.jsx'
 import BusinessLogs from '../components/Admin/BusinessLogs.jsx'
+import WalletAdjustment from '../components/Admin/WalletAdjustment.jsx'
 
 
 
@@ -92,6 +93,10 @@ export const router = createBrowserRouter([
           {
             path: "role-management",
             element:<AdminRolesDashboard />
+          },
+          {
+            path: "wallet-adjustment",
+            element: <WalletAdjustment />
           },
           {
             path: "logs",

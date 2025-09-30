@@ -330,7 +330,7 @@ public class MerchantService {
                 merchant.getFranchise() != null ? merchant.getFranchise().getId() : null,
                 merchant.getFranchise() != null ? merchant.getFranchise().getFranchiseName() : "Direct Merchant",
                 merchant.getProducts() != null ? merchant.getProducts() : 0,
-                merchant.getWalletBalance() != null ? merchant.getWalletBalance() : BigDecimal.ZERO,
+                getWalletBalance(merchant.getId()),
                 merchant.getMonthlyRevenue() != null ? merchant.getMonthlyRevenue() : BigDecimal.ZERO,
                 merchant.getStatus() != null ? merchant.getStatus() : "ACTIVE",
                 merchant.getCreatedAt()

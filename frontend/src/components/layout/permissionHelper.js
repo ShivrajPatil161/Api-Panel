@@ -4,7 +4,7 @@ export function flattenPermissions(permissions) {
 
   function traverse(perms) {
     perms.forEach((p) => {
-      result.add(p.name);
+      result.add(p.name.trim());
       if (p.children && p.children.length > 0) {
         traverse(p.children);
       }

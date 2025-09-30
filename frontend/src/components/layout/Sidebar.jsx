@@ -172,6 +172,10 @@ const filterMenuItemsByPermissions = (menuItems, permissionSet, userType) => {
             return userType === 'super_admin';
           }
 
+          // Show Wallet Adjustment only for super admin
+          if (child.title === 'Wallet Adjustment') {
+            return userType === 'super_admin';
+          }
           // Show My Permissions only for regular admin
           if (child.title === 'My Permissions') {
             return userType === 'admin';
@@ -219,7 +223,8 @@ const getMenuItems = (userType) => {
     if (userType === 'super_admin') {
       children.push(
         { title: 'Admin Management', path: '/dashboard/role-management', icon: Users, permission: 'Admin Management' },
-        { title: 'Logs', path: '/dashboard/logs', icon: Users, permission: 'Logs' }
+        { title: 'Logs', path: '/dashboard/logs', icon: Users, permission: 'Logs' },
+        { title: 'Wallet Adjustment', path: '/dashboard/wallet-adjustment', icon: Users, permission: 'Wallet Adjustment' }
       );
     } else if (userType === 'admin') {
       children.push(
@@ -257,11 +262,11 @@ const getMenuItems = (userType) => {
         key: 'inventory',
         icon: Package,
         iconColor: '',
-        permission: 'Inventory',
+        permission: 'Inventory Management',
         children: [
           { title: 'Pricing Scheme', path: '/dashboard/inventory/pricing', icon: Calculator, permission: 'Pricing Scheme' },
           { title: 'Product Scheme Assign', path: '/dashboard/inventory/products-assign', icon: Calculator, permission: 'Product Scheme Assign' },
-          { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: ArrowDown, permission: 'Inventory Management' },
+          { title: 'Inventory', path: '/dashboard/inventory/inventory', icon: ArrowDown, permission: 'Inventory' },
         ]
       },
       {

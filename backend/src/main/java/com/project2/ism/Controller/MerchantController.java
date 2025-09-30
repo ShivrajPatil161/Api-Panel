@@ -131,7 +131,10 @@ public class MerchantController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<?> updateMerchant(@PathVariable Long id, @Valid @RequestBody Merchant merchant) {
         try {
             Merchant updatedMerchant = merchantService.updateMerchant(id, merchant);

@@ -19,14 +19,17 @@ public class AuditService {
     }
 
     public void saveHistory(String entityName, String entityId, String fieldName,
-                            String oldValue, String newValue, String changedBy) {
+                            String oldValue, String newValue, String changedBy,
+                            String parentEntityName, String parentEntityId) {
 
         System.out.println("Saving history: " + entityName + "." + fieldName +
-                " from [" + oldValue + "] to [" + newValue + "] by " + changedBy);
+                " from [" + oldValue + "] to [" + newValue + "] by " + changedBy +
+                (parentEntityName != null ? " (parent: " + parentEntityName + "#" + parentEntityId + ")" : ""));
 
         try {
             String sql = "INSERT INTO entity_history (entity_name, entity_id, field_name, " +
-                    "old_value, new_value, changed_by, changed_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    "old_value, new_value, changed_by, changed_at, parent_entity_name, parent_entity_id) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             int rows = jdbcTemplate.update(sql,
                     entityName,
@@ -35,7 +38,9 @@ public class AuditService {
                     oldValue,
                     newValue,
                     changedBy,
-                    LocalDateTime.now()
+                    LocalDateTime.now(),
+                    parentEntityName,
+                    parentEntityId
             );
 
             System.out.println("Audit history saved! Rows affected: " + rows);
