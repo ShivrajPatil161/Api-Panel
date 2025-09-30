@@ -1,0 +1,61 @@
+package com.project2.ism.Repository;
+
+import com.project2.ism.Model.EntityHistory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface EntityHistoryRepository extends JpaRepository<EntityHistory, Long> {
+
+    // Find by entity
+    List<EntityHistory> findByEntityNameAndEntityIdOrderByChangedAtDesc(String entityName, String entityId);
+
+    // Find by parent entity (includes children)
+    List<EntityHistory> findByParentEntityNameAndParentEntityIdOrderByChangedAtDesc(
+            String parentEntityName, String parentEntityId
+    );
+
+    // Find by entity OR parent entity (combined view)
+    @Query("SELECT eh FROM EntityHistory eh WHERE " +
+            "(eh.entityName = :entityName AND eh.entityId = :entityId) OR " +
+            "(eh.parentEntityName = :entityName AND eh.parentEntityId = :entityId) " +
+            "ORDER BY eh.changedAt DESC")
+    List<EntityHistory> findByEntityOrParent(
+            @Param("entityName") String entityName,
+            @Param("entityId") String entityId
+    );
+
+    // Find by user
+    List<EntityHistory> findByChangedByOrderByChangedAtDesc(String changedBy);
+
+    // Recent activity
+    List<EntityHistory> findTop50ByOrderByChangedAtDesc();
+
+    // Custom query with multiple filters
+    @Query("SELECT eh FROM EntityHistory eh WHERE " +
+            "(:entityName IS NULL OR eh.entityName = :entityName) AND " +
+            "(:entityId IS NULL OR eh.entityId = :entityId) AND " +
+            "(:parentEntityName IS NULL OR eh.parentEntityName = :parentEntityName) AND " +
+            "(:parentEntityId IS NULL OR eh.parentEntityId = :parentEntityId) AND " +
+            "(:changedBy IS NULL OR eh.changedBy = :changedBy) AND " +
+            "(:startDate IS NULL OR eh.changedAt >= :startDate) AND " +
+            "(:endDate IS NULL OR eh.changedAt <= :endDate) " +
+            "ORDER BY eh.changedAt DESC")
+    Page<EntityHistory> findWithFilters(
+            @Param("entityName") String entityName,
+            @Param("entityId") String entityId,
+            @Param("parentEntityName") String parentEntityName,
+            @Param("parentEntityId") String parentEntityId,
+            @Param("changedBy") String changedBy,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+}

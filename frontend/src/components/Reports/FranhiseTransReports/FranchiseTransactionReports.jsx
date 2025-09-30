@@ -252,10 +252,10 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
             'Merchant Name': transaction.merchantName,
             'Franchise Name': transaction.franchiseName,
             'State': transaction.state || '-',
-            'Settlement Rate': transaction.settlementRate,
-            'Franchise Rate': transaction.franchiseRate,
-            'Merchant Rate': transaction.merchantRate,
-            'Commission Rate': transaction.commissionRate,
+            'Settlement Rate': `${transaction.settlementRate || 0}%`,
+            'Franchise Rate': `${transaction.franchiseRate || 0}%`,
+            'Merchant Rate': `${transaction.merchantRate || 0}%`,
+            'Commission Rate': `${transaction.commissionRate || 0}%`,
             'Settled On': new Date(transaction.settleDate).toLocaleString()
         }));
     };
