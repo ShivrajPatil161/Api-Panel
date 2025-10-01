@@ -134,6 +134,8 @@ import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -233,17 +235,40 @@ public class MerchantService {
         merchant.setCreatedAt(LocalDateTime.now());
         merchant.setUpdatedAt(LocalDateTime.now());
 
-        if(dto.isApproved()){
-            merchant.setApproved(dto.isApproved());
-//             Create login credentials
-        userService.createAndSendCredentials(
-                dto.getPrimaryContactEmail(),
-                "MERCHANT",
-                null
-        );
+        // Get role from JWT via SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String role = authentication.getAuthorities().iterator().next().getAuthority(); //e.g. ROLE_ADMIN
+
+        Merchant savedMerchant = merchantRepository.save(merchant);
+
+
+        // Set approved only if Admin or Super_Admin
+        if ("ROLE_ADMIN".equals(role) || "ROLE_SUPER_ADMIN".equals(role)) {
+            savedMerchant.setApproved(true);
+            MerchantWallet w = new MerchantWallet();
+            Merchant mRef = new Merchant();
+            mRef.setId(savedMerchant.getId());
+            w.setMerchant(mRef);
+            w.setAvailableBalance(BigDecimal.ZERO);
+            w.setLastUpdatedAmount(BigDecimal.ZERO);
+            w.setLastUpdatedAt(LocalDateTime.now());
+            w.setTotalCash(BigDecimal.ZERO);
+            w.setCutOfAmount(BigDecimal.ZERO);
+            merchantWalletRepository.save(w);
+        } else {
+            savedMerchant.setApproved(false);
+//            merchantApprovalService.createApproval(savedMerchant);
+            // default
         }
 
-        merchantRepository.save(merchant);
+        // If approved, create credentials
+        if (savedMerchant.isApproved()) {
+            userService.createAndSendCredentials(
+                    dto.getPrimaryContactEmail(),
+                    "MERCHANT",
+                    null
+            );
+        }
 
 
     }
@@ -348,8 +373,17 @@ public class MerchantService {
         Merchant merchant = getMerchantById(id);
         merchant.setApproved(true);
         merchant.setUpdatedAt(LocalDateTime.now());
-        merchantRepository.save(merchant);
-
+        Merchant savedMerchant = merchantRepository.save(merchant);
+        MerchantWallet w = new MerchantWallet();
+        Merchant mRef = new Merchant();
+        mRef.setId(savedMerchant.getId());
+        w.setMerchant(mRef);
+        w.setAvailableBalance(BigDecimal.ZERO);
+        w.setLastUpdatedAmount(BigDecimal.ZERO);
+        w.setLastUpdatedAt(LocalDateTime.now());
+        w.setTotalCash(BigDecimal.ZERO);
+        w.setCutOfAmount(BigDecimal.ZERO);
+        merchantWalletRepository.save(w);
         // Create user login credentials when approved
         userService.createAndSendCredentials(
                 merchant.getContactPerson().getEmail(),
