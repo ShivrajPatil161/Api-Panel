@@ -201,8 +201,18 @@ public class FranchiseService {
         franchise.setCreatedAt(LocalDateTime.now());
         franchise.setUpdatedAt(LocalDateTime.now());
 
-        franchiseRepository.save(franchise);
+        Franchise savedFranchise=franchiseRepository.save(franchise);
 
+        FranchiseWallet w = new FranchiseWallet();
+        Franchise fRef = new Franchise();
+        fRef.setId(savedFranchise.getId());
+        w.setFranchise(fRef);
+        w.setAvailableBalance(BigDecimal.ZERO);
+        w.setLastUpdatedAmount(BigDecimal.ZERO);
+        w.setLastUpdatedAt(LocalDateTime.now());
+        w.setTotalCash(BigDecimal.ZERO);
+        w.setCutOfAmount(BigDecimal.ZERO);
+        franchiseWalletRepository.save(w);
         // Create login credentials
         userService.createAndSendCredentials(
                 dto.getPrimaryContactEmail(),
