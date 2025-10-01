@@ -284,7 +284,6 @@ const ProductList = () => {
       setTotalElements(data.totalElements || 0);
 
       toast.dismiss('fetch-products');
-      toast.success(`Loaded ${data.content?.length || 0} products`);
     } catch (error) {
       setData([]);
       setTotalPages(0);
