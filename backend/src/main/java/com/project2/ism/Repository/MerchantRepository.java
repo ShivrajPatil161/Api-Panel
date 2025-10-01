@@ -37,15 +37,12 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     @Query("SELECT COUNT(m) FROM Merchant m WHERE m.franchise IS NOT NULL")
     Long countFranchiseMerchants();
 
-//    @Query("SELECT m.franchise.id, COUNT(m) FROM Merchant m WHERE m.franchise IS NOT NULL GROUP BY m.franchise.id")
-//    List<Object[]> countByFranchise();
-
     @Query("""
     SELECT f.franchiseName, COUNT(m)
     FROM Merchant m
     JOIN m.franchise f
     GROUP BY f.franchiseName
-""")
+    """)
     List<Object[]> countByFranchise();
 
     // Sum wallet balance of direct merchants (franchise_id is null)

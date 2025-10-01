@@ -1,121 +1,3 @@
-//package com.project2.ism.Service;
-//
-//import com.project2.ism.DTO.MerchantFormDTO;
-//import com.project2.ism.Exception.ResourceNotFoundException;
-//import com.project2.ism.Model.ContactPerson;
-//import com.project2.ism.Model.UploadDocuments;
-//import com.project2.ism.Model.Users.BankDetails;
-//import com.project2.ism.Model.Users.Merchant;
-//import com.project2.ism.Repository.FranchiseRepository;
-//import com.project2.ism.Repository.MerchantRepository;
-//import org.springframework.stereotype.Service;
-//
-//import java.util.List;
-//
-//@Service
-//public class MerchantService {
-//
-//    private final MerchantRepository merchantRepository;
-//    private final FranchiseRepository franchiseRepository;
-//
-//
-//    private final FileStorageService fileStorageService;
-//
-//    private final UserService userService;
-//
-//    public MerchantService(MerchantRepository merchantRepository, FranchiseRepository franchiseRepository, FileStorageService fileStorageService, UserService userService) {
-//        this.merchantRepository = merchantRepository;
-//        this.fileStorageService = fileStorageService;
-//        this.franchiseRepository = franchiseRepository;
-//        this.userService = userService;
-//    }
-//
-//    public void createMerchant(MerchantFormDTO dto) {
-//        // Check if franchise is provided
-//            //System.out.printf(String.valueOf(franchiseId));
-//            // Verify if franchise exists
-//            boolean exists = franchiseRepository.existsById(dto.getFranchiseId());
-//            if (!exists) {
-//                throw new IllegalArgumentException("Franchise with ID " + dto.getFranchiseId() + " does not exist");
-//            }
-//        Merchant merchant = new Merchant();
-//
-//        merchant.setBusinessName(dto.getBusinessName());
-//        // Basic details
-//        merchant.setLegalName(dto.getLegalName());
-//        merchant.setBusinessType(dto.getBusinessType());
-//        merchant.setGstNumber(dto.getGstNumber());
-//        merchant.setPanNumber(dto.getPanNumber());
-//        merchant.setRegistrationNumber(dto.getRegistrationNumber());
-//        merchant.setAddress(dto.getBusinessAddress());
-//
-//        // Contact Person
-//        ContactPerson contact = new ContactPerson();
-//        contact.setName(dto.getPrimaryContactName());
-//        contact.setPhoneNumber(dto.getPrimaryContactMobile());
-//        contact.setAlternatePhoneNum(dto.getAlternateContactMobile());
-//        contact.setEmail(dto.getPrimaryContactEmail());
-//        contact.setLandlineNumber(dto.getLandlineNumber());
-//        merchant.setContactPerson(contact);
-//
-//        // Bank Details
-//        BankDetails bank = new BankDetails();
-//        bank.setBankName(dto.getBankName());
-//        bank.setAccountHolderName(dto.getAccountHolderName());
-//        bank.setAccountNumber(dto.getAccountNumber());
-//        bank.setIfsc(dto.getIfscCode());
-//        bank.setBranchName(dto.getBranchName());
-//        bank.setAccountType(dto.getAccountType());
-//        merchant.setBankDetails(bank);
-//
-//        // Upload Documents
-//        UploadDocuments docs = new UploadDocuments();
-//        docs.setPanProof(fileStorageService.store(dto.getPanCardDocument(), "pan"));
-//        docs.setGstCertificateProof(fileStorageService.store(dto.getGstCertificate(), "gst"));
-//        docs.setAddressProof(fileStorageService.store(dto.getAddressProof(), "address"));
-//        docs.setBankAccountProof(fileStorageService.store(dto.getBankProof(), "bank"));
-//        merchant.setUploadDocuments(docs);
-//
-//        merchantRepository.save(merchant);
-//        userService.createAndSendCredentials(
-//                "htaien277353@gmail.com",
-//                "MERCHANT",
-//                null
-//        );
-//
-//
-//    }
-//
-//    public List<Merchant> getAllMerchants() {
-//        return merchantRepository.findAll();
-//    }
-//
-//    public Merchant getMerchantById(Long id) {
-//        return merchantRepository.findById(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with ID: " + id));
-//    }
-//
-//    public Merchant updateMerchant(Long id, Merchant merchantDetails) {
-//        Merchant merchant = getMerchantById(id);
-//        merchant.setBusinessName(merchantDetails.getBusinessName());
-//        merchant.setFranchise(merchantDetails.getFranchise()); // Optional if you allow changing Franchise
-//        // Map other fields from CustomerBase if needed
-//        return merchantRepository.save(merchant);
-//    }
-//
-//    public void deleteMerchant(Long id) {
-//        Merchant merchant = getMerchantById(id);
-//        merchantRepository.delete(merchant);
-//    }
-//
-//    public List<Merchant> getMerchantsByFranchise(Long franchiseId) {
-//        return merchantRepository.findByFranchiseId(franchiseId);
-//    }
-//}
-
-
-
-
 
 package com.project2.ism.Service;
 
@@ -134,6 +16,8 @@ import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -233,17 +117,40 @@ public class MerchantService {
         merchant.setCreatedAt(LocalDateTime.now());
         merchant.setUpdatedAt(LocalDateTime.now());
 
-        if(dto.isApproved()){
-            merchant.setApproved(dto.isApproved());
-//             Create login credentials
-        userService.createAndSendCredentials(
-                dto.getPrimaryContactEmail(),
-                "MERCHANT",
-                null
-        );
+        // Get role from JWT via SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String role = authentication.getAuthorities().iterator().next().getAuthority(); //e.g. ROLE_ADMIN
+
+        Merchant savedMerchant = merchantRepository.save(merchant);
+
+
+        // Set approved only if Admin or Super_Admin
+        if ("ROLE_ADMIN".equals(role) || "ROLE_SUPER_ADMIN".equals(role)) {
+            savedMerchant.setApproved(true);
+            MerchantWallet w = new MerchantWallet();
+            Merchant mRef = new Merchant();
+            mRef.setId(savedMerchant.getId());
+            w.setMerchant(mRef);
+            w.setAvailableBalance(BigDecimal.ZERO);
+            w.setLastUpdatedAmount(BigDecimal.ZERO);
+            w.setLastUpdatedAt(LocalDateTime.now());
+            w.setTotalCash(BigDecimal.ZERO);
+            w.setCutOfAmount(BigDecimal.ZERO);
+            merchantWalletRepository.save(w);
+        } else {
+            savedMerchant.setApproved(false);
+//            merchantApprovalService.createApproval(savedMerchant);
+            // default
         }
 
-        merchantRepository.save(merchant);
+        // If approved, create credentials
+        if (savedMerchant.isApproved()) {
+            userService.createAndSendCredentials(
+                    dto.getPrimaryContactEmail(),
+                    "MERCHANT",
+                    null
+            );
+        }
 
 
     }
@@ -348,8 +255,17 @@ public class MerchantService {
         Merchant merchant = getMerchantById(id);
         merchant.setApproved(true);
         merchant.setUpdatedAt(LocalDateTime.now());
-        merchantRepository.save(merchant);
-
+        Merchant savedMerchant = merchantRepository.save(merchant);
+        MerchantWallet w = new MerchantWallet();
+        Merchant mRef = new Merchant();
+        mRef.setId(savedMerchant.getId());
+        w.setMerchant(mRef);
+        w.setAvailableBalance(BigDecimal.ZERO);
+        w.setLastUpdatedAmount(BigDecimal.ZERO);
+        w.setLastUpdatedAt(LocalDateTime.now());
+        w.setTotalCash(BigDecimal.ZERO);
+        w.setCutOfAmount(BigDecimal.ZERO);
+        merchantWalletRepository.save(w);
         // Create user login credentials when approved
         userService.createAndSendCredentials(
                 merchant.getContactPerson().getEmail(),
