@@ -65,14 +65,14 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
             "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " + // left join ftd for franchise commission
             "vt.brandType, vt.cardType, vt.cardClassification, " +
-            "mtd.merchant.businessName, ftd.franchise.franchiseName, mtd.merchant.status) " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, mtd.tranStatus) " +
             "FROM MerchantTransactionDetails mtd " +
-            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "LEFT JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
             "LEFT JOIN FranchiseTransactionDetails ftd ON ftd.vendorTransactionId = mtd.vendorTransactionId " +
             "AND ftd.franchise.id = mtd.merchant.franchise.id " +
             "WHERE mtd.transactionDate BETWEEN :startDate AND :endDate " +
             "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
-            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+//            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
             "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
             "ORDER BY mtd.transactionDate DESC")
     Page<MerchantTransactionReportDTO> findMerchantTransactionsByFilters(
@@ -88,14 +88,14 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
             "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
             "vt.brandType, vt.cardType, vt.cardClassification, " +
-            "mtd.merchant.businessName, ftd.franchise.franchiseName, mtd.merchant.status) " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, mtd.tranStatus) " +
             "FROM MerchantTransactionDetails mtd " +
-            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "LEFT JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
             "LEFT JOIN FranchiseTransactionDetails ftd ON ftd.vendorTransactionId = mtd.vendorTransactionId " +
             "AND ftd.franchise.id = mtd.merchant.franchise.id " +
             "WHERE mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
             "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
-            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+//            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
             "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
             "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
     Page<MerchantTransactionReportDTO> findMerchantTransactionsBySettlementDateFilters(
