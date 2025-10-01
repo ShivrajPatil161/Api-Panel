@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import CustomerOnboarding from '../Forms/CustomerOnboarding/CustomerOnborading';
 
-import { merchantData } from '../../constants/merchantlistData';
 
 import api from '../../constants/API/axiosInstance';
 import ViewMerchantEntry from '../View/ViewMerchantEntry';

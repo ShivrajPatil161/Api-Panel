@@ -39,7 +39,6 @@ const VendorListPage = () => {
     try {
       const vendorData = await vendorApi.getAllVendors();
       setVendors(vendorData);
-      toast.success("Vendor List Feteched")
     } catch (error) {
       const errorMessage = error?.response?.data?.message || 'Failed to load vendors';
       toast.error(errorMessage);
