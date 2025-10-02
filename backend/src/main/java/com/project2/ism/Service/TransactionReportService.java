@@ -19,6 +19,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -57,17 +60,15 @@ public class TransactionReportService {
      * Generate merchant transaction report with enhanced filtering
      */
     public TransactionReportResponse generateEnhancedMerchantTransactionReport(TransactionReportRequest request) {
-        logger.info("Generating enhanced merchant transaction report for date range: {} to {}, dateFilter: {}, merchantType: {}",
-                request.getStartDate(), request.getEndDate(), request.getDateFilterType(), request.getMerchantType());
+        logger.info("Generating enhanced merchant transaction report...");
 
         validateReportRequest(request);
 
         try {
             Pageable pageable = createPageable(request);
-
             Page<MerchantTransactionReportDTO> transactionPage;
 
-            // Choose query based on date filter type and merchant type
+            // Choose query based on date filter type
             if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
                 transactionPage = merchantTransactionRepository
                         .findMerchantTransactionsBySettlementDateFilters(
@@ -77,9 +78,7 @@ public class TransactionReportService {
                                 request.getTransactionStatus(),
                                 request.getTransactionType(),
                                 pageable);
-
             } else {
-                // Default to transaction date
                 transactionPage = merchantTransactionRepository
                         .findMerchantTransactionsByFilters(
                                 request.getStartDate(),
@@ -90,18 +89,21 @@ public class TransactionReportService {
                                 pageable);
             }
 
-            // Convert to DTOs
-//            List<TransactionDetailResponse> transactionDetails = transactionPage.getContent()
-//                    .stream()
-//                    .map(this::mapToTransactionDetailResponse)
-//                    .collect(Collectors.toList());
+            // Get user role from Security Context
+            String userRole = getUserRoleFromSecurityContext();
 
-            // Get summary data
+            // Apply role-based filtering
+            List<MerchantTransactionReportDTO> adjustedTransactions = transactionPage.getContent()
+                    .stream()
+                    .map(dto -> applyRoleBasedFiltering(dto, userRole))
+                    .collect(Collectors.toList());
+
+            // Get summary
             TransactionSummary summary = getEnhancedMerchantTransactionSummary(request);
 
             // Build response
             TransactionReportResponse<MerchantTransactionReportDTO> response = new TransactionReportResponse<>();
-            response.setTransactions(transactionPage.getContent());
+            response.setTransactions(adjustedTransactions);
             response.setSummary(summary);
             response.setReportGeneratedAt(LocalDateTime.now());
             response.setReportType("MERCHANT_TRANSACTION_REPORT");
@@ -110,16 +112,44 @@ public class TransactionReportService {
             response.setHasNext(transactionPage.hasNext());
             response.setHasPrevious(transactionPage.hasPrevious());
 
-            logger.info("Successfully generated enhanced merchant transaction report with {} transactions",
-                    transactionPage.getNumberOfElements());
+            logger.info("Successfully generated report with {} transactions", adjustedTransactions.size());
             return response;
 
         } catch (Exception e) {
-            logger.error("Error generating enhanced merchant transaction report", e);
-            throw new BusinessException("Failed to generate enhanced merchant transaction report: " + e.getMessage());
+            logger.error("Error generating report", e);
+            throw new BusinessException("Failed to generate report: " + e.getMessage());
         }
     }
 
+    // Helper method to get role from JWT token in Security Context
+    private String getUserRoleFromSecurityContext() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getAuthorities() != null) {
+            return authentication.getAuthorities().stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse("ADMIN");  // Default to ADMIN if no role found
+        }
+        return "ADMIN";
+    }
+
+    // Apply role-based filtering
+    private MerchantTransactionReportDTO applyRoleBasedFiltering(MerchantTransactionReportDTO dto, String role) {
+        if ("ROLE_MERCHANT".equals(role) || "MERCHANT".equals(role)) {
+            // Hide franchise information
+            dto.setFranchiseName(null);
+            dto.setFranchiseRate(null);
+            dto.setCommissionRate(null);
+            dto.setCommissionAmount(null);
+
+            // Replace systemFee with grossCharge for merchant view
+            if (dto.getGrossCharge() != null) {
+                dto.setSystemFee(dto.getGrossCharge());
+            }
+        }
+        // For ADMIN/FRANCHISE roles, show everything as-is
+        return dto;
+    }
     /**
      * Generate franchise transaction report with enhanced filtering
      */

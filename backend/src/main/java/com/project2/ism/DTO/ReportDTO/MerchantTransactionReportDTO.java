@@ -1,5 +1,6 @@
 package com.project2.ism.DTO.ReportDTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;
@@ -17,16 +18,22 @@ public class MerchantTransactionReportDTO {
     private BigDecimal settlementPercentage;
     private BigDecimal settleAmount;
     private BigDecimal systemFee;
-    private BigDecimal merchantRate;      // calculated
-    private BigDecimal franchiseRate;     // optional if merchant has franchise
-    private BigDecimal commissionRate;    // optional if franchise exists
-    private BigDecimal commissionAmount;  // optional if franchise exists
+
+    @JsonIgnore  // Don't expose this directly - we use it for role logic
+    private BigDecimal grossCharge;
+
+    private BigDecimal merchantRate;
+    private BigDecimal franchiseRate;
+    private BigDecimal commissionRate;
+    private BigDecimal commissionAmount;
     private String brandType;
     private String cardType;
     private String cardClassification;
     private String merchantName;
-    private String franchiseName;         // optional
+    private String franchiseName;
     private String state;
+
+    // Getters and setters...
 
     // Constructor with raw amounts
     public MerchantTransactionReportDTO(
@@ -38,8 +45,8 @@ public class MerchantTransactionReportDTO {
             String tid,
             BigDecimal merchantNetAmount,
             BigDecimal grossCharge,
-            BigDecimal franchiseCommission,  // null for direct merchants
-            BigDecimal systemFee,
+            BigDecimal franchiseNetAmount,  // THIS is ftd.netAmount (franchise commission)
+            BigDecimal charge,              // mtd.charge
             String brandType,
             String cardType,
             String cardClassification,
@@ -47,24 +54,12 @@ public class MerchantTransactionReportDTO {
             String franchiseName,
             String state
     ) {
-        // Debug prints - Add these to see what values are coming from query
-        System.out.println("=== Constructor Debug for TxnId: " + txnId + " ===");
-        System.out.println("txnAmount: " + txnAmount);
-        System.out.println("merchantNetAmount: " + merchantNetAmount);
-        System.out.println("grossCharge: " + grossCharge);
-        System.out.println("franchiseCommission: " + franchiseCommission);
-        System.out.println("systemFee: " + systemFee);
-        System.out.println("franchiseName: " + franchiseName);
-
         this.txnId = txnId;
         this.txnDate = txnDate;
         this.txnAmount = txnAmount;
         this.settleDate = settleDate;
         this.authCode = authCode;
         this.tid = tid;
-        this.settleAmount = merchantNetAmount;
-        this.systemFee = systemFee;
-        this.commissionAmount = franchiseCommission;
         this.brandType = brandType;
         this.cardType = cardType;
         this.cardClassification = cardClassification;
@@ -72,51 +67,61 @@ public class MerchantTransactionReportDTO {
         this.franchiseName = franchiseName;
         this.state = state;
 
-        if (txnAmount != null && txnAmount.compareTo(BigDecimal.ZERO) > 0) {
-            if (franchiseCommission != null) {
-                // Dependent merchant (has franchise commission)
-                System.out.println("Branch: Dependent merchant (with franchise)");
+        // Store raw values (keep grossCharge for role-based logic later)
+        this.settleAmount = merchantNetAmount;
+        this.systemFee = charge;  // This is what we show by default
+        this.commissionAmount = franchiseNetAmount;
 
-                this.merchantRate = txnAmount
-                        .subtract(settleAmount)
+        // Store grossCharge internally (we'll use it for merchant view)
+        this.grossCharge = grossCharge;  // ADD this field to your DTO
+
+        // Safe calculations
+        if (txnAmount != null && txnAmount.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal safeSettleAmount = merchantNetAmount != null ? merchantNetAmount : BigDecimal.ZERO;
+
+            if (franchiseNetAmount != null) {
+                // Dependent merchant (with franchise)
+                this.merchantRate = txnAmount.subtract(safeSettleAmount)
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
                         .multiply(BigDecimal.valueOf(100));
 
                 this.franchiseRate = txnAmount
-                        .subtract(settleAmount.add(commissionAmount))
+                        .subtract(safeSettleAmount.add(franchiseNetAmount))
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
                         .multiply(BigDecimal.valueOf(100));
 
                 this.commissionRate = merchantRate.subtract(franchiseRate);
                 this.settlementPercentage = this.merchantRate;
-
-                System.out.println("Calculated merchantRate: " + this.merchantRate);
-                System.out.println("Calculated franchiseRate: " + this.franchiseRate);
-                System.out.println("Calculated commissionRate: " + this.commissionRate);
             } else {
                 // Direct merchant (no franchise)
-                System.out.println("Branch: Direct merchant (no franchise)");
-
-                this.merchantRate = txnAmount
-                        .subtract(settleAmount)
+                this.merchantRate = txnAmount.subtract(safeSettleAmount)
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
                         .multiply(BigDecimal.valueOf(100));
 
                 this.franchiseRate = null;
                 this.commissionRate = null;
                 this.settlementPercentage = this.merchantRate;
-
-                System.out.println("Calculated merchantRate: " + this.merchantRate);
             }
         } else {
-            System.out.println("Branch: Zero or null transaction amount");
-            this.merchantRate = BigDecimal.ZERO;
-            this.franchiseRate = BigDecimal.ZERO;
-            this.commissionRate = BigDecimal.ZERO;
-            this.settlementPercentage = BigDecimal.ZERO;
+            this.merchantRate = null;
+            this.franchiseRate = null;
+            this.commissionRate = null;
+            this.settlementPercentage = null;
         }
 
+
         System.out.println("=== End Debug ===\n");
+    }
+    private static BigDecimal nullSafe(BigDecimal val) {
+        return val != null ? val : BigDecimal.ZERO;
+    }
+
+    private static BigDecimal safeDivide(BigDecimal numerator, BigDecimal denominator) {
+        if (numerator == null || denominator == null || denominator.compareTo(BigDecimal.ZERO) == 0) {
+            return null;
+        }
+        return numerator.divide(denominator, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
     }
 
     public String getTxnId() {
@@ -173,6 +178,14 @@ public class MerchantTransactionReportDTO {
 
     public void setSettlementPercentage(BigDecimal settlementPercentage) {
         this.settlementPercentage = settlementPercentage;
+    }
+
+    public BigDecimal getGrossCharge() {
+        return grossCharge;
+    }
+
+    public void setGrossCharge(BigDecimal grossCharge) {
+        this.grossCharge = grossCharge;
     }
 
     public BigDecimal getSettleAmount() {
