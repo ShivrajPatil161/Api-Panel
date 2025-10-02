@@ -39,6 +39,7 @@ import CreditCardBillPayment from '../components/Payout/CreditCardBillPayment.js
 import AdminRolesDashboard from '../components/Admin/AdminRolesDashboard.jsx'
 import BusinessLogs from '../components/Admin/BusinessLogs.jsx'
 import WalletAdjustment from '../components/Admin/WalletAdjustment.jsx'
+import ProductDistributionList from '../components/Tables/ProductDistributionList.jsx'
 
 
 
@@ -167,7 +168,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: "products-distribution",
-                element: <ProductDistribution />
+                element: <ProductDistributionList />
               },
               {
                 path: "inward-products",
