@@ -13,6 +13,7 @@ import com.project2.ism.Exception.BusinessException;
 import com.project2.ism.Exception.ValidationException;
 import com.project2.ism.Model.FranchiseTransactionDetails;
 import com.project2.ism.Model.MerchantTransactionDetails;
+import com.project2.ism.Model.VendorTransactions;
 import com.project2.ism.Repository.FranchiseTransDetRepository;
 import com.project2.ism.Repository.MerchantTransDetRepository;
 import org.springframework.data.domain.Page;
@@ -31,8 +32,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -151,7 +154,7 @@ public class TransactionReportService {
         return dto;
     }
     /**
-     * Generate franchise transaction report with enhanced filtering
+     * Generate franchise transaction report with enhanced filtering and entity mapping
      */
     public TransactionReportResponse generateEnhancedFranchiseTransactionReport(TransactionReportRequest request) {
         logger.info("Generating enhanced franchise transaction report for date range: {} to {}, dateFilter: {}",
@@ -162,11 +165,11 @@ public class TransactionReportService {
         try {
             Pageable pageable = createPageable(request);
 
-            Page<FranchiseTransactionReportDTO> transactionPage;
+            Page<FranchiseTransactionDetails> entityPage;
 
             // Choose query based on date filter type
             if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
-                transactionPage = franchiseTransactionRepository
+                entityPage = franchiseTransactionRepository
                         .findFranchiseTransactionsBySettlementDateFilters(
                                 request.getStartDate(),
                                 request.getEndDate(),
@@ -176,7 +179,7 @@ public class TransactionReportService {
                                 pageable);
             } else {
                 // Default to transaction date
-                transactionPage = franchiseTransactionRepository
+                entityPage = franchiseTransactionRepository
                         .findFranchiseTransactionsByFilters(
                                 request.getStartDate(),
                                 request.getEndDate(),
@@ -185,12 +188,43 @@ public class TransactionReportService {
                                 request.getTransactionType(),
                                 pageable);
             }
+// After fetching the page
+//            System.out.println("Total rows returned: " + entityPage.getNumberOfElements());
+//            entityPage.getContent().forEach(ftd -> {
+//                System.out.println("FTD ID: " + ftd.getTransactionId() +
+//                        ", Date: " + ftd.getTransactionDate() +
+//                        ", Amount: " + ftd.getAmount() +
+//                        ", MerchantTxnId: " + (ftd.getMerchantTransactionDetail() != null
+//                        ? ftd.getMerchantTransactionDetail().getTransactionId()
+//                        : "null"));
+//            });
+            // Collect all vendor transaction IDs for batch fetch
+            List<String> vendorTransactionIds = entityPage.getContent().stream()
+                    .map(FranchiseTransactionDetails::getMerchantTransactionDetail)
+                    .filter(Objects::nonNull)
+                    .map(MerchantTransactionDetails::getVendorTransactionId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
 
-            // Convert to DTOs
-//            List<TransactionDetailResponse> transactionDetails = transactionPage.getContent()
-//                    .stream()
-//                    .map(this::mapToTransactionDetailResponse)
-//                    .collect(Collectors.toList());
+            // Batch fetch vendor transactions (if any exist)
+            Map<String, VendorTransactions> vendorTransactionMap = new HashMap<>();
+            if (!vendorTransactionIds.isEmpty()) {
+                List<VendorTransactions> vendorTransactions =
+                        franchiseTransactionRepository.findByTransactionReferenceIdIn(vendorTransactionIds);
+                vendorTransactionMap = vendorTransactions.stream()
+                        .collect(Collectors.toMap(
+                                VendorTransactions::getTransactionReferenceId,
+                                vt -> vt,
+                                (existing, replacement) -> existing // Handle duplicates if any
+                        ));
+            }
+
+            // Map entities to DTOs
+            final Map<String, VendorTransactions> finalVendorMap = vendorTransactionMap;
+            Page<FranchiseTransactionReportDTO> transactionPage = entityPage.map(ftd ->
+                    mapToFranchiseTransactionReportDTO(ftd, finalVendorMap)
+            );
 
             // Get franchise summary with commission data
             FranchiseTransactionSummary summary = getEnhancedFranchiseTransactionSummary(request);
@@ -216,6 +250,63 @@ public class TransactionReportService {
         }
     }
 
+    /**
+     * Helper method to map FranchiseTransactionDetails entity to DTO
+     * Handles NULL merchant and vendor transactions gracefully
+     */
+    private FranchiseTransactionReportDTO mapToFranchiseTransactionReportDTO(
+            FranchiseTransactionDetails ftd,
+            Map<String, VendorTransactions> vendorTransactionMap) {
+
+        MerchantTransactionDetails mtd = ftd.getMerchantTransactionDetail();
+        VendorTransactions vt = null;
+
+        // Get vendor transaction if merchant transaction exists
+        if (mtd != null && mtd.getVendorTransactionId() != null) {
+            vt = vendorTransactionMap.get(mtd.getVendorTransactionId());
+        }
+
+        // Use your existing DTO constructor - it handles nulls and calculations perfectly!
+        return new FranchiseTransactionReportDTO(
+                // Vendor transaction ID (null for standalone CREDIT/DEBIT)
+                mtd != null ? mtd.getVendorTransactionId() : null,
+                ftd.getActionOnBalance(),
+                // Transaction date
+                ftd.getTransactionDate(),
+
+                // Transaction amount
+                ftd.getAmount(),
+
+                // Settlement date
+                ftd.getUpdatedDateAndTimeOfTransaction(),
+
+                // Vendor transaction fields (null if no vendor transaction)
+                vt != null ? vt.getAuthCode() : null,
+                vt != null ? vt.getTid() : null,
+
+                // Merchant transaction fields (null for standalone transactions)
+                mtd != null ? mtd.getNetAmount() : null,        // merchantNetAmount
+                mtd != null ? mtd.getGrossCharge() : null,      // grossCharge
+
+                // Franchise commission (always present in ftd)
+                ftd.getNetAmount(),                              // franchiseCommission
+
+                // System fee
+                mtd != null ? mtd.getCharge() : null,            // systemFee
+
+                // Card details (null if no vendor transaction)
+                vt != null ? vt.getBrandType() : null,
+                vt != null ? vt.getCardType() : null,
+                vt != null ? vt.getCardClassification() : null,
+
+                // Business names
+                mtd != null && mtd.getMerchant() != null ? mtd.getMerchant().getBusinessName() : null,
+                ftd.getFranchise() != null ? ftd.getFranchise().getFranchiseName() : null,
+
+                // Transaction status
+                ftd.getTranStatus()
+        );
+    }
     /**
      * Get enhanced merchant transaction summary
      */

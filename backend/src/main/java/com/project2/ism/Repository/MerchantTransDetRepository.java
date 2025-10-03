@@ -61,7 +61,7 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
 //            Pageable pageable);
 
     @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
-            "mtd.vendorTransactionId, mtd.transactionDate, mtd.amount, " +
+            "mtd.vendorTransactionId, mtd.actionOnBalance,mtd.transactionDate, mtd.amount, " +
             "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
             "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " + // left join ftd for franchise commission
             "vt.brandType, vt.cardType, vt.cardClassification, " +
@@ -84,7 +84,7 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             Pageable pageable);
 
     @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
-            "mtd.vendorTransactionId, mtd.transactionDate, mtd.amount, " +
+            "mtd.vendorTransactionId, mtd.actionOnBalance,mtd.transactionDate, mtd.amount, " +
             "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
             "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
             "vt.brandType, vt.cardType, vt.cardClassification, " +
@@ -118,7 +118,7 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             "FROM MerchantTransactionDetails mtd WHERE " +
             "mtd.transactionDate BETWEEN :startDate AND :endDate " +
             "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
-            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+            //"AND (:status IS NULL OR mtd.tranStatus = :status) " +
             "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType)")
     Map<String, Object> getMerchantTransactionSummary(
             @Param("startDate") LocalDateTime startDate,
@@ -139,7 +139,7 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             "FROM MerchantTransactionDetails mtd WHERE " +
             "mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
             "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
-            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+           //"AND (:status IS NULL OR mtd.tranStatus = :status) " +
             "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType)")
     Map<String, Object> getMerchantTransactionSummaryBySettlementDate(
             @Param("startDate") LocalDateTime startDate,

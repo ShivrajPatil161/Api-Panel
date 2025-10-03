@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerchantTransactionReportDTO {
     private String txnId;
+    private String actionOnBalance;
     private LocalDateTime txnDate;
     private BigDecimal txnAmount;
     private LocalDateTime settleDate;
@@ -38,6 +39,7 @@ public class MerchantTransactionReportDTO {
     // Constructor with raw amounts
     public MerchantTransactionReportDTO(
             String txnId,
+            String actionOnBalance,
             LocalDateTime txnDate,
             BigDecimal txnAmount,
             LocalDateTime settleDate,
@@ -55,6 +57,7 @@ public class MerchantTransactionReportDTO {
             String state
     ) {
         this.txnId = txnId;
+        this.actionOnBalance = actionOnBalance;
         this.txnDate = txnDate;
         this.txnAmount = txnAmount;
         this.settleDate = settleDate;
@@ -122,6 +125,14 @@ public class MerchantTransactionReportDTO {
         }
         return numerator.divide(denominator, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
+    }
+
+    public String getActionOnBalance() {
+        return actionOnBalance;
+    }
+
+    public void setActionOnBalance(String actionOnBalance) {
+        this.actionOnBalance = actionOnBalance;
     }
 
     public String getTxnId() {
