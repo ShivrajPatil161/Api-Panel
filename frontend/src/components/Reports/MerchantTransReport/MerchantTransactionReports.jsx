@@ -1,7 +1,7 @@
 // MerchantTransactionReports.jsx
 import React, { useState, useMemo } from 'react';
 import { useReactTable, getCoreRowModel, flexRender, createColumnHelper } from '@tanstack/react-table';
-import { FileText, TrendingUp, TrendingDown, DollarSign, CreditCard } from 'lucide-react';
+import { FileText, TrendingUp, TrendingDown, DollarSign, AlertCircle } from 'lucide-react';
 import api from '../../../constants/API/axiosInstance';
 import UniversalExportButtons from '../UniversalExportButtons';
 import MTransReportFilters from './MTransReportFilters';
@@ -52,173 +52,128 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
         }
     };
 
-    // Check if merchant is franchise type based on data structure
-    const isFranchiseMerchant = transactions.length > 0 && transactions[0].franchiseName;
+    // Detect which fields are available in the data
+    const availableFields = useMemo(() => {
+        if (transactions.length === 0) return new Set();
 
-    // Table columns definition with all available fields
-    const columnHelper = createColumnHelper();
-    const columns = useMemo(() => [
-        columnHelper.accessor('txnId', {
-            header: 'Transaction ID',
-            cell: info => (
-                <span className="font-mono text-xs text-gray-900">
-                    {info.getValue()}
-                </span>
-            )
-        }),
-        columnHelper.accessor('txnDate', {
-            header: 'Date',
-            cell: info => (
-                <span className="text-xs text-gray-700">
-                    {new Date(info.getValue()).toLocaleDateString()}
-                </span>
-            )
-        }),
-        columnHelper.accessor('settleDate', {
-            header: 'Settled On',
-            cell: info => (
-                <span className="text-xs text-gray-600">
-                    {new Date(info.getValue()).toLocaleDateString()}
-                </span>
-            )
-        }),
-        columnHelper.accessor('txnAmount', { // Use actual field name from DTO
-            header: 'Transaction Amount',
-            cell: info => (
-                <span className="font-semibold text-xs text-blue-600">
-                    ₹{(info.getValue() || 0).toLocaleString()}
-                </span>
-            )
-        }),
-        columnHelper.accessor('settleAmount', {
-            header: 'Net Amount',
-            cell: info => (
-                <span className="font-semibold text-xs text-green-600">
-                    ₹{(info.getValue() || 0).toLocaleString()}
-                </span>
-            )
-        }),
-        columnHelper.accessor('systemFee', {
-            header: 'System Fee',
-            cell: info => (
-                <span className="font-semibold text-xs text-red-600">
-                    ₹{(info.getValue() || 0).toLocaleString()}
-                </span>
-            )
-        }),
-        // Franchise-specific columns (conditionally shown)
-        ...(isFranchiseMerchant ? [
-            columnHelper.accessor('commissionAmount', {
+        const fields = new Set();
+        transactions.forEach(txn => {
+            Object.keys(txn).forEach(key => {
+                if (txn[key] !== null && txn[key] !== undefined && txn[key] !== '') {
+                    fields.add(key);
+                }
+            });
+        });
+        return fields;
+    }, [transactions]);
+
+    // Define all possible column configurations
+    const columnDefinitions = useMemo(() => {
+        const columnHelper = createColumnHelper();
+        return {
+            txnId: columnHelper.accessor('txnId', {
+                header: 'Transaction ID',
+                cell: info => <span className="font-mono text-xs text-gray-900">{info.getValue()}</span>
+            }),
+            actionOnBalance: columnHelper.accessor('actionOnBalance', {
+                header: 'Action',
+                cell: info => (
+                    <span className={`text-xs font-semibold ${info.getValue() === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                        {info.getValue()}
+                    </span>
+                )
+            }),
+            txnDate: columnHelper.accessor('txnDate', {
+                header: 'Date',
+                cell: info => <span className="text-xs text-gray-700">{new Date(info.getValue()).toLocaleDateString()}</span>
+            }),
+            settleDate: columnHelper.accessor('settleDate', {
+                header: 'Settled On',
+                cell: info => <span className="text-xs text-gray-600">{new Date(info.getValue()).toLocaleDateString()}</span>
+            }),
+            txnAmount: columnHelper.accessor('txnAmount', {
+                header: 'Transaction Amount',
+                cell: info => <span className="font-semibold text-xs text-blue-600">₹{(info.getValue() || 0).toLocaleString()}</span>
+            }),
+            settleAmount: columnHelper.accessor('settleAmount', {
+                header: 'Net Amount',
+                cell: info => <span className="font-semibold text-xs text-green-600">₹{(info.getValue() || 0).toLocaleString()}</span>
+            }),
+            systemFee: columnHelper.accessor('systemFee', {
+                header: 'System Fee',
+                cell: info => <span className="font-semibold text-xs text-red-600">₹{(info.getValue() || 0).toLocaleString()}</span>
+            }),
+            commissionAmount: columnHelper.accessor('commissionAmount', {
                 header: 'Commission',
-                cell: info => (
-                    <span className="font-semibold text-xs text-orange-600">
-                        ₹{(info.getValue() || 0).toLocaleString()}
-                    </span>
-                )
+                cell: info => <span className="font-semibold text-xs text-orange-600">₹{(info.getValue() || 0).toLocaleString()}</span>
             }),
-            columnHelper.accessor('franchiseName', {
+            franchiseName: columnHelper.accessor('franchiseName', {
                 header: 'Franchise',
-                cell: info => (
-                    <span className="text-xs text-gray-700">
-                        {info.getValue() || '-'}
-                    </span>
-                )
-            })
-        ] : []),
-        columnHelper.accessor('authCode', {
-            header: 'Auth Code',
-            cell: info => (
-                <span className="text-xs text-gray-600">
-                    {info.getValue() || '-'}
-                </span>
-            )
-        }),
-        columnHelper.accessor('tid', {
-            header: 'TID',
-            cell: info => (
-                <span className="text-xs text-gray-600">
-                    {info.getValue() || '-'}
-                </span>
-            )
-        }),
-        columnHelper.accessor('brandType', {
-            header: 'Brand',
-            cell: info => (
-                <span className="text-xs font-medium text-purple-600">
-                    {info.getValue() || '-'}
-                </span>
-            )
-        }),
-        columnHelper.accessor('cardType', {
-            header: 'Card Type',
-            cell: info => (
-                <span className="text-xs text-blue-600">
-                    {info.getValue() || '-'}
-                </span>
-            )
-        }),
-        columnHelper.accessor('cardClassification', {
-            header: 'Card Class',
-            cell: info => (
-                <span className="text-xs text-gray-600">
-                    {info.getValue() || '-'}
-                </span>
-            )
-        }),
-        columnHelper.accessor('merchantName', {
-            header: 'Merchant',
-            cell: info => (
-                <span className="text-xs text-gray-900 font-medium">
-                    {info.getValue() || '-'}
-                </span>
-            )
-        }),
-        ...(isFranchiseMerchant ? [
-            columnHelper.accessor('state', {
-                header: 'State',
-                cell: info => (
-                    <span className="text-xs text-gray-600">
-                        {info.getValue() || '-'}
-                    </span>
-                )
-            })
-        ] : []),
-        columnHelper.accessor('settlementPercentage', {
-            header: 'Settlement Rate',
-            cell: info => (
-                <span className="text-xs text-indigo-600">
-                    {info.getValue() || 0}%
-                </span>
-            )
-        }),
-        columnHelper.accessor('merchantRate', {
-            header: 'Merchant Rate',
-            cell: info => (
-                <span className="text-xs text-purple-600">
-                    {info.getValue() || 0}%
-                </span>
-            )
-        }),
-        // Franchise-specific rate columns
-        ...(isFranchiseMerchant ? [
-            columnHelper.accessor('franchiseRate', {
-                header: 'Franchise Rate',
-                cell: info => (
-                    <span className="text-xs text-green-600">
-                        {info.getValue() || 0}%
-                    </span>
-                )
+                cell: info => <span className="text-xs text-gray-700">{info.getValue() || '-'}</span>
             }),
-            columnHelper.accessor('commissionRate', {
+            authCode: columnHelper.accessor('authCode', {
+                header: 'Auth Code',
+                cell: info => <span className="text-xs text-gray-600">{info.getValue() || '-'}</span>
+            }),
+            tid: columnHelper.accessor('tid', {
+                header: 'TID',
+                cell: info => <span className="text-xs text-gray-600">{info.getValue() || '-'}</span>
+            }),
+            brandType: columnHelper.accessor('brandType', {
+                header: 'Brand',
+                cell: info => <span className="text-xs font-medium text-purple-600">{info.getValue() || '-'}</span>
+            }),
+            cardType: columnHelper.accessor('cardType', {
+                header: 'Card Type',
+                cell: info => <span className="text-xs text-blue-600">{info.getValue() || '-'}</span>
+            }),
+            cardClassification: columnHelper.accessor('cardClassification', {
+                header: 'Card Class',
+                cell: info => <span className="text-xs text-gray-600">{info.getValue() || '-'}</span>
+            }),
+            merchantName: columnHelper.accessor('merchantName', {
+                header: 'Merchant',
+                cell: info => <span className="text-xs text-gray-900 font-medium">{info.getValue() || '-'}</span>
+            }),
+            state: columnHelper.accessor('state', {
+                header: 'State',
+                cell: info => <span className="text-xs text-gray-600">{info.getValue() || '-'}</span>
+            }),
+            settlementPercentage: columnHelper.accessor('settlementPercentage', {
+                header: 'Settlement Rate',
+                cell: info => <span className="text-xs text-indigo-600">{info.getValue() || 0}%</span>
+            }),
+            merchantRate: columnHelper.accessor('merchantRate', {
+                header: 'Merchant Rate',
+                cell: info => <span className="text-xs text-purple-600">{info.getValue() || 0}%</span>
+            }),
+            franchiseRate: columnHelper.accessor('franchiseRate', {
+                header: 'Franchise Rate',
+                cell: info => <span className="text-xs text-green-600">{info.getValue() || 0}%</span>
+            }),
+            commissionRate: columnHelper.accessor('commissionRate', {
                 header: 'Commission Rate',
-                cell: info => (
-                    <span className="text-xs text-orange-600">
-                        {info.getValue() || 0}%
-                    </span>
-                )
+                cell: info => <span className="text-xs text-orange-600">{info.getValue() || 0}%</span>
             })
-        ] : [])
-    ], [columnHelper, isFranchiseMerchant]);
+        };
+    }, []);
+
+    // Priority order for columns
+    const columnPriority = [
+        'txnId', 'actionOnBalance', 'txnDate', 'settleDate', 'txnAmount', 'settleAmount',
+        'systemFee', 'commissionAmount', 'merchantName', 'franchiseName', 'brandType',
+        'cardType', 'authCode', 'tid', 'cardClassification', 'state',
+        'settlementPercentage', 'merchantRate', 'franchiseRate', 'commissionRate'
+    ];
+
+    // Dynamically build columns based on available fields
+    const columns = useMemo(() => {
+        return columnPriority
+            .filter(field => availableFields.has(field))
+            .map(field => columnDefinitions[field])
+            .filter(Boolean);
+    }, [availableFields, columnDefinitions]);
 
     const table = useReactTable({
         data: transactions,
@@ -226,83 +181,181 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
         getCoreRowModel: getCoreRowModel(),
     });
 
-    // Handle filter changes from the ReportFilters component
     const handleFiltersChange = (newFilters) => {
         setLocalFilters(prev => ({ ...prev, ...newFilters }));
     };
 
-    // Export functionality with dynamic columns based on merchant type
-    const getExportColumns = () => {
-        const baseColumns = {
-            headers: [
-                'Transaction ID', 'Transaction Date', 'Settled On', 'Transaction Amount (₹)', 'Net Amount (₹)',
-                'System Fee (₹)', 'Auth Code', 'TID', 'Brand Type', 'Card Type', 'Card Classification',
-                'Merchant Name', 'Settlement Rate (%)', 'Merchant Rate (%)'
-            ],
-            keys: [
-                'txnId', 'txnDate', 'settleDate', 'txnAmount', 'settleAmount', 'systemFee',
-                'authCode', 'tid', 'brandType', 'cardType', 'cardClassification',
-                'merchantName', 'settlementPercentage', 'merchantRate'
-            ]
+    // Dynamic export configuration
+    const exportConfig = useMemo(() => {
+        const fieldMapping = {
+            txnId: { header: 'Transaction ID', format: val => val },
+            actionOnBalance: { header: 'Action', format: val => val },
+            txnDate: { header: 'Transaction Date', format: val => new Date(val).toLocaleString() },
+            settleDate: { header: 'Settled On', format: val => new Date(val).toLocaleString() },
+            txnAmount: { header: 'Transaction Amount (₹)', format: val => val },
+            settleAmount: { header: 'Net Amount (₹)', format: val => val },
+            systemFee: { header: 'System Fee (₹)', format: val => val },
+            commissionAmount: { header: 'Commission (₹)', format: val => val },
+            authCode: { header: 'Auth Code', format: val => val || '-' },
+            tid: { header: 'TID', format: val => val || '-' },
+            brandType: { header: 'Brand Type', format: val => val || '-' },
+            cardType: { header: 'Card Type', format: val => val || '-' },
+            cardClassification: { header: 'Card Classification', format: val => val || '-' },
+            merchantName: { header: 'Merchant Name', format: val => val || '-' },
+            franchiseName: { header: 'Franchise Name', format: val => val || '-' },
+            state: { header: 'State', format: val => val || '-' },
+            settlementPercentage: { header: 'Settlement Rate (%)', format: val => val },
+            merchantRate: { header: 'Merchant Rate (%)', format: val => val },
+            franchiseRate: { header: 'Franchise Rate (%)', format: val => val },
+            commissionRate: { header: 'Commission Rate (%)', format: val => val }
         };
 
-        if (isFranchiseMerchant) {
-            baseColumns.headers.splice(6, 0, 'Commission (₹)', 'Franchise Name');
-            baseColumns.keys.splice(6, 0, 'commissionAmount', 'franchiseName');
-            baseColumns.headers.splice(-2, 0, 'State', 'Franchise Rate (%)', 'Commission Rate (%)');
-            baseColumns.keys.splice(-2, 0, 'state', 'franchiseRate', 'commissionRate');
-        }
+        const availableColumns = columnPriority.filter(field => availableFields.has(field));
 
-        return baseColumns;
-    };
+        return {
+            headers: availableColumns.map(field => fieldMapping[field].header),
+            keys: availableColumns
+        };
+    }, [availableFields]);
 
     const excelTransform = (data) => {
         return data.map(transaction => {
-            
-
-            const baseData = {
-                'Transaction ID': transaction.txnId,
-                'Transaction Date': new Date(transaction.txnDate).toLocaleString(),
-                'Settled On': new Date(transaction.settleDate).toLocaleString(),
-                'Transaction Amount': transaction.txnAmount || 0,
-                'Net Amount': transaction.settleAmount || 0,
-                'System Fee': transaction.systemFee || 0,
-                'Auth Code': transaction.authCode || '-',
-                'TID': transaction.tid || '-',
-                'Brand Type': transaction.brandType || '-',
-                'Card Type': transaction.cardType || '-',
-                'Card Classification': transaction.cardClassification || '-',
-                'Merchant Name': transaction.merchantName || '-',
-                'Settlement Rate': `${(transaction.settlementPercentage || 0).toFixed(2)}%`,
-                'Merchant Rate': `${(transaction.merchantRate || 0).toFixed(2)}%`
-            };
-
-            if (isFranchiseMerchant) {
-                return {
-                    ...baseData,
-                    'Commission': transaction.commissionAmount || 0,
-                    'Franchise Name': transaction.franchiseName || '-',
-                    'State': transaction.state || '-',
-                    'Franchise Rate': `${(transaction.franchiseRate || 0).toFixed(2)}%`,
-                    'Commission Rate': `${(transaction.commissionRate || 0).toFixed(2)}%`
+            const row = {};
+            exportConfig.keys.forEach(key => {
+                const fieldMapping = {
+                    txnId: { header: 'Transaction ID', format: val => val },
+                    actionOnBalance: { header: 'Action', format: val => val },
+                    txnDate: { header: 'Transaction Date', format: val => new Date(val).toLocaleString() },
+                    settleDate: { header: 'Settled On', format: val => new Date(val).toLocaleString() },
+                    txnAmount: { header: 'Transaction Amount', format: val => val },
+                    settleAmount: { header: 'Net Amount', format: val => val },
+                    systemFee: { header: 'System Fee', format: val => val },
+                    commissionAmount: { header: 'Commission', format: val => val },
+                    authCode: { header: 'Auth Code', format: val => val || '-' },
+                    tid: { header: 'TID', format: val => val || '-' },
+                    brandType: { header: 'Brand Type', format: val => val || '-' },
+                    cardType: { header: 'Card Type', format: val => val || '-' },
+                    cardClassification: { header: 'Card Classification', format: val => val || '-' },
+                    merchantName: { header: 'Merchant Name', format: val => val || '-' },
+                    franchiseName: { header: 'Franchise Name', format: val => val || '-' },
+                    state: { header: 'State', format: val => val || '-' },
+                    settlementPercentage: { header: 'Settlement Rate', format: val => `${val || 0}%` },
+                    merchantRate: { header: 'Merchant Rate', format: val => `${val || 0}%` },
+                    franchiseRate: { header: 'Franchise Rate', format: val => `${val || 0}%` },
+                    commissionRate: { header: 'Commission Rate', format: val => `${val || 0}%` }
                 };
-            }
 
-            return baseData;
+                const config = fieldMapping[key];
+                row[config.header] = config.format(transaction[key]);
+            });
+            return row;
         });
     };
 
     const generateFilename = () => {
         const dateRange = `${localFilters.startDate}_to_${localFilters.endDate}`;
-        return `merchant_transaction_report_${dateRange}`;
+        const type = localFilters.transactionType !== 'All' ? `_${localFilters.transactionType}` : '';
+        return `merchant_transaction_report${type}_${dateRange}`;
     };
 
-    const generateReportTitle = () => {
-        return isFranchiseMerchant ? 'Franchise Merchant Transaction Report' : 'Direct Merchant Transaction Report';
+    const isFranchiseMerchant = availableFields.has('franchiseName');
+
+    // Dynamic card analysis
+    const renderCardAnalysis = () => {
+        const hasBrandType = availableFields.has('brandType');
+        const hasCardType = availableFields.has('cardType');
+        const hasActionOnBalance = availableFields.has('actionOnBalance');
+
+        if (!hasBrandType && !hasCardType && !hasActionOnBalance) return null;
+
+        return (
+            <div className="bg-white rounded-lg shadow-sm border p-4">
+                <h3 className="text-md font-semibold text-gray-900 mb-3">Transaction Analysis</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {hasBrandType && (
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-800 mb-2">Brand Distribution</h4>
+                            <div className="space-y-1">
+                                {Object.entries(
+                                    transactions.reduce((acc, txn) => {
+                                        if (txn.brandType) {
+                                            acc[txn.brandType] = (acc[txn.brandType] || 0) + 1;
+                                        }
+                                        return acc;
+                                    }, {})
+                                ).map(([brand, count]) => (
+                                    <div key={brand} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
+                                        <span className="font-medium">{brand}</span>
+                                        <span className="text-gray-600">{count} txns</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {hasCardType && (
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-800 mb-2">Card Type Distribution</h4>
+                            <div className="space-y-1">
+                                {Object.entries(
+                                    transactions.reduce((acc, txn) => {
+                                        if (txn.cardType) {
+                                            acc[txn.cardType] = (acc[txn.cardType] || 0) + 1;
+                                        }
+                                        return acc;
+                                    }, {})
+                                ).map(([type, count]) => (
+                                    <div key={type} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
+                                        <span className="font-medium">{type}</span>
+                                        <span className="text-gray-600">{count} txns</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <h4 className="text-sm font-medium text-gray-800 mb-2">Summary Stats</h4>
+                        <div className="space-y-1">
+                            {hasActionOnBalance && (
+                                <>
+                                    <div className="bg-green-50 p-2 rounded text-xs">
+                                        <div className="flex justify-between">
+                                            <span>Credit Txns</span>
+                                            <span className="font-medium">
+                                                {transactions.filter(t => t.actionOnBalance === 'CREDIT').length}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-red-50 p-2 rounded text-xs">
+                                        <div className="flex justify-between">
+                                            <span>Debit Txns</span>
+                                            <span className="font-medium">
+                                                {transactions.filter(t => t.actionOnBalance === 'DEBIT').length}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                            <div className="bg-blue-50 p-2 rounded text-xs">
+                                <div className="flex justify-between">
+                                    <span>Avg Transaction</span>
+                                    <span className="font-medium">₹{summary?.averageTransactionValue?.toFixed(0) || 0}</span>
+                                </div>
+                            </div>
+                            <div className="bg-purple-50 p-2 rounded text-xs">
+                                <div className="flex justify-between">
+                                    <span>Success Rate</span>
+                                    <span className="font-medium">{summary?.successRate || 100}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
-    // Calculate totals
-    const totalSystemFee = transactions.reduce((sum, txn) => sum + (txn.systemFee || 0), 0);
     const totalCommission = transactions.reduce((sum, txn) => sum + (txn.commissionAmount || 0), 0);
 
     return (
@@ -335,7 +388,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-medium text-gray-600">Total Amount</p>
-                                <p className="text-lg font-bold text-gray-900">₹{summary.totalAmount.toLocaleString()}</p>
+                                <p className="text-lg font-bold text-gray-900">₹{summary.totalAmount?.toLocaleString()}</p>
                             </div>
                             <TrendingUp className="w-6 h-6 text-green-600" />
                         </div>
@@ -345,7 +398,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-medium text-gray-600">Net Amount</p>
-                                <p className="text-lg font-bold text-green-600">₹{summary.totalNetAmount.toLocaleString()}</p>
+                                <p className="text-lg font-bold text-green-600">₹{summary.totalNetAmount?.toLocaleString()}</p>
                             </div>
                             <TrendingUp className="w-6 h-6 text-green-600" />
                         </div>
@@ -358,7 +411,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                                     {isFranchiseMerchant ? 'Total Commission' : 'Total Charges'}
                                 </p>
                                 <p className="text-lg font-bold text-orange-600">
-                                    ₹{(isFranchiseMerchant ? totalCommission : summary.totalCharges).toLocaleString()}
+                                    ₹{(isFranchiseMerchant ? totalCommission : summary.totalCharges)?.toLocaleString()}
                                 </p>
                             </div>
                             {isFranchiseMerchant ?
@@ -370,78 +423,8 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                 </div>
             )}
 
-            {/* Card Analysis */}
-            {transactions.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border p-4">
-                    <h3 className="text-md font-semibold text-gray-900 mb-3">Transaction Analysis</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Brand Distribution */}
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-800 mb-2">Brand Distribution</h4>
-                            <div className="space-y-1">
-                                {Object.entries(
-                                    transactions.reduce((acc, txn) => {
-                                        const brand = txn.brandType || 'Unknown';
-                                        acc[brand] = (acc[brand] || 0) + 1;
-                                        return acc;
-                                    }, {})
-                                ).map(([brand, count]) => (
-                                    <div key={brand} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
-                                        <span className="font-medium">{brand}</span>
-                                        <span className="text-gray-600">{count} txns</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Card Type Distribution */}
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-800 mb-2">Card Type Distribution</h4>
-                            <div className="space-y-1">
-                                {Object.entries(
-                                    transactions.reduce((acc, txn) => {
-                                        const type = txn.cardType || 'Unknown';
-                                        acc[type] = (acc[type] || 0) + 1;
-                                        return acc;
-                                    }, {})
-                                ).map(([type, count]) => (
-                                    <div key={type} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
-                                        <span className="font-medium">{type}</span>
-                                        <span className="text-gray-600">{count} txns</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Average Transaction Value */}
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-800 mb-2">Summary Stats</h4>
-                            <div className="space-y-1">
-                                <div className="bg-blue-50 p-2 rounded text-xs">
-                                    <div className="flex justify-between">
-                                        <span>Avg Transaction</span>
-                                        <span className="font-medium">₹{summary.averageTransactionValue?.toFixed(0) || 0}</span>
-                                    </div>
-                                </div>
-                                <div className="bg-green-50 p-2 rounded text-xs">
-                                    <div className="flex justify-between">
-                                        <span>Success Rate</span>
-                                        <span className="font-medium">{summary.successRate || 100}%</span>
-                                    </div>
-                                </div>
-                                {isFranchiseMerchant && (
-                                    <div className="bg-orange-50 p-2 rounded text-xs">
-                                        <div className="flex justify-between">
-                                            <span>Total Commission</span>
-                                            <span className="font-medium">₹{totalCommission.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Dynamic Card Analysis */}
+            {transactions.length > 0 && renderCardAnalysis()}
 
             {/* Transactions Table */}
             {transactions.length > 0 && (
@@ -451,7 +434,8 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                             <h2 className="text-md font-semibold text-gray-900">Transaction Details</h2>
                             {reportInfo && (
                                 <p className="text-xs text-gray-600 mt-1">
-                                    {generateReportTitle()} | Generated on {new Date(reportInfo.reportGeneratedAt).toLocaleDateString()} |
+                                    {isFranchiseMerchant ? 'Franchise Merchant' : 'Direct Merchant'} Report |
+                                    Generated on {new Date(reportInfo.reportGeneratedAt).toLocaleDateString()} |
                                     Total {reportInfo.totalElements} transactions
                                 </p>
                             )}
@@ -459,46 +443,38 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                         <UniversalExportButtons
                             data={transactions}
                             filename={generateFilename()}
-                            title={generateReportTitle()}
-                            columns={getExportColumns()}
+                            title={`${isFranchiseMerchant ? 'Franchise' : 'Direct'} Merchant Transaction Report`}
+                            columns={exportConfig}
                             excelTransform={excelTransform}
                             summary={summary}
                         />
                     </div>
 
-                    <div className="relative">
-                        <div
-                            className="overflow-x-auto"
-                            style={{
-                                maxHeight: '70vh',
-                                overflowY: 'auto'
-                            }}
-                        >
-                            <table className="w-full min-w-max">
-                                <thead className="bg-gray-50 sticky top-0">
-                                    {table.getHeaderGroups().map(headerGroup => (
-                                        <tr key={headerGroup.id}>
-                                            {headerGroup.headers.map(header => (
-                                                <th key={header.id} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                                                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {table.getRowModel().rows.map(row => (
-                                        <tr key={row.id} className="hover:bg-gray-50">
-                                            {row.getVisibleCells().map(cell => (
-                                                <td key={cell.id} className="px-3 py-2 whitespace-nowrap">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div className="overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                        <table className="w-full min-w-max">
+                            <thead className="bg-gray-50 sticky top-0">
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <tr key={headerGroup.id}>
+                                        {headerGroup.headers.map(header => (
+                                            <th key={header.id} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {table.getRowModel().rows.map(row => (
+                                    <tr key={row.id} className="hover:bg-gray-50">
+                                        {row.getVisibleCells().map(cell => (
+                                            <td key={cell.id} className="px-3 py-2 whitespace-nowrap">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
@@ -506,7 +482,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
             {/* No Data Message */}
             {!loading && transactions.length === 0 && summary && (
                 <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-                    <FileText className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                    <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-3" />
                     <h3 className="text-md font-medium text-gray-900 mb-2">No Transactions Found</h3>
                     <p className="text-sm text-gray-600">No transactions found for the selected criteria.</p>
                 </div>
