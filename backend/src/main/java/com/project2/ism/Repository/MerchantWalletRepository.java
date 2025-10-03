@@ -34,4 +34,7 @@ public interface MerchantWalletRepository extends JpaRepository<MerchantWallet, 
         WHERE m.franchise.id IS NOT NULL
         """)
     BigDecimal getTotalFranchiseMerchantWalletBalance();
+
+    @Query("SELECT m.availableBalance FROM MerchantWallet m WHERE m.merchant.id = :merchantId")
+    Optional<BigDecimal> findAvailableBalanceById(@Param("merchantId") Long merchantId);
 }
