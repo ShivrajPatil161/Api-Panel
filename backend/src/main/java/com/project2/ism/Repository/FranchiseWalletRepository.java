@@ -22,4 +22,8 @@ public interface FranchiseWalletRepository extends JpaRepository<FranchiseWallet
     Optional<FranchiseWallet> findByFranchiseId(Long franchiseId);
     @Query("SELECT COALESCE(SUM(fw.availableBalance), 0) FROM FranchiseWallet fw")
     BigDecimal getTotalFranchiseWalletBalance();
+
+    @Query("SELECT f.availableBalance FROM FranchiseWallet f WHERE f.franchise.id = :franchiseId")
+    Optional<BigDecimal> findAvailableBalanceById(@Param("franchiseId") Long franchiseId);
+
 }
