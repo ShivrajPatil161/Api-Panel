@@ -32,11 +32,12 @@ public class StatsService {
     private final VendorRatesRepository vendorRatesRepository;
 
     private final InwardTransactionRepository inwardTransactionRepository;
+    private final FranchiseWalletRepository franchiseWalletRepository;
+    private final MerchantWalletRepository merchantWalletRepository;
 
 
 
-
-    public StatsService(FranchiseRepository franchiseRepository, MerchantRepository merchantRepository, OutwardTransactionRepository outwardTransactionRepository, ProductSerialsRepository productSerialsRepository, ProductRepository productRepository, FranchiseService franchiseService, MerchantService merchantService, VendorRepository vendorRepository, VendorRatesRepository vendorRatesRepository, InwardTransactionRepository inwardTransactionRepository) {
+    public StatsService(FranchiseRepository franchiseRepository, MerchantRepository merchantRepository, OutwardTransactionRepository outwardTransactionRepository, ProductSerialsRepository productSerialsRepository, ProductRepository productRepository, FranchiseService franchiseService, MerchantService merchantService, VendorRepository vendorRepository, VendorRatesRepository vendorRatesRepository, InwardTransactionRepository inwardTransactionRepository, FranchiseWalletRepository franchiseWalletRepository, MerchantWalletRepository merchantWalletRepository) {
         this.franchiseRepository = franchiseRepository;
         this.merchantRepository = merchantRepository;
         this.outwardTransactionRepository = outwardTransactionRepository;
@@ -47,13 +48,15 @@ public class StatsService {
         this.vendorRepository = vendorRepository;
         this.vendorRatesRepository = vendorRatesRepository;
         this.inwardTransactionRepository = inwardTransactionRepository;
+        this.franchiseWalletRepository = franchiseWalletRepository;
+        this.merchantWalletRepository = merchantWalletRepository;
     }
 
     public FranchiseStatsDTO getFranchiseStats(Long franchiseId) {
         Long merchantCount = merchantRepository.countByFranchiseId(franchiseId);
         Long outwardCount = outwardTransactionRepository.countByFranchiseId(franchiseId);
-        BigDecimal wallet = franchiseRepository.findById(franchiseId)
-                .map(Franchise::getWalletBalance).orElse(BigDecimal.ZERO);
+        BigDecimal wallet = franchiseWalletRepository.findAvailableBalanceById(franchiseId)
+                .orElse(BigDecimal.ZERO);
 
         // ✅ fetch product-level stats
         List<FranchiseProductSummaryDTO> productSummary = franchiseService.getProductsOfFranchise(franchiseId);
@@ -64,8 +67,8 @@ public class StatsService {
     public MerchantStatsDTO getMerchantStats(Long merchantId) {
         Long outwardCount = outwardTransactionRepository.countByMerchantId(merchantId);
         Long allocatedProducts = productSerialsRepository.countByMerchantId(merchantId);
-        BigDecimal wallet = merchantRepository.findById(merchantId)
-                .map(Merchant::getWalletBalance).orElse(BigDecimal.ZERO);
+        BigDecimal wallet = merchantWalletRepository.findAvailableBalanceById(merchantId)
+                .orElse(BigDecimal.ZERO);
 
         // ✅ fetch product-level stats
         List<MerchantProductSummaryDTO> productSummary = merchantService.getProductsOfMerchant(merchantId);

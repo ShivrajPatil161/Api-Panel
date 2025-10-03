@@ -74,10 +74,10 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             "ftd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
             "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
             "vt.brandType, vt.cardType, vt.cardClassification, " +
-            "mtd.merchant.businessName, ftd.franchise.franchiseName, ftd.franchise.status) " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, ftd.tranStatus) " +
             "FROM FranchiseTransactionDetails ftd " +
-            "JOIN ftd.merchantTransactionDetail mtd " +
-            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "LEFT JOIN ftd.merchantTransactionDetail mtd " +
+            "LEFT JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
             "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
             "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
             "AND (:status IS NULL OR ftd.tranStatus = :status) " +
@@ -99,10 +99,10 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             "ftd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
             "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
             "vt.brandType, vt.cardType, vt.cardClassification, " +
-            "mtd.merchant.businessName, ftd.franchise.franchiseName, ftd.franchise.status) " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, ftd.tranStatus) " +
             "FROM FranchiseTransactionDetails ftd " +
-            "JOIN ftd.merchantTransactionDetail mtd " +
-            "JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "LEFT JOIN ftd.merchantTransactionDetail mtd " +
+            "LEFT JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
             "WHERE ftd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
             "AND (:franchiseId IS NULL OR ftd.franchise.id = :franchiseId) " +
             //"AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
