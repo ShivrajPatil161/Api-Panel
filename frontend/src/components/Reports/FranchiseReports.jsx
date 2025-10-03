@@ -228,27 +228,27 @@ const FranchiseReports = () => {
                 <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="text-sm font-medium text-gray-500">Total Franchises</div>
                     <div className="text-2xl font-bold text-gray-900">{data.length}</div>
-                    <Building className="ml-55 -mt-9 w-8 h-8 text-gray-400" />
+                    {/* <Building className="ml-55 -mt-9 w-8 h-8 text-gray-400" /> */}
                 </div>
                 <div className="bg-gradient-to-r from-red-50 to-red-100 p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="text-sm font-medium text-gray-500">Total Merchants</div>
                     <div className="text-2xl font-bold text-gray-900">
                         {data.reduce((sum, item) => sum + item.totalMerchants, 0)}
-                    <Store className="ml-55 -mt-9 w-8 h-8 text-gray-400"/>
+                    {/* <Store className="ml-55 -mt-9 w-8 h-8 text-gray-400"/> */}
                     </div>
                 </div>
                 <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="text-sm font-medium text-gray-500">Total Devices</div>
                     <div className="text-2xl font-bold text-gray-900">
                         {data.reduce((sum, item) => sum + item.totalDevices, 0)}
-                    <Calculator className="ml-55 -mt-9 w-8 h-8 text-gray-400"/>
+                    {/* <Calculator className="ml-55 -mt-9 w-8 h-8 text-gray-400"/> */}
                     </div>
                 </div>
                 <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="text-sm font-medium text-gray-500">Total Products</div>
                     <div className="text-2xl font-bold text-gray-900">
                         {data.reduce((sum, item) => sum + item.totalProducts, 0)}
-                    <Package className="ml-55 -mt-9 w-8 h-8 text-gray-400"/>
+                    {/* <Package className="ml-55 -mt-9 w-8 h-8 text-gray-400"/> */}
 
                     </div>
                 </div>
