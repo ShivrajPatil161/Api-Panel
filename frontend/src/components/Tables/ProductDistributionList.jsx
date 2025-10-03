@@ -172,7 +172,7 @@ const ProductDistributionList = () => {
 
     return (
         <div className="max-w-7xl mx-auto p-6 space-y-6">
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm  p-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-blue-100 rounded-lg">
@@ -198,17 +198,17 @@ const ProductDistributionList = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-lg shadow-sm border p-4">
+                <div className="bg-white rounded-lg shadow-sm  p-4">
                     <div className="text-sm text-gray-600">Total Distributions</div>
                     <div className="text-2xl font-bold text-gray-900 mt-1">{distributions.length}</div>
                 </div>
-                <div className="bg-white rounded-lg shadow-sm border p-4">
+                <div className="bg-white rounded-lg shadow-sm  p-4">
                     <div className="text-sm text-gray-600">Total Devices</div>
                     <div className="text-2xl font-bold text-gray-900 mt-1">
                         {distributions.reduce((sum, d) => sum + (d.quantity || 0), 0)}
                     </div>
                 </div>
-                <div className="bg-white rounded-lg shadow-sm border p-4">
+                <div className="bg-white rounded-lg shadow-sm  p-4">
                     <div className="text-sm text-gray-600">Pending Receipts</div>
                     <div className="text-2xl font-bold text-yellow-600 mt-1">
                         {distributions.filter(d => !d.receivedDate).length}
@@ -216,8 +216,8 @@ const ProductDistributionList = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border">
-                <div className="p-4 border-b">
+            <div className="bg-white rounded-lg shadow-sm ">
+                <div className="p-4 ">
                     <input
                         type="text"
                         placeholder="Search distributions..."
@@ -278,7 +278,7 @@ const ProductDistributionList = () => {
                     </table>
                 </div>
 
-                <div className="px-6 py-4 border-t flex items-center justify-between">
+                <div className="px-6 py-4 flex items-center justify-between">
                     <div className="text-sm text-gray-700">
                         Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
                         {Math.min(
