@@ -419,7 +419,7 @@ public class EnhancedSettlementService2 {
 //        CustomerSchemeAssignment schemeAssignment = schemeAssignRepo.findByOutwardTransaction(device.getOutwardTransaction())
 //                .orElseThrow(() -> new IllegalStateException("No pricing scheme found for device"));
 
-        LocalDate today = LocalDate.now(); // or transaction date if needed
+        LocalDate txnDate = vt.getDate() != null ? vt.getDate().toLocalDate() : LocalDate.now();
 
 // Get merchant from device directly
         Merchant merchant = device.getMerchant();
@@ -431,13 +431,13 @@ public class EnhancedSettlementService2 {
             schemeAssignment = schemeAssignRepo.findActiveSchemeForFranchiseAndProduct(
                     franchiseId,
                     device.getProduct().getId(),
-                    today
+                    txnDate
             );
         } else {
             schemeAssignment = schemeAssignRepo.findActiveSchemeForMerchantAndProduct(
                     merchant.getId(),
                     device.getProduct().getId(),
-                    today
+                    txnDate
             );
         }
 
@@ -671,88 +671,6 @@ public class EnhancedSettlementService2 {
     }
 
     private SettlementCandidateDTO mapToSettlementCandidate(VendorTransactions vt, Long expectedMerchantId, Long productId) {
-//        try {
-//            Optional<ProductSerialNumbers> deviceOpt = findDeviceForTransaction(vt);
-//            if (deviceOpt.isEmpty()) {
-//                return SettlementCandidateDTO.notFound(vt, "DEVICE_NOT_FOUND");
-//            }
-//
-//            ProductSerialNumbers device = deviceOpt.get();
-//
-//            if (!expectedMerchantId.equals(device.getMerchant().getId())) {
-//                return SettlementCandidateDTO.notFound(vt, "WRONG_MERCHANT");
-//            }
-//
-//            // Check if device belongs to the specified product
-//            if (productId != null && !productId.equals(device.getProduct().getId())) {
-//                return SettlementCandidateDTO.notFound(vt, "WRONG_PRODUCT");
-//            }
-//
-//            Optional<CustomerSchemeAssignment> schemeOpt = schemeAssignRepo.findByOutwardTransaction(device.getOutwardTransaction());
-//            if (schemeOpt.isEmpty()) {
-//                return SettlementCandidateDTO.notFound(vt, "NO_PRICING_SCHEME");
-//            }
-//
-//            CustomerSchemeAssignment scheme = schemeOpt.get();
-//
-//            LocalDate txnDate = vt.getDate() != null ? vt.getDate().toLocalDate() : LocalDate.now();
-//            if (scheme.getExpiryDate() != null && txnDate.isAfter(scheme.getExpiryDate())) {
-//                return SettlementCandidateDTO.notFound(vt, "SCHEME_EXPIRED");
-//            }
-//
-//            String cardName = normalizeCardName(vt.getBrandType(), vt.getCardType());
-//            Optional<CardRate> crOpt = cardRateRepo.findByPricingScheme_IdAndCardNameContainingIgnoreCase(
-//                            scheme.getScheme().getId(), cardName)
-//                    .or(() -> cardRateRepo.findByPricingScheme_IdAndCardNameContainingIgnoreCase(
-//                            scheme.getScheme().getId(), "DEFAULT"));
-//
-//            if (crOpt.isEmpty()) {
-//                return SettlementCandidateDTO.notFound(vt, "NO_CARD_RATE");
-//            }
-//
-//            CardRate cr = crOpt.get();
-//            BigDecimal amount = vt.getAmount() == null ? BigDecimal.ZERO : vt.getAmount();
-//
-//            // Check if merchant is franchise merchant and use appropriate rate
-//            Merchant merchant = device.getMerchant();
-//            boolean isFranchiseMerchant = merchant.getFranchise() != null;
-//
-//            Double rateToUse;
-//            if (isFranchiseMerchant && cr.getMerchantRate() != null) {
-//                rateToUse = cr.getMerchantRate();
-//            } else {
-//                rateToUse = cr.getRate();
-//            }
-//
-//            if (rateToUse == null) {
-//                return SettlementCandidateDTO.notFound(vt, "NO_RATE_CONFIGURED");
-//            }
-//
-//            BigDecimal feePct = amount.signum() > 0
-//                    ? BigDecimal.valueOf(rateToUse).movePointLeft(2)
-//                    : BigDecimal.ZERO;
-//            BigDecimal fee = amount.multiply(feePct).setScale(2, RoundingMode.HALF_UP);
-//            if (fee.compareTo(amount.abs()) > 0) fee = amount.abs();
-//            BigDecimal net = amount.subtract(fee).setScale(2, RoundingMode.HALF_UP);
-//
-//            return new SettlementCandidateDTO(
-//                    vt.getInternalId(),
-//                    vt.getTransactionReferenceId(),
-//                    vt.getDate(),
-//                    amount,
-//                    vt.getCardType(),
-//                    vt.getBrandType(),
-//                    cardName,
-//                    rateToUse,
-//                    fee,
-//                    net,
-//                    null
-//            );
-//
-//        } catch (Exception ex) {
-//            log.error("Error mapping vendor transaction {}", vt.getInternalId(), ex);
-//            return SettlementCandidateDTO.notFound(vt, "MAPPING_ERROR: " + ex.getMessage());
-//        }
         try {
             Optional<ProductSerialNumbers> deviceOpt = findDeviceForTransaction(vt);
             if (deviceOpt.isEmpty()) {

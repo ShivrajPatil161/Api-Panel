@@ -112,8 +112,6 @@ public class MerchantTransactionReportDTO {
             this.settlementPercentage = null;
         }
 
-
-        System.out.println("=== End Debug ===\n");
     }
     private static BigDecimal nullSafe(BigDecimal val) {
         return val != null ? val : BigDecimal.ZERO;
