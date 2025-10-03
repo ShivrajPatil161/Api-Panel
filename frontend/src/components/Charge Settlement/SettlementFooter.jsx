@@ -59,7 +59,7 @@ const SettlementFooter = ({
 
                     {/* Selection Summary */}
                     <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        <h4 className="text-sm font-medium text-gray-900 ">
                             {showGlobalTotals ? 'Current Selection' : 'Selection Summary'}
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">

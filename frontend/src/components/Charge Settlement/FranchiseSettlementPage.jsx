@@ -328,7 +328,7 @@ const FranchiseSettlementPage = () => {
                 </div>
 
                 {/* Franchise Selection */}
-                <div className="bg-white p-4 rounded-lg shadow-sm border mb-6">
+                <div className="bg-white p-4 rounded-lg shadow-sm  mb-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Select Franchise</h3>
                     <div className="max-w-md">
                         <select
@@ -368,7 +368,7 @@ const FranchiseSettlementPage = () => {
 
                 {/* Merchant Selection */}
                 {selectedFranchiseId && cycleKey && productId && (
-                    <div className="bg-white p-4 rounded-lg shadow-sm border mb-6">
+                    <div className="bg-white p-4 rounded-lg shadow-sm  mb-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-medium text-gray-900">
                                 Select Merchants ({selectedMerchantIds.length} selected)

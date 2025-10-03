@@ -9,7 +9,7 @@ const ChargeCalculation = () => {
   return (
 
     <div className='p-6'>
-      <div className='bg-white p-4 rounded-lg shadow-sm border mb-6'>
+      <div className='bg-white p-4 rounded-lg shadow-sm  mb-6'>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Select Customer Type</h1>
         <select
           value={customerType}
