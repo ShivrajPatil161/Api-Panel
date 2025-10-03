@@ -8,12 +8,26 @@ public class FranchiseReportsDTO {
     private BigDecimal walletBalance;
     private Long totalProducts;
     private Long totalDevices;
-    public FranchiseReportsDTO(String franchiseName, Long totalMerchants, BigDecimal walletBalance, Long totalDevices,Long totalProducts) {
+    private String gstNumber;
+    private String panNumber;
+    private String registrationNumber;
+    private String contactPersonName;
+    private String contactPersonPhoneNumber;
+    private String contactPersonEmail;
+
+
+    public FranchiseReportsDTO(String franchiseName, Long totalMerchants, BigDecimal walletBalance, Long totalProducts, Long totalDevices, String gstNumber, String panNumber, String registrationNumber, String contactPersonName, String contactPersonPhoneNumber, String contactPersonEmail) {
         this.franchiseName = franchiseName;
         this.totalMerchants = totalMerchants;
         this.walletBalance = walletBalance;
-        this.totalDevices = totalDevices;
         this.totalProducts = totalProducts;
+        this.totalDevices = totalDevices;
+        this.gstNumber = gstNumber;
+        this.panNumber = panNumber;
+        this.registrationNumber = registrationNumber;
+        this.contactPersonName = contactPersonName;
+        this.contactPersonPhoneNumber = contactPersonPhoneNumber;
+        this.contactPersonEmail = contactPersonEmail;
     }
     // getters + setters
 
@@ -55,6 +69,54 @@ public class FranchiseReportsDTO {
 
     public void setTotalDevices(Long totalDevices) {
         this.totalDevices = totalDevices;
+    }
+
+    public String getGstNumber() {
+        return gstNumber;
+    }
+
+    public void setGstNumber(String gstNumber) {
+        this.gstNumber = gstNumber;
+    }
+
+    public String getPanNumber() {
+        return panNumber;
+    }
+
+    public void setPanNumber(String panNumber) {
+        this.panNumber = panNumber;
+    }
+
+    public String getRegistrationNumber() {
+        return registrationNumber;
+    }
+
+    public void setRegistrationNumber(String registrationNumber) {
+        this.registrationNumber = registrationNumber;
+    }
+
+    public String getContactPersonName() {
+        return contactPersonName;
+    }
+
+    public void setContactPersonName(String contactPersonName) {
+        this.contactPersonName = contactPersonName;
+    }
+
+    public String getContactPersonPhoneNumber() {
+        return contactPersonPhoneNumber;
+    }
+
+    public void setContactPersonPhoneNumber(String contactPersonPhoneNumber) {
+        this.contactPersonPhoneNumber = contactPersonPhoneNumber;
+    }
+
+    public String getContactPersonEmail() {
+        return contactPersonEmail;
+    }
+
+    public void setContactPersonEmail(String contactPersonEmail) {
+        this.contactPersonEmail = contactPersonEmail;
     }
 }
 

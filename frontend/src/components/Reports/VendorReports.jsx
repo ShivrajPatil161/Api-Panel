@@ -32,6 +32,12 @@ const VendorReports = () => {
                         totalDevices: vendor.totalDevices,
                         
                         totalProducts: vendor.totalProducts,
+
+                        agreementStartDate: vendor.agreementStartDate,
+
+                        agreementEndDate: vendor.agreementEndDate,
+
+                        creditPeriodDays: vendor.creditPeriodDays
                         
                     });
         
@@ -43,19 +49,25 @@ const VendorReports = () => {
     // Export configurations - no IDs
     const exportConfig = {
         columns: {
-            headers: ['Vendor Name', 'Total Products', 'Total Devices'],
-            keys: ['vendorName', 'totalProducts', 'totalDevices'],
-            widths: [30, 30, 20],
+            headers: ['Vendor Name', 'Total Products', 'Total Devices','Agreement Start Date','Agreement End Date','Credit Period Days'],
+            keys: ['vendorName', 'totalProducts', 'totalDevices','agreementStartDate,','agreementEndDate','creditPeriodDays'],
+            widths: [30, 30, 20, 20, 20, 20],
             styles: {
                 0: { cellWidth: 60 },
                 1: { cellWidth: 60 },
-                2: { cellWidth: 30, halign: 'center' }
+                2: { cellWidth: 30, halign: 'center' },
+                3: { cellWidth: 60 },
+                4: { cellWidth: 60 },
+                5: { cellWidth: 60 }
             }
         },
         excelTransform: (data) => flattenedData.map(item => ({
             'Vendor Name': item.vendorName,
             'Total Products': item.totalProducts,
-            'Total Devices': item.totalDevices
+            'Total Devices': item.totalDevices,
+            'Agreement Start Date': item.agreementStartDate,
+            'Agreement End Date': item.agreementEndDate,
+            'Credit Period': item.creditPeriodDays
         })),
         pdfTransform: (data) => flattenedData
     };
@@ -77,7 +89,7 @@ const VendorReports = () => {
             cell: ({ row }) => {
                 
                 return (
-                    <div className="text-center text-gray-700 font-medium">
+                    <div className="text-center text-gray-700">
                         {row.original.totalProducts}
                     </div>
                 );
@@ -87,11 +99,36 @@ const VendorReports = () => {
         columnHelper.accessor('totalDevices', {
             header: 'Total Devices',
             cell: ({ row }) => (
-                <div className="text-center text-gray-700 font-medium">
+                <div className="text-center text-gray-700 ">
                     {row.original.totalDevices}
                 </div>
             ),
         }),
+        columnHelper.accessor('agreementStartDate', {
+            header: 'Agreement Start Date',
+            cell: ({ row }) => (
+                <div className="text-center text-gray-700 ">
+                    {row.original.agreementStartDate}
+                </div>
+            ),
+        }),
+        columnHelper.accessor('agreementEndDate', {
+            header: 'Agreement end Date',
+            cell: ({ row }) => (
+                <div className="text-center text-gray-700 ">
+                    {row.original.agreementEndDate}
+                </div>
+            ),
+        }),
+        columnHelper.accessor('creditPeriodDays', {
+            header: 'credit Period Days',
+            cell: ({ row }) => (
+                <div className="text-center text-gray-700 ">
+                    {row.original.creditPeriodDays}
+                </div>
+            ),
+        })
+        
        
     ], [columnHelper]);
 
@@ -159,6 +196,23 @@ const VendorReports = () => {
                     title="Vendor Reports"
                     {...exportConfig}
                 />
+            </div>
+
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="text-sm font-medium text-gray-500">Total Vendors</div>
+                    <div className="text-2xl font-bold text-gray-900">{data.length}</div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="text-sm font-medium text-gray-500">Total Products</div>
+                    <div className="text-2xl font-bold text-gray-900">{totalProducts}</div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="text-sm font-medium text-gray-500">Total Devices</div>
+                    <div className="text-2xl font-bold text-gray-900">{totalDevices}</div>
+                </div>
             </div>
 
             {/* Search */}
@@ -271,21 +325,7 @@ const VendorReports = () => {
                 </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Vendors</div>
-                    <div className="text-2xl font-bold text-gray-900">{data.length}</div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Products</div>
-                    <div className="text-2xl font-bold text-gray-900">{totalProducts}</div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Devices</div>
-                    <div className="text-2xl font-bold text-gray-900">{totalDevices}</div>
-                </div>
-            </div>
+            
         </div>
     );
 };

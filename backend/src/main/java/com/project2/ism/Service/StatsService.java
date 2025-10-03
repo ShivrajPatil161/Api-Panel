@@ -129,6 +129,9 @@ public class StatsService {
                     VendorDetailDTO vdto = new VendorDetailDTO();
                     vdto.setVendorId(vendor.getId());
                     vdto.setVendorName(vendor.getName());
+                    vdto.setAgreementStartDate(vendor.getAgreementStartDate());
+                    vdto.setAgreementEndDate(vendor.getAgreementEndDate());
+                    vdto.setCreditPeriodDays(vendor.getCreditPeriodDays());
 
                     // total products under this vendor
                     Long totalProducts = productRepository.countByVendorId(vendor.getId());

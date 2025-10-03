@@ -27,9 +27,6 @@ public class Franchise extends CustomerBase {
     @Column(name = "status")
     private String status = "ACTIVE";
 
-    @Column(name = "wallet_balance", precision = 10, scale = 2)
-    private BigDecimal walletBalance = BigDecimal.ZERO;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -46,9 +43,6 @@ public class Franchise extends CustomerBase {
     // Add getters and setters for these fields
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-
-    public BigDecimal getWalletBalance() { return walletBalance; }
-    public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
