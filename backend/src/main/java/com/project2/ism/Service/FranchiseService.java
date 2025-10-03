@@ -99,7 +99,6 @@ public class FranchiseService {
 
         // Set default values
         franchise.setStatus("ACTIVE");
-        franchise.setWalletBalance(BigDecimal.ZERO);
         franchise.setCreatedAt(LocalDateTime.now());
         franchise.setUpdatedAt(LocalDateTime.now());
 

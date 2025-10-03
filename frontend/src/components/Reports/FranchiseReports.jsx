@@ -8,7 +8,8 @@ import {
     flexRender,
     createColumnHelper,
 } from '@tanstack/react-table';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+
+import { Search, ChevronLeft, ChevronRight, TrendingUp, User, User2Icon, UserCheck, UserCircle, UserMinus, UserSquare, Building, Building2, Store, LucideWashingMachine, Calculator, Package } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
 import UniversalExportButtons from './UniversalExportButtons';
 
@@ -23,15 +24,21 @@ const FranchiseReports = () => {
     // Export configuration
     const exportConfig = {
         columns: {
-            headers: ['Franchise Name', 'Total Merchants', 'Wallet Balance', 'Total Devices', 'Total Products'],
-            keys: ['franchiseName', 'totalMerchants', 'walletBalance', 'totalDevices', 'totalProducts'],
-            widths: [20, 15, 15, 15, 15],
+            headers: ['Franchise Name', 'Total Merchants', 'Wallet Balance', 'Total Devices', 'Total Products','Contact Person','Contact Number','Contact Email','GST Number','PAN','Registration Number'],
+            keys: ['franchiseName', 'totalMerchants', 'walletBalance', 'totalDevices', 'totalProducts','contactPersonName','contactPersonPhoneNumber','contactPersonEmail','gstNumber','panNumber','registrationNumber'],
+            widths: [20, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
             styles: {
                 0: { cellWidth: 50 },
                 1: { cellWidth: 30, halign: 'center' },
                 2: { cellWidth: 30, halign: 'center' },
                 3: { cellWidth: 30, halign: 'center' },
-                4: { cellWidth: 30, halign: 'center' }
+                4: { cellWidth: 30, halign: 'center' },
+                5: { cellWidth: 30, halign: 'center' },
+                6: { cellWidth: 30, halign: 'center' },
+                7: { cellWidth: 30, halign: 'center' },
+                8: { cellWidth: 30, halign: 'center' },
+                9: { cellWidth: 30, halign: 'center' },
+                10: { cellWidth: 30, halign: 'center' }
             }
         },
         excelTransform: (data) => data.map(item => ({
@@ -39,14 +46,27 @@ const FranchiseReports = () => {
             'Total Merchants': item.totalMerchants,
             'Wallet Balance': item.walletBalance || 0,
             'Total Devices': item.totalDevices,
-            'Total Products': item.totalProducts
+            'Total Products': item.totalProducts,
+            'Contact Person': item.contactPersonName,
+            'Contact Number': item.contactPersonPhoneNumber,
+            'Contact Email':item.contactPersonEmail,
+            'GST Number':item.gstNumber,
+            'PAN':item.panNumber,
+            'Registration Number':item.registrationNumber 
+
         })),
         pdfTransform: (data) => data.map(item => ({
             franchiseName: item.franchiseName,
             totalMerchants: item.totalMerchants,
             walletBalance: item.walletBalance || 0,
             totalDevices: item.totalDevices,
-            totalProducts: item.totalProducts
+            totalProducts: item.totalProducts,
+            contactPerson: item.contactPersonName,
+            contactPersonPhoneNumber: item.contactPersonPhoneNumber,
+            contactPersonEmail: item.contactPersonEmail,
+            gstNumber: item.gstNumber,
+            panNumber: item.panNumber,
+            registrationNumber: item.registrationNumber
         }))
     };
 
@@ -91,6 +111,56 @@ const FranchiseReports = () => {
                 </div>
             ),
         }),
+
+        columnHelper.accessor('contactPersonName', {
+            header: 'Contact Person',
+            cell: info => (
+                <div className=" text-gray-900">
+                    {info.getValue()}
+                </div>
+            ),
+        }),
+        columnHelper.accessor('contactPersonPhoneNumber', {
+            header: 'Contact Number',
+            cell: info => (
+                <div className=" text-gray-900">
+                    {info.getValue()}
+                </div>
+            ),
+        }),
+        columnHelper.accessor('contactPersonEmail', {
+            header: 'Contact Email',
+            cell: info => (
+                <div className=" text-gray-900">
+                    {info.getValue()}
+                </div>
+            ),
+        }),
+        columnHelper.accessor('gstNumber', {
+            header: 'GST Number',
+            cell: info => (
+                <div className=" text-gray-900">
+                    {info.getValue()}
+                </div>
+            ),
+        }),
+        columnHelper.accessor('panNumber', {
+            header: 'PAN Number',
+            cell: info => (
+                <div className=" text-gray-900">
+                    {info.getValue()}
+                </div>
+            ),
+        }),
+        columnHelper.accessor('registrationNumber', {
+            header: 'registrations Number',
+            cell: info => (
+                <div className=" text-gray-900">
+                    {info.getValue()}
+                </div>
+            ),
+        })
+    
     ], [columnHelper]);
 
     const table = useReactTable({
@@ -151,6 +221,37 @@ const FranchiseReports = () => {
                     title="Franchise Reports"
                     {...exportConfig}
                 />
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="text-sm font-medium text-gray-500">Total Franchises</div>
+                    <div className="text-2xl font-bold text-gray-900">{data.length}</div>
+                    <Building className="ml-55 -mt-9 w-8 h-8 text-gray-400" />
+                </div>
+                <div className="bg-gradient-to-r from-red-50 to-red-100 p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="text-sm font-medium text-gray-500">Total Merchants</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                        {data.reduce((sum, item) => sum + item.totalMerchants, 0)}
+                    <Store className="ml-55 -mt-9 w-8 h-8 text-gray-400"/>
+                    </div>
+                </div>
+                <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="text-sm font-medium text-gray-500">Total Devices</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                        {data.reduce((sum, item) => sum + item.totalDevices, 0)}
+                    <Calculator className="ml-55 -mt-9 w-8 h-8 text-gray-400"/>
+                    </div>
+                </div>
+                <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="text-sm font-medium text-gray-500">Total Products</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                        {data.reduce((sum, item) => sum + item.totalProducts, 0)}
+                    <Package className="ml-55 -mt-9 w-8 h-8 text-gray-400"/>
+
+                    </div>
+                </div>
             </div>
 
             {/* Search */}
@@ -239,31 +340,7 @@ const FranchiseReports = () => {
                 </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Franchises</div>
-                    <div className="text-2xl font-bold text-gray-900">{data.length}</div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Merchants</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                        {data.reduce((sum, item) => sum + item.totalMerchants, 0)}
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Devices</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                        {data.reduce((sum, item) => sum + item.totalDevices, 0)}
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="text-sm font-medium text-gray-500">Total Products</div>
-                    <div className="text-2xl font-bold text-gray-900">
-                        {data.reduce((sum, item) => sum + item.totalProducts, 0)}
-                    </div>
-                </div>
-            </div>
+            
         </div>
     );
 };

@@ -442,7 +442,7 @@ const ProductAssignment = () => {
                 </div>
 
                 {/* Table Controls */}
-                <div className="p-6 border-b">
+                <div className="p-6 ">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-4">
                             <input
@@ -511,7 +511,7 @@ const ProductAssignment = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
+                <div className="px-6 py-4 bg-gray-50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => table.previousPage()}

@@ -40,17 +40,19 @@ public interface FranchiseRepository extends JpaRepository<Franchise, Long> {
 """)
     List<FranchiseListDTO> findAllWithMerchantCount();
 
-    //stats
-    @Query("SELECT SUM(f.walletBalance) FROM Franchise f")
-    BigDecimal sumWalletBalances();
-
     @Query(value = """
     SELECT new com.project2.ism.DTO.ReportDTO.FranchiseReportsDTO(
         f.franchiseName,
         COUNT(DISTINCT m.id),
         fw.availableBalance,
         COUNT(DISTINCT psn.id),
-        COUNT(DISTINCT p.id)
+        COUNT(DISTINCT p.id),
+        f.gstNumber,
+        f.panNumber,
+        f.registrationNumber,
+        f.contactPerson.name,
+        f.contactPerson.phoneNumber,
+        f.contactPerson.email
     )
     FROM Franchise f
     LEFT JOIN Merchant m ON m.franchise.id = f.id
@@ -58,12 +60,11 @@ public interface FranchiseRepository extends JpaRepository<Franchise, Long> {
     LEFT JOIN ProductSerialNumbers psn ON psn.outwardTransaction.id = ot.id
     LEFT JOIN Product p ON p.id = ot.product.id
     LEFT JOIN FranchiseWallet fw ON fw.franchise.id = f.id
-    GROUP BY f.id, f.franchiseName, fw.availableBalance
+    GROUP BY f.id, f.franchiseName, fw.availableBalance,
+             f.gstNumber, f.panNumber, f.registrationNumber,
+             f.contactPerson.name, f.contactPerson.phoneNumber, f.contactPerson.email
 """)
     List<FranchiseReportsDTO> getFranchiseReports();
-
-
-
 
 
 }
