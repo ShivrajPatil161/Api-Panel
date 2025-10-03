@@ -1,5 +1,6 @@
 package com.project2.ism.Repository;
 
+import com.project2.ism.DTO.AdminDTO.SettlementActivityStatsDTO;
 import com.project2.ism.Model.FranchiseSettlementBatch;
 import com.project2.ism.Model.MerchantSettlementBatch;
 import org.springframework.data.domain.Page;
@@ -46,5 +47,20 @@ public interface MerchantSettlementBatchRepository extends JpaRepository<Merchan
 
     Long countByStatusAndProcessingCompletedAtBetween(String completed, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
+
+    @Query("""
+        SELECT new com.project2.ism.DTO.AdminDTO.SettlementActivityStatsDTO(
+            COUNT(m.id),
+            COALESCE(SUM(m.processedTransactions), 0L),
+            COALESCE(SUM(m.totalAmount), 0.0),
+            COALESCE(SUM(m.totalFees), 0.0),
+            COALESCE(SUM(m.totalNetAmount), 0.0)
+        )
+        FROM MerchantSettlementBatch m
+        WHERE m.createdBy = :createdBy
+        AND m.franchiseBatchId IS NULL
+        AND DATE(m.createdAt) = CURRENT_DATE
+    """)
+    SettlementActivityStatsDTO getTodaysDirectMerchantSettlementStats(@Param("createdBy") String createdBy);
 }
 

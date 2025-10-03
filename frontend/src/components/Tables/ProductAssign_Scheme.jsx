@@ -91,7 +91,7 @@ const ProductAssignment = () => {
                     const assignmentCount = row.original.assignmentCount
 
                     if (assignmentCount === 0) {
-                        return <div className="w-6"></div>
+                        return <div className="w-3"></div>
                     }
 
                     return (
@@ -102,16 +102,16 @@ const ProductAssignment = () => {
                                     [groupIndex]: !prev[groupIndex]
                                 }))
                             }}
-                            className="p-1 hover:bg-gray-100 rounded"
+                            className="p- hover:bg-gray-100 rounded"
                         >
                             {expanded[groupIndex] ?
-                                <ChevronDown size={16} /> :
-                                <ChevronRightIcon size={16} />
+                                <ChevronDown size={14} /> :
+                                <ChevronRightIcon size={14} />
                             }
                         </button>
                     )
                 }
-                return <div className="w-6 ml-4"></div>
+                return <div className=""></div>
             },
             size: 40
         },
@@ -467,7 +467,7 @@ const ProductAssignment = () => {
                                     {headerGroup.headers.map((header) => (
                                         <th
                                             key={header.id}
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                             style={{ width: header.getSize() }}
                                         >
                                             {header.isPlaceholder ? null : (
@@ -498,7 +498,7 @@ const ProductAssignment = () => {
                                         {row.getVisibleCells().map((cell) => (
                                             <td
                                                 key={cell.id}
-                                                className={`px-6 py-4 ${row.original.type === 'scheme' ? 'font-medium' : ''}`}
+                                                className={`px-4 py-3 ${row.original.type === 'scheme' ? 'font-medium' : ''}`}
                                             >
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </td>

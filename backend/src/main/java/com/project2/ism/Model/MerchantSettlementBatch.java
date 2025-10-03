@@ -16,6 +16,10 @@ public class MerchantSettlementBatch {
     @Column(name = "merchant_id", nullable = false)
     private Long merchantId;
 
+    @Column(name = "franchise_batch_id", nullable = true)
+    private Long franchiseBatchId;
+
+
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
@@ -216,6 +220,14 @@ public class MerchantSettlementBatch {
 
     public void setProcessingCompletedAt(LocalDateTime processingCompletedAt) {
         this.processingCompletedAt = processingCompletedAt;
+    }
+
+    public Long getFranchiseBatchId() {
+        return franchiseBatchId;
+    }
+
+    public void setFranchiseBatchId(Long franchiseBatchId) {
+        this.franchiseBatchId = franchiseBatchId;
     }
 
     public String getErrorMessage() {

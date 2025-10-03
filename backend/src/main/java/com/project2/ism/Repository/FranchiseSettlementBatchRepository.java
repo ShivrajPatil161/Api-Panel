@@ -1,5 +1,6 @@
 package com.project2.ism.Repository;
 
+import com.project2.ism.DTO.AdminDTO.SettlementActivityStatsDTO;
 import com.project2.ism.Model.FranchiseSettlementBatch;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -29,4 +30,19 @@ public interface FranchiseSettlementBatchRepository extends JpaRepository<Franch
     Long countByStatus(FranchiseSettlementBatch.BatchStatus status);
 
     Long countByStatusAndProcessingCompletedAtBetween(FranchiseSettlementBatch.BatchStatus completed, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    @Query("""
+        SELECT new com.project2.ism.DTO.AdminDTO.SettlementActivityStatsDTO(
+            COUNT(f.id),
+            COALESCE(SUM(f.processedTransactions), 0L),
+            COALESCE(SUM(f.totalAmount), 0.0),
+            COALESCE(SUM(f.totalFees), 0.0),
+            COALESCE(SUM(f.totalNetAmount), 0.0)
+        )
+        FROM FranchiseSettlementBatch f
+        WHERE f.createdBy = :createdBy
+        AND DATE(f.createdAt) = CURRENT_DATE
+    """)
+    SettlementActivityStatsDTO getTodaysFranchiseSettlementStats(@Param("createdBy") String createdBy);
+
 }

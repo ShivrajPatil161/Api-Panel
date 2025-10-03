@@ -8,6 +8,8 @@ import com.project2.ism.Model.MerchantSettlementBatch;
 import com.project2.ism.Service.EnhancedSettlementService2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,10 +34,12 @@ public class EnhancedSettlementController {
     public ResponseEntity<BatchCreatedResponse> getOrCreateActiveBatch(
             @PathVariable Long merchantId,
             @RequestParam String cycleKey,
-            @RequestParam String createdBy,
             @RequestParam Long productId) { // NEW: Required product_id parameter
 
         try {
+            // ✅ Extract current user (email/username) from Spring Security
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String createdBy = (authentication != null) ? authentication.getName() : "SYSTEM";
             MerchantSettlementBatch batch = enhancedSettlementService
                     .getOrCreateActiveBatch(merchantId, productId, cycleKey, createdBy);
 

@@ -94,13 +94,13 @@ public class EnhancedSettlementService2 {
         }
 
         // Create new batch
-        return createBatch(merchantId,productId, cycleKey, createdBy);
+        return createBatch(merchantId,productId, cycleKey, createdBy, null);
     }
 
     /**
      * Create new settlement batch with product_id filtering
      */
-    public MerchantSettlementBatch createBatch(Long merchantId, Long productId, String cycleKey, String createdBy) {
+    public MerchantSettlementBatch createBatch(Long merchantId, Long productId, String cycleKey, String createdBy,Long franchiseBatchId) {
         log.debug("Creating new batch for merchant={}, cycle={}, product={}", merchantId, cycleKey, productId);
 
         LocalDateTime windowEnd = calculateWindowEnd(cycleKey);
@@ -108,6 +108,9 @@ public class EnhancedSettlementService2 {
 
         MerchantSettlementBatch batch = new MerchantSettlementBatch();
         batch.setMerchantId(merchantId);
+        if(franchiseBatchId!=null){
+            batch.setFranchiseBatchId(franchiseBatchId);
+        }
         batch.setWindowStart(windowStart);
         batch.setWindowEnd(windowEnd);
         batch.setCycleKey(cycleKey);

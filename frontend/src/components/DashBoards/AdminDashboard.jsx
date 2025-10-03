@@ -257,7 +257,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Product Categories & Franchise Details */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     {/* Product Categories */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                         <div className="flex items-center justify-between mb-6">
@@ -308,6 +308,101 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Settlement Activity Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
+                    {/* Franchise Settlements */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Today's Franchise Settlements</h3>
+                            <Store className="w-6 h-6 text-blue-600" />
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-blue-50 rounded-lg">
+                                    <p className="text-sm text-blue-700 mb-1">Total Batches</p>
+                                    <p className="text-2xl font-bold text-blue-600">
+                                        {dashboardData?.settlementActivity?.franchiseSettlements?.totalBatches || 0}
+                                    </p>
+                                </div>
+                                <div className="p-4 bg-green-50 rounded-lg">
+                                    <p className="text-sm text-green-700 mb-1">Transactions</p>
+                                    <p className="text-2xl font-bold text-green-600">
+                                        {dashboardData?.settlementActivity?.franchiseSettlements?.totalProcessedTransactions || 0}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-4 space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-slate-600">Total Amount</span>
+                                    <span className="text-lg font-bold text-slate-900">
+                                        ₹{dashboardData?.settlementActivity?.franchiseSettlements?.totalAmount?.toFixed(2) || '0.00'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-slate-600">Total Fees</span>
+                                    <span className="text-lg font-semibold text-red-600">
+                                        -₹{dashboardData?.settlementActivity?.franchiseSettlements?.totalFees?.toFixed(2) || '0.00'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                                    <span className="text-sm font-medium text-slate-700">Net Amount</span>
+                                    <span className="text-xl font-bold text-green-600">
+                                        ₹{dashboardData?.settlementActivity?.franchiseSettlements?.totalNetAmount?.toFixed(2) || '0.00'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Direct Merchant Settlements */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Today's Direct Merchant Settlements</h3>
+                            <Users className="w-6 h-6 text-purple-600" />
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-purple-50 rounded-lg">
+                                    <p className="text-sm text-purple-700 mb-1">Total Batches</p>
+                                    <p className="text-2xl font-bold text-purple-600">
+                                        {dashboardData?.settlementActivity?.directMerchantSettlements?.totalBatches || 0}
+                                    </p>
+                                </div>
+                                <div className="p-4 bg-green-50 rounded-lg">
+                                    <p className="text-sm text-green-700 mb-1">Transactions</p>
+                                    <p className="text-2xl font-bold text-green-600">
+                                        {dashboardData?.settlementActivity?.directMerchantSettlements?.totalProcessedTransactions || 0}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-4 space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-slate-600">Total Amount</span>
+                                    <span className="text-lg font-bold text-slate-900">
+                                        ₹{dashboardData?.settlementActivity?.directMerchantSettlements?.totalAmount?.toFixed(2) || '0.00'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-slate-600">Total Fees</span>
+                                    <span className="text-lg font-semibold text-red-600">
+                                        -₹{dashboardData?.settlementActivity?.directMerchantSettlements?.totalFees?.toFixed(2) || '0.00'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                                    <span className="text-sm font-medium text-slate-700">Net Amount</span>
+                                    <span className="text-xl font-bold text-green-600">
+                                        ₹{dashboardData?.settlementActivity?.directMerchantSettlements?.totalNetAmount?.toFixed(2) || '0.00'}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
