@@ -1,8 +1,13 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.DTO.AdminDTO.SettlementActivityStatsDTO;
 import com.project2.ism.DTO.FranchiseMerchantStatsDTO;
 import com.project2.ism.DTO.InventoryTransactionStatsDTO;
 import com.project2.ism.DTO.VendorStatsDTO;
+import com.project2.ism.Repository.FranchiseSettlementBatchRepository;
+import com.project2.ism.Repository.MerchantSettlementBatchRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,17 +23,21 @@ public class AdminDashboardService {
     private final VendorService vendorService;
     private final StatsService statsService;
     private final ProductService productService;
+    private final FranchiseSettlementBatchRepository franchiseSettlementBatchRepository;
+    private final MerchantSettlementBatchRepository merchantSettlementBatchRepository;
 
     public AdminDashboardService(FranchiseService franchiseService,
                                  PricingSchemeService pricingSchemeService,
                                  VendorService vendorService,
                                  StatsService statsService,
-                                 ProductService productService) {
+                                 ProductService productService, FranchiseSettlementBatchRepository franchiseSettlementBatchRepository, MerchantSettlementBatchRepository merchantSettlementBatchRepository) {
         this.franchiseService = franchiseService;
         this.pricingSchemeService = pricingSchemeService;
         this.vendorService = vendorService;
         this.statsService = statsService;
         this.productService = productService;
+        this.franchiseSettlementBatchRepository = franchiseSettlementBatchRepository;
+        this.merchantSettlementBatchRepository = merchantSettlementBatchRepository;
     }
 
     /**
@@ -62,7 +71,17 @@ public class AdminDashboardService {
         // Product Stats
         Map<String, Object> productStats = productService.getProductStats();
         dashboardStats.put("productStats", productStats);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String createdBy = auth.getName();
+        SettlementActivityStatsDTO franchiseStats =
+                franchiseSettlementBatchRepository.getTodaysFranchiseSettlementStats(createdBy);
 
+        SettlementActivityStatsDTO merchantStats =
+                merchantSettlementBatchRepository.getTodaysDirectMerchantSettlementStats(createdBy);
+        Map<String, Object> settlementActivity = new HashMap<>();
+        settlementActivity.put("franchiseSettlements", franchiseStats);
+        settlementActivity.put("directMerchantSettlements", merchantStats);
+        dashboardStats.put("settlementActivity", settlementActivity);
         return dashboardStats;
     }
 

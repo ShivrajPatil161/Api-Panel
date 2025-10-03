@@ -4,6 +4,8 @@ import com.project2.ism.DTO.TempDTOs.*;
 import com.project2.ism.Model.FranchiseSettlementBatch;
 import com.project2.ism.Service.FranchiseBulkSettlementService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,10 +46,12 @@ public class FranchiseBulkSettlementController {
     public ResponseEntity<FranchiseBatchResponse> createSelectiveBatch(
             @PathVariable Long franchiseId,
             @RequestParam String cycleKey,
-            @RequestParam String createdBy,
             @RequestParam Long productId, // NEW: Required product_id parameter
             @RequestBody List<Long> merchantIds) {
         try {
+            // ✅ Extract current user (email/username) from Spring Security
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String createdBy = (authentication != null) ? authentication.getName() : "SYSTEM";
             FranchiseSettlementBatch batch = franchiseBulkSettlementService
                     .createSelectiveFranchiseBatch(franchiseId,productId, cycleKey, merchantIds, createdBy);
             return ResponseEntity.ok(new FranchiseBatchResponse(batch));
@@ -63,9 +67,11 @@ public class FranchiseBulkSettlementController {
     public ResponseEntity<FranchiseBatchResponse> createFullBatch(
             @PathVariable Long franchiseId,
             @RequestParam String cycleKey,
-            @RequestParam String createdBy,
             @RequestParam Long productId) { // NEW: Required product_id parameter
         try {
+            // ✅ Extract current user (email/username) from Spring Security
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String createdBy = (authentication != null) ? authentication.getName() : "SYSTEM";
             FranchiseSettlementBatch batch = franchiseBulkSettlementService
                     .createFullFranchiseBatch(franchiseId,productId, cycleKey, createdBy);
             return ResponseEntity.ok(new FranchiseBatchResponse(batch));

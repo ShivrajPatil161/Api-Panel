@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -127,10 +128,11 @@ public class FranchiseAsyncProcessor {
             // Get franchise batch info
             FranchiseSettlementBatch batch = getFranchiseBatch(franchiseBatchId);
 
-//            Authentication authentication =
+//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//            String createdBy = (authentication != null) ? authentication.getName() : "SYSTEM";
             // Create merchant-level settlement batch for tracking
             merchantBatch = settlementService.createBatch(
-                    merchantId, batch.getProductId(), batch.getCycleKey(), "FRANCHISE_BULK");
+                    merchantId, batch.getProductId(), batch.getCycleKey(), batch.getCreatedBy(),franchiseBatchId);
 
             result.setTotalTransactions(transactionIds.size());
 
