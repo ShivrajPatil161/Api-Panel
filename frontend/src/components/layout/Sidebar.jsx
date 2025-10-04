@@ -733,10 +733,14 @@ const filterMenuItemsByPermissions = (menuItems, permissionSet, userType) => {
     }
 
     // For other menu items, apply normal permission filtering
+    // For other menu items, apply normal permission filtering
     if (item.children) {
-      const filteredChildren = item.children.filter(child =>
-        hasPermission(permissionSet, child.permission || child.title)
-      );
+      const filteredChildren = item.children.filter(child => {
+        // Skip permission check for Reports children
+        if (item.key === 'reports') return true;
+
+        return hasPermission(permissionSet, child.permission || child.title);
+      });
 
       if (filteredChildren.length > 0) {
         acc.push({ ...item, children: filteredChildren });
@@ -765,6 +769,7 @@ const MENU_CONFIGS = {
         children.push(
           { title: 'Admin Management', path: '/dashboard/role-management', icon: Users, permission: 'Admin Management' },
           { title: 'Logs', path: '/dashboard/logs', icon: Users, permission: 'Logs' },
+          { title: 'Edit History', path: '/dashboard/edit-history', icon: Users, permission: 'Edit History' },
           { title: 'Wallet Adjustment', path: '/dashboard/wallet-adjustment', icon: Users, permission: 'Wallet Adjustment' }
         );
       } else if (userType === 'admin') {
@@ -842,15 +847,15 @@ const MENU_CONFIGS = {
         iconColor: '',
         permission: 'Reports',
         children: [
-          { title: 'Franchise Reports', path: '/dashboard/reports/franchise', icon: BarChart3, permission: 'File Upload' },
-          // { title: 'Merchant Reports', path: '/dashboard/reports/merchant', icon: BarChart3, permission: 'File Upload' },
-          { title: 'Vendor Reports', path: '/dashboard/reports/vendor', icon: BarChart3, permission: 'Charge Calculation' },
-          { title: 'Merchant Transaction Reports', path: '/dashboard/reports/merchant-transactions', icon: BarChart3, permission: 'Batch Status' },
-          { title: 'Franchise Transaction Report', path: '/dashboard/reports/franchise-transactions', icon: BarChart3, permission: 'File Upload' },
-          { title: 'Inward Report', path: '/dashboard/reports/inward', icon: BarChart3, permission: 'Charge Calculation' },
-          { title: 'Outward Report', path: '/dashboard/reports/outward', icon: BarChart3, permission: 'Batch Status' },
-          { title: 'Return Report', path: '/dashboard/reports/return', icon: BarChart3, permission: 'File Upload' },
-          { title: 'Product Reports', path: '/dashboard/reports/product', icon: BarChart3, permission: 'Charge Calculation' }
+          { title: 'Franchise Reports', path: '/dashboard/reports/franchise', icon: BarChart3},
+          { title: 'Merchant Reports', path: '/dashboard/reports/merchant', icon: BarChart3},
+          { title: 'Vendor Reports', path: '/dashboard/reports/vendor', icon: BarChart3},
+          { title: 'Merchant Transaction Reports', path: '/dashboard/reports/merchant-transactions', icon: BarChart3},
+          { title: 'Franchise Transaction Report', path: '/dashboard/reports/franchise-transactions', icon: BarChart3},
+          { title: 'Inward Report', path: '/dashboard/reports/inward', icon: BarChart3},
+          { title: 'Outward Report', path: '/dashboard/reports/outward', icon: BarChart3 },
+          { title: 'Return Report', path: '/dashboard/reports/return', icon: BarChart3},
+          { title: 'Product Reports', path: '/dashboard/reports/product', icon: BarChart3}
         ]
       }
     ];
@@ -890,8 +895,8 @@ const MENU_CONFIGS = {
       icon: BarChart3,
       iconColor: '',
       children: [
-        { title: 'Merchant Transaction Reports', path: '/dashboard/reports/merchant-transactions', icon: BarChart3, permission: 'Batch Status' },
-        { title: 'Franchise Transaction Report', path: '/dashboard/reports/franchise-transactions', icon: BarChart3, permission: 'File Upload' },
+        { title: 'Merchant Transaction Reports', path: '/dashboard/reports/merchant-transactions', icon: BarChart3},
+        { title: 'Franchise Transaction Report', path: '/dashboard/reports/franchise-transactions', icon: BarChart3},
       ]
     }
   ],
@@ -940,7 +945,7 @@ const MENU_CONFIGS = {
       icon: BarChart3,
       iconColor: '',
       children: [
-        { title: 'Merchant Transaction Reports', path: '/dashboard/reports/merchant-transactions', icon: BarChart3, permission: 'Batch Status' }
+        { title: 'Merchant Transaction Reports', path: '/dashboard/reports/merchant-transactions', icon: BarChart3}
       ]
     }
   ]
@@ -968,7 +973,7 @@ const Sidebar = ({ userType }) => {
     // For super admin, grant all permissions
     if (userType === 'super_admin') {
       return new Set([
-        'Dashboard', 'Admin Management', 'Logs', 'Wallet Adjustment',
+        'Dashboard', 'Admin Management', 'Logs','Edit History', 'Wallet Adjustment',
         'Vendors', 'Vendor List', 'Product List', 'Vendor Rates',
         'Inventory', 'Pricing Scheme', 'Product Scheme Assign', 'Inventory Management',
         'Customers', 'Customer List', 'Onboard Customer', 'Merchant Approval', 'Products Distribution',

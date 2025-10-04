@@ -31,6 +31,9 @@ import ReturnTransactionReport from '../../components/Reports/ReturnTransactionR
 import ProductReport from '../../components/Reports/productReports/ProductReport.jsx'
 import MTransReportDashboard from '../../components/Reports/MerchantTransReport/MTransReportDashboard.jsx'
 import FTransReportDashboard from '../../components/Reports/FranhiseTransReports/FTransReportDashboard.jsx'
+import MerchantReports from '../../components/Reports/MerchantReports.jsx'
+import AuditHistoryComponent from '../../components/Admin/AuditHistoryComponent.jsx'
+
 
 export const adminRoutes = [
   {
@@ -48,6 +51,10 @@ export const adminRoutes = [
   {
     path: "logs",
     element: <BusinessLogs />
+  },
+  {
+    path: "edit-history",
+    element: <AuditHistoryComponent />
   },
   // Vendors routes
   {
@@ -148,6 +155,10 @@ export const adminRoutes = [
       {
         path: "franchise",
         element: <FranchiseReports />
+      },
+      {
+        path: "merchant",
+        element: <MerchantReports />
       },
       {
         path: "vendor",
