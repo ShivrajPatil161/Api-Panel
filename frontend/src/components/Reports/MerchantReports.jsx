@@ -103,14 +103,7 @@ const MerchantReports = () => {
                 </div>
             ),
         }),
-        columnHelper.accessor('totalProducts', {
-            header: 'Total Products',
-            cell: info => (
-                <div className="text-center text-gray-700">
-                    {info.getValue()}
-                </div>
-            ),
-        }),
+       
 
         columnHelper.accessor('contactPersonName', {
             header: 'Contact Person',
@@ -244,14 +237,14 @@ const MerchantReports = () => {
                     {/* <Calculator className="ml-55 -mt-9 w-8 h-8 text-gray-400"/> */}
                     </div>
                 </div>
-                <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-gray-200">
+                {/* <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="text-sm font-medium text-gray-500">Total Products</div>
                     <div className="text-2xl font-bold text-gray-900">
-                        {data.reduce((sum, item) => sum + item.totalProducts, 0)}
-                    {/* <Package className="ml-55 -mt-9 w-8 h-8 text-gray-400"/> */}
+                        {data.reduce((sum, item) => sum + item.franchiseName, 0)}
+                    <Package className="ml-55 -mt-9 w-8 h-8 text-gray-400"/>
 
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Search */}
