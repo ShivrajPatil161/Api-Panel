@@ -59,10 +59,10 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     @Query(value = """
     SELECT new com.project2.ism.DTO.ReportDTO.MerchantReportDTO(
         m.businessName,
-        m.franchise.franchiseName,
-        mw.availableBalance,
+        COALESCE(f.franchiseName, 'Direct'),
+        COALESCE(mw.availableBalance, 0),
         COUNT(DISTINCT psn.id),
-        COUNT(DISTINCT p.id),
+        COUNT(DISTINCT ot.product.id),
         m.gstNumber,
         m.panNumber,
         m.registrationNumber,
@@ -71,11 +71,11 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
         m.contactPerson.email
     )
     FROM Merchant m
-    LEFT JOIN OutwardTransactions ot ON ot.merchant.id = m.id
-    LEFT JOIN ProductSerialNumbers psn ON psn.outwardTransaction.id = ot.id
-    LEFT JOIN Product p ON p.id = ot.product.id
+    LEFT JOIN m.franchise f
     LEFT JOIN MerchantWallet mw ON mw.merchant.id = m.id
-    GROUP BY m.id, m.businessName, m.franchise.franchiseName, mw.availableBalance,
+    LEFT JOIN OutwardTransactions ot ON ot.merchant.id = m.id
+    LEFT JOIN ProductSerialNumbers psn ON psn.merchant.id = m.id
+    GROUP BY m.id, m.businessName, f.franchiseName, mw.availableBalance,
              m.gstNumber, m.panNumber, m.registrationNumber,
              m.contactPerson.name, m.contactPerson.phoneNumber, m.contactPerson.email
 """)
