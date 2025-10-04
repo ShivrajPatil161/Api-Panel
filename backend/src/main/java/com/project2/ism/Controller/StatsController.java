@@ -4,6 +4,7 @@ import com.project2.ism.DTO.FranchiseStatsDTO;
 import com.project2.ism.DTO.InventoryTransactionStatsDTO;
 import com.project2.ism.DTO.MerchantStatsDTO;
 import com.project2.ism.DTO.ReportDTO.FranchiseReportsDTO;
+import com.project2.ism.DTO.ReportDTO.MerchantReportDTO;
 import com.project2.ism.DTO.ReportDTO.VendorReportsDTO;
 import com.project2.ism.Service.StatsService;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,12 @@ public class StatsController {
     @GetMapping("/franchise-reports")
     public ResponseEntity<List<FranchiseReportsDTO>> getFranchiseReports() {
         List<FranchiseReportsDTO> reports = statsService.getFranchiseReports();
+        return ResponseEntity.ok(reports);
+    }
+
+    @GetMapping("/merchant-reports")
+    public  ResponseEntity<List<MerchantReportDTO>> getMerchantReports(){
+        List<MerchantReportDTO> reports = statsService.getMerchantReports();
         return ResponseEntity.ok(reports);
     }
 

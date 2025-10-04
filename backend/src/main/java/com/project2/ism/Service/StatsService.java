@@ -2,10 +2,7 @@ package com.project2.ism.Service;
 
 
 import com.project2.ism.DTO.*;
-import com.project2.ism.DTO.ReportDTO.FranchiseReportsDTO;
-import com.project2.ism.DTO.ReportDTO.ProductDetailDTO;
-import com.project2.ism.DTO.ReportDTO.VendorDetailDTO;
-import com.project2.ism.DTO.ReportDTO.VendorReportsDTO;
+import com.project2.ism.DTO.ReportDTO.*;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
@@ -154,5 +151,9 @@ public class StatsService {
 
     public List<FranchiseReportsDTO> getFranchiseReports() {
         return franchiseRepository.getFranchiseReports();
+    }
+
+    public List<MerchantReportDTO> getMerchantReports(){
+        return merchantRepository.getMerchantReports();
     }
 }
