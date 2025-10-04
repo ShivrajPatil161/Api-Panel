@@ -2,9 +2,9 @@ package com.project2.ism.DTO.ReportDTO;
 
 import java.math.BigDecimal;
 
-public class FranchiseReportsDTO {
+public class MerchantReportDTO {
+    private String businessName;
     private String franchiseName;
-    private Long totalMerchants;
     private BigDecimal walletBalance;
     private Long totalDevices;
     private Long totalProducts;
@@ -15,10 +15,9 @@ public class FranchiseReportsDTO {
     private String contactPersonPhoneNumber;
     private String contactPersonEmail;
 
-
-    public FranchiseReportsDTO(String franchiseName, Long totalMerchants, BigDecimal walletBalance, Long totalDevices,Long totalProducts, String gstNumber, String panNumber, String registrationNumber, String contactPersonName, String contactPersonPhoneNumber, String contactPersonEmail) {
+    public MerchantReportDTO(String businessName, String franchiseName, BigDecimal walletBalance, Long totalDevices, Long totalProducts, String gstNumber, String panNumber, String registrationNumber, String contactPersonName, String contactPersonPhoneNumber, String contactPersonEmail) {
+        this.businessName = businessName;
         this.franchiseName = franchiseName;
-        this.totalMerchants = totalMerchants;
         this.walletBalance = walletBalance;
         this.totalDevices = totalDevices;
         this.totalProducts = totalProducts;
@@ -29,7 +28,14 @@ public class FranchiseReportsDTO {
         this.contactPersonPhoneNumber = contactPersonPhoneNumber;
         this.contactPersonEmail = contactPersonEmail;
     }
-    // getters + setters
+
+    public String getBusinessName() {
+        return businessName;
+    }
+
+    public void setBusinessName(String businessName) {
+        this.businessName = businessName;
+    }
 
     public String getFranchiseName() {
         return franchiseName;
@@ -37,14 +43,6 @@ public class FranchiseReportsDTO {
 
     public void setFranchiseName(String franchiseName) {
         this.franchiseName = franchiseName;
-    }
-
-    public Long getTotalMerchants() {
-        return totalMerchants;
-    }
-
-    public void setTotalMerchants(Long totalMerchants) {
-        this.totalMerchants = totalMerchants;
     }
 
     public BigDecimal getWalletBalance() {
@@ -55,20 +53,20 @@ public class FranchiseReportsDTO {
         this.walletBalance = walletBalance;
     }
 
-    public Long getTotalProducts() {
-        return totalProducts;
-    }
-
-    public void setTotalProducts(Long totalProducts) {
-        this.totalProducts = totalProducts;
-    }
-
     public Long getTotalDevices() {
         return totalDevices;
     }
 
     public void setTotalDevices(Long totalDevices) {
         this.totalDevices = totalDevices;
+    }
+
+    public Long getTotalProducts() {
+        return totalProducts;
+    }
+
+    public void setTotalProducts(Long totalProducts) {
+        this.totalProducts = totalProducts;
     }
 
     public String getGstNumber() {
@@ -119,4 +117,3 @@ public class FranchiseReportsDTO {
         this.contactPersonEmail = contactPersonEmail;
     }
 }
-

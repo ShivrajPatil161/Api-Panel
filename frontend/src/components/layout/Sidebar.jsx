@@ -843,6 +843,7 @@ const MENU_CONFIGS = {
         permission: 'Reports',
         children: [
           { title: 'Franchise Reports', path: '/dashboard/reports/franchise', icon: BarChart3, permission: 'File Upload' },
+          // { title: 'Merchant Reports', path: '/dashboard/reports/merchant', icon: BarChart3, permission: 'File Upload' },
           { title: 'Vendor Reports', path: '/dashboard/reports/vendor', icon: BarChart3, permission: 'Charge Calculation' },
           { title: 'Merchant Transaction Reports', path: '/dashboard/reports/merchant-transactions', icon: BarChart3, permission: 'Batch Status' },
           { title: 'Franchise Transaction Report', path: '/dashboard/reports/franchise-transactions', icon: BarChart3, permission: 'File Upload' },

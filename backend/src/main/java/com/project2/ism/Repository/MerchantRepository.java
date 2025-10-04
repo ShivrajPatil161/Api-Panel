@@ -1,5 +1,7 @@
 package com.project2.ism.Repository;
 
+import com.project2.ism.DTO.ReportDTO.FranchiseReportsDTO;
+import com.project2.ism.DTO.ReportDTO.MerchantReportDTO;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -52,4 +54,30 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     // Sum wallet balance of merchants under a franchise (franchise_id not null)
     @Query("SELECT SUM(m.walletBalance) FROM Merchant m WHERE m.franchise IS NOT NULL")
     BigDecimal sumFranchiseMerchantWallets();
+
+
+    @Query(value = """
+    SELECT new com.project2.ism.DTO.ReportDTO.MerchantReportDTO(
+        m.businessName,
+        m.franchise.franchiseName,
+        mw.availableBalance,
+        COUNT(DISTINCT psn.id),
+        COUNT(DISTINCT p.id),
+        m.gstNumber,
+        m.panNumber,
+        m.registrationNumber,
+        m.contactPerson.name,
+        m.contactPerson.phoneNumber,
+        m.contactPerson.email
+    )
+    FROM Merchant m
+    LEFT JOIN OutwardTransactions ot ON ot.merchant.id = m.id
+    LEFT JOIN ProductSerialNumbers psn ON psn.outwardTransaction.id = ot.id
+    LEFT JOIN Product p ON p.id = ot.product.id
+    LEFT JOIN MerchantWallet mw ON mw.merchant.id = m.id
+    GROUP BY m.id, m.businessName, m.franchise.franchiseName, mw.availableBalance,
+             m.gstNumber, m.panNumber, m.registrationNumber,
+             m.contactPerson.name, m.contactPerson.phoneNumber, m.contactPerson.email
+""")
+    List<MerchantReportDTO> getMerchantReports();
 }

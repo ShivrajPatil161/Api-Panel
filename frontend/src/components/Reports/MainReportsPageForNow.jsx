@@ -18,6 +18,7 @@ const MainReportsPageForNow = () => {
     // Define all possible tabs
     const allTabs = [
         { id: "franchise", label: "Franchise Reports", component: <FranchiseReports /> },
+        { id: "merchant", label: "Merchant Reports", component: <MerchantReports /> },
         { id: "vendor", label: "Vendor Reports", component: <VendorReports /> },
         { id: "merchant-reports", label: "Merchant Transaction Reports", component: <MTransReportDashboard /> },
         { id: "franchise-reports", label: "Franchise Transaction Reports", component: <FTransReportDashboard /> },
