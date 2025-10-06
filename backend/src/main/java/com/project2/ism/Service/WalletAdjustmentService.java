@@ -1,9 +1,6 @@
 package com.project2.ism.Service;
 
-import com.project2.ism.Model.FranchiseTransactionDetails;
-import com.project2.ism.Model.FranchiseWallet;
-import com.project2.ism.Model.MerchantTransactionDetails;
-import com.project2.ism.Model.MerchantWallet;
+import com.project2.ism.Model.*;
 import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Model.Users.Merchant;
 import com.project2.ism.Repository.*;
@@ -150,4 +147,17 @@ public class WalletAdjustmentService {
 
         merchantWalletRepository.save(merchantWallet);
     }
+
+    public BigDecimal getFranchiseWalletBalance(Long franchiseId) {
+        return franchiseWalletRepository.findByFranchiseId(franchiseId)
+                .map(WalletBase::getAvailableBalance)
+                .orElse(BigDecimal.ZERO);
+    }
+
+    public BigDecimal getMerchantWalletBalance(Long merchantId) {
+        return merchantWalletRepository.findByMerchantId(merchantId)
+                .map(WalletBase::getAvailableBalance)
+                .orElse(BigDecimal.ZERO);
+    }
+
 }
