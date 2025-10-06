@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/wallet-adjustment")
-@CrossOrigin(origins = "*")
 public class WalletAdjustmentController {
 
     @Autowired
@@ -45,6 +44,54 @@ public class WalletAdjustmentController {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
         }
     }
+
+    @GetMapping("/franchise/{franchiseId}")
+    public ResponseEntity<?> getFranchiseWalletBalance(@PathVariable Long franchiseId) {
+        try {
+            BigDecimal balance = walletAdjustmentService.getFranchiseWalletBalance(franchiseId);
+            return ResponseEntity.ok().body(new WalletBalanceResponse(franchiseId, balance));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    @GetMapping("/merchant/{merchantId}")
+    public ResponseEntity<?> getMerchantWalletBalance(@PathVariable Long merchantId) {
+        try {
+            BigDecimal balance = walletAdjustmentService.getMerchantWalletBalance(merchantId);
+            return ResponseEntity.ok().body(new WalletBalanceResponse(merchantId, balance));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    // Inner response class for balance
+    static class WalletBalanceResponse {
+        private Long customerId;
+        private BigDecimal availableBalance;
+
+        public WalletBalanceResponse(Long customerId, BigDecimal availableBalance) {
+            this.customerId = customerId;
+            this.availableBalance = availableBalance;
+        }
+
+        public Long getCustomerId() {
+            return customerId;
+        }
+
+        public void setCustomerId(Long customerId) {
+            this.customerId = customerId;
+        }
+
+        public BigDecimal getAvailableBalance() {
+            return availableBalance;
+        }
+
+        public void setAvailableBalance(BigDecimal availableBalance) {
+            this.availableBalance = availableBalance;
+        }
+    }
+
 
     static class WalletAdjustmentRequest {
         private Long customerId;
