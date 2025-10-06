@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/reports/stock")
+@RequestMapping("/reports/stock")
 @CrossOrigin(origins = "*")
 public class StockReportController {
 
