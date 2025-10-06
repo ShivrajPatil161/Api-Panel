@@ -557,9 +557,12 @@ import {
   Store,
   Banknote,
   Coins,
-  Eye
+  Eye,
+  Package2
 } from 'lucide-react';
 import { flattenPermissions } from "./permissionHelper";
+import logoImage from '../../assets/SD-2.jpg';
+
 
 // Reusable Menu Item Component
 const MenuItem = React.memo(({
@@ -665,8 +668,12 @@ const SidebarHeader = React.memo(({ sidebarCollapsed, onToggle, userType }) => {
     <div className="flex items-center justify-between p-4 border-b border-gray-200">
       {!sidebarCollapsed && (
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Package className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+            <img 
+                          src={logoImage} 
+                          alt="Same Day Solution Logo" 
+                          className="w-[50px] max-w-xs mx-auto  "
+                        />
           </div>
           <div>
             <h1 className="text-lg font-bold text-gray-800">Supply Chain</h1>
