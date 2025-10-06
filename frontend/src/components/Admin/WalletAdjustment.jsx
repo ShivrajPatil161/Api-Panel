@@ -725,13 +725,13 @@ const WalletAdjustment = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Transaction Type <span className="text-red-500">*</span>
                                 </label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="flex gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, type: 'CREDIT' })}
-                                        className={`py-2.5 px-4 rounded-lg font-medium transition-all ${formData.type === 'CREDIT'
-                                            ? 'bg-green-600 text-white shadow-md'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        className={`w-20 py-1.5 rounded-md text-sm font-medium transition-all ${formData.type === 'CREDIT'
+                                                ? 'bg-green-600 text-white shadow'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                     >
                                         Credit
@@ -739,14 +739,15 @@ const WalletAdjustment = () => {
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, type: 'DEBIT' })}
-                                        className={`py-2.5 px-4 rounded-lg font-medium transition-all ${formData.type === 'DEBIT'
-                                            ? 'bg-red-600 text-white shadow-md'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        className={`w-20 py-1.5 rounded-md text-sm font-medium transition-all ${formData.type === 'DEBIT'
+                                                ? 'bg-red-600 text-white shadow'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                     >
                                         Debit
                                     </button>
                                 </div>
+
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
