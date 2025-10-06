@@ -33,6 +33,7 @@ import MTransReportDashboard from '../../components/Reports/MerchantTransReport/
 import FTransReportDashboard from '../../components/Reports/FranhiseTransReports/FTransReportDashboard.jsx'
 import MerchantReports from '../../components/Reports/MerchantReports.jsx'
 import AuditHistoryComponent from '../../components/Admin/AuditHistoryComponent.jsx'
+import StockReport from '../../components/Reports/StockReport.jsx'
 
 
 export const adminRoutes = [
@@ -187,6 +188,10 @@ export const adminRoutes = [
       {
         path: "product",
         element: <ProductReport />
+      },
+      {
+        path: "stock",
+        element: <StockReport />
       }
     ]
   }

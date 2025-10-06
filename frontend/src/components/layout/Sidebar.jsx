@@ -855,7 +855,9 @@ const MENU_CONFIGS = {
           { title: 'Inward Report', path: '/dashboard/reports/inward', icon: BarChart3},
           { title: 'Outward Report', path: '/dashboard/reports/outward', icon: BarChart3 },
           { title: 'Return Report', path: '/dashboard/reports/return', icon: BarChart3},
-          { title: 'Product Reports', path: '/dashboard/reports/product', icon: BarChart3}
+          { title: 'Product Reports', path: '/dashboard/reports/product', icon: BarChart3},
+          { title: 'Stock Reports', path: '/dashboard/reports/stock', icon: BarChart3}
+
         ]
       }
     ];
