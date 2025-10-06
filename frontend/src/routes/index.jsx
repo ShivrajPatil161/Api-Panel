@@ -226,7 +226,6 @@
 
 
 
-
 import { createBrowserRouter, Navigate } from 'react-router'
 import { Suspense } from 'react'
 import App from '../App.jsx'
@@ -250,35 +249,48 @@ const LoadingFallback = () => (
   </div>
 )
 
-// Root redirect
 const RootRedirect = () => {
   const isAuthenticated = localStorage.getItem('authToken')
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
 }
 
-// Get routes based on user type
-const getDashboardRoutes = () => {
+// Route guard that checks at render time
+const RoleBasedRoute = ({ element, allowedRoles }) => {
   const userType = localStorage.getItem('userType')?.toLowerCase()
 
   if (!userType) {
-    return [{
-      path: '*',
-      element: <Navigate to="/login" replace />
-    }]
+    return <Navigate to="/login" replace />
   }
 
-  switch (userType) {
-    case 'admin':
-    case 'super_admin':
-      return adminRoutes
-    case 'franchise':
-      return franchiseRoutes
-    case 'merchant':
-      return merchantRoutes
-    default:
-      return []
+  if (!allowedRoles.includes(userType)) {
+    return <Navigate to="/dashboard" replace />
   }
+
+  return element
 }
+
+// Helper to wrap routes with role checking
+const createRoleRoutes = (routes, allowedRoles) => {
+  return routes.map(route => {
+    if (route.children) {
+      return {
+        ...route,
+        children: createRoleRoutes(route.children, allowedRoles)
+      }
+    }
+    return {
+      ...route,
+      element: <RoleBasedRoute element={route.element} allowedRoles={allowedRoles} />
+    }
+  })
+}
+
+// Combine all routes with role guards
+const allDashboardRoutes = [
+  ...createRoleRoutes(adminRoutes, ['admin', 'super_admin']),
+  ...createRoleRoutes(franchiseRoutes, ['franchise']),
+  ...createRoleRoutes(merchantRoutes, ['merchant'])
+]
 
 export const router = createBrowserRouter([
   {
@@ -310,7 +322,7 @@ export const router = createBrowserRouter([
             </Suspense>
           </ProtectedRoute>
         ),
-        children: getDashboardRoutes()
+        children: allDashboardRoutes
       }
     ]
   },
