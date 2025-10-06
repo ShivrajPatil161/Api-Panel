@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -124,4 +125,33 @@ public interface ProductSerialsRepository extends JpaRepository<ProductSerialNum
     @Query("UPDATE ProductSerialNumbers ps SET ps.productDistribution = NULL, ps.merchant = NULL WHERE ps.productDistribution.id = :distributionId")
     void clearDistributionFromSerials(@Param("distributionId") Long distributionId);
 
+
+    @Query("SELECT DISTINCT psn FROM ProductSerialNumbers psn " +
+            "LEFT JOIN FETCH psn.product p " +
+            "LEFT JOIN FETCH p.productCategory " +
+            "LEFT JOIN FETCH psn.merchant m " +
+            "LEFT JOIN FETCH psn.franchise f " +
+            "LEFT JOIN FETCH psn.inwardTransaction it " +
+            "LEFT JOIN FETCH psn.outwardTransaction ot " +
+            "LEFT JOIN FETCH ot.merchant otm " +
+            "LEFT JOIN FETCH ot.franchise otf " +
+            "LEFT JOIN FETCH psn.returnTransaction rt " +
+            "LEFT JOIN FETCH psn.productDistribution pd " +
+            "WHERE (:status IS NULL OR " +
+            "   (:status = 'AVAILABLE' AND psn.outwardTransaction IS NULL AND psn.returnTransaction IS NULL AND psn.merchant IS NULL AND psn.franchise IS NULL) OR " +
+            "   (:status = 'ALLOCATED' AND (psn.outwardTransaction IS NOT NULL OR psn.merchant IS NOT NULL OR psn.franchise IS NOT NULL) AND psn.returnTransaction IS NULL) OR " +
+            "   (:status = 'RETURNED' AND psn.returnTransaction IS NOT NULL)) " +
+            "AND (:productId IS NULL OR p.id = :productId) " +
+            "AND (:merchantId IS NULL OR m.id = :merchantId OR otm.id = :merchantId) " +
+            "AND (:franchiseId IS NULL OR f.id = :franchiseId OR otf.id = :franchiseId) " +
+            "AND (:fromDate IS NULL OR psn.receivedDate >= :fromDate OR it.receivedDate >= :fromDate) " +
+            "AND (:toDate IS NULL OR psn.receivedDate <= :toDate OR it.receivedDate <= :toDate)")
+    List<ProductSerialNumbers> findByFilters(
+            @Param("status") String status,
+            @Param("productId") Long productId,
+            @Param("merchantId") Long merchantId,
+            @Param("franchiseId") Long franchiseId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate
+    );
 }
