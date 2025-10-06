@@ -1,6 +1,7 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.DTO.AdminDTO.SettlementActivityStatsDTO;
+import com.project2.ism.DTO.CustomerSchemeAssignmentDTO;
 import com.project2.ism.DTO.FranchiseMerchantStatsDTO;
 import com.project2.ism.DTO.InventoryTransactionStatsDTO;
 import com.project2.ism.DTO.VendorStatsDTO;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -25,12 +27,13 @@ public class AdminDashboardService {
     private final ProductService productService;
     private final FranchiseSettlementBatchRepository franchiseSettlementBatchRepository;
     private final MerchantSettlementBatchRepository merchantSettlementBatchRepository;
+    private final CustomerSchemeAssignmentService customerSchemeAssignmentService;
 
     public AdminDashboardService(FranchiseService franchiseService,
                                  PricingSchemeService pricingSchemeService,
                                  VendorService vendorService,
                                  StatsService statsService,
-                                 ProductService productService, FranchiseSettlementBatchRepository franchiseSettlementBatchRepository, MerchantSettlementBatchRepository merchantSettlementBatchRepository) {
+                                 ProductService productService, FranchiseSettlementBatchRepository franchiseSettlementBatchRepository, MerchantSettlementBatchRepository merchantSettlementBatchRepository, CustomerSchemeAssignmentService customerSchemeAssignmentService) {
         this.franchiseService = franchiseService;
         this.pricingSchemeService = pricingSchemeService;
         this.vendorService = vendorService;
@@ -38,6 +41,7 @@ public class AdminDashboardService {
         this.productService = productService;
         this.franchiseSettlementBatchRepository = franchiseSettlementBatchRepository;
         this.merchantSettlementBatchRepository = merchantSettlementBatchRepository;
+        this.customerSchemeAssignmentService = customerSchemeAssignmentService;
     }
 
     /**
@@ -82,6 +86,9 @@ public class AdminDashboardService {
         settlementActivity.put("franchiseSettlements", franchiseStats);
         settlementActivity.put("directMerchantSettlements", merchantStats);
         dashboardStats.put("settlementActivity", settlementActivity);
+
+        List<CustomerSchemeAssignmentDTO> expiringSchemes = customerSchemeAssignmentService.getTop5ExpiryDateForDashboard();
+        dashboardStats.put("expiringSchemes",expiringSchemes);
         return dashboardStats;
     }
 

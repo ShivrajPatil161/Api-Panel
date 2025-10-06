@@ -125,6 +125,7 @@ public interface CustomerSchemeAssignmentRepository extends JpaRepository<Custom
     );
 
 
+    List<CustomerSchemeAssignment> findTop5ByExpiryDateGreaterThanEqualOrderByExpiryDateAsc(LocalDate currentDate);
 
 //----------------------------------For ProductScheme Reports------------------------------------------------
 

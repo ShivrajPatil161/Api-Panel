@@ -180,6 +180,13 @@ public class CustomerSchemeAssignmentService {
         assignmentRepo.delete(entity);
     }
 
+    public List<CustomerSchemeAssignmentDTO> getTop5ExpiryDateForDashboard(){
+        return assignmentRepo.findTop5ByExpiryDateGreaterThanEqualOrderByExpiryDateAsc(LocalDate.now())
+                .stream()
+                .map(this::toDTO)
+                .toList();
+
+    }
     private CustomerSchemeAssignmentDTO toDTO(CustomerSchemeAssignment entity) {
         CustomerSchemeAssignmentDTO dto = new CustomerSchemeAssignmentDTO();
         dto.setId(entity.getId());
