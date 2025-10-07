@@ -670,13 +670,13 @@ const SidebarHeader = React.memo(({ sidebarCollapsed, onToggle, userType }) => {
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
             <img 
-                          src={logoImage} 
-                          alt="Same Day Solution Logo" 
-                          className="w-[50px] max-w-xs mx-auto  "
-                        />
+              src={logoImage} 
+              alt="Same Day Solution Logo" 
+              className="w-[55px] max-w-md mx-auto rounded-xl p-1 bg-gray-500  "
+             />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-800">Supply Chain</h1>
+            <h1 className="text-xs font-bold text-gray-800">Merchant Management System</h1>
             <p className="text-xs text-gray-500">{displayText}</p>
           </div>
         </div>
