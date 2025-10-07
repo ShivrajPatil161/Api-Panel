@@ -132,9 +132,9 @@ const AdminDashboard = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-            <div className="container mx-auto px-6 py-8">
+            <div className="container mx-auto px-6">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-4">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-4xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
@@ -182,41 +182,42 @@ const AdminDashboard = () => {
                     />
                 </div>
 
-                {/* Transaction & Pricing Overview */}
+                {/*Expiring Schemes  & Pricing Overview */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    {/* Transaction Stats */}
+                    {/* Expiring Schemes */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Transaction Overview</h3>
-                            <ShoppingCart className="w-6 h-6 text-blue-600" />
+                            <h3 className="text-xl font-bold text-slate-900">Expiring Schemes</h3>
+                            <CreditCard className="w-6 h-6 text-orange-600" />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="text-center p-4 bg-green-50 rounded-lg">
-                                <p className="text-2xl font-bold text-green-600">{transactionStats?.totalInwardTransactions || 0}</p>
-                                <p className="text-sm text-green-700">Inward</p>
-                            </div>
-                            <div className="text-center p-4 bg-red-50 rounded-lg">
-                                <p className="text-2xl font-bold text-red-600">{transactionStats?.totalOutwardTransactions || 0}</p>
-                                <p className="text-sm text-red-700">Outward</p>
-                            </div>
-                        </div>
+                        <div className="max-h-64 overflow-y-auto">
+                            {dashboardData?.expiringSchemes && dashboardData.expiringSchemes.length > 0 ? (
+                                <div className="space-y-3">
+                                    {dashboardData.expiringSchemes.map((scheme) => (
+                                        <div key={scheme.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-sm font-semibold text-slate-900">{scheme.schemeCode}</span>
+                                                <span className="text-xs px-2 py-1 bg-orange-200 text-orange-800 rounded">
+                                                    {scheme.customerType}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs mb-1">
+                                                <span className="text-slate-600">{scheme.productName} - {scheme.customerName}</span> :
+                                                <span className="font-medium text-orange-600 ml-1">Expires: {scheme.expiryDate}</span>
+                                            </p>
 
-                        <div className="space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-600">Total Product Serials:</span>
-                                <span className="font-semibold">{transactionStats?.totalProductSerials || 0}</span>
-                            </div>
-
-                            {transactionStats?.productSerialStatus && (
-                                <div className="flex flex-wrap gap-2">
-                                    {Object.entries(transactionStats.productSerialStatus).map(([status, count]) => (
-                                        <StatusBadge key={status} status={status} count={count} />
+                                        </div>
                                     ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-slate-500">
+                                    <p className="text-sm">No expiring schemes</p>
                                 </div>
                             )}
                         </div>
                     </div>
+                    
 
                     {/* Wallet Balance Overview */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -255,99 +256,8 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Product Categories, Franchise Details & Expiring Schemes */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    {/* Product Categories */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Product Categories</h3>
-                            <Package className="w-6 h-6 text-green-600" />
-                        </div>
-
-                        <div className="space-y-4 overflow-y-auto">
-                            {productStats?.categoryBreakdown?.map((category) => (
-                                <CategoryCard key={category.id} category={category} />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Franchise Distribution */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Franchise Distribution</h3>
-                            <Store className="w-6 h-6 text-blue-600" />
-                        </div>
-
-                        <div className="space-y-4 overflow-y-auto">
-                            <div className="grid grid-cols-3 gap-4 text-center">
-                                <div className="p-3 bg-blue-50 rounded-lg">
-                                    <p className="text-2xl font-bold text-blue-600">{franchiseStats?.totalDirectMerchants || 0}</p>
-                                    <p className="text-xs text-blue-700">Direct</p>
-                                </div>
-                                <div className="p-3 bg-green-50 rounded-lg">
-                                    <p className="text-2xl font-bold text-green-600">{franchiseStats?.totalFranchiseMerchants || 0}</p>
-                                    <p className="text-xs text-green-700">Franchise</p>
-                                </div>
-                                <div className="p-3 bg-purple-50 rounded-lg">
-                                    <p className="text-2xl font-bold text-purple-600">{franchiseStats?.totalFranchises || 0}</p>
-                                    <p className="text-xs text-purple-700">Locations</p>
-                                </div>
-                            </div>
-
-                            {franchiseStats?.merchantsPerFranchise && (
-                                <div className="mt-6">
-                                    <p className="text-sm font-medium text-slate-600 mb-3">Merchants per Franchise:</p>
-                                    <div className="space-y-2">
-                                        {Object.entries(franchiseStats.merchantsPerFranchise).map(([franchiseName, count]) => (
-                                            <div key={franchiseName} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                                                <span className="text-slate-700">{franchiseName}</span>
-                                                <span className="font-semibold text-slate-900">{count} merchants</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Expiring Schemes */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Expiring Schemes</h3>
-                            <CreditCard className="w-6 h-6 text-orange-600" />
-                        </div>
-
-                        <div className="max-h-64 overflow-y-auto">
-                            {dashboardData?.expiringSchemes && dashboardData.expiringSchemes.length > 0 ? (
-                                <div className="space-y-3">
-                                    {dashboardData.expiringSchemes.map((scheme) => (
-                                        <div key={scheme.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="text-sm font-semibold text-slate-900">{scheme.schemeCode}</span>
-                                                <span className="text-xs px-2 py-1 bg-orange-200 text-orange-800 rounded">
-                                                    {scheme.customerType}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs mb-1">
-                                                <span className="text-slate-600">{scheme.productName} - {scheme.customerName}</span> :
-                                                <span className="font-medium text-orange-600 ml-1">Expires: {scheme.expiryDate}</span>
-                                            </p>
-
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 text-slate-500">
-                                    <p className="text-sm">No expiring schemes</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
                 {/* Settlement Activity Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     {/* Franchise Settlements */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                         <div className="flex items-center justify-between mb-6">
@@ -440,6 +350,98 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Product Categories, Franchise Details & Transaction */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
+                    {/* Product Categories */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Product Categories</h3>
+                            <Package className="w-6 h-6 text-green-600" />
+                        </div>
+
+                        <div className="space-y-4 max-h-64 overflow-y-auto">
+                            {productStats?.categoryBreakdown?.map((category) => (
+                                <CategoryCard key={category.id} category={category} />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Franchise Distribution */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Franchise Distribution</h3>
+                            <Store className="w-6 h-6 text-blue-600" />
+                        </div>
+
+                        <div className="space-y-4 max-h-64 overflow-y-auto">
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div className="p-3 bg-blue-50 rounded-lg">
+                                    <p className="text-2xl font-bold text-blue-600">{franchiseStats?.totalDirectMerchants || 0}</p>
+                                    <p className="text-xs text-blue-700">Direct</p>
+                                </div>
+                                <div className="p-3 bg-green-50 rounded-lg">
+                                    <p className="text-2xl font-bold text-green-600">{franchiseStats?.totalFranchiseMerchants || 0}</p>
+                                    <p className="text-xs text-green-700">Franchise</p>
+                                </div>
+                                <div className="p-3 bg-purple-50 rounded-lg">
+                                    <p className="text-2xl font-bold text-purple-600">{franchiseStats?.totalFranchises || 0}</p>
+                                    <p className="text-xs text-purple-700">Locations</p>
+                                </div>
+                            </div>
+
+                            {franchiseStats?.merchantsPerFranchise && (
+                                <div className="mt-6">
+                                    <p className="text-sm font-medium text-slate-600 mb-3">Merchants per Franchise:</p>
+                                    <div className="space-y-2">
+                                        {Object.entries(franchiseStats.merchantsPerFranchise).map(([franchiseName, count]) => (
+                                            <div key={franchiseName} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                                <span className="text-slate-700">{franchiseName}</span>
+                                                <span className="font-semibold text-slate-900">{count} merchants</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Transaction Stats */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Transaction Overview</h3>
+                            <ShoppingCart className="w-6 h-6 text-blue-600" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="text-center p-4 bg-green-50 rounded-lg">
+                                <p className="text-2xl font-bold text-green-600">{transactionStats?.totalInwardTransactions || 0}</p>
+                                <p className="text-sm text-green-700">Inward</p>
+                            </div>
+                            <div className="text-center p-4 bg-red-50 rounded-lg">
+                                <p className="text-2xl font-bold text-red-600">{transactionStats?.totalOutwardTransactions || 0}</p>
+                                <p className="text-sm text-red-700">Outward</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-600">Total Product Serials:</span>
+                                <span className="font-semibold">{transactionStats?.totalProductSerials || 0}</span>
+                            </div>
+
+                            {transactionStats?.productSerialStatus && (
+                                <div className="flex flex-wrap gap-2">
+                                    {Object.entries(transactionStats.productSerialStatus).map(([status, count]) => (
+                                        <StatusBadge key={status} status={status} count={count} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+              
             </div>
         </div>
     );
