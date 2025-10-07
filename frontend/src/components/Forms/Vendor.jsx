@@ -179,6 +179,7 @@ const vendorSchema = z.object({
   bankType: z.enum(['Central Bank', 'Private Sector', 'Public Sector', 'Co-operative', 'Rural Banks'], {
     required_error: "Bank type is required"
   }),
+  //make it optional these fields
   contactPerson: z.object({
     name: z.string().min(2, 'Contact person name is required'),
     email: z.string().email('Invalid email address'),

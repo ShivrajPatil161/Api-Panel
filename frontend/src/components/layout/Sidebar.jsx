@@ -1055,7 +1055,7 @@ const Sidebar = ({ userType }) => {
   }, [userType, permissionSet]);
 
   return (
-    <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200`}>
+    <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200 h-full`}>
       <SidebarHeader
         sidebarCollapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
