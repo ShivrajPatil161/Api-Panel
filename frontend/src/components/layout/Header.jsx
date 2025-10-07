@@ -137,12 +137,8 @@ const Header = ({ userType }) => {
   };
 
   return (
-<<<<<<< HEAD
-    <header className="bg-gray-200 shadow-sm border-b border-gray-200 sticky top-0 z-40">
-=======
-    <header className="ml-15 bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <header className="ml-15 bg-gray-200 shadow-sm border-b border-gray-200 sticky top-0 z-40">
       
->>>>>>> origin/main
       <div className="flex items-center justify-between px-6 py-4">
         {/* Left Section */}
         <div className="flex flex-col">
