@@ -182,7 +182,7 @@ const AdminDashboard = () => {
                     />
                 </div>
 
-                {/*Expiring Schemes  & Pricing Overview */}
+                {/*Expiring Schemes  & Wallet Balance Overview */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     {/* Expiring Schemes */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -231,7 +231,7 @@ const AdminDashboard = () => {
                                 <div className="p-4 bg-blue-50 rounded-lg">
                                     <div className="flex justify-between items-center">
                                         <span className="text-blue-700 font-medium">Franchise Wallets</span>
-                                        <span className="text-2xl font-bold text-blue-600">
+                                        <span className="text-2xl font-semibold text-black">
                                             ₹{franchiseStats?.totalFranchiseWalletBalance?.toFixed(2) || '0.00'}
                                         </span>
                                     </div>
@@ -239,7 +239,7 @@ const AdminDashboard = () => {
                                 <div className="p-4 bg-green-50 rounded-lg">
                                     <div className="flex justify-between items-center">
                                         <span className="text-green-700 font-medium">Direct Merchant Wallets</span>
-                                        <span className="text-2xl font-bold text-green-600">
+                                        <span className="text-2xl font-semibold text-black">
                                             ₹{franchiseStats?.totalDirectMerchantWalletBalance?.toFixed(2) || '0.00'}
                                         </span>
                                     </div>
@@ -247,7 +247,7 @@ const AdminDashboard = () => {
                                 <div className="p-4 bg-purple-50 rounded-lg">
                                     <div className="flex justify-between items-center">
                                         <span className="text-purple-700 font-medium">Franchise Merchant Wallets</span>
-                                        <span className="text-2xl font-bold text-purple-600">
+                                        <span className="text-2xl font-semibold text-black">
                                             ₹{franchiseStats?.totalFranchiseMerchantWalletBalance?.toFixed(2) || '0.00'}
                                         </span>
                                     </div>

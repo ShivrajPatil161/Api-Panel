@@ -27,7 +27,7 @@ const ProductDistributionList = () => {
         try {
             let response;
             if (userType === 'franchise' && customerId) {
-                response = await api.get(`/product-distributions/franchise/${customerId}`);
+                response = await api.get(`/product-distribution/franchise/${customerId}`);
             } else {
                 response = await api.get('/product-distribution');
             }

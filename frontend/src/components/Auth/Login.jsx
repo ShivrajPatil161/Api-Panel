@@ -40,7 +40,8 @@ const Login = () => {
 
         toast.success("Login successful!");
         reset();
-        navigate("/dashboard");
+        //navigate("/dashboard");
+        window.location.href = '/dashboard';
       }
     } catch (error) {
       console.error("Login Error:", error?.response?.data?.error || error.message);

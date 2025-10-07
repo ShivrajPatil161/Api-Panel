@@ -226,6 +226,123 @@
 
 
 
+// import { createBrowserRouter, Navigate } from 'react-router'
+// import { Suspense } from 'react'
+// import App from '../App.jsx'
+// import ProtectedRoute from './ProtectedRoutes.jsx'
+// import Layout from '../components/layout/Layout.jsx'
+// import Login from '../components/Auth/Login.jsx'
+// import ForgotPassword from '../components/Auth/ForgotPass.jsx'
+// import ResetPassword from '../components/Auth/ResetPassword.jsx'
+// import ErrorPage from './roleRoutes/ErrorPage.jsx'
+
+// import { adminRoutes } from './roleRoutes/adminRoutes.jsx'
+// import { franchiseRoutes } from './roleRoutes/franchiseRoutes.jsx'
+// import { merchantRoutes } from './roleRoutes/merchantRoutes.jsx'
+
+// const LoadingFallback = () => (
+//   <div className="flex items-center justify-center h-screen">
+//     <div className="text-center">
+//       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+//       <p className="mt-4 text-gray-600">Loading...</p>
+//     </div>
+//   </div>
+// )
+
+// const RootRedirect = () => {
+//   const isAuthenticated = localStorage.getItem('authToken')
+//   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+// }
+
+// // Route guard that checks at render time
+// const RoleBasedRoute = ({ element, allowedRoles }) => {
+//   const userType = localStorage.getItem('userType')?.toLowerCase()
+// console.log(userType, allowedRoles)
+//   if (!userType) {
+//     return <Navigate to="/login" replace />
+//   }
+
+//   if (!allowedRoles.includes(userType)) {
+//     return <Navigate to="/dashboard" replace />
+//   }
+
+//   return element
+// }
+
+// // Helper to wrap routes with role checking
+// const createRoleRoutes = (routes, allowedRoles) => {
+//   return routes.map(route => {
+//     if (route.children) {
+//       return {
+//         ...route,
+//         children: createRoleRoutes(route.children, allowedRoles)
+//       }
+//     }
+//     return {
+//       ...route,
+//       element: <RoleBasedRoute element={route.element} allowedRoles={allowedRoles} />
+//     }
+//   })
+// }
+
+// const userType = localStorage.getItem('userType')?.toLowerCase();
+// let allowedRoutes = [];
+// if (userType === 'admin' || userType === 'super_admin') {
+//   allowedRoutes = createRoleRoutes(adminRoutes, ['admin', 'super_admin']);
+// } else if (userType === 'franchise') {
+//   allowedRoutes = createRoleRoutes(franchiseRoutes, ['franchise']);
+// } else if (userType === 'merchant') {
+//   allowedRoutes = createRoleRoutes(merchantRoutes, ['merchant']);
+// }
+
+
+// // Combine all routes with role guards
+// const allDashboardRoutes = [
+//   ...createRoleRoutes(adminRoutes, ['admin', 'super_admin']),
+//   ...createRoleRoutes(franchiseRoutes, ['franchise']),
+//   ...createRoleRoutes(merchantRoutes, ['merchant'])
+// ]
+
+// export const router = createBrowserRouter([
+//   {
+//     path: "/",
+//     element: <App />,
+//     children: [
+//       {
+//         index: true,
+//         element: <RootRedirect />
+//       },
+//       {
+//         path: "login",
+//         element: <Login />
+//       },
+//       {
+//         path: "forgot-pass",
+//         element: <ForgotPassword />
+//       },
+//       {
+//         path: "reset-password",
+//         element: <ResetPassword />
+//       },
+//       {
+//         path: "dashboard",
+//         element: (
+//           <ProtectedRoute>
+//             <Suspense fallback={<LoadingFallback />}>
+//               <Layout />
+//             </Suspense>
+//           </ProtectedRoute>
+//         ),
+//         children: allDashboardRoutes
+//       }
+//     ]
+//   },
+//   {
+//     path: '*',
+//     element: <ErrorPage />
+//   }
+// ])
+
 import { createBrowserRouter, Navigate } from 'react-router'
 import { Suspense } from 'react'
 import App from '../App.jsx'
@@ -254,43 +371,26 @@ const RootRedirect = () => {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
 }
 
-// Route guard that checks at render time
-const RoleBasedRoute = ({ element, allowedRoles }) => {
+// 🧠 Function that selects routes dynamically at runtime
+const getRoutesForUser = () => {
   const userType = localStorage.getItem('userType')?.toLowerCase()
-
-  if (!userType) {
-    return <Navigate to="/login" replace />
+console.log(userType)
+  if (userType === 'admin' || userType === 'super_admin') {
+    console.log('adminRoutes', adminRoutes)
+    return adminRoutes
+  }
+  if (userType === 'franchise') {
+    console.log('franchiseRoutes', franchiseRoutes)
+    return franchiseRoutes
+  }
+  if (userType === 'merchant') {
+    console.log('merchantRoutes', merchantRoutes)
+    return merchantRoutes
   }
 
-  if (!allowedRoles.includes(userType)) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  return element
+  // If no valid userType, return empty array (will redirect via ProtectedRoute)
+  return []
 }
-
-// Helper to wrap routes with role checking
-const createRoleRoutes = (routes, allowedRoles) => {
-  return routes.map(route => {
-    if (route.children) {
-      return {
-        ...route,
-        children: createRoleRoutes(route.children, allowedRoles)
-      }
-    }
-    return {
-      ...route,
-      element: <RoleBasedRoute element={route.element} allowedRoles={allowedRoles} />
-    }
-  })
-}
-
-// Combine all routes with role guards
-const allDashboardRoutes = [
-  ...createRoleRoutes(adminRoutes, ['admin', 'super_admin']),
-  ...createRoleRoutes(franchiseRoutes, ['franchise']),
-  ...createRoleRoutes(merchantRoutes, ['merchant'])
-]
 
 export const router = createBrowserRouter([
   {
@@ -322,7 +422,8 @@ export const router = createBrowserRouter([
             </Suspense>
           </ProtectedRoute>
         ),
-        children: allDashboardRoutes
+        // 👇 Dynamically inject only current user's routes
+        children: getRoutesForUser()
       }
     ]
   },
