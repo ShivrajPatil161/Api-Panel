@@ -537,7 +537,7 @@
 
 
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router';
 import {
   Home,
@@ -970,9 +970,11 @@ const getMenuItems = (userType) => {
   return MENU_CONFIGS[normalizedUserType] || MENU_CONFIGS.merchant;
 };
 
+
 // Main Sidebar Component
 const Sidebar = ({ userType }) => {
   const location = useLocation();
+  const sidebarRef = useRef(null);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState({});
@@ -982,7 +984,7 @@ const Sidebar = ({ userType }) => {
     // For super admin, grant all permissions
     if (userType === 'super_admin') {
       return new Set([
-        'Dashboard', 'Admin Management', 'Logs','Edit History', 'Wallet Adjustment',
+        'Dashboard', 'Admin Management', 'Logs', 'Edit History', 'Wallet Adjustment',
         'Vendors', 'Vendor List', 'Product List', 'Vendor Rates',
         'Inventory', 'Pricing Scheme', 'Product Scheme Assign', 'Inventory Management',
         'Customers', 'Customer List', 'Onboard Customer', 'Merchant Approval', 'Products Distribution',
@@ -1009,6 +1011,25 @@ const Sidebar = ({ userType }) => {
     // For non-admin users, return empty set (no filtering)
     return new Set();
   }, [userType]);
+
+  // Handle click outside to close sidebar
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Only close if sidebar is expanded
+      if (!sidebarCollapsed && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setSidebarCollapsed(true);
+        setExpandedMenus({});
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sidebarCollapsed]);
 
   const toggleMenu = (menuKey) => {
     setExpandedMenus(prev => ({
@@ -1055,7 +1076,10 @@ const Sidebar = ({ userType }) => {
   }, [userType, permissionSet]);
 
   return (
-    <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200`}>
+    <div
+      ref={sidebarRef}
+      className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200 h-full`}
+    >
       <SidebarHeader
         sidebarCollapsed={sidebarCollapsed}
         onToggle={toggleSidebar}

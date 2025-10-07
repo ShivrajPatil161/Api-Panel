@@ -75,9 +75,11 @@ const Header = ({ userType }) => {
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userType');
-    localStorage.removeItem('customerId')
-    localStorage.clear()
-    navigate('/login');
+    localStorage.removeItem('customerId');
+    localStorage.clear();
+
+    // Force full page reload to reset router and all state
+    window.location.href = '/login';
   };
 
   // Route → title mapping
@@ -135,7 +137,12 @@ const Header = ({ userType }) => {
   };
 
   return (
+<<<<<<< HEAD
     <header className="bg-gray-200 shadow-sm border-b border-gray-200 sticky top-0 z-40">
+=======
+    <header className="ml-15 bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      
+>>>>>>> origin/main
       <div className="flex items-center justify-between px-6 py-4">
         {/* Left Section */}
         <div className="flex flex-col">

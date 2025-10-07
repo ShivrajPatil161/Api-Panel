@@ -329,9 +329,10 @@ const OutwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
     try {
       const response = await api.get(`/products/category/${categoryId}`)
       if (response.data && Array.isArray(response.data)) {
+        console.log('Products response:', response.data) // Debug log
         const productOptions = response.data.map(product => ({
           value: product.id.toString(),
-          label: `${product.productCode || 'N/A'} - ${product.productName || product.name || 'Unnamed Product'}`,
+          label: `${product.productCode || 'N/A'} - ${product.productName || product.name || 'Unnamed Product'} - ${product.vendor.name || 'No Vendor'}`,
           productCode: product.productCode,
           productName: product.productName || product.name
         }))
