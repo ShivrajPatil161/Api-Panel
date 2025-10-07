@@ -9,6 +9,8 @@ import {
   Wallet
 } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
+import logoImage from '../../assets/SD-2.jpg';
+
 
 const Header = ({ userType }) => {
   const [profileData, setProfileData] = useState(null);
@@ -141,12 +143,20 @@ const Header = ({ userType }) => {
       
       <div className="flex items-center justify-between px-6 py-4">
         {/* Left Section */}
-        <div className="flex flex-col">
+       <div className='flex'>
+          <img 
+                       src={logoImage} 
+                       alt="Same Day Solution Logo" 
+                       className="w-[60px] max-w-md mx-auto rounded-xl p-1 mr-2 bg-gray-500  "
+                      />
+         <div className="flex flex-col">
+          
           <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
           {getBreadcrumb() && (
             <nav className="text-sm text-gray-500 mt-1">{getBreadcrumb()}</nav>
           )}
         </div>
+       </div>
 
         {/* Right Section */}
         <div className="flex items-center space-x-4">
