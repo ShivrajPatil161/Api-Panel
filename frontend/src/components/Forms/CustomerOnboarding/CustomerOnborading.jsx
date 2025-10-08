@@ -5,24 +5,6 @@ import api from "../../../constants/API/axiosInstance"
 import { toast } from 'react-toastify'
 import { BankDetailsForm, BasicDetailsForm, ContactDetailsForm, CustomerTypeSelection, DocumentPreview, DocumentsForm, FranchiseSelectionForm } from './DetailsComponent'
 
-// Form validation patterns
-const VALIDATION_PATTERNS = {
-  pan: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-  gst: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/,
-  ifsc: /^[A-Z]{4}0[A-Z0-9]{6}$/,
-  mobile: /^[6-9]\d{9}$/,
-  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-}
-
-// File validation
-const FILE_CONSTRAINTS = {
-  maxSize: 5 * 1024 * 1024, // 5MB
-  allowedTypes: ['image/jpeg', 'image/png', 'application/pdf']
-}
-
-
-
-
 // Main Component
 const CustomerOnboarding = ({
   // Context props

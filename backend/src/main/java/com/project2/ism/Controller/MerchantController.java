@@ -47,7 +47,28 @@ public class MerchantController {
             ));
         }
     }
-
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<?> updateMerchant(
+            @PathVariable Long id,
+            @ModelAttribute MerchantFormDTO formDTO
+    ) {
+        try {
+            Merchant updatedMerchant = merchantService.updateMerchant(id, formDTO);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Merchant updated successfully",
+                    "data", updatedMerchant
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Failed to update merchant: " + e.getMessage()
+            ));
+        }
+    }
     @GetMapping
     public ResponseEntity<List<MerchantListDTO>> getAllMerchants() {
         try {
@@ -68,25 +89,7 @@ public class MerchantController {
         }
     }
 
-    @PutMapping(
-            value = "/{id}",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    public ResponseEntity<?> updateMerchant(@PathVariable Long id, @Valid @RequestBody Merchant merchant) {
-        try {
-            Merchant updatedMerchant = merchantService.updateMerchant(id, merchant);
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Merchant updated successfully",
-                    "data", updatedMerchant
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Failed to update merchant: " + e.getMessage()
-            ));
-        }
-    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteMerchant(@PathVariable Long id) {

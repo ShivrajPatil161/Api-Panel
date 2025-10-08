@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -167,27 +168,118 @@ public class MerchantService {
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with ID: " + id));
     }
 
-    public Merchant updateMerchant(Long id, Merchant merchantDetails) {
+    public Merchant updateMerchant(Long id, MerchantFormDTO dto) throws IOException {
         Merchant merchant = getMerchantById(id);
 
-        // Update basic details
-        if (merchantDetails.getBusinessName() != null) {
-            merchant.setBusinessName(merchantDetails.getBusinessName());
+        // Update basic details (only if provided)
+        if (dto.getBusinessName() != null && !dto.getBusinessName().isEmpty()) {
+            merchant.setBusinessName(dto.getBusinessName());
         }
-        if (merchantDetails.getLegalName() != null) {
-            merchant.setLegalName(merchantDetails.getLegalName());
+        if (dto.getLegalName() != null && !dto.getLegalName().isEmpty()) {
+            merchant.setLegalName(dto.getLegalName());
         }
-        if (merchantDetails.getBusinessType() != null) {
-            merchant.setBusinessType(merchantDetails.getBusinessType());
+        if (dto.getBusinessType() != null && !dto.getBusinessType().isEmpty()) {
+            merchant.setBusinessType(dto.getBusinessType());
         }
-        if (merchantDetails.getAddress() != null) {
-            merchant.setAddress(merchantDetails.getAddress());
+        if (dto.getBusinessAddress() != null && !dto.getBusinessAddress().isEmpty()) {
+            merchant.setAddress(dto.getBusinessAddress());
+        }
+        if (dto.getGstNumber() != null && !dto.getGstNumber().isEmpty()) {
+            merchant.setGstNumber(dto.getGstNumber());
+        }
+        if (dto.getPanNumber() != null && !dto.getPanNumber().isEmpty()) {
+            merchant.setPanNumber(dto.getPanNumber());
+        }
+        if (dto.getRegistrationNumber() != null && !dto.getRegistrationNumber().isEmpty()) {
+            merchant.setRegistrationNumber(dto.getRegistrationNumber());
         }
 
+        // Update franchise relationship if provided
+        if (dto.getFranchiseId() != null) {
+            Franchise franchise = franchiseRepository.findById(dto.getFranchiseId())
+                    .orElseThrow(() -> new RuntimeException("Franchise not found"));
+            merchant.setFranchise(franchise);
+        }
+
+        // Update contact details
+        ContactPerson contactPerson = merchant.getContactPerson();
+        if (contactPerson == null) {
+            contactPerson = new ContactPerson();
+        }
+
+        if (dto.getPrimaryContactName() != null && !dto.getPrimaryContactName().isEmpty()) {
+            contactPerson.setName(dto.getPrimaryContactName());
+        }
+        if (dto.getPrimaryContactMobile() != null && !dto.getPrimaryContactMobile().isEmpty()) {
+            contactPerson.setPhoneNumber(dto.getPrimaryContactMobile());
+        }
+        if (dto.getPrimaryContactEmail() != null && !dto.getPrimaryContactEmail().isEmpty()) {
+            contactPerson.setEmail(dto.getPrimaryContactEmail());
+        }
+        if (dto.getAlternateContactMobile() != null && !dto.getAlternateContactMobile().isEmpty()) {
+            contactPerson.setAlternatePhoneNum(dto.getAlternateContactMobile());
+        }
+        if (dto.getLandlineNumber() != null && !dto.getLandlineNumber().isEmpty()) {
+            contactPerson.setLandlineNumber(dto.getLandlineNumber());
+        }
+
+        merchant.setContactPerson(contactPerson);
+
+        // Update bank details
+        BankDetails bankDetails = merchant.getBankDetails();
+        if (bankDetails == null) {
+            bankDetails = new BankDetails();
+        }
+
+        if (dto.getBankName() != null && !dto.getBankName().isEmpty()) {
+            bankDetails.setBankName(dto.getBankName());
+        }
+        if (dto.getAccountHolderName() != null && !dto.getAccountHolderName().isEmpty()) {
+            bankDetails.setAccountHolderName(dto.getAccountHolderName());
+        }
+        if (dto.getAccountNumber() != null && !dto.getAccountNumber().isEmpty()) {
+            bankDetails.setAccountNumber(dto.getAccountNumber());
+        }
+        if (dto.getIfscCode() != null && !dto.getIfscCode().isEmpty()) {
+            bankDetails.setIfsc(dto.getIfscCode());
+        }
+        if (dto.getBranchName() != null && !dto.getBranchName().isEmpty()) {
+            bankDetails.setBranchName(dto.getBranchName());
+        }
+        if (dto.getAccountType() != null && !dto.getAccountType().isEmpty()) {
+            bankDetails.setAccountType(dto.getAccountType());
+        }
+
+        merchant.setBankDetails(bankDetails);
+
+        // Handle document uploads (only if new files are provided)
+        UploadDocuments uploadDocuments = merchant.getUploadDocuments();
+        if (uploadDocuments == null) {
+            uploadDocuments = new UploadDocuments();
+        }
+
+        if (dto.getPanCardDocument() != null && !dto.getPanCardDocument().isEmpty()) {
+            String panPath = fileStorageService.store(dto.getPanCardDocument(), "merchant_pan");
+            uploadDocuments.setPanProof(panPath);
+        }
+        if (dto.getGstCertificate() != null && !dto.getGstCertificate().isEmpty()) {
+            String gstPath = fileStorageService.store(dto.getGstCertificate(), "merchant_gst");
+            uploadDocuments.setGstCertificateProof(gstPath);
+        }
+        if (dto.getAddressProof() != null && !dto.getAddressProof().isEmpty()) {
+            String addressPath = fileStorageService.store(dto.getAddressProof(), "merchant_address");
+            uploadDocuments.setAddressProof(addressPath);
+        }
+        if (dto.getBankProof() != null && !dto.getBankProof().isEmpty()) {
+            String bankPath = fileStorageService.store(dto.getBankProof(), "merchant_bank");
+            uploadDocuments.setBankAccountProof(bankPath);
+        }
+
+        merchant.setUploadDocuments(uploadDocuments);
         merchant.setUpdatedAt(LocalDateTime.now());
+
         return merchantRepository.save(merchant);
     }
-
     public void deleteMerchant(Long id) {
         Merchant merchant = getMerchantById(id);
 
