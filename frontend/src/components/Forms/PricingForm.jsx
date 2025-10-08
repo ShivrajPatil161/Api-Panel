@@ -485,6 +485,14 @@ const PricingSchemeFormModal = ({
 
         {/* Modal Body */}
         <div className="p-6">
+          {/* Reuse Notice */}
+          {isReuse && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-2">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> You're creating a new pricing scheme based on an existing one.
+              </p>
+            </div>
+          )}
           <div className="space-y-6">
             {/* Basic Details */}
             <div className="bg-gray-50 p-4 rounded-lg">

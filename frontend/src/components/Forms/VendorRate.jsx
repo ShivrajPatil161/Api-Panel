@@ -457,7 +457,7 @@ const VendorProductDetails = ({ register, errors, editData, control, setValue, w
 }
 
 // ==================== VENDOR RATE FORM MODAL ====================
-const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
+const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false, isReuse = false }) => {
   const getDefaultValues = () => ({
     vendor: '',
     productId: '',
@@ -476,19 +476,31 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
     watch,
     formState: { errors }
   } = useForm({
-    defaultValues: getDefaultValues()
+    defaultValues: initialData
+      ? { ...initialData, vendor: String(initialData.vendorId), productId: String(initialData.productId) }
+      : getDefaultValues()
   })
 
-  // Set form values when initialData changes (for edit mode)
+  // Set form values when initialData changes (for edit mode or reuse mode)
   useEffect(() => {
-    if (initialData && isEdit) {
+    if (initialData && (isEdit || isReuse)) {
       Object.keys(initialData).forEach(key => {
         if (key !== 'vendorId' && key !== 'productId') {
           setValue(key, initialData[key])
+        } else if (key === 'vendorId') {
+          setValue('vendor', String(initialData[key]))
+        } else if (key === 'productId') {
+          setValue('productId', String(initialData[key]))
         }
       })
+
+      // For reuse mode, clear the dates so user can set new ones
+      if (isReuse) {
+        setValue('effectiveDate', '')
+        setValue('expiryDate', '')
+      }
     }
-  }, [initialData, isEdit, setValue])
+  }, [initialData, isEdit, isReuse, setValue])
 
   const onFormSubmit = (data) => {
     console.log(data)
@@ -513,9 +525,10 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="flex justify-between items-center p-6 bg-gradient-to-r from-gray-600 to-gray-800  rounded-t-lg">
+        <div className="flex justify-between items-center p-6 bg-gradient-to-r from-gray-600 to-gray-800 rounded-t-lg">
           <h2 className="flex items-center text-2xl font-bold text-white">
-           <CreditCard className='mr-2 ' size={40}/> {isEdit ? 'Edit Vendor Rates' : 'Add New Vendor Rates'}
+            <CreditCard className='mr-2' size={40} />
+            {isEdit ? 'Edit Vendor Rates' : isReuse ? 'Reuse Vendor Rates' : 'Add New Vendor Rates'}
           </h2>
           <button
             onClick={handleCancel}
@@ -529,6 +542,16 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
         {/* Modal Body */}
         <div className="p-6">
           <div className="space-y-6">
+            {/* Reuse Notice */}
+            {isReuse && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> You're creating a new vendor rate based on an existing one.
+                  Please update the effective and expiry dates before saving.
+                </p>
+              </div>
+            )}
+
             <VendorProductDetails
               register={register}
               errors={errors}
@@ -541,6 +564,7 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
               control={control}
               setValue={setValue}
               watch={watch}
+              isReuse={isReuse}
             />
             <MonthlyRent register={register} errors={errors} />
             <CardRates control={control} register={register} errors={errors} />

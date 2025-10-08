@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, flexRender, createColumnHelper } from '@tanstack/react-table'
-import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, Search, Eye, Building2, CreditCard, Calendar, DollarSign, Users, Loader2 } from 'lucide-react'
+import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, Search, Eye, Building2, CreditCard, Calendar, DollarSign, Users, Loader2, Copy } from 'lucide-react'
 import VendorRateForm from '../Forms/VendorRate'
 import { getAllVendorRates, createVendorRate, updateVendorRate, deleteVendorRate } from '../../constants/API/vendorRates'
 import VendorRateView from '../View/VendorRateView'
@@ -15,6 +15,8 @@ const VendorRateList = () => {
     const [submitting, setSubmitting] = useState(false)
     const [viewData, setViewData] = useState(null)
     const [isViewOpen, setIsViewOpen] = useState(false)
+    const [isReuse, setIsReuse] = useState(false)
+
 
     const columnHelper = createColumnHelper()
 
@@ -197,6 +199,13 @@ const VendorRateList = () => {
                     >
                         <Trash2 className="h-4 w-4" />
                     </button>
+                    <button
+                        onClick={() => handleReuse(info.row.original)}
+                        className="p-1 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                        title="Reuse Rates"
+                    >
+                        <Copy size={16} />
+                    </button>
                 </div>
             ),
             size: 100
@@ -233,6 +242,11 @@ const VendorRateList = () => {
         setIsFormOpen(true)
     }
 
+    const handleReuse = (vendorData) => {
+        setEditingData(vendorData)
+        setIsReuse(true)
+        setIsFormOpen(true)
+    }
 
 
     const handleDelete = async (id) => {
@@ -498,6 +512,7 @@ const VendorRateList = () => {
                     onCancel={handleFormCancel}
                     initialData={editingData}
                     isEdit={isEdit}
+                    isReuse={isReuse}
                     submitting={submitting}
                 />
             )}
