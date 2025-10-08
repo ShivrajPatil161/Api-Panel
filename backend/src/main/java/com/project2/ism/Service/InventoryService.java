@@ -51,6 +51,7 @@ public class InventoryService {
             return new InventoryDTO(
                     p.getProductCode(),
                     p.getProductName(),
+                    p.getVendor().getName(),
                     totalQty,
                     reservedQty,
                     availableQty

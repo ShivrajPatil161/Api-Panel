@@ -78,15 +78,15 @@ const productSchema = z.object({
     z.literal("new") // allow "new" string for add category
   ]),
   newCategoryName: z.string().optional(),
-  model: z.string().min(2, 'Model is required'),
-  brand: z.string().min(2, 'Brand is required'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
+  model: z.string().min(2, 'Model is required').or(z.literal('')),
+  brand: z.string().min(2, 'Brand is required').or(z.literal('')),
+  description: z.string().min(10, 'Description must be at least 10 characters').or(z.literal('')),
   warrantyPeriod: z.number().min(0, 'Warranty period must be 0 or more months'),
   warrantyType: z.enum(['manufacturer', 'vendor', 'none']),
   hsn: z.string().regex(/^[0-9]{4,8}$/, 'HSN must be 4-8 digits'),
   status: z.boolean(),
-  minOrderQuantity: z.number().min(1, 'Minimum order quantity must be at least 1'),
-  maxOrderQuantity: z.number().min(1, 'Maximum order quantity must be at least 1'),
+  minOrderQuantity: z.number().min(1, 'Minimum order quantity must be at least 1').or(z.literal('')),
+  maxOrderQuantity: z.number().min(1, 'Maximum order quantity must be at least 1').or(z.literal('')),
   remarks: z.string().nullable().optional().default("")
 }).refine((data) => data.maxOrderQuantity >= data.minOrderQuantity, {
   message: "Maximum quantity must be greater than or equal to minimum quantity",
@@ -466,7 +466,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   name="brand"
                   register={register}
                   error={errors.brand}
-                  required
+                  
                   placeholder="Enter brand name"
                 />
 
@@ -475,7 +475,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   name="model"
                   register={register}
                   error={errors.model}
-                  required
+                  
                   placeholder="Enter model number"
                 />
 
@@ -485,7 +485,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                     name="description"
                     register={register}
                     error={errors.description}
-                    required
+                    
                     placeholder="Enter detailed product description"
                   />
                 </div>
@@ -547,7 +547,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   error={errors.minOrderQuantity}
                   type="number"
                   min="1"
-                  required
+                  
                   placeholder="1"
                 />
 
@@ -558,7 +558,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   error={errors.maxOrderQuantity}
                   type="number"
                   min="1"
-                  required
+                  
                   placeholder="100"
                 />
               </div>

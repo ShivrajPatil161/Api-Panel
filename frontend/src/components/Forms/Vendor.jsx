@@ -173,31 +173,32 @@ const FormActions = ({ onCancel, isSubmitting, isEdit }) => (
   </div>
 );
 
-// Validation schema
+// Validation Schema using Zod
 const vendorSchema = z.object({
   name: z.string().min(2, 'Vendor name must be at least 2 characters'),
   bankType: z.enum(['Central Bank', 'Private Sector', 'Public Sector', 'Co-operative', 'Rural Banks'], {
     required_error: "Bank type is required"
   }),
-  //make it optional these fields
+  // optional contactPerson
   contactPerson: z.object({
-    name: z.string().min(2, 'Contact person name is required'),
-    email: z.string().email('Invalid email address'),
-    phoneNumber: z.string().regex(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
-  }),
-  address: z.string().min(10, 'Address must be at least 10 characters'),
-  city: z.string().min(2, 'City is required'),
-  state: z.string().min(2, 'State is required'),
-  pinCode: z.string().regex(/^[0-9]{6}$/, 'Pincode must be 6 digits'),
-  gstNumber: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'Invalid GST number format'),
-  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format'),
+    name: z.string().min(2, 'Contact person name is required').optional().or(z.literal('')),
+    email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    phoneNumber: z.string().regex(/^[0-9]{10}$/, 'Phone number must be 10 digits').optional().or(z.literal('')),
+  }).optional().nullable().or(z.literal('')),
+  address: z.string().min(10, 'Address must be at least 10 characters').optional().nullable().or(z.literal('')),
+  city: z.string().min(2, 'City is required').or(z.literal('')),
+  state: z.string().min(2, 'State is required').or(z.literal('')),
+  pinCode: z.string().regex(/^[0-9]{6}$/, 'Pincode must be 6 digits').or(z.literal('')),
+  gstNumber: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'Invalid GST number format').optional().or(z.literal('')),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format').or(z.literal('')),
   agreementStartDate: z.string().min(1, 'Agreement start date is required'),
   agreementEndDate: z.string().min(1, 'Agreement end date is required'),
   creditPeriodDays: z.number().min(0, 'Credit period must be 0 or more days'),
-  paymentTerms: z.string().min(5, 'Payment terms are required'),
+  paymentTerms: z.string().min(5, 'Payment terms are required').optional().or(z.literal('')), // allow empty string
   status: z.boolean(),
   remarks: z.string().optional()
 });
+
 
 // Bank type options
 const BANK_TYPE_OPTIONS = [
@@ -294,7 +295,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
               name="contactPerson.name"
               register={register}
               error={errors.contactPerson?.name}
-              required
+              
               placeholder="Enter contact person name"
             />
 
@@ -303,7 +304,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
               name="contactPerson.phoneNumber"
               register={register}
               error={errors.contactPerson?.phoneNumber}
-              required
+              
               placeholder="Enter 10-digit phone number"
               maxLength={10}
             />
@@ -313,7 +314,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
               name="contactPerson.email"
               register={register}
               error={errors.contactPerson?.email}
-              required
+              
               type="email"
               placeholder="Enter email address"
             />
@@ -328,7 +329,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
               name="address"
               register={register}
               error={errors.address}
-              required
+              
               placeholder="Enter complete address"
             />
 
@@ -338,7 +339,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
                 name="city"
                 register={register}
                 error={errors.city}
-                required
+                
                 placeholder="Enter city"
               />
 
@@ -347,7 +348,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
                 name="state"
                 register={register}
                 error={errors.state}
-                required
+                
                 placeholder="Enter state"
               />
 
@@ -356,7 +357,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
                 name="pinCode"
                 register={register}
                 error={errors.pinCode}
-                required
+                
                 placeholder="Enter 6-digit pincode"
                 maxLength={6}
               />
@@ -372,7 +373,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
               name="gstNumber"
               register={register}
               error={errors.gstNumber}
-              required
+              
               placeholder="Enter GST number (15 digits)"
               maxLength={15}
               style={{ textTransform: 'uppercase' }}
@@ -383,7 +384,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
               name="pan"
               register={register}
               error={errors.pan}
-              required
+              
               placeholder="Enter PAN number (10 digits)"
               maxLength={10}
               style={{ textTransform: 'uppercase' }}
@@ -429,7 +430,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
               name="paymentTerms"
               register={register}
               error={errors.paymentTerms}
-              required
+              
               placeholder="e.g., Net 30, Advance payment"
             />
           </GridLayout>
