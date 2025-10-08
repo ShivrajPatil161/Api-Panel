@@ -147,13 +147,13 @@ const Header = ({ userType }) => {
           <img 
                        src={logoImage} 
                        alt="Same Day Solution Logo" 
-                       className="w-[60px] max-w-md mx-auto rounded-xl p-1 mr-2  bg-gray-500  "
+                       className="w-[55px] max-h-[50px] mx-auto rounded-xl mt-1 p-1 mr-2  bg-gray-500  "
                       />
          <div className="flex flex-col">
           
-          <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{getPageTitle()}</h1>
           {getBreadcrumb() && (
-            <nav className="text-sm text-gray-500 mt-1">{getBreadcrumb()}</nav>
+            <nav className="text-sm text-gray-500 ">{getBreadcrumb()}</nav>
           )}
         </div>
        </div>

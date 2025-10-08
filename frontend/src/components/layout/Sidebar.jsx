@@ -665,7 +665,7 @@ const SidebarHeader = React.memo(({ sidebarCollapsed, onToggle, userType }) => {
   const displayText = USER_TYPE_DISPLAY[userType] || USER_TYPE_DISPLAY.default;
 
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200">
+    <div className="flex items-center justify-between p-4 bg-gray-200 ">
       {!sidebarCollapsed && (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
@@ -1012,24 +1012,15 @@ const Sidebar = ({ userType }) => {
     return new Set();
   }, [userType]);
 
-  // Handle click outside to close sidebar
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      // Only close if sidebar is expanded
-      if (!sidebarCollapsed && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        setSidebarCollapsed(true);
-        setExpandedMenus({});
-      }
-    };
+  // Handle mouse leave to close sidebar (keep expandedMenus state)
+  const handleMouseLeave = () => {
+    setSidebarCollapsed(true);
+  };
 
-    // Add event listener
-    document.addEventListener('mousedown', handleClickOutside);
-
-    // Cleanup
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [sidebarCollapsed]);
+  // Handle mouse enter to open sidebar
+  const handleMouseEnter = () => {
+    setSidebarCollapsed(false);
+  };
 
   const toggleMenu = (menuKey) => {
     setExpandedMenus(prev => ({
@@ -1078,35 +1069,39 @@ const Sidebar = ({ userType }) => {
   return (
     <div
       ref={sidebarRef}
-      className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200 h-full`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-200 shadow-xl transition-[width] duration-300 ease-out flex flex-col border-r border-gray-200 h-full overflow-hidden`}
     >
-      <SidebarHeader
-        sidebarCollapsed={sidebarCollapsed}
-        onToggle={toggleSidebar}
-        userType={userType}
-      />
+      <div className="w-64 flex flex-col h-full">
+        <SidebarHeader
+          sidebarCollapsed={sidebarCollapsed}
+          onToggle={toggleSidebar}
+          userType={userType}
+        />
 
-      <nav className="flex-1 overflow-y-auto py-4">
-        <div className="space-y-2">
-          {menuItems.length > 0 ? (
-            menuItems.map((item) => (
-              <div key={item.key || item.path}>
-                <MenuItem
-                  item={item}
-                  isActive={expandedMenus[item.key]}
-                  isParentActive={isActiveParent(item.children)}
-                  sidebarCollapsed={sidebarCollapsed}
-                  onMenuClick={handleMenuClick}
-                />
+        <nav className="flex-1 overflow-y-auto py-4">
+          <div className="space-y-2">
+            {menuItems.length > 0 ? (
+              menuItems.map((item) => (
+                <div key={item.key || item.path}>
+                  <MenuItem
+                    item={item}
+                    isActive={expandedMenus[item.key]}
+                    isParentActive={isActiveParent(item.children)}
+                    sidebarCollapsed={sidebarCollapsed}
+                    onMenuClick={handleMenuClick}
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-2 text-gray-500 text-sm">
+                {!sidebarCollapsed && "No permissions available"}
               </div>
-            ))
-          ) : (
-            <div className="px-4 py-2 text-gray-500 text-sm">
-              {!sidebarCollapsed && "No permissions available"}
-            </div>
-          )}
-        </div>
-      </nav>
+            )}
+          </div>
+        </nav>
+      </div>
     </div>
   );
 };
