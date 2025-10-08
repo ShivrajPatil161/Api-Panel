@@ -1078,7 +1078,7 @@ const Sidebar = ({ userType }) => {
   return (
     <div
       ref={sidebarRef}
-      className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200 h-full`}
+      className={`${sidebarCollapsed ? 'w-16' : 'w-69'} bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col border-r border-gray-200 h-full`}
     >
       <SidebarHeader
         sidebarCollapsed={sidebarCollapsed}
