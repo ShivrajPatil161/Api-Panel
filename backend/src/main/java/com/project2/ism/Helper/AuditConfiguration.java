@@ -32,6 +32,6 @@ public class AuditConfiguration {
         // Register for DELETE (for child entities)
         registry.appendListeners(EventType.POST_DELETE, auditEntityListener);
 
-        System.out.println("AuditConfiguration - Registered Hibernate PreUpdate listener");
+
     }
 }

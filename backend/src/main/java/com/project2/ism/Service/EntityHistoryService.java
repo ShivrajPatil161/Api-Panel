@@ -123,9 +123,10 @@ public class EntityHistoryService {
     private static final Map<String, List<String>> ENTITY_MEANINGFUL_FIELDS = new HashMap<>();
 
     static {
-        ENTITY_MEANINGFUL_FIELDS.put("CardRate", Arrays.asList("id", "cardName", "rate", "effectiveFrom"));
-        ENTITY_MEANINGFUL_FIELDS.put("PricingScheme", Arrays.asList("id", "schemeCode", "description", "isActive"));
-        ENTITY_MEANINGFUL_FIELDS.put("User", Arrays.asList("id", "email", "firstName", "lastName", "role"));
+        ENTITY_MEANINGFUL_FIELDS.put("CardRate", Arrays.asList("id", "cardName", "rate"));
+        ENTITY_MEANINGFUL_FIELDS.put("PricingScheme", Arrays.asList("id", "schemeCode", "description"));
+        ENTITY_MEANINGFUL_FIELDS.put("VendorCardRates", Arrays.asList("id", "cardType", "rate"));
+        ENTITY_MEANINGFUL_FIELDS.put("VendorRates", Arrays.asList("id", "vendor_id", "product_id","monthlyRent" ,"effectiveDate","expiryDate"));
         // Add more entities as needed
     }
 
