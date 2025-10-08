@@ -831,7 +831,7 @@ const MENU_CONFIGS = {
           { title: 'Customer List', path: '/dashboard/customers', icon: Users, permission: 'Customer List' },
           { title: 'Onboard Customer', path: '/dashboard/customers/onboard', icon: UserPlus, permission: 'Onboard Customer' },
           { title: 'Merchant Approval', path: '/dashboard/customers/admin-approval', icon: UserPlus, permission: 'Merchant Approval' },
-          { title: 'Products Distribution', path: '/dashboard/customers/products-distribution', icon: Package, permission: 'Products Distribution' }
+          { title: 'Products Distribution', path: '/dashboard/customers/products-distribution', icon: Package, permission: 'Product Distribution' }
         ]
       },
       {
@@ -987,7 +987,7 @@ const Sidebar = ({ userType }) => {
         'Dashboard', 'Admin Management', 'Logs', 'Edit History', 'Wallet Adjustment',
         'Vendors', 'Vendor List', 'Product List', 'Vendor Rates',
         'Inventory', 'Pricing Scheme', 'Product Scheme Assign', 'Inventory Management',
-        'Customers', 'Customer List', 'Onboard Customer', 'Merchant Approval', 'Products Distribution',
+        'Customers', 'Customer List', 'Onboard Customer', 'Merchant Approval', 'Product Distribution',
         'Other', 'File Upload', 'Charge Calculation', 'Batch Status',
         'Reports'
       ]);
