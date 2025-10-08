@@ -17,7 +17,9 @@ import {
   X,
   Package,
   Shield,
-  Building
+  Building,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -275,7 +277,6 @@ const ProductList = () => {
   const fetchProducts = async () => {
     setLoading(true);
    
-
     try {
       const data = await getProducts(pagination.pageIndex, pagination.pageSize, sorting[0]?.id || 'productName', sorting[0]?.desc ? 'desc' : 'asc', searchQuery);
 
@@ -320,6 +321,14 @@ const ProductList = () => {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
     toast.info('Search cleared');
   };
+
+  // Calculate stats
+  const totalProducts = data.length;
+  const activeProducts = data.filter(p => p.status === true).length;
+  const inactiveProducts = data.filter(p => p.status === false).length;
+  const avgWarranty = totalProducts > 0
+    ? Math.round(data.reduce((acc, p) => acc + (p.warrantyPeriod || 0), 0) / totalProducts)
+    : 0;
 
   // Table columns configuration
   const columns = useMemo(
@@ -415,7 +424,6 @@ const ProductList = () => {
   const handleAddProduct = () => {
     setEditingProduct(null);
     setShowForm(true);
-    
   };
 
   const handleEdit = (product) => {
@@ -425,14 +433,11 @@ const ProductList = () => {
     };
     setEditingProduct(editData);
     setShowForm(true);
-   
   };
 
   const handleView = (product) => {
     setViewingProduct(product);
-    
   };
-
 
   const handleDelete = (productId, productName) => {
     const confirmDelete = () => {
@@ -442,7 +447,7 @@ const ProductList = () => {
 
     const cancelDelete = () => {
       toast.dismiss();
-      toast.info('Delete operation cancelled'); // ✅ Same behavior as alert version
+      toast.info('Delete operation cancelled');
     };
 
     toast.warn(
@@ -482,8 +487,6 @@ const ProductList = () => {
     }
   };
 
-
-
   const handleFormSubmit = async (formData) => {
     const isEdit = !!editingProduct;
     try {
@@ -498,27 +501,85 @@ const ProductList = () => {
       console.error('Form submission failed:', error);
     }
   };
+
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingProduct(null);
-   
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg">
-      <div className="mb-6">
-        {(userType === 'admin' || userType==="super_admin") && (
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-gray-800">Product Master</h1>
-            <button
-              onClick={handleAddProduct}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              + Add Product
-            </button>
+    <div className="min-h-screen bg-gray-50 pr-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Package className="text-blue-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
+                <p className="text-gray-600">Manage your all vendor products</p>
+              </div>
+            </div>
+            {(userType === 'admin' || userType === "super_admin") && (
+              <button
+                onClick={handleAddProduct}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <span>+ Add Product</span>
+              </button>
+            )}
           </div>
-        )}
+        </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Package className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Products</p>
+                <p className="text-2xl font-bold text-gray-900">{totalElements}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Products</p>
+                <p className="text-2xl font-bold text-gray-900">{activeProducts}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <XCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Inactive Products</p>
+                <p className="text-2xl font-bold text-gray-900">{inactiveProducts}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Shield className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Avg Warranty</p>
+                <p className="text-2xl font-bold text-gray-900">{avgWarranty} months</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search Bar */}
         <SearchBar
           searchInput={searchInput}
           setSearchInput={setSearchInput}
@@ -533,83 +594,94 @@ const ProductList = () => {
           </p>
         )}
 
-        <div className="mb-4">
-          <span className="text-sm text-gray-600">
-            Showing {totalElements} products
-          </span>
+        {loading && <LoadingSpinner />}
+
+        {showForm && (
+          <ProductMasterForm
+            onSubmit={handleFormSubmit}
+            initialData={editingProduct}
+            isEdit={!!editingProduct}
+            onCancel={handleCloseForm}
+          />
+        )}
+
+        <ProductViewModal
+          product={viewingProduct}
+          onClose={() => setViewingProduct(null)}
+        />
+
+        {/* Table Card */}
+        <div className="bg-white rounded-lg shadow-sm">
+          {/* Table Header */}
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Product List</h2>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th
+                        key={header.id}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </span>
+                          <span className="text-gray-400">
+                            {{
+                              asc: '🔼',
+                              desc: '🔽',
+                            }[header.column.getIsSorted()] ?? null}
+                          </span>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {table.getRowModel().rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={columns.length} className="px-6 py-12 text-center">
+                      <EmptyState />
+                    </td>
+                  </tr>
+                ) : (
+                  table.getRowModel().rows.map(row => (
+                    <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {table.getRowModel().rows.length > 0 && (
+            <div className="px-6 py-4 border-t border-gray-200">
+              <Pagination
+                table={table}
+                pagination={pagination}
+                totalPages={totalPages}
+                totalElements={totalElements}
+              />
+            </div>
+          )}
         </div>
       </div>
-
-      {loading && <LoadingSpinner />}
-
-      {showForm && (
-        <ProductMasterForm
-          onSubmit={handleFormSubmit}
-          initialData={editingProduct}
-          isEdit={!!editingProduct}
-          onCancel={handleCloseForm}
-        />
-      )}
-
-      <ProductViewModal
-        product={viewingProduct}
-        onClose={() => setViewingProduct(null)}
-      />
-
-      {/* Table */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </span>
-                      <span className="text-gray-400">
-                        {{
-                          asc: '↑',
-                          desc: '↓',
-                        }[header.column.getIsSorted()] ?? '↕'}
-                      </span>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="hover:bg-gray-50">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {data.length === 0 && !loading && <EmptyState />}
-
-      {data.length > 0 && (
-        <Pagination
-          table={table}
-          pagination={pagination}
-          totalPages={totalPages}
-          totalElements={totalElements}
-        />
-      )}
     </div>
   );
 };

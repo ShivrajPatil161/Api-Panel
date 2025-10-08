@@ -171,11 +171,11 @@ const ProductDistributionList = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-6 space-y-6">
-            <div className="bg-white rounded-lg shadow-sm  p-6">
-                <div className="flex items-center justify-between">
+          <div className="min-h-screen bg-gray-50 pr-4">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
+                        <div className="p-2  rounded-lg">
                             <Package className="w-6 h-6 text-blue-600" />
                         </div>
                         <div>
@@ -197,7 +197,7 @@ const ProductDistributionList = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="bg-white rounded-lg shadow-sm  p-4">
                     <div className="text-sm text-gray-600">Total Distributions</div>
                     <div className="text-2xl font-bold text-gray-900 mt-1">{distributions.length}</div>
@@ -223,7 +223,7 @@ const ProductDistributionList = () => {
                         placeholder="Search distributions..."
                         value={globalFilter}
                         onChange={(e) => setGlobalFilter(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        className=" px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
 
