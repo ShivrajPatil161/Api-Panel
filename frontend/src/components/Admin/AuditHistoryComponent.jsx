@@ -197,9 +197,9 @@ const AuditHistoryComponent = () => {
         if (!details || Object.keys(details).length === 0) return null;
 
         return (
-            <div className="mb-3">
+            <div className="mb-2">
                 <div className="text-xs font-semibold text-gray-700 mb-2">{title}</div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1">
+                <div className="grid grid-cols-2 md:grid-cols-3 ">
                     {Object.entries(details).map(([key, value]) => (
                         <div key={key} className="text-xs">
                             <span className="text-gray-500">{key}:</span>{' '}
@@ -295,7 +295,7 @@ const AuditHistoryComponent = () => {
                                             </tr>
                                         ))}
                                     </thead>
-                                    <tbody className="divide-y">
+                                    <tbody className="">
                                         {table.getRowModel().rows.map((row) => (
                                             <React.Fragment key={row.id}>
                                                 <tr className="hover:bg-gray-50">
@@ -339,14 +339,14 @@ const AuditHistoryComponent = () => {
                                         <button
                                             onClick={() => setCurrentPage(0)}
                                             disabled={isFirst}
-                                            className="px-3 py-1 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-xs"
+                                                    className="px-3 py-1  rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-xs"
                                         >
                                             First
                                         </button>
                                         <button
                                             onClick={() => setCurrentPage(currentPage - 1)}
                                             disabled={isFirst}
-                                            className="px-3 py-1 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                                    className="px-3 py-1   rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                                         >
                                             Previous
                                         </button>
@@ -356,14 +356,14 @@ const AuditHistoryComponent = () => {
                                         <button
                                             onClick={() => setCurrentPage(currentPage + 1)}
                                             disabled={isLast}
-                                            className="px-3 py-1 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                                    className="px-3 py-1  rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                                         >
                                             Next
                                         </button>
                                         <button
                                             onClick={() => setCurrentPage(totalPages - 1)}
                                             disabled={isLast}
-                                            className="px-3 py-1 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-xs"
+                                            className="px-3 py-1   rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-xs"
                                         >
                                             Last
                                         </button>

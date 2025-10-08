@@ -39,6 +39,8 @@ public interface EntityHistoryRepository extends JpaRepository<EntityHistory, Lo
     List<EntityHistory> findTop50ByOrderByChangedAtDesc();
     // Recent activity with dynamic limit
     List<EntityHistory> findAllByOrderByChangedAtDesc(Pageable pageable);
+
+
     // Custom query with multiple filters
     @Query("SELECT eh FROM EntityHistory eh WHERE " +
             "(:startDate IS NULL OR eh.changedAt >= :startDate) AND " +
