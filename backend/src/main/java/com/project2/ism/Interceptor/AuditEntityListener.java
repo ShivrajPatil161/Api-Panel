@@ -19,8 +19,8 @@ public class AuditEntityListener implements PreUpdateEventListener, PostInsertEv
     // Define which entities are "child entities" that should track INSERT/DELETE
     private static final Set<String> CHILD_ENTITIES = new HashSet<>(Arrays.asList(
             "VendorCardRates",
-            "OrderItems",
-            "InvoiceItems"
+            "CardRate"
+
             // Add more child entities here as needed
     ));
 

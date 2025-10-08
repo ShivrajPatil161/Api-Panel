@@ -1069,9 +1069,11 @@ const Sidebar = ({ userType }) => {
   return (
     <div
       ref={sidebarRef}
+
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-200 shadow-xl transition-[width] duration-300 ease-out flex flex-col border-r border-gray-200 h-full overflow-hidden`}
+      
     >
       <div className="w-64 flex flex-col h-full">
         <SidebarHeader

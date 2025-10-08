@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, Filter, Clock, User, FileText } from 'lucide-react';
+import { Calendar, Search, Filter, Clock, User, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
 
 const AuditHistoryComponent = () => {
@@ -7,20 +7,28 @@ const AuditHistoryComponent = () => {
     const [loading, setLoading] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [limit, setLimit] = useState(5);
+    const [pageSize, setPageSize] = useState(10);
+    const [currentPage, setCurrentPage] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [isFirst, setIsFirst] = useState(true);
+    const [isLast, setIsLast] = useState(false);
     const [filterMode, setFilterMode] = useState('recent');
 
     useEffect(() => {
         fetchRecentHistory();
-    }, []);
+    }, [currentPage, pageSize]);
 
     const fetchRecentHistory = async () => {
         setLoading(true);
         try {
-            const response = await api.get(`/history/recent?limit=${limit}`);
-            setHistoryData(response.data);
-            setTotalElements(response.data.length);
+            const response = await api.get(`/history/recent?page=${currentPage}&size=${pageSize}`);
+            const data = response.data;
+            setHistoryData(data.content);
+            setTotalElements(data.totalElements);
+            setTotalPages(data.totalPages);
+            setIsFirst(data.first);
+            setIsLast(data.last);
             setFilterMode('recent');
         } catch (error) {
             console.error('Error fetching recent history:', error);
@@ -36,6 +44,7 @@ const AuditHistoryComponent = () => {
         }
 
         setLoading(true);
+        setCurrentPage(0);
         try {
             const formattedStartDate = `${startDate}T00:00:00`;
             const formattedEndDate = `${endDate}T23:59:59`;
@@ -48,6 +57,15 @@ const AuditHistoryComponent = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+    };
+
+    const handlePageSizeChange = (e) => {
+        setPageSize(Number(e.target.value));
+        setCurrentPage(0);
     };
 
     const formatDateTime = (dateString) => {
@@ -63,7 +81,9 @@ const AuditHistoryComponent = () => {
         });
     };
 
-    const getChangeType = (oldValue, newValue) => {
+    const getChangeType = (oldValue, newValue, fieldName) => {
+        if (fieldName === 'RECORD_ADDED') return 'added';
+        if (fieldName === 'RECORD_DELETED') return 'deleted';
         if (oldValue === null || oldValue === 'null') return 'added';
         if (newValue === null || newValue === 'null') return 'deleted';
         return 'modified';
@@ -76,6 +96,24 @@ const AuditHistoryComponent = () => {
             modified: 'bg-blue-100 text-blue-800 border-blue-300'
         };
         return styles[type] || styles.modified;
+    };
+
+    const renderEntityDetails = (details) => {
+        if (!details || Object.keys(details).length === 0) return null;
+
+        return (
+            <div className="bg-gray-50 rounded p-3 text-xs">
+                <p className="font-medium text-gray-700 mb-2">Entity Details:</p>
+                <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(details).map(([key, value]) => (
+                        <div key={key} className="flex gap-2">
+                            <span className="text-gray-500">{key}:</span>
+                            <span className="text-gray-800 font-medium">{value?.toString() || 'N/A'}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -114,15 +152,17 @@ const AuditHistoryComponent = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Limit (Recent)</label>
-                                <input
-                                    type="number"
-                                    value={limit}
-                                    onChange={(e) => setLimit(e.target.value)}
-                                    min="1"
-                                    max="100"
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Page Size</label>
+                                <select
+                                    value={pageSize}
+                                    onChange={handlePageSizeChange}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                                >
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
                             </div>
                         </div>
                         <div className="flex gap-2">
@@ -164,85 +204,150 @@ const AuditHistoryComponent = () => {
                         <p className="text-gray-600">No history records found</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {historyData.map((record) => {
-                            const changeType = getChangeType(record.oldValue, record.newValue);
-                            return (
-                                <div
-                                    key={record.id}
-                                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow"
-                                >
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                                <span className="text-blue-600 font-semibold text-sm">#{record.id}</span>
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="font-semibold text-gray-900">{record.entityName}</h3>
-                                                    <span className="text-xs text-gray-500">ID: {record.entityId}</span>
-                                                    <span className={`text-xs px-2 py-1 rounded-full border ${getChangeTypeBadge(changeType)}`}>
-                                                        {changeType}
-                                                    </span>
+                    <>
+                        <div className="space-y-3">
+                            {historyData.map((record, index) => {
+                                const changeType = getChangeType(record.oldValue, record.newValue, record.fieldName);
+                                return (
+                                    <div
+                                        key={`${record.changedAt}-${index}`}
+                                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow"
+                                    >
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-3 flex-1">
+                                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-blue-600 font-semibold text-xs">{record.entityName.substring(0, 2)}</span>
                                                 </div>
-                                                <p className="text-sm text-gray-600">Field: <span className="font-medium">{record.fieldName}</span></p>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                        <h3 className="font-semibold text-gray-900">{record.entityName}</h3>
+                                                        <span className={`text-xs px-2 py-1 rounded-full border ${getChangeTypeBadge(changeType)}`}>
+                                                            {changeType}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600">Field: <span className="font-medium">{record.fieldName}</span></p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right flex-shrink-0">
+                                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                                                    <User className="w-4 h-4" />
+                                                    <span>{record.changedBy}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span>{formatDateTime(record.changedAt)}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                                                <User className="w-4 h-4" />
-                                                <span>{record.changedBy}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                <Clock className="w-3 h-3" />
-                                                <span>{formatDateTime(record.changedAt)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-500 mb-1">Old Value</p>
-                                            <div className="bg-red-50 border border-red-200 rounded px-3 py-2">
-                                                <p className="text-sm text-gray-800 break-all">
-                                                    {record.oldValue === null || record.oldValue === 'null' ? (
-                                                        <span className="text-gray-400 italic">null</span>
-                                                    ) : (
-                                                        record.oldValue
-                                                    )}
-                                                </p>
+                                        {changeType !== 'added' && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+                                                <div>
+                                                    <p className="text-xs font-medium text-gray-500 mb-1">Old Value</p>
+                                                    <div className="bg-red-50 border border-red-200 rounded px-3 py-2">
+                                                        <p className="text-sm text-gray-800 break-all">
+                                                            {record.oldValue === null || record.oldValue === 'null' ? (
+                                                                <span className="text-gray-400 italic">null</span>
+                                                            ) : (
+                                                                record.oldValue
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-medium text-gray-500 mb-1">New Value</p>
+                                                    <div className="bg-green-50 border border-green-200 rounded px-3 py-2">
+                                                        <p className="text-sm text-gray-800 break-all">
+                                                            {record.newValue === null || record.newValue === 'null' ? (
+                                                                <span className="text-gray-400 italic">null</span>
+                                                            ) : (
+                                                                record.newValue
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-500 mb-1">New Value</p>
-                                            <div className="bg-green-50 border border-green-200 rounded px-3 py-2">
-                                                <p className="text-sm text-gray-800 break-all">
-                                                    {record.newValue === null || record.newValue === 'null' ? (
-                                                        <span className="text-gray-400 italic">null</span>
-                                                    ) : (
-                                                        record.newValue
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                        )}
 
-                                    {record.parentEntityName && (
-                                        <div className="mt-3 pt-3 border-t border-gray-100">
-                                            <p className="text-xs text-gray-500">
-                                                Parent: <span className="font-medium">{record.parentEntityName}</span>
-                                                {record.parentEntityId && ` (ID: ${record.parentEntityId})`}
-                                            </p>
-                                        </div>
-                                    )}
+                                        {record.entityDetails && (
+                                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                                {renderEntityDetails(record.entityDetails)}
+                                            </div>
+                                        )}
+
+                                        {record.parentEntityName && (
+                                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                                <p className="text-xs font-medium text-gray-700 mb-2">
+                                                    Parent: <span className="font-semibold">{record.parentEntityName}</span>
+                                                </p>
+                                                {renderEntityDetails(record.parentEntityDetails)}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-6">
+                            <div className="flex items-center justify-between">
+                                <div className="text-sm text-gray-600">
+                                    Showing <span className="font-medium">{currentPage * pageSize + 1}</span> to{' '}
+                                    <span className="font-medium">
+                                        {Math.min((currentPage + 1) * pageSize, totalElements)}
+                                    </span>{' '}
+                                    of <span className="font-medium">{totalElements}</span> results
                                 </div>
-                            );
-                        })}
-                    </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={isFirst}
+                                        className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                        Previous
+                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: totalPages }, (_, i) => i).map((page) => {
+                                            if (
+                                                page === 0 ||
+                                                page === totalPages - 1 ||
+                                                (page >= currentPage - 1 && page <= currentPage + 1)
+                                            ) {
+                                                return (
+                                                    <button
+                                                        key={page}
+                                                        onClick={() => handlePageChange(page)}
+                                                        className={`px-3 py-2 rounded-md text-sm font-medium ${page === currentPage
+                                                                ? 'bg-blue-600 text-white'
+                                                                : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                            }`}
+                                                    >
+                                                        {page + 1}
+                                                    </button>
+                                                );
+                                            } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                                return <span key={page} className="px-2 text-gray-400">...</span>;
+                                            }
+                                            return null;
+                                        })}
+                                    </div>
+                                    <button
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={isLast}
+                                        className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
+                                    >
+                                        Next
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
     );
 };
 
-export default AuditHistoryComponent;
+export default AuditHistoryComponent;   

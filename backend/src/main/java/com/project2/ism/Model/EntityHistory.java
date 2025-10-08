@@ -15,7 +15,7 @@ public class EntityHistory {
     private String entityName;
 
     @Column(name = "entity_id", nullable = false)
-    private String entityId;
+    private Long entityId;
 
     @Column(name = "field_name", nullable = false)
     private String fieldName;
@@ -36,15 +36,15 @@ public class EntityHistory {
     private String parentEntityName;
 
     @Column(name = "parent_entity_id")
-    private String parentEntityId;
+    private Long parentEntityId;
 
     // Constructors
     public EntityHistory() {
     }
 
-    public EntityHistory(String entityName, String entityId, String fieldName,
+    public EntityHistory(String entityName, Long entityId, String fieldName,
                          String oldValue, String newValue, String changedBy, LocalDateTime changedAt,
-                         String parentEntityName, String parentEntityId) {
+                         String parentEntityName, Long parentEntityId) {
         this.entityName = entityName;
         this.entityId = entityId;
         this.fieldName = fieldName;
@@ -73,11 +73,11 @@ public class EntityHistory {
         this.entityName = entityName;
     }
 
-    public String getEntityId() {
+    public Long getEntityId() {
         return entityId;
     }
 
-    public void setEntityId(String entityId) {
+    public void setEntityId(Long entityId) {
         this.entityId = entityId;
     }
 
@@ -129,11 +129,11 @@ public class EntityHistory {
         this.parentEntityName = parentEntityName;
     }
 
-    public String getParentEntityId() {
+    public Long getParentEntityId() {
         return parentEntityId;
     }
 
-    public void setParentEntityId(String parentEntityId) {
+    public void setParentEntityId(Long parentEntityId) {
         this.parentEntityId = parentEntityId;
     }
 }
