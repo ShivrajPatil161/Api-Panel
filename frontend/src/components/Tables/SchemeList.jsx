@@ -7,7 +7,9 @@ import {
     getFilteredRowModel,
     flexRender
 } from '@tanstack/react-table'
-import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X, DollarSign, IndianRupee, Search, Package, Users, CreditCard, Building2 } from 'lucide-react'
+
+import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X, Copy ,DollarSign, IndianRupee, Search, Package, Users, CreditCard, Building2} from 'lucide-react'
+
 import { toast } from 'react-toastify'
 
 import PricingSchemeFormModal from '../Forms/PricingForm'
@@ -21,6 +23,7 @@ const SchemeList = () => {
     const [viewingScheme, setViewingScheme] = useState(null)
     const [globalFilter, setGlobalFilter] = useState('')
     const [sorting, setSorting] = useState([])
+    const [isReuse, setIsReuse] = useState(false) // Add this state
 
     // Load schemes on component mount
     useEffect(() => {
@@ -146,6 +149,13 @@ const SchemeList = () => {
                     >
                         <Trash2 size={16} />
                     </button>
+                    <button
+                        onClick={() => handleReuse(row.original)}
+                        className="p-1 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                        title="Reuse scheme"
+                    >
+                        <Copy size={16} />
+                    </button>
                 </div>
             ),
         },
@@ -180,6 +190,12 @@ const SchemeList = () => {
         setEditingScheme(scheme)
         setIsModalOpen(true)
     }
+    const handleReuse = (scheme) => {
+        setEditingScheme(scheme)
+        setIsReuse(true) // Set to true for reuse mode
+        setIsModalOpen(true)
+    }
+
 
     const handleView = (scheme) => {
         setViewingScheme(scheme)
@@ -470,7 +486,8 @@ const SchemeList = () => {
                     onCancel={handleCancel}
                     onSubmit={handleSubmit}
                     initialData={editingScheme}
-                    isEdit={!!editingScheme}
+                    isEdit={!!editingScheme && !isReuse}
+                    isReuse={isReuse}
                 />
             )}
 

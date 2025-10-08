@@ -366,11 +366,17 @@ const CardRates = ({ control, register, errors, watch }) => {
 };
 
 
-// ==================== PRICING SCHEME FORM MODAL ====================
-const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
+const PricingSchemeFormModal = ({
+  onCancel,
+  onSubmit,
+  initialData = null,
+  isEdit = false,
+  isReuse = false  // Add new prop
+}) => {
 
   const [category, setCategory] = useState([]);
   const [loading, setLoading] = useState(true)
+
   const getDefaultValues = () => ({
     schemeCode: '',
     rentalByMonth: '',
@@ -378,10 +384,9 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
     cardRates: [],
     description: '',
     productCategoryName: '',
-    productCategoryId:''
+    productCategoryId: ''
   })
 
-  
   const {
     control,
     register,
@@ -396,15 +401,13 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
       : getDefaultValues()
   })
 
-
-  // Fetch scheme code on mount for new schemes
+  // Fetch scheme code on mount for new schemes OR when reusing
   useEffect(() => {
-    if (!isEdit && !initialData) {
+    if ((!isEdit && !initialData) || isReuse) {
       fetchNewSchemeCode()
-      
     }
     fetchCategory()
-  }, [isEdit, initialData])
+  }, [isEdit, initialData, isReuse])
 
   const fetchNewSchemeCode = async () => {
     try {
@@ -415,9 +418,9 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
       }
     } catch (error) {
       console.error('Error fetching scheme code:', error)
-      // Fallback to manual entry if API fails
     }
   }
+
   const fetchCategory = async () => {
     try {
       const response = await api.get("/product-categories")
@@ -437,7 +440,6 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
     { value: 'franchise', label: 'Franchise' },
     { value: 'direct_merchant', label: 'Direct Merchant' }
   ]
-
 
   const onFormSubmit = (data) => {
     const filteredData = {
@@ -470,7 +472,7 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
         {/* Modal Header */}
         <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg">
           <h2 className="text-2xl font-bold text-gray-800">
-            {isEdit ? 'Edit Pricing Scheme' : 'Add New Pricing Scheme'}
+            {isEdit ? 'Edit Pricing Scheme' : isReuse ? 'Reuse Pricing Scheme' : 'Add New Pricing Scheme'}
           </h2>
           <button
             onClick={handleCancel}
@@ -495,7 +497,7 @@ const PricingSchemeFormModal = ({ onCancel, onSubmit, initialData = null, isEdit
                   errors={errors}
                   required
                   disabled
-                  readOnly={!isEdit}
+                  readOnly={!isEdit && !isReuse}
                   placeholder="Auto-generated"
                 />
                 {loading ? (

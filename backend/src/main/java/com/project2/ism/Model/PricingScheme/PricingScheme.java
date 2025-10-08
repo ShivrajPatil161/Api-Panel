@@ -30,6 +30,9 @@ public class PricingScheme {
     @Column(name = "rental_by_month", nullable = false)
     private Double rentalByMonth;
 
+    @Column(name = "gst", nullable = false)
+    private Double gst;
+
     @Column(name = "customer_type", nullable = false)
     private String customerType;
 
@@ -143,5 +146,13 @@ public class PricingScheme {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Double getGst() {
+        return gst;
+    }
+
+    public void setGst(Double gst) {
+        this.gst = gst;
     }
 }
