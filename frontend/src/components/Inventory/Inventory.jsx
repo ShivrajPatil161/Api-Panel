@@ -334,7 +334,7 @@ const handleReturnCancel = () => {
 
     return (
         <div className="min-h-screen">
-            <div className="max-w-8xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-gray-50 pr-4">
                 {/* Header */}
                 <div className="bg-white shadow-sm rounded-lg mb-6">
                     <div className="px-6 py-4">
@@ -411,16 +411,16 @@ const handleReturnCancel = () => {
                 )}
 
                 {isReturnModalOpen && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
-    <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-      <OptimizedReturns
-        onSubmit={handleReturnSubmit}
-        onCancel={handleReturnCancel}
-        editData={editingReturn}
-        showToast={showToast}
-      />
-    </div>
-  </div>
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
+                        <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+                            <OptimizedReturns
+                                onSubmit={handleReturnSubmit}
+                                onCancel={handleReturnCancel}
+                                editData={editingReturn}
+                                showToast={showToast}
+                            />
+                        </div>
+                    </div>
 )}
             </div>
         </div>
