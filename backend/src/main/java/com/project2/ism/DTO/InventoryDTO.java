@@ -3,15 +3,17 @@ package com.project2.ism.DTO;
 public class InventoryDTO {
     private String productCode;
     private String productName;
+    private String vendorName;
     private int totalQuantity;
     private int reserved;
     private int available;
     private String status;
 
-    public InventoryDTO(String productCode, String productName,
+    public InventoryDTO(String productCode, String productName,String vendorName,
                         int totalQuantity, int reserved, int available) {
         this.productCode = productCode;
         this.productName = productName;
+        this.vendorName = vendorName;
         this.totalQuantity = totalQuantity;
         this.reserved = reserved;
         this.available = available;
@@ -66,5 +68,13 @@ public class InventoryDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getVendorName() {
+        return vendorName;
+    }
+
+    public void setVendorName(String vendorName) {
+        this.vendorName = vendorName;
     }
 }

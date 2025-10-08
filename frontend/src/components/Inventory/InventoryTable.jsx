@@ -60,6 +60,18 @@ const InventoryTable = () => {
             ),
         },
         {
+            accessorKey: 'vendorName',
+            header: ({ column }) => (
+                <button
+                    className="flex items-center space-x-1 hover:text-blue-600"
+                    onClick={() => column.toggleSorting()}
+                >
+                    <span>Vendor Name</span>
+                    <ArrowUpDown className="h-4 w-4" />
+                </button>
+            ),
+        },
+        {
             accessorKey: 'totalQuantity',
             header: ({ column }) => (
                 <button
