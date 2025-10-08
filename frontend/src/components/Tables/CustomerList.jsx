@@ -1143,7 +1143,7 @@ const CustomerListComponent = () => {
 
                 {/* Edit Modal */}
                 {editModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-90 p-4">
                         <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full overflow-auto">
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
