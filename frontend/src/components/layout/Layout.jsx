@@ -9,7 +9,7 @@ const Layout = () => {
   return (
     <div className="flex h-screen bg-gray-100 relative">
       {/* Sidebar - Positioned absolutely to overlay */}
-      <div className="absolute inset-y-0 left-0 z-50 h-full">
+      <div className="absolute inset-y-0 left-0 z-30 h-full">
         <Sidebar userType={userType} />
       </div>
 
