@@ -15,11 +15,11 @@ import java.util.List;
 public interface EntityHistoryRepository extends JpaRepository<EntityHistory, Long> {
 
     // Find by entity
-    List<EntityHistory> findByEntityNameAndEntityIdOrderByChangedAtDesc(String entityName, String entityId);
+    List<EntityHistory> findByEntityNameAndEntityIdOrderByChangedAtDesc(String entityName, Long entityId);
 
     // Find by parent entity (includes children)
     List<EntityHistory> findByParentEntityNameAndParentEntityIdOrderByChangedAtDesc(
-            String parentEntityName, String parentEntityId
+            String parentEntityName, Long parentEntityId
     );
 
     // Find by entity OR parent entity (combined view)
@@ -29,7 +29,7 @@ public interface EntityHistoryRepository extends JpaRepository<EntityHistory, Lo
             "ORDER BY eh.changedAt DESC")
     List<EntityHistory> findByEntityOrParent(
             @Param("entityName") String entityName,
-            @Param("entityId") String entityId
+            @Param("entityId") Long entityId
     );
 
     // Find by user
@@ -37,23 +37,14 @@ public interface EntityHistoryRepository extends JpaRepository<EntityHistory, Lo
 
     // Recent activity
     List<EntityHistory> findTop50ByOrderByChangedAtDesc();
-
+    // Recent activity with dynamic limit
+    List<EntityHistory> findAllByOrderByChangedAtDesc(Pageable pageable);
     // Custom query with multiple filters
     @Query("SELECT eh FROM EntityHistory eh WHERE " +
-            "(:entityName IS NULL OR eh.entityName = :entityName) AND " +
-            "(:entityId IS NULL OR eh.entityId = :entityId) AND " +
-            "(:parentEntityName IS NULL OR eh.parentEntityName = :parentEntityName) AND " +
-            "(:parentEntityId IS NULL OR eh.parentEntityId = :parentEntityId) AND " +
-            "(:changedBy IS NULL OR eh.changedBy = :changedBy) AND " +
             "(:startDate IS NULL OR eh.changedAt >= :startDate) AND " +
             "(:endDate IS NULL OR eh.changedAt <= :endDate) " +
             "ORDER BY eh.changedAt DESC")
     Page<EntityHistory> findWithFilters(
-            @Param("entityName") String entityName,
-            @Param("entityId") String entityId,
-            @Param("parentEntityName") String parentEntityName,
-            @Param("parentEntityId") String parentEntityId,
-            @Param("changedBy") String changedBy,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
