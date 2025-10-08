@@ -73,6 +73,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -108,6 +109,29 @@ public class FranchiseController {
         }
     }
 
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<?> updateFranchise(
+            @PathVariable Long id,
+            @ModelAttribute FranchiseFormDTO formDTO
+    ) {
+        try {
+            Franchise updatedFranchise = franchiseService.updateFranchise(id, formDTO);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Franchise updated successfully",
+                    "data", updatedFranchise
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Failed to update franchise: " + e.getMessage()
+            ));
+        }
+    }
+
 
     //settlement api .js uses this
     @GetMapping
@@ -132,23 +156,7 @@ public class FranchiseController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateFranchise(@PathVariable Long id,
-                                             @Valid @RequestBody Franchise franchise) {
-        try {
-            Franchise updatedFranchise = franchiseService.updateFranchise(id, franchise);
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Franchise updated successfully",
-                    "data", updatedFranchise
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Failed to update franchise: " + e.getMessage()
-            ));
-        }
-    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFranchise(@PathVariable Long id) {

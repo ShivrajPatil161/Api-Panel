@@ -11,7 +11,9 @@ import com.project2.ism.Model.Users.Franchise;
 import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -152,27 +154,110 @@ public class FranchiseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Franchise not found with ID: " + id));
     }
 
-    public Franchise updateFranchise(Long id, Franchise franchiseDetails) {
+    public Franchise updateFranchise(Long id, FranchiseFormDTO dto) throws IOException {
         Franchise franchise = getFranchiseById(id);
 
-        // Update basic details
-        if (franchiseDetails.getFranchiseName() != null) {
-            franchise.setFranchiseName(franchiseDetails.getFranchiseName());
+        // Update basic details (only if provided)
+        if (dto.getFranchiseName() != null && !dto.getFranchiseName().isEmpty()) {
+            franchise.setFranchiseName(dto.getFranchiseName());
         }
-        if (franchiseDetails.getLegalName() != null) {
-            franchise.setLegalName(franchiseDetails.getLegalName());
+        if (dto.getLegalName() != null && !dto.getLegalName().isEmpty()) {
+            franchise.setLegalName(dto.getLegalName());
         }
-        if (franchiseDetails.getBusinessType() != null) {
-            franchise.setBusinessType(franchiseDetails.getBusinessType());
+        if (dto.getBusinessType() != null && !dto.getBusinessType().isEmpty()) {
+            franchise.setBusinessType(dto.getBusinessType());
         }
-        if (franchiseDetails.getAddress() != null) {
-            franchise.setAddress(franchiseDetails.getAddress());
+        if (dto.getBusinessAddress() != null && !dto.getBusinessAddress().isEmpty()) {
+            franchise.setAddress(dto.getBusinessAddress());
+        }
+        if (dto.getGstNumber() != null && !dto.getGstNumber().isEmpty()) {
+            franchise.setGstNumber(dto.getGstNumber());
+        }
+        if (dto.getPanNumber() != null && !dto.getPanNumber().isEmpty()) {
+            franchise.setPanNumber(dto.getPanNumber());
+        }
+        if (dto.getRegistrationNumber() != null && !dto.getRegistrationNumber().isEmpty()) {
+            franchise.setRegistrationNumber(dto.getRegistrationNumber());
         }
 
+        // Update contact details
+        ContactPerson contactPerson = franchise.getContactPerson();
+        if (contactPerson == null) {
+            contactPerson = new ContactPerson();
+        }
+
+        if (dto.getPrimaryContactName() != null && !dto.getPrimaryContactName().isEmpty()) {
+            contactPerson.setName(dto.getPrimaryContactName());
+        }
+        if (dto.getPrimaryContactMobile() != null && !dto.getPrimaryContactMobile().isEmpty()) {
+            contactPerson.setPhoneNumber(dto.getPrimaryContactMobile());
+        }
+        if (dto.getPrimaryContactEmail() != null && !dto.getPrimaryContactEmail().isEmpty()) {
+            contactPerson.setEmail(dto.getPrimaryContactEmail());
+        }
+        if (dto.getAlternateContactMobile() != null && !dto.getAlternateContactMobile().isEmpty()) {
+            contactPerson.setAlternatePhoneNum(dto.getAlternateContactMobile());
+        }
+        if (dto.getLandlineNumber() != null && !dto.getLandlineNumber().isEmpty()) {
+            contactPerson.setLandlineNumber(dto.getLandlineNumber());
+        }
+
+        franchise.setContactPerson(contactPerson);
+
+        // Update bank details
+        BankDetails bankDetails = franchise.getBankDetails();
+        if (bankDetails == null) {
+            bankDetails = new BankDetails();
+        }
+
+        if (dto.getBankName() != null && !dto.getBankName().isEmpty()) {
+            bankDetails.setBankName(dto.getBankName());
+        }
+        if (dto.getAccountHolderName() != null && !dto.getAccountHolderName().isEmpty()) {
+            bankDetails.setAccountHolderName(dto.getAccountHolderName());
+        }
+        if (dto.getAccountNumber() != null && !dto.getAccountNumber().isEmpty()) {
+            bankDetails.setAccountNumber(dto.getAccountNumber());
+        }
+        if (dto.getIfscCode() != null && !dto.getIfscCode().isEmpty()) {
+            bankDetails.setIfsc(dto.getIfscCode());
+        }
+        if (dto.getBranchName() != null && !dto.getBranchName().isEmpty()) {
+            bankDetails.setBranchName(dto.getBranchName());
+        }
+        if (dto.getAccountType() != null && !dto.getAccountType().isEmpty()) {
+            bankDetails.setAccountType(dto.getAccountType());
+        }
+
+        franchise.setBankDetails(bankDetails);
+
+        // Handle document uploads (only if new files are provided)
+        UploadDocuments uploadDocuments = franchise.getUploadDocuments();
+        if (uploadDocuments == null) {
+            uploadDocuments = new UploadDocuments();
+        }
+
+        if (dto.getPanCardDocument() != null && !dto.getPanCardDocument().isEmpty()) {
+            String panPath = fileStorageService.store(dto.getPanCardDocument(), "franchise_pan");
+            uploadDocuments.setPanProof(panPath);
+        }
+        if (dto.getGstCertificate() != null && !dto.getGstCertificate().isEmpty()) {
+            String gstPath = fileStorageService.store(dto.getGstCertificate(), "franchise_gst");
+            uploadDocuments.setGstCertificateProof(gstPath);
+        }
+        if (dto.getAddressProof() != null && !dto.getAddressProof().isEmpty()) {
+            String addressPath = fileStorageService.store(dto.getAddressProof(), "franchise_address");
+            uploadDocuments.setAddressProof(addressPath);
+        }
+        if (dto.getBankProof() != null && !dto.getBankProof().isEmpty()) {
+            String bankPath = fileStorageService.store(dto.getBankProof(), "franchise_bank");
+        }
+
+        franchise.setUploadDocuments(uploadDocuments);
         franchise.setUpdatedAt(LocalDateTime.now());
+
         return franchiseRepository.save(franchise);
     }
-
     public void deleteFranchise(Long id) {
         Franchise franchise = getFranchiseById(id);
 
