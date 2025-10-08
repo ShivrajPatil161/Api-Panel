@@ -25,10 +25,17 @@ public class EntityHistoryService {
     @Autowired
     private EntityManager entityManager;
 
+    // Service - One method handles both cases
     public EntityHistoryPageDTO getHistory(LocalDateTime startDate,
                                            LocalDateTime endDate, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<EntityHistory> historyPage = historyRepository.findWithFilters(startDate, endDate, pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("changedAt").descending());
+        Page<EntityHistory> historyPage;
+
+        if (startDate != null || endDate != null) {
+            historyPage = historyRepository.findWithFilters(startDate, endDate, pageable);
+        } else {
+            historyPage = historyRepository.findAll(pageable);
+        }
 
         List<EntityHistoryDTO> dtos = historyPage.getContent().stream()
                 .map(this::toDTO)

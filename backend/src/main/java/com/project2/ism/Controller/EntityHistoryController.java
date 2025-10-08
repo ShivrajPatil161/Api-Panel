@@ -21,13 +21,13 @@ public class EntityHistoryController {
     @Autowired
     private EntityHistoryService historyService;
 
-    // 1. Get ALL history (with optional filters)
+    // Controller - ONE endpoint for everything
     @GetMapping
     public ResponseEntity<EntityHistoryPageDTO> getHistory(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "20") int size
     ) {
         EntityHistoryPageDTO history = historyService.getHistory(startDate, endDate, page, size);
         return ResponseEntity.ok(history);
