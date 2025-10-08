@@ -141,13 +141,13 @@ const Header = ({ userType }) => {
   return (
     <header className="ml-15 bg-gray-200 shadow-sm border-b border-gray-200 sticky top-0 z-40">
       
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex items-center justify-between px-6 py-2">
         {/* Left Section */}
        <div className='flex'>
           <img 
                        src={logoImage} 
                        alt="Same Day Solution Logo" 
-                       className="w-[60px] max-w-md mx-auto rounded-xl p-1 mr-2 bg-gray-500  "
+                       className="w-[60px] max-w-md mx-auto rounded-xl p-1 mr-2  bg-gray-500  "
                       />
          <div className="flex flex-col">
           

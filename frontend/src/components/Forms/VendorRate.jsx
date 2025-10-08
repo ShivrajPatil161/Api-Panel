@@ -1,6 +1,6 @@
 import { useState,useEffect,useRef } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
-import { X,Plus } from 'lucide-react'
+import { X,Plus, Wallet, Wallet2, CreditCard } from 'lucide-react'
 import api from '../../constants/API/axiosInstance'
 
 // ==================== FORM COMPONENTS ====================
@@ -513,9 +513,9 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg">
-          <h2 className="text-2xl font-bold text-gray-800">
-            {isEdit ? 'Edit Vendor Rates' : 'Add New Vendor Rates'}
+        <div className="flex justify-between items-center p-6 bg-gradient-to-r from-gray-600 to-gray-800  rounded-t-lg">
+          <h2 className="flex items-center text-2xl font-bold text-white">
+           <CreditCard className='mr-2 ' size={40}/> {isEdit ? 'Edit Vendor Rates' : 'Add New Vendor Rates'}
           </h2>
           <button
             onClick={handleCancel}

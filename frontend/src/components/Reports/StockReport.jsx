@@ -99,6 +99,11 @@ const StockReport = () => {
             size: 120,
         },
         {
+            accessorKey: 'mobNumber',
+            header: 'Mobile',
+            size: 120,
+        },
+        {
             accessorKey: 'productName',
             header: 'Product',
             size: 150,
@@ -135,11 +140,6 @@ const StockReport = () => {
                     </div>
                 ) : '-';
             }
-        },
-        {
-            accessorKey: 'mobNumber',
-            header: 'Mobile',
-            size: 120,
         },
         {
             accessorKey: 'inwardReceivedDate',
