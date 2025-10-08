@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, act } from 'react'
 import {
     useReactTable,
     getCoreRowModel,
@@ -566,8 +566,20 @@ const CustomerListComponent = () => {
         try {
             setLoading(true)
             const response = await customerApi.getCustomerDetails(id, type)
+
+            // Extract the correct customer data based on type
+            let customerData;
+            if (type === 'franchise') {
+                // For franchise, the data is in response.data.franchise
+                customerData = response.data.franchise || response.data
+            } else {
+                // For merchant, the data is directly in response.data
+                // but might also be in response.data.merchant
+                customerData = response.data.merchant || response.data
+            }
+
             setEditModal({
-                customer: response.data,
+                customer: customerData,
                 type,
                 customerId: id
             })
@@ -1165,6 +1177,7 @@ const CustomerListComponent = () => {
                                     customerId={editModal.customerId}
                                     onClose={() => setEditModal(null)}
                                     onSuccess={handleEditSuccess}
+                                    customerType={activeTab === 'franchises' ? 'franchise' : 'merchant'}
                                 />
                             </div>
                         </div>

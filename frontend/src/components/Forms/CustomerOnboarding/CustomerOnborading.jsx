@@ -27,9 +27,11 @@ const CustomerOnboarding = ({
 
   // Initialize customer type
   const [customerType, setCustomerType] = useState(() => {
+   
     if (propCustomerType) return propCustomerType
     if (isEditMode) return customerData?.franchiseName ? 'franchise' : 'merchant'
     if (isFranchiseContext) return 'merchant'
+   
     return ''
   })
 
