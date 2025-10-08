@@ -399,7 +399,7 @@ const ProductAssignment = () => {
     }
 
     return (
-        <div className="max-w-8xl mx-auto p-6">
+        <div className="min-h-screen bg-gray-50 pr-4">
             <div className="bg-white rounded-lg shadow-lg">
                 {/* Header */}
                 <div className="bg-white text-black p-6 rounded-t-lg">
