@@ -16,11 +16,17 @@ public class AuditEntityListener implements PreUpdateEventListener, PostInsertEv
 
     private static AuditService auditService;
 
+    // Define which entities should be audited (PARENT entities to track)
+    private static final Set<String> AUDITED_ENTITIES = new HashSet<>(Arrays.asList(
+            "PricingScheme",
+            "VendorRates"
+            // Add more parent entities you want to audit here
+    ));
+
     // Define which entities are "child entities" that should track INSERT/DELETE
     private static final Set<String> CHILD_ENTITIES = new HashSet<>(Arrays.asList(
             "VendorCardRates",
             "CardRate"
-
             // Add more child entities here as needed
     ));
 
@@ -35,11 +41,19 @@ public class AuditEntityListener implements PreUpdateEventListener, PostInsertEv
         System.out.println("AuditEntityListener - Spring injected AuditService");
     }
 
-    // ==================== UPDATE EVENT (existing) ====================
+    // ==================== UPDATE EVENT ====================
     @Override
     public boolean onPreUpdate(PreUpdateEvent event) {
+        Object entity = event.getEntity();
+        String entityName = entity.getClass().getSimpleName();
+
+        // Check if this entity should be audited
+        if (!AUDITED_ENTITIES.contains(entityName) && !CHILD_ENTITIES.contains(entityName)) {
+            return false; // Skip this entity
+        }
+
         System.out.println("============ AUDIT UPDATE LISTENER TRIGGERED ============");
-        System.out.println("Entity: " + event.getEntity().getClass().getSimpleName());
+        System.out.println("Entity: " + entityName);
 
         try {
             if (auditService == null) {
@@ -52,9 +66,7 @@ public class AuditEntityListener implements PreUpdateEventListener, PostInsertEv
                 changedBy = "SYSTEM";
             }
 
-            Object entity = event.getEntity();
             String entityId = event.getId().toString();
-            String entityName = entity.getClass().getSimpleName();
 
             String[] propertyNames = event.getPersister().getPropertyNames();
             Object[] oldState = event.getOldState();
@@ -142,9 +154,9 @@ public class AuditEntityListener implements PreUpdateEventListener, PostInsertEv
             auditService.saveHistory(
                     entityName,
                     entityId,
-                    "RECORD_ADDED", // Special field name for inserts
-                    null, // No old value for inserts
-                    "New record added", // Description
+                    "RECORD_ADDED",
+                    null,
+                    "New record added",
                     changedBy,
                     parentEntityName,
                     parentEntityId
@@ -194,9 +206,9 @@ public class AuditEntityListener implements PreUpdateEventListener, PostInsertEv
             auditService.saveHistory(
                     entityName,
                     entityId,
-                    "RECORD_DELETED", // Special field name for deletes
-                    "Record existed", // Description
-                    null, // No new value for deletes
+                    "RECORD_DELETED",
+                    "Record existed",
+                    null,
                     changedBy,
                     parentEntityName,
                     parentEntityId
@@ -285,6 +297,8 @@ public class AuditEntityListener implements PreUpdateEventListener, PostInsertEv
                 fieldName.equals("updatedBy") ||
                 fieldName.equals("vendor") ||
                 fieldName.equals("productCategory") ||
-                fieldName.equals("vendorRate"); // Skip the parent reference in child entity
+                fieldName.equals("product") ||
+                fieldName.equals("vendorRate");
+
     }
 }
