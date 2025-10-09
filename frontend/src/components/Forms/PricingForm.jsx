@@ -371,7 +371,7 @@ const PricingSchemeFormModal = ({
   onSubmit,
   initialData = null,
   isEdit = false,
-  isReuse = false  // Add new prop
+  isReuse = false
 }) => {
 
   const [category, setCategory] = useState([]);
@@ -396,7 +396,7 @@ const PricingSchemeFormModal = ({
     reset,
     setValue
   } = useForm({
-    defaultValues: initialData
+    defaultValues: initialData && isEdit && !isReuse
       ? { ...initialData, productCategoryId: String(initialData.productCategoryId) }
       : getDefaultValues()
   })
@@ -408,6 +408,24 @@ const PricingSchemeFormModal = ({
     }
     fetchCategory()
   }, [isEdit, initialData, isReuse])
+
+  // Set form values when initialData changes (for reuse mode)
+  useEffect(() => {
+    if (initialData && isReuse) {
+      // For reuse mode, copy data but exclude IDs
+      setValue('rentalByMonth', initialData.rentalByMonth)
+      setValue('customerType', initialData.customerType)
+      setValue('description', initialData.description)
+      setValue('productCategoryId', String(initialData.productCategoryId))
+
+      // Copy card rates but remove their IDs
+      const cardRatesWithoutIds = initialData.cardRates.map(rate => {
+        const { id, ...rateWithoutId } = rate
+        return rateWithoutId
+      })
+      setValue('cardRates', cardRatesWithoutIds)
+    }
+  }, [initialData, isReuse, setValue])
 
   const fetchNewSchemeCode = async () => {
     try {
@@ -455,10 +473,24 @@ const PricingSchemeFormModal = ({
         } else {
           return rate.rate && parseFloat(rate.rate) > 0 && rate.cardName.trim()
         }
+      }).map(rate => {
+        // Remove IDs from card rates for reuse
+        if (isReuse) {
+          const { id, ...rateWithoutId } = rate
+          return rateWithoutId
+        }
+        return rate
       })
     }
 
-    onSubmit(filteredData)
+    // Remove scheme ID for reuse
+    if (isReuse) {
+      const { id, ...dataWithoutId } = filteredData
+      onSubmit(dataWithoutId)
+    } else {
+      onSubmit(filteredData)
+    }
+
     onCancel()
   }
 
@@ -472,7 +504,7 @@ const PricingSchemeFormModal = ({
         {/* Modal Header */}
         <div className="flex justify-between items-center p-6 border-b bg-gray-50 rounded-t-lg">
           <h2 className="text-2xl font-bold text-gray-800">
-            {isEdit ? 'Edit Pricing Scheme' : isReuse ? 'Reuse Pricing Scheme' : 'Add New Pricing Scheme'}
+            {isEdit && !isReuse ? 'Edit Pricing Scheme' : isReuse ? 'Reuse Pricing Scheme' : 'Add New Pricing Scheme'}
           </h2>
           <button
             onClick={handleCancel}
@@ -487,9 +519,10 @@ const PricingSchemeFormModal = ({
         <div className="p-6">
           {/* Reuse Notice */}
           {isReuse && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-2">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-blue-800">
                 <strong>Note:</strong> You're creating a new pricing scheme based on an existing one.
+                A new scheme code has been generated. Card rates and other details have been pre-filled.
               </p>
             </div>
           )}
@@ -505,7 +538,7 @@ const PricingSchemeFormModal = ({
                   errors={errors}
                   required
                   disabled
-                  readOnly={!isEdit && !isReuse}
+                  readOnly
                   placeholder="Auto-generated"
                 />
                 {loading ? (
@@ -576,7 +609,7 @@ const PricingSchemeFormModal = ({
                 onClick={handleSubmit(onFormSubmit)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
               >
-                {isEdit ? 'Update Scheme' : 'Save Scheme'}
+                {isEdit && !isReuse ? 'Update Scheme' : 'Save Scheme'}
               </button>
             </div>
           </div>

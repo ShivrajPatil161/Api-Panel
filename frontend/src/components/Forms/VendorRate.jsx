@@ -305,7 +305,7 @@ const CardRates = ({ control, register, errors }) => {
 
 
 // Enhanced Vendor Product Details Component
-const VendorProductDetails = ({ register, errors, editData, control, setValue, watch }) => {
+const VendorProductDetails = ({ register, errors, editData, control, setValue, watch, isReuse }) => {
   const [vendors, setVendors] = useState([])
   const [products, setProducts] = useState([])
   const [selectedVendor, setSelectedVendor] = useState(null)
@@ -320,8 +320,9 @@ const VendorProductDetails = ({ register, errors, editData, control, setValue, w
   useEffect(() => {
     fetchVendors()
   }, [])
+
   useEffect(() => {
-    if (editData?.productId && products.length > 0 && isInitialized) {
+    if (editData?.productId && products.length > 0 && isInitialized && !isReuse) {
       const productExists = products.find(product =>
         product.id === editData.productId || product.value === editData.productId.toString()
       )
@@ -329,12 +330,12 @@ const VendorProductDetails = ({ register, errors, editData, control, setValue, w
         setValue('productId', editData.productId.toString())
       }
     }
-  }, [products, editData?.productId, isInitialized, setValue])
+  }, [products, editData?.productId, isInitialized, isReuse, setValue])
 
   // Handle initial data population when vendors are loaded and we have edit data
   useEffect(() => {
-    if (editData && vendors.length > 0 && !isInitialized) {
-      // Find and set the initial vendor
+    if (editData && vendors.length > 0 && !isInitialized && !isReuse) {
+      // Find and set the initial vendor (only for edit mode, not reuse)
       if (editData.vendorId) {
         const initialVendor = vendors.find(vendor =>
           vendor.id === editData.vendorId || vendor.value === editData.vendorId.toString()
@@ -348,8 +349,11 @@ const VendorProductDetails = ({ register, errors, editData, control, setValue, w
         }
       }
       setIsInitialized(true)
+    } else if (isReuse && vendors.length > 0 && !isInitialized) {
+      // For reuse mode, just mark as initialized without setting vendor/product
+      setIsInitialized(true)
     }
-  }, [editData, vendors, isInitialized, setValue])
+  }, [editData, vendors, isInitialized, isReuse, setValue])
 
   const fetchVendors = async () => {
     try {
@@ -456,6 +460,7 @@ const VendorProductDetails = ({ register, errors, editData, control, setValue, w
   )
 }
 
+
 // ==================== VENDOR RATE FORM MODAL ====================
 const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false, isReuse = false }) => {
   const getDefaultValues = () => ({
@@ -476,44 +481,81 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
     watch,
     formState: { errors }
   } = useForm({
-    defaultValues: initialData
-      ? { ...initialData, vendor: String(initialData.vendorId), productId: String(initialData.productId) }
+    defaultValues: initialData && isEdit && !isReuse
+      ? {
+        ...initialData,
+        vendor: String(initialData.vendorId),
+        productId: String(initialData.productId)
+      }
       : getDefaultValues()
   })
 
   // Set form values when initialData changes (for edit mode or reuse mode)
   useEffect(() => {
     if (initialData && (isEdit || isReuse)) {
-      Object.keys(initialData).forEach(key => {
-        if (key !== 'vendorId' && key !== 'productId') {
-          setValue(key, initialData[key])
-        } else if (key === 'vendorId') {
-          setValue('vendor', String(initialData[key]))
-        } else if (key === 'productId') {
-          setValue('productId', String(initialData[key]))
-        }
-      })
-
-      // For reuse mode, clear the dates so user can set new ones
       if (isReuse) {
+        // For reuse mode, copy only monthlyRent, remark, and card rates without IDs
+        setValue('monthlyRent', initialData.monthlyRent)
+        setValue('remark', initialData.remark)
+
+        // Copy card rates but remove their IDs
+        const cardRatesWithoutIds = initialData.vendorCardRates.map(rate => {
+          const { id, ...rateWithoutId } = rate
+          return rateWithoutId
+        })
+        setValue('vendorCardRates', cardRatesWithoutIds)
+
+        // Ensure these are empty
+        setValue('vendor', '')
+        setValue('productId', '')
         setValue('effectiveDate', '')
         setValue('expiryDate', '')
+      } else {
+        // For edit mode, set all values including vendor and product
+        Object.keys(initialData).forEach(key => {
+          if (key === 'vendorId') {
+            setValue('vendor', String(initialData[key]))
+          } else if (key === 'productId') {
+            setValue('productId', String(initialData[key]))
+          } else if (key !== 'id') {
+            setValue(key, initialData[key])
+          }
+        })
       }
     }
   }, [initialData, isEdit, isReuse, setValue])
 
   const onFormSubmit = (data) => {
     console.log(data)
+
+    // Filter card rates based on customer type
+    const filteredCardRates = data.vendorCardRates.filter(rate =>
+      rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim()
+    )
+
+    // Remove IDs from card rates if reusing
+    const processedCardRates = isReuse
+      ? filteredCardRates.map(rate => {
+        const { id, ...rateWithoutId } = rate
+        return rateWithoutId
+      })
+      : filteredCardRates
+
     const filteredData = {
       ...data,
       vendor: { id: Number(data.vendor) },
       product: { id: Number(data.productId) },
-      vendorCardRates: data.vendorCardRates.filter(rate =>
-        rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim()
-      )
+      vendorCardRates: processedCardRates
     }
 
-    onSubmit(filteredData)
+    // Remove ID if reusing (so backend treats it as new creation)
+    if (isReuse) {
+      const { id, ...dataWithoutId } = filteredData
+      onSubmit(dataWithoutId)
+    } else {
+      onSubmit(filteredData)
+    }
+
     onCancel()
   }
 
@@ -528,7 +570,7 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
         <div className="flex justify-between items-center p-6 bg-gradient-to-r from-gray-600 to-gray-800 rounded-t-lg">
           <h2 className="flex items-center text-2xl font-bold text-white">
             <CreditCard className='mr-2' size={40} />
-            {isEdit ? 'Edit Vendor Rates' : isReuse ? 'Reuse Vendor Rates' : 'Add New Vendor Rates'}
+            {isEdit && !isReuse ? 'Edit Vendor Rates' : isReuse ? 'Reuse Vendor Rates' : 'Add New Vendor Rates'}
           </h2>
           <button
             onClick={handleCancel}
@@ -547,7 +589,8 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
                   <strong>Note:</strong> You're creating a new vendor rate based on an existing one.
-                  Please update the effective and expiry dates before saving.
+                  The monthly rent and card rates have been pre-filled. Please select a vendor, product,
+                  and set new effective and expiry dates.
                 </p>
               </div>
             )}
@@ -555,12 +598,21 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
             <VendorProductDetails
               register={register}
               errors={errors}
-              editData={{
-                vendorId: initialData?.vendorId,
-                productId: initialData?.productId,
-                effectiveDate: initialData?.effectiveDate,
-                expiryDate: initialData?.expiryDate
-              }}
+              editData={
+                isReuse
+                  ? {
+                    vendorId: null,
+                    productId: null,
+                    effectiveDate: '',
+                    expiryDate: ''
+                  }
+                  : {
+                    vendorId: initialData?.vendorId,
+                    productId: initialData?.productId,
+                    effectiveDate: initialData?.effectiveDate,
+                    expiryDate: initialData?.expiryDate
+                  }
+              }
               control={control}
               setValue={setValue}
               watch={watch}
@@ -598,7 +650,7 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
                 onClick={handleSubmit(onFormSubmit)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
               >
-                {isEdit ? 'Update Vendor Rates' : 'Save Vendor Rates'}
+                {isEdit && !isReuse ? 'Update Vendor Rates' : 'Save Vendor Rates'}
               </button>
             </div>
           </div>

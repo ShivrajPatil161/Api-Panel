@@ -14,6 +14,7 @@ import { toast } from 'react-toastify'
 
 import PricingSchemeFormModal from '../Forms/PricingForm'
 import schemeApi from '../../constants/API/schemeApi'
+import { set } from 'react-hook-form'
 
 const SchemeList = () => {
     const [schemes, setSchemes] = useState([])
@@ -251,7 +252,7 @@ const SchemeList = () => {
 
     const handleSubmit = async (data) => {
         try {
-            if (editingScheme) {
+            if (editingScheme && !isReuse) {
                 await schemeApi.updateScheme(editingScheme.id, data)
                 toast.success('Pricing scheme updated successfully!')
             } else {
@@ -261,6 +262,7 @@ const SchemeList = () => {
             loadSchemes()
             setIsModalOpen(false)
             setEditingScheme(null)
+            setIsReuse(false) // Reset reuse state after submission
         } catch (error) {
             const errorMessage = error?.response?.data?.error ||
                 (editingScheme ? 'Failed to update pricing scheme' : 'Failed to create pricing scheme')
@@ -271,6 +273,7 @@ const SchemeList = () => {
     const handleCancel = () => {
         setIsModalOpen(false)
         setEditingScheme(null)
+        setIsReuse(false) // Reset reuse state on cancel
     }
 
     // Calculate stats
