@@ -6,6 +6,7 @@ import ProductDistributionList from '../../components/Tables/ProductDistribution
 import MainReportsPageForNow from '../../components/Reports/MainReportsPageForNow.jsx'
 import MTransReportDashboard from '../../components/Reports/MerchantTransReport/MTransReportDashboard.jsx'
 import FTransReportDashboard from '../../components/Reports/FranhiseTransReports/FTransReportDashboard.jsx'
+import Payout from '../../components/Payout/Payout.jsx'
 
 export const franchiseRoutes = [
   {
@@ -37,6 +38,10 @@ export const franchiseRoutes = [
         element: <CustomerProductsList />
       }
     ]
+  },
+  {
+    path: 'payout',
+    element: <Payout />
   },
   {
     path: 'reports',

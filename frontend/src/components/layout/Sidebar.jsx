@@ -558,7 +558,8 @@ import {
   Banknote,
   Coins,
   Eye,
-  Package2
+  Package2,
+  IndianRupee
 } from 'lucide-react';
 import { flattenPermissions } from "./permissionHelper";
 import logoImage from '../../assets/SD-2.jpg';
@@ -713,7 +714,7 @@ const filterMenuItemsByPermissions = (menuItems, permissionSet, userType) => {
           if (child.title === 'DashBoard') return true;
 
           // Show Admin Management and Logs only for super_admin
-          if (child.title === 'Admin Management' || child.title === 'Logs') {
+          if (child.title === 'Admin Management' || child.title === 'Logs' || child.title === 'Taxes Manage' || child.title === 'Edit History') {
             return userType === 'super_admin';
           }
 
@@ -776,6 +777,7 @@ const MENU_CONFIGS = {
         children.push(
           { title: 'Admin Management', path: '/dashboard/role-management', icon: Users, permission: 'Admin Management' },
           { title: 'Logs', path: '/dashboard/logs', icon: Users, permission: 'Logs' },
+          { title: 'Taxes Manage', path: '/dashboard/taxes-management', icon: IndianRupee, permission: 'Taxes Management' },
           { title: 'Edit History', path: '/dashboard/edit-history', icon: Users, permission: 'Edit History' },
           { title: 'Wallet Adjustment', path: '/dashboard/wallet-adjustment', icon: Users, permission: 'Wallet Adjustment' }
         );
@@ -898,6 +900,13 @@ const MENU_CONFIGS = {
       ]
     },
     {
+      title: 'Payout',
+      key: 'payout',
+      path: '/dashboard/payout',
+      icon: Coins,
+      iconColor: '',
+    },
+    {
       title: 'Reports',
       path: '/dashboard/reports',
       key: 'reports',
@@ -984,7 +993,7 @@ const Sidebar = ({ userType }) => {
     // For super admin, grant all permissions
     if (userType === 'super_admin') {
       return new Set([
-        'Dashboard', 'Admin Management', 'Logs', 'Edit History', 'Wallet Adjustment',
+        'Dashboard', 'Admin Management', 'Logs','Taxes Manage', 'Edit History', 'Wallet Adjustment',
         'Vendors', 'Vendor List', 'Product List', 'Vendor Rates',
         'Inventory', 'Pricing Scheme', 'Product Scheme Assign', 'Inventory Management',
         'Customers', 'Customer List', 'Onboard Customer', 'Merchant Approval', 'Product Distribution',

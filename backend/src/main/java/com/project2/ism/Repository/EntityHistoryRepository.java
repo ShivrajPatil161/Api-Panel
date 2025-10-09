@@ -51,4 +51,20 @@ public interface EntityHistoryRepository extends JpaRepository<EntityHistory, Lo
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
     );
+
+
+    @Query("""
+        SELECT eh FROM EntityHistory eh 
+        WHERE eh.entityName = :entityName 
+        AND eh.entityId = :entityId 
+        AND eh.fieldName = :fieldName 
+        AND eh.changedAt > :transactionDate 
+        ORDER BY eh.changedAt ASC
+        """)
+    List<EntityHistory> findChangesAfterDate(
+            @Param("entityName") String entityName,
+            @Param("entityId") Long entityId,
+            @Param("fieldName") String fieldName,
+            @Param("transactionDate") LocalDateTime transactionDate
+    );
 }
