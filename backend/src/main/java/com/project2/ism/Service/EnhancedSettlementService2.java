@@ -40,6 +40,8 @@ public class EnhancedSettlementService2 {
     private final FranchiseTransDetRepository franchiseTxnRepo;
     private final SettlementBatchCandidateRepository candidateRepo;
     private final SettlementAsyncProcessor asyncProcessor;
+    private final EntityHistoryRepository entityHistoryRepository;
+
     @Autowired
     public EnhancedSettlementService2(
             ProductSerialsRepository serialRepo,
@@ -54,7 +56,7 @@ public class EnhancedSettlementService2 {
             FranchiseWalletRepository franchiseWalletRepo,
             FranchiseTransDetRepository franchiseTxnRepo,
             SettlementBatchCandidateRepository candidateRepo,
-            SettlementAsyncProcessor asyncProcessor
+            SettlementAsyncProcessor asyncProcessor, EntityHistoryRepository entityHistoryRepository
     ) {
         this.serialRepo = serialRepo;
         this.productRepository = productRepository;
@@ -69,6 +71,7 @@ public class EnhancedSettlementService2 {
         this.franchiseTxnRepo = franchiseTxnRepo;
         this.candidateRepo = candidateRepo;
         this.asyncProcessor = asyncProcessor;
+        this.entityHistoryRepository = entityHistoryRepository;
     }
 
     /**
@@ -245,12 +248,6 @@ public class EnhancedSettlementService2 {
             CardRate cardRate = getCardRateForTransaction(vt, device);
             BigDecimal amount = nvl(vt.getAmount());
 
-//            SettlementResultDTO result;
-//            if (merchant.getFranchise() != null) {
-//                result = processFranchiseMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
-//            } else {
-//                result = processDirectMerchantSettlement(merchant, vt, cardRate, amount, batchId, device);
-//            }
 
             SettlementResultDTO temp;
             if (merchant.getFranchise() != null) {
@@ -457,11 +454,19 @@ public class EnhancedSettlementService2 {
                                                                 CardRate cr, BigDecimal amount, Long batchId, ProductSerialNumbers device) {
         log.debug("Processing direct merchant settlement for merchant {} amount {}", merchant.getId(), amount);
 
-        Double rateValue = cr.getRate();
+        // Check if rate was changed after transaction date
+        LocalDateTime transactionDate = vt.getDate();
+        Double historicalRate = getHistoricalRateIfChanged(cr, transactionDate, "rate");
+        Double rateValue = historicalRate != null ? historicalRate : cr.getRate();
+
         if (rateValue == null) {
             throw new IllegalStateException("No rate configured for card: " + cr.getCardName());
         }
 
+        if (historicalRate != null) {
+            log.info("Using historical rate {} (current: {}) for transaction dated {} for card {}",
+                    historicalRate, cr.getRate(), transactionDate, cr.getCardName());
+        }
         BigDecimal feePct = amount.signum() > 0
                 ? BigDecimal.valueOf(rateValue).movePointLeft(2)
                 : BigDecimal.ZERO;
@@ -531,17 +536,31 @@ public class EnhancedSettlementService2 {
             throw new IllegalStateException("Merchant does not belong to a franchise");
         }
 
-        Double merchantRatePercent = cr.getMerchantRate();
-        Double franchiseRatePercent = cr.getFranchiseRate();
+        LocalDateTime transactionDate = vt.getDate();
+
+        // Check for historical rates
+        Double historicalMerchantRate = getHistoricalRateIfChanged(cr, transactionDate, "merchantRate");
+        Double historicalFranchiseRate = getHistoricalRateIfChanged(cr, transactionDate, "franchiseRate");
+
+        Double merchantRatePercent = historicalMerchantRate != null ? historicalMerchantRate : cr.getMerchantRate();
+        Double franchiseRatePercent = historicalFranchiseRate != null ? historicalFranchiseRate : cr.getFranchiseRate();
 
         if (merchantRatePercent == null || franchiseRatePercent == null) {
-            log.warn("Dual rates not configured for card: {}. Using single rate.", cr.getCardName());
-            return processDirectMerchantSettlement(merchant, vt, cr, amount, batchId, device);/////////////oooooooooooiiiiiiiiiiiiiiiiiii check this fallback , actuaally flaawed
+            log.warn("Dual rates not configured for card: {}. Using single rate fallback.", cr.getCardName());
+            return processDirectMerchantSettlement(merchant, vt, cr, amount, batchId, device);
+        }
+        if (historicalMerchantRate == null || historicalFranchiseRate == null) {
+            log.info("Using current rates - Merchant: {} (current: {}), Franchise: {} (current: {}) for transaction dated {} for card {}",
+                    merchantRatePercent, cr.getMerchantRate(),
+                    franchiseRatePercent, cr.getFranchiseRate(),
+                    transactionDate, cr.getCardName());
         }
 
-        if (merchantRatePercent < franchiseRatePercent) {
-            log.warn("Merchant rate ({}) is less than franchise rate ({}) for card: {}. This may cause negative commission.",
-                    merchantRatePercent, franchiseRatePercent, cr.getCardName());
+        if (historicalMerchantRate != null || historicalFranchiseRate != null) {
+            log.info("Using historical rates - Merchant: {} (current: {}), Franchise: {} (current: {}) for transaction dated {} for card {}",
+                    merchantRatePercent, cr.getMerchantRate(),
+                    franchiseRatePercent, cr.getFranchiseRate(),
+                    transactionDate, cr.getCardName());
         }
 
         BigDecimal merchantRate = BigDecimal.valueOf(merchantRatePercent).movePointLeft(2);
@@ -672,7 +691,7 @@ public class EnhancedSettlementService2 {
 
     private SettlementCandidateDTO mapToSettlementCandidate(VendorTransactions vt, Long expectedMerchantId, Long productId) {
         try {
-            Optional<ProductSerialNumbers> deviceOpt = findDeviceForTransaction(vt);
+            Optional<ProductSerialNumbers> deviceOpt =  findDeviceForTransaction(vt);
             if (deviceOpt.isEmpty()) {
                 return SettlementCandidateDTO.notFound(vt, "DEVICE_NOT_FOUND");
             }
@@ -731,7 +750,30 @@ public class EnhancedSettlementService2 {
 
             // 🔹 Determine applicable rate for franchise merchants
             boolean isFranchiseMerchant = merchant.getFranchise() != null;
-            Double rateToUse = (isFranchiseMerchant && cr.getMerchantRate() != null) ? cr.getMerchantRate() : cr.getRate();
+            // 🔹 Check for historical rates if rate was changed after transaction
+            LocalDateTime transactionDateTime = vt.getDate();
+            Double rateToUse;
+
+            if (isFranchiseMerchant && cr.getMerchantRate() != null) {
+                // For franchise merchants, check merchant_rate field
+                Double historicalRate = getHistoricalRateIfChanged(cr, transactionDateTime, "merchant_rate");
+                rateToUse = historicalRate != null ? historicalRate : cr.getMerchantRate();
+
+                if (historicalRate != null) {
+                    log.info("Using historical merchant rate {} (current: {}) for preview of transaction dated {} for card {}",
+                            historicalRate, cr.getMerchantRate(), transactionDateTime, cr.getCardName());
+                }
+            } else {
+                // For direct merchants, check rate field
+                Double historicalRate = getHistoricalRateIfChanged(cr, transactionDateTime, "rate");
+                rateToUse = historicalRate != null ? historicalRate : cr.getRate();
+
+                if (historicalRate != null) {
+                    log.info("Using historical rate {} (current: {}) for preview of transaction dated {} for card {}",
+                            historicalRate, cr.getRate(), transactionDateTime, cr.getCardName());
+                }
+            }
+
 
             if (rateToUse == null) {
                 return SettlementCandidateDTO.notFound(vt, "NO_RATE_CONFIGURED");
@@ -825,6 +867,35 @@ public class EnhancedSettlementService2 {
     }
 
 
+    // ==================== METHOD TO CHECK IF RATES WHERE EDIT OR NOT ====================
+    private Double getHistoricalRateIfChanged(CardRate cardRate, LocalDateTime transactionDate, String rateField) {
+        // Check if rate was changed after transaction date
+        List<EntityHistory> changes = entityHistoryRepository.findChangesAfterDate(
+                "CardRate",
+                cardRate.getId(),
+                rateField,
+                transactionDate
+        );
+    for(EntityHistory e: changes){
+        System.out.println(e.getId());
+    }
+        if (!changes.isEmpty()) {
+            // Rate was changed after transaction - use the old value
+            EntityHistory firstChange = changes.get(0);
+            String oldValue = firstChange.getOldValue();
+
+            if (oldValue != null && !oldValue.isEmpty()) {
+                try {
+                    return Double.parseDouble(oldValue);
+                } catch (NumberFormatException e) {
+                    log.warn("Failed to parse old rate value: {}", oldValue, e);
+                }
+            }
+        }
+
+        // No changes after transaction date, or parsing failed - use current rate
+        return null;
+    }
     // ==================== INNER CLASSES ====================
 
     private record DeviceIdentifiers(String mid, String tid) {

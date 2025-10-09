@@ -34,6 +34,7 @@ import FTransReportDashboard from '../../components/Reports/FranhiseTransReports
 import MerchantReports from '../../components/Reports/MerchantReports.jsx'
 import AuditHistoryComponent from '../../components/Admin/AuditHistoryComponent.jsx'
 import StockReport from '../../components/Reports/StockReport.jsx'
+import TaxesManagement from '../../components/Admin/TaxesManagement.jsx'
 
 
 export const adminRoutes = [
@@ -56,6 +57,10 @@ export const adminRoutes = [
   {
     path: "edit-history",
     element: <AuditHistoryComponent />
+  },
+  {
+    path: "taxes-management",
+    element: <TaxesManagement />
   },
   // Vendors routes
   {
