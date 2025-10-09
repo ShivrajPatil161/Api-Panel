@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Archive, Plus } from 'lucide-react'
+import { Archive, ArrowDownToLine, ArrowUpFromLine, ArrowUpToLine, CircleArrowDown, CircleArrowOutDownLeft, Icon, icons, Layers, MoveDown, MoveUp, Plus, RotateCcw, SquareArrowDown } from 'lucide-react'
 import InventoryTable from './InventoryTable' 
 import InwardTable from './InwardTable' 
 import OutwardTable from './OutwardTable' 
@@ -34,10 +34,10 @@ const InventoryManagement = () => {
     const [editingReturn, setEditingReturn] = useState(null)
 
     const tabs = [
-        { id: 'inventory', label: 'Inventory', count: inventoryData.length },
-        { id: 'inward', label: 'Inward Entry', count: inwardData.length },
-        { id: 'outward', label: 'Outward Entry', count: outwardData.length },
-        { id: 'returns', label: 'Returns', count: returnData.length }
+        { id: 'inventory', label: 'Inventory', count: inventoryData.length, icon: Layers },
+        { id: 'inward', label: 'Inward Entry', count: inwardData.length, icon: ArrowDownToLine  },
+        { id: 'outward', label: 'Outward Entry', count: outwardData.length, icon: ArrowUpFromLine },
+        { id: 'returns', label: 'Returns', count: returnData.length, icon: RotateCcw }
     ]
 
     // Toast helper function
@@ -55,7 +55,6 @@ const InventoryManagement = () => {
         setLoading(true)
         try {
             const data = await getAllOutwardTransactions()
-            console.log(data)
             setOutwardData(Array.isArray(data) ? data : [])
         } catch (error) {
             console.error("Error fetching outward data:", error)
@@ -190,7 +189,7 @@ const InventoryManagement = () => {
         setLoading(true)
         try {
             const data = await returnTransactionAPI.getAllReturnTransactions()
-            console.log('Return data:', data)
+
             setReturnData(Array.isArray(data) ? data : [])
         } catch (error) {
             console.error("Error fetching return data:", error)
@@ -348,22 +347,27 @@ const handleReturnCancel = () => {
                                </div>
                                 </div>
                                 {/* Tabs */}
-                                <div className="bg-white shadow-sm rounded-lg mb-6">
+                                <div className="bg-white shadow-sm rounded-lg mb-4">
                                     <div className="border-b border-gray-200">
-                                        <nav className="-mb-px flex space-x-23 px-4">
-                                            {tabs.map((tab) => (
+                                        <nav className="-mb-px flex px-4">
+                                            {tabs.map((tab) => {
+                                                const Icon = tab.icon;
+                                                return(
+                                                
                                                 <button
                                                     key={tab.id}
                                                     onClick={() => setActiveTab(tab.id)}
-                                                    className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                                                    className={`py-3 px-1 ml-15 mr-8 border-b-3 font-medium text-sm ${activeTab === tab.id
                                                                 ? 'border-blue-500 text-blue-600'
                                                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                                     }`}
                                                 >
-                                                {tab.label}
-                                   
+                                                <div className='flex '>
+                                                    {Icon && <Icon className="mr-1 m-1  text-black" size={15}/>}                                               
+                                                {tab.label} 
+                                                </div>
                                                 </button>
-                                            ))}
+                                            )})}
                                         </nav>
                                     </div>
                                 </div>
@@ -371,7 +375,7 @@ const handleReturnCancel = () => {
 
                             
 
-                            <div className="flex items-center pt-28">
+                            <div className="flex items-center pt-24 pr-5">
                                 {getActionButtons()}
                             </div>
                         </div>

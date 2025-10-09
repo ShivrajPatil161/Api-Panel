@@ -9,7 +9,7 @@ import {
     getExpandedRowModel,
     flexRender
 } from '@tanstack/react-table'
-import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X, ChevronDown, ChevronRight as ChevronRightIcon, Merge } from 'lucide-react'
 import ProductAssignmentFormModal from '../Forms/ProductSchemeAssignmen'
 import api from '../../constants/API/axiosInstance'
 import { toast } from 'react-toastify'
@@ -400,17 +400,22 @@ const ProductAssignment = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 pr-4">
-            <div className="bg-white rounded-lg shadow-lg">
+            <div className=" rounded-lg ">
                 {/* Header */}
-                <div className="bg-white text-black p-6 rounded-t-lg">
+                <div className=" text-black  rounded-t-lg">
                     <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-3xl font-bold">Customer Scheme Assignments</h1>
-                            <p className="text-black mt-2">Manage pricing scheme assignments for franchises and merchants</p>
+                        <div className='flex'>
+                            <Merge className='text-blue-600 mr-3 mt-3'/>
+                            <div>
+                            <h1 className="text-2xl font-bold">Customer Scheme Assignments</h1>
+                            <p className="text-black ">Manage pricing scheme assignments for franchises and merchants</p>
                             <p className="text-sm text-gray-600 mt-1">
                                 {schemeGroups.length} schemes • {totalAssignments} total assignments
                             </p>
+                            </div>
+
                         </div>
+                        
                         <div className="flex gap-3">
                             <button
                                 onClick={() => {
@@ -461,7 +466,7 @@ const ProductAssignment = () => {
                 {/* Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-white">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <tr key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (

@@ -29,7 +29,9 @@ import {
     X,
     Download,
     FileText,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Handshake,
+    Users2
 } from 'lucide-react'
 import { toast } from 'react-toastify'
 
@@ -949,10 +951,16 @@ const CustomerListComponent = () => {
     })
 
     const TableHeader = ({ title, count }) => (
-        <div className="flex items-center justify-between mb-6">
-            <div>
-                <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <div className="flex items-center justify-between mb-4">
+           
+            <div className='flex items-center'>
+                {!title.includes("Merchant") ? 
+                 <Handshake className='text-blue-600 mr-3'/>
+                : <Users2 className='text-blue-600 mr-3'/>}
+               <div>
+                 <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
                 <p className="text-gray-600 mt-1">{count} total customers</p>
+               </div>
             </div>
             <div className="flex items-center space-x-4">
                 <div className="relative">
@@ -988,8 +996,8 @@ const CustomerListComponent = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-gray-50 p">
+            <div className=" mx-auto">
                 {/* Tabs */}
                 <div className="border-b border-gray-200 mb-8">
                     <nav className="-mb-px flex space-x-8">

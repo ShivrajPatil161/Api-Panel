@@ -15,10 +15,13 @@ import {
     ChevronsLeft,
     ChevronsRight,
     Eye,
-    Edit,
     Trash2,
     CreditCard,
     X,
+    Package,
+    TrendingUp,
+    Calendar,
+    Users,
 } from 'lucide-react'
 
 const DetailRow = ({ label, value }) => {
@@ -236,13 +239,6 @@ const InwardTable = ({ data, onEdit, onView, onDelete }) => {
                     >
                         <Eye className="h-4 w-4" />
                     </button>
-                    {/* <button
-                        onClick={() => onEdit?.(row.original)}
-                        className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
-                        title="Edit Entry"
-                    >
-                        <Edit className="h-4 w-4" />
-                    </button> */}
                     <button
                         onClick={() => onDelete?.(row.original.id)}
                         className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
@@ -268,120 +264,222 @@ const InwardTable = ({ data, onEdit, onView, onDelete }) => {
         },
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
+        initialState: {
+            pagination: {
+                pageSize: 10,
+            },
+        },
     })
+
+    // Calculate stats
+    const totalEntries = data?.length || 0
+    const totalQuantity = data?.reduce((acc, item) => acc + (item.quantity || 0), 0) || 0
+    const uniqueVendors = data ? new Set(data.map(item => item.vendorName)).size : 0
+    const recentEntries = data?.filter(item => {
+        const entryDate = new Date(item.receivedDate)
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        return entryDate >= sevenDaysAgo
+    }).length || 0
 
     if (!data || data.length === 0) {
         return (
-            <div className="p-6 text-center">
-                <p className="text-gray-500">No inward entries found. Click "Add Inward Entry" to get started.</p>
+            <div className="min-h-screen bg-gray-50 pr-4">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <div className="flex items-center space-x-3">
+                            <TrendingUp className="text-blue-600" />
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">Inward Management</h1>
+                                <p className="text-gray-600">Track and manage all inward inventory entries</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Empty State */}
+                    <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                        <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <p className="text-lg font-medium text-gray-500 mb-2">No inward entries found</p>
+                        <p className="text-gray-400">Click "Add Inward Entry" to get started</p>
+                    </div>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="space-y-4 p-6">
-            {/* Search */}
-            <div className="flex items-center space-x-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <input
-                        type="text"
-                        placeholder="Search inward entries..."
-                        value={globalFilter ?? ''}
-                        onChange={(e) => setGlobalFilter(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                    />
-                </div>
-            </div>
+        <div className="min-h-screen bg-gray-50 pr-4">
+            <div className=" mx-auto">
+                
 
-            {/* Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50">
-                            {table.getHeaderGroups().map(headerGroup => (
-                                <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map(header => (
-                                        <th key={header.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </th>
-                                    ))}
-                                </tr>
-                            ))}
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {table.getRowModel().rows.map(row => (
-                                <tr key={row.id} className="hover:bg-gray-50">
-                                    {row.getVisibleCells().map(cell => (
-                                        <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-700">
-                                Page {table.getState().pagination.pageIndex + 1} of{' '}
-                                {table.getPageCount()}
-                            </span>
-                            <select
-                                value={table.getState().pagination.pageSize}
-                                onChange={(e) => table.setPageSize(Number(e.target.value))}
-                                className="border border-gray-300 rounded px-2 py-1 text-sm"
-                            >
-                                {[10, 20, 30, 40, 50].map(pageSize => (
-                                    <option key={pageSize} value={pageSize}>
-                                        Show {pageSize}
-                                    </option>
-                                ))}
-                            </select>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                                <CreditCard className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">Total Inwards</p>
+                                <p className="text-2xl font-bold text-gray-900">{totalEntries}</p>
+                            </div>
                         </div>
-
-                        <div className="flex items-center space-x-2">
-                            <button
-                                onClick={() => table.setPageIndex(0)}
-                                disabled={!table.getCanPreviousPage()}
-                                className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                <ChevronsLeft className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => table.previousPage()}
-                                disabled={!table.getCanPreviousPage()}
-                                className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
-                                className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                disabled={!table.getCanNextPage()}
-                                className="p-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                <ChevronsRight className="h-4 w-4" />
-                            </button>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                                <Package className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">Total Quantity</p>
+                                <p className="text-2xl font-bold text-gray-900">{totalQuantity}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-purple-100 rounded-lg">
+                                <Users className="h-6 w-6 text-purple-600" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">Unique Vendors</p>
+                                <p className="text-2xl font-bold text-gray-900">{uniqueVendors}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-yellow-100 rounded-lg">
+                                <Calendar className="h-6 w-6 text-yellow-600" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">Recent (7 Days)</p>
+                                <p className="text-2xl font-bold text-gray-900">{recentEntries}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Table Card */}
+                <div className="bg-white rounded-lg shadow-sm">
+                    {/* Table Header */}
+                    <div className="p-6 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900">Inward Entries List</h2>
+                            <div className="flex items-center space-x-4">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search inward entries..."
+                                        value={globalFilter ?? ''}
+                                        onChange={(e) => setGlobalFilter(e.target.value)}
+                                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <tr key={headerGroup.id}>
+                                        {headerGroup.headers.map(header => (
+                                            <th key={header.id} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {table.getRowModel().rows.map(row => (
+                                    <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                                        {row.getVisibleCells().map(cell => (
+                                            <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {table.getRowModel().rows.length > 0 && (
+                        <div className="px-6 py-4 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-700">
+                                        Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+                                        {Math.min(
+                                            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                                            table.getFilteredRowModel().rows.length
+                                        )}{' '}
+                                        of {table.getFilteredRowModel().rows.length} results
+                                    </span>
+                                    <select
+                                        value={table.getState().pagination.pageSize}
+                                        onChange={(e) => table.setPageSize(Number(e.target.value))}
+                                        className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        {[10, 20, 30, 40, 50].map(pageSize => (
+                                            <option key={pageSize} value={pageSize}>
+                                                Show {pageSize}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() => table.setPageIndex(0)}
+                                        disabled={!table.getCanPreviousPage()}
+                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                                    >
+                                        <ChevronsLeft className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => table.previousPage()}
+                                        disabled={!table.getCanPreviousPage()}
+                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </button>
+                                    <span className="text-sm text-gray-700">
+                                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                                    </span>
+                                    <button
+                                        onClick={() => table.nextPage()}
+                                        disabled={!table.getCanNextPage()}
+                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                        disabled={!table.getCanNextPage()}
+                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                                    >
+                                        <ChevronsRight className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
+
             {isViewOpen && (
                 <ViewInwardEntry
                     inwardData={viewData}
