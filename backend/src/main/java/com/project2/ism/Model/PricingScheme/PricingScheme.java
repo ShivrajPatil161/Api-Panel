@@ -1,7 +1,6 @@
 package com.project2.ism.Model.PricingScheme;
 
 
-import com.project2.ism.Interceptor.AuditEntityListener;
 import com.project2.ism.Model.ProductCategory;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -13,7 +12,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "pricing_schemes")
-@EntityListeners(AuditEntityListener.class)
 public class PricingScheme {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +28,7 @@ public class PricingScheme {
     @Column(name = "rental_by_month", nullable = false)
     private Double rentalByMonth;
 
-    @Column(name = "gst", nullable = false)
+    @Column(name = "gst")
     private Double gst;
 
     @Column(name = "customer_type", nullable = false)

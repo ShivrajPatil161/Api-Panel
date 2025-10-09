@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, Search, Eye, Building2, 
 import VendorRateForm from '../Forms/VendorRate'
 import { getAllVendorRates, createVendorRate, updateVendorRate, deleteVendorRate } from '../../constants/API/vendorRates'
 import VendorRateView from '../View/VendorRateView'
+import { set } from 'react-hook-form'
 
 const VendorRateList = () => {
     const [data, setData] = useState([])
@@ -282,6 +283,7 @@ const VendorRateList = () => {
                 setIsFormOpen(false)
                 setEditingData(null)
                 setIsEdit(false)
+                setIsReuse(false)
             }
         } catch (error) {
             console.error('Error submitting form:', error)
@@ -295,6 +297,7 @@ const VendorRateList = () => {
         setIsFormOpen(false)
         setEditingData(null)
         setIsEdit(false)
+        setIsReuse(false)
     }
 
     // Calculate stats safely based on backend structure
@@ -504,7 +507,6 @@ const VendorRateList = () => {
                     )}
                 </div>
             </div>
-
             {/* Form Modal */}
             {isFormOpen && (
                 <VendorRateForm

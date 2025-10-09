@@ -494,11 +494,16 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
   useEffect(() => {
     if (initialData && (isEdit || isReuse)) {
       if (isReuse) {
-       
-        // For reuse mode, copy only monthlyRent, vendorCardRates, and remark
+        // For reuse mode, copy only monthlyRent, remark, and card rates without IDs
         setValue('monthlyRent', initialData.monthlyRent)
-        setValue('vendorCardRates', initialData.vendorCardRates)
         setValue('remark', initialData.remark)
+
+        // Copy card rates but remove their IDs
+        const cardRatesWithoutIds = initialData.vendorCardRates.map(rate => {
+          const { id, ...rateWithoutId } = rate
+          return rateWithoutId
+        })
+        setValue('vendorCardRates', cardRatesWithoutIds)
 
         // Ensure these are empty
         setValue('vendor', '')
@@ -506,7 +511,6 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
         setValue('effectiveDate', '')
         setValue('expiryDate', '')
       } else {
-       
         // For edit mode, set all values including vendor and product
         Object.keys(initialData).forEach(key => {
           if (key === 'vendorId') {
@@ -523,16 +527,35 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
 
   const onFormSubmit = (data) => {
     console.log(data)
+
+    // Filter card rates based on customer type
+    const filteredCardRates = data.vendorCardRates.filter(rate =>
+      rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim()
+    )
+
+    // Remove IDs from card rates if reusing
+    const processedCardRates = isReuse
+      ? filteredCardRates.map(rate => {
+        const { id, ...rateWithoutId } = rate
+        return rateWithoutId
+      })
+      : filteredCardRates
+
     const filteredData = {
       ...data,
       vendor: { id: Number(data.vendor) },
       product: { id: Number(data.productId) },
-      vendorCardRates: data.vendorCardRates.filter(rate =>
-        rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim()
-      )
+      vendorCardRates: processedCardRates
     }
 
-    onSubmit(filteredData)
+    // Remove ID if reusing (so backend treats it as new creation)
+    if (isReuse) {
+      const { id, ...dataWithoutId } = filteredData
+      onSubmit(dataWithoutId)
+    } else {
+      onSubmit(filteredData)
+    }
+
     onCancel()
   }
 
