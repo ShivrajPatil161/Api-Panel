@@ -41,7 +41,7 @@ public class InventoryService {
             int totalQty = serials.size();
 
             int reservedQty = (int) serials.stream()
-                    .filter(s -> s.getOutwardTransaction() != null && s.getMerchant() == null)
+                    .filter(s -> s.getReturnTransaction() != null)
                     .count();
 
             int availableQty = (int) serials.stream()
