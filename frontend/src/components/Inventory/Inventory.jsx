@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus } from 'lucide-react'
+import { Archive, Plus } from 'lucide-react'
 import InventoryTable from './InventoryTable' 
 import InwardTable from './InwardTable' 
 import OutwardTable from './OutwardTable' 
@@ -336,50 +336,52 @@ const handleReturnCancel = () => {
         <div className="min-h-screen">
             <div className="min-h-screen bg-gray-50 pr-4">
                 {/* Header */}
-                <div className="bg-white shadow-sm rounded-lg mb-6">
-                    <div className="px-6 py-4">
+                <div className=" rounded-lg mb-3">
+                    <div className="px- ">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
-                                <p className="text-gray-600 mt-1">Manage your inventory, inward, outward and returns</p>
+                                <div className='flex items-center'>
+                                     <Archive className="text-blue-600 mr-3 ml-1 mb-3" />
+                               <div>
+                                 <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
+                                <p className="text-gray-600  mb-4">Manage your inventory, inward, outward and returns</p>
+                               </div>
+                                </div>
+                                {/* Tabs */}
+                                <div className="bg-white shadow-sm rounded-lg mb-6">
+                                    <div className="border-b border-gray-200">
+                                        <nav className="-mb-px flex space-x-23 px-4">
+                                            {tabs.map((tab) => (
+                                                <button
+                                                    key={tab.id}
+                                                    onClick={() => setActiveTab(tab.id)}
+                                                    className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                                                                ? 'border-blue-500 text-blue-600'
+                                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                                    }`}
+                                                >
+                                                {tab.label}
+                                   
+                                                </button>
+                                            ))}
+                                        </nav>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex items-center space-x-3">
+
+                            
+
+                            <div className="flex items-center pt-28">
                                 {getActionButtons()}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Tabs */}
-                <div className="bg-white shadow-sm rounded-lg mb-6">
-                    <div className="border-b border-gray-200">
-                        <nav className="-mb-px flex space-x-8 px-6">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
-                                            ? 'border-blue-500 text-blue-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                        }`}
-                                >
-                                    {tab.label}
-                                    {tab.count > 0 && (
-                                        <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${activeTab === tab.id
-                                                ? 'bg-blue-100 text-blue-600'
-                                                : 'bg-gray-100 text-gray-600'
-                                            }`}>
-                                            {tab.count}
-                                        </span>
-                                    )}
-                                </button>
-                            ))}
-                        </nav>
-                    </div>
-                </div>
+                
 
                 {/* Table Content */}
-                <div className="bg-white shadow-sm rounded-lg">
+                <div className="bg-white  rounded-lg">
                     {renderActiveTable()}
                 </div>
 

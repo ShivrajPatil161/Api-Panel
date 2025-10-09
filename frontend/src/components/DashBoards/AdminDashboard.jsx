@@ -12,7 +12,8 @@ import {
     RefreshCw,
     AlertCircle,
     CheckCircle,
-    Clock
+    Clock,
+    Handshake
 } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
 
@@ -132,12 +133,12 @@ const AdminDashboard = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-            <div className="container mx-auto px-6">
+            <div className=" mx-auto px-6">
                 {/* Header */}
                 <div className="mb-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-4xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
+                            <h1 className="text-3xl font-bold text-slate-900 mb-1">Admin Dashboard</h1>
                             <p className="text-slate-600">Overview of your business operations</p>
                         </div>
                         <button
@@ -155,7 +156,7 @@ const AdminDashboard = () => {
                     <StatCard
                         title="Total Franchises"
                         value={franchiseStats?.totalFranchises || 0}
-                        icon={Store}
+                        icon={Handshake}
                         color="blue"
                         subtitle="Active franchise locations"
                     />
@@ -231,7 +232,7 @@ const AdminDashboard = () => {
                                 <div className="p-4 bg-blue-50 rounded-lg">
                                     <div className="flex justify-between items-center">
                                         <span className="text-blue-700 font-medium">Franchise Wallets</span>
-                                        <span className="text-2xl font-semibold text-black">
+                                        <span className="text-xl font-semibold text-black">
                                             ₹{franchiseStats?.totalFranchiseWalletBalance?.toFixed(2) || '0.00'}
                                         </span>
                                     </div>
@@ -239,7 +240,7 @@ const AdminDashboard = () => {
                                 <div className="p-4 bg-green-50 rounded-lg">
                                     <div className="flex justify-between items-center">
                                         <span className="text-green-700 font-medium">Direct Merchant Wallets</span>
-                                        <span className="text-2xl font-semibold text-black">
+                                        <span className="text-xl font-semibold text-black">
                                             ₹{franchiseStats?.totalDirectMerchantWalletBalance?.toFixed(2) || '0.00'}
                                         </span>
                                     </div>
@@ -247,7 +248,7 @@ const AdminDashboard = () => {
                                 <div className="p-4 bg-purple-50 rounded-lg">
                                     <div className="flex justify-between items-center">
                                         <span className="text-purple-700 font-medium">Franchise Merchant Wallets</span>
-                                        <span className="text-2xl font-semibold text-black">
+                                        <span className="text-xl font-semibold text-black">
                                             ₹{franchiseStats?.totalFranchiseMerchantWalletBalance?.toFixed(2) || '0.00'}
                                         </span>
                                     </div>
