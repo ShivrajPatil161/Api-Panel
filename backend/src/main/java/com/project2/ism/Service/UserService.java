@@ -30,6 +30,7 @@ public class UserService {
         this.mailService = mailService;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
+
     public Optional<User> loginUser(String email, String password) {
         Optional<User> userFromDb = userRepository.findByEmail(email);
         if (userFromDb.isPresent() && passwordEncoder.matches(password, userFromDb.get().getPassword())) {
@@ -49,6 +50,7 @@ public class UserService {
         User savedUser = userRepository.save(user);
         return Optional.of(savedUser);
     }
+
     @Transactional
     public void createAndSendCredentials(String email, String role, String plainPassword) {
         // 1. If password is null, generate random
@@ -102,7 +104,7 @@ public class UserService {
             String token = UUID.randomUUID().toString();
 
             user.setResetToken(token);
-            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(5)); // 30 min expiry
+            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(10)); // 10 min expiry
             userRepository.save(user);
 
             String resetLink = "http://localhost:5175/reset-password?token=" + token;
@@ -115,6 +117,7 @@ public class UserService {
             throw new ResourceNotFoundException("No user found with this email");
         }
     }
+
     public enum ResetStatus {
         SUCCESS,
         EXPIRED,
@@ -142,5 +145,38 @@ public class UserService {
         return ResetStatus.INVALID;
     }
 
+    public enum ChangePasswordStatus {
+        SUCCESS,
+        USER_NOT_FOUND,
+        INVALID_CURRENT_PASSWORD,
+        SAME_PASSWORD
+    }
+
+    @Transactional
+    public ChangePasswordStatus changePassword(String email, String currentPassword, String newPassword) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            return ChangePasswordStatus.USER_NOT_FOUND;
+        }
+
+        User user = userOptional.get();
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return ChangePasswordStatus.INVALID_CURRENT_PASSWORD;
+        }
+
+        // Check if new password is same as current password
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            return ChangePasswordStatus.SAME_PASSWORD;
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ChangePasswordStatus.SUCCESS;
+    }
 
 }

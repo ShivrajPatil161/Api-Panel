@@ -74,6 +74,7 @@ public class UserController {
                     .body(Map.of("error", "User already exists"));
         }
     }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email) {
         try {
@@ -98,6 +99,44 @@ public class UserController {
             };
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong.");
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String currentPassword = request.get("currentPassword");
+            String newPassword = request.get("newPassword");
+
+            // Validate input
+            if (email == null || email.isBlank() ||
+                    currentPassword == null || currentPassword.isBlank() ||
+                    newPassword == null || newPassword.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "All fields are required"));
+            }
+
+            if (newPassword.length() < 8) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "New password must be at least 8 characters "));
+            }
+
+            UserService.ChangePasswordStatus status =
+                    userService.changePassword(email, currentPassword, newPassword);
+
+            return switch (status) {
+                case SUCCESS -> ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+                case USER_NOT_FOUND -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found"));
+                case INVALID_CURRENT_PASSWORD -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Current password is incorrect"));
+                case SAME_PASSWORD -> ResponseEntity.badRequest()
+                        .body(Map.of("error", "New password must be different from current password"));
+            };
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Something went wrong"));
         }
     }
 
