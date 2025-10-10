@@ -61,7 +61,7 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
 //            Pageable pageable);
 
     @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
-            "mtd.vendorTransactionId, mtd.actionOnBalance,mtd.transactionDate, mtd.amount, " +
+            "mtd.transactionId ,mtd.vendorTransactionId, mtd.actionOnBalance,mtd.transactionDate, mtd.amount, " +
             "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
             "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " + // left join ftd for franchise commission
             "vt.brandType, vt.cardType, vt.cardClassification, " +
@@ -84,7 +84,7 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             Pageable pageable);
 
     @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
-            "mtd.vendorTransactionId, mtd.actionOnBalance,mtd.transactionDate, mtd.amount, " +
+            "mtd.transactionId, mtd.vendorTransactionId, mtd.actionOnBalance,mtd.transactionDate, mtd.amount, " +
             "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
             "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
             "vt.brandType, vt.cardType, vt.cardClassification, " +
@@ -132,7 +132,7 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             "COUNT(mtd) as totalTransactions, " +
             "COALESCE(SUM(mtd.amount), 0) as totalAmount, " +
             "COALESCE(SUM(mtd.netAmount), 0) as totalNetAmount, " +
-            "COALESCE(SUM(mtd.charge), 0) as totalCharges, " +
+            "COALESCE(SUM(mtd.grossCharge), 0) as totalCharges, " +
             "COALESCE(AVG(mtd.amount), 0) as averageAmount, " +
             "COUNT(CASE WHEN mtd.tranStatus = 'SETTLED' THEN 1 END) as successCount, " +
             "COUNT(CASE WHEN mtd.tranStatus != 'SETTLED' THEN 1 END) as failureCount " +

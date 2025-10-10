@@ -175,51 +175,52 @@
 
 
 
-            // ✅ Step 2: get vendor rates for product
-            VendorRates vendorRates = vendorRatesService.getRatesByProductId(productId);
-            if (vendorRates == null) {
-                throw new ResourceNotFoundException("Vendor rates not found for product id " + productId);
-            }
+//            // ✅ Step 2: get vendor rates for product
+//            VendorRates vendorRates = vendorRatesService.getRatesByProductId(productId);
+//            if (vendorRates == null) {
+//                throw new ResourceNotFoundException("Vendor rates not found for product id " + productId);
+//            }
 
             // ✅ Step 3: fetch all pricing schemes for that category + customer type
             List<PricingScheme> schemes = pricingSchemeRepository
                     .findByProductCategory_IdAndCustomerType(productCategoryId, customerType);
 
-            List<PricingScheme> validSchemes = new ArrayList<>();
-
-            for (PricingScheme scheme : schemes) {
-                boolean valid = true;
-
-                // Check rental by month
-                if (scheme.getRentalByMonth() < vendorRates.getMonthlyRent().doubleValue()) {
-                    valid = false;
-                }
-
-                // Map vendor card rates by card type for quick lookup
-                Map<String, BigDecimal> vendorCardRateMap = vendorRates.getVendorCardRates()
-                        .stream()
-                        .collect(Collectors.toMap(VendorCardRates::getCardType, VendorCardRates::getRate));
-
-                // Check card rates (franchise/merchant specific if applicable)
-                for (CardRate cardRate : scheme.getCardRates()) {
-                    BigDecimal vendorRate = vendorCardRateMap.get(cardRate.getCardName());
-                    if (vendorRate != null) {
-                        double effectiveRate = cardRate.getRate() != null ? cardRate.getRate() :
-                                (customerType.equalsIgnoreCase("FRANCHISE") ? cardRate.getFranchiseRate() : cardRate.getMerchantRate());
-
-                        if (effectiveRate < vendorRate.doubleValue()) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (valid) {
-                    validSchemes.add(scheme);
-                }
-            }
-
-            return validSchemes;
+//            List<PricingScheme> validSchemes = new ArrayList<>();
+//
+//            for (PricingScheme scheme : schemes) {
+//                boolean valid = true;
+//
+//                // Check rental by month
+//                if (scheme.getRentalByMonth() < vendorRates.getMonthlyRent().doubleValue()) {
+//                    valid = false;
+//                }
+//
+//                // Map vendor card rates by card type for quick lookup
+//                Map<String, BigDecimal> vendorCardRateMap = vendorRates.getVendorCardRates()
+//                        .stream()
+//                        .collect(Collectors.toMap(VendorCardRates::getCardType, VendorCardRates::getRate));
+//
+//                // Check card rates (franchise/merchant specific if applicable)
+//                for (CardRate cardRate : scheme.getCardRates()) {
+//                    BigDecimal vendorRate = vendorCardRateMap.get(cardRate.getCardName());
+//                    if (vendorRate != null) {
+//                        double effectiveRate = cardRate.getRate() != null ? cardRate.getRate() :
+//                                (customerType.equalsIgnoreCase("FRANCHISE") ? cardRate.getFranchiseRate() : cardRate.getMerchantRate());
+//
+//                        if (effectiveRate < vendorRate.doubleValue()) {
+//                            valid = false;
+//                            break;
+//                        }
+//                    }
+//                }
+//
+//                if (valid) {
+//                    validSchemes.add(scheme);
+//                }
+//            }
+//
+//            return validSchemes;
+            return schemes;
         }
 
     }
