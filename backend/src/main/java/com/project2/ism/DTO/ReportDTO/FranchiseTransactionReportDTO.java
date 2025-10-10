@@ -25,6 +25,7 @@ public class FranchiseTransactionReportDTO {
     private BigDecimal merchantRate;         // calculated from txnAmount & settleAmount
     private BigDecimal commissionRate;       // merchantRate - franchiseRate
     private BigDecimal commissionAmount;     // raw franchise commission
+    private BigDecimal systemFeeExGST;
     private BigDecimal gstAmount;
     private BigDecimal tdsAmount;
     private BigDecimal tdsPercentage;
@@ -101,6 +102,7 @@ public class FranchiseTransactionReportDTO {
             this.gstAmount = systemFee.multiply(gstRate)
                     .divide(BigDecimal.valueOf(100).add(gstRate), 2, RoundingMode.HALF_UP);
             System.out.println(this.gstAmount);
+            this.systemFeeExGST = systemFee.subtract(gstAmount);
         } else {
             // Standalone franchise transaction (DEBIT/CREDIT not related to merchant)
             this.merchantRate = null;
@@ -108,6 +110,14 @@ public class FranchiseTransactionReportDTO {
             this.commissionRate = null;
             this.settlementRate = null;
         }
+    }
+
+    public BigDecimal getSystemFeeExGST() {
+        return systemFeeExGST;
+    }
+
+    public void setSystemFeeExGST(BigDecimal systemFeeExGST) {
+        this.systemFeeExGST = systemFeeExGST;
     }
 
     public BigDecimal getGstAmount() {

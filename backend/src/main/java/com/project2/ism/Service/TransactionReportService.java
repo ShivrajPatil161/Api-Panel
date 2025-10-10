@@ -95,23 +95,14 @@ public class TransactionReportService {
                                 pageable);
             }
 
-            // Fetch GST percentage from database (consider caching this)
-            BigDecimal gstPercentage = getGstPercentage();
+
             // Get user role from Security Context
             String userRole = getUserRoleFromSecurityContext();
 
             // Apply role-based filtering
             List<MerchantTransactionReportDTO> adjustedTransactions = transactionPage.getContent()
                     .stream()
-                    .map(dto -> {
-                        // Apply role-based filtering first
-                        MerchantTransactionReportDTO adjusted = applyRoleBasedFiltering(dto, userRole);
-
-                        // Calculate and set GST amount
-                        calculateAndSetGst(adjusted, gstPercentage);
-
-                        return adjusted;
-                    })
+                    .map(dto -> applyRoleBasedFiltering(dto, userRole))
                     .collect(Collectors.toList());
 
             // Get summary
@@ -162,8 +153,9 @@ public class TransactionReportService {
             BigDecimal gstAmount = dto.getSystemFee()
                     .multiply(gstPercentage)
                     .divide(BigDecimal.valueOf(100).add(gstPercentage), 2, RoundingMode.HALF_UP);
-
+            BigDecimal systemFeeExgst = dto.getSystemFee().subtract(gstAmount);
             dto.setGstAmount(gstAmount);
+            dto.setSystemFeeExGST(systemFeeExgst);
         }
     }
     // Apply role-based filtering
@@ -180,6 +172,17 @@ public class TransactionReportService {
                 dto.setSystemFee(dto.getGrossCharge());
             }
         }
+        else if (role != null && (
+                role.equalsIgnoreCase("ROLE_ADMIN") ||
+                        role.equalsIgnoreCase("ADMIN") ||
+                        role.equalsIgnoreCase("ROLE_SUPER_ADMIN") ||
+                        role.equalsIgnoreCase("SUPER_ADMIN"))) {
+
+            // Only Admins and Super Admins get GST calculation
+            BigDecimal gstPercentage = getGstPercentage();
+            calculateAndSetGst(dto, gstPercentage);
+        }
+
         // For ADMIN/FRANCHISE roles, show everything as-is
         return dto;
     }
@@ -297,7 +300,7 @@ public class TransactionReportService {
         }
 
         // Use your existing DTO constructor - it handles nulls and calculations perfectly!
-        return new FranchiseTransactionReportDTO(
+        FranchiseTransactionReportDTO dto = new FranchiseTransactionReportDTO(
                 // Vendor transaction ID (null for standalone CREDIT/DEBIT)
                 mtd != null ? mtd.getVendorTransactionId() : null,
                 ftd.getTransactionId(),
@@ -338,7 +341,33 @@ public class TransactionReportService {
                 // Transaction status
                 ftd.getTranStatus()
         );
+        String userRole = getUserRoleFromSecurityContext();
+        return applyFranchiseRoleBasedFiltering(dto,userRole);
     }
+
+
+    private FranchiseTransactionReportDTO applyFranchiseRoleBasedFiltering(
+            FranchiseTransactionReportDTO dto, String role) {
+
+        if (role == null) return dto;
+
+        // Normalize and check
+        String normalizedRole = role.toUpperCase();
+
+        if (normalizedRole.contains("ADMIN") || normalizedRole.contains("SUPER_ADMIN")) {
+            // Admin and Super Admin can see GST and TDS
+            return dto;
+        } else {
+            // Hide sensitive financial details for others
+            dto.setSystemFeeExGST(null);
+            dto.setGstAmount(null);
+            dto.setTdsAmount(null);
+            dto.setTdsPercentage(null);
+        }
+
+        return dto;
+    }
+
     /**
      * Get enhanced merchant transaction summary
      */

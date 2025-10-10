@@ -5,12 +5,15 @@ import { FileText, BarChart3, TrendingUp, Users } from 'lucide-react';
 import FranchiseTransactionReport from './FranchiseTransactionReports';
 import FranchiseMerchantPerformanceReport from './FranchiseMerchantPerformance';
 import FTransReportFilters from './FTransReportFilters';
+import FranchiseTransactionWithTaxReport from './FranchiseTransactionWithTaxReport';
 
 const FTransReportDashboard = () => {
     const [activeTab, setActiveTab] = useState('transactions');
     const userType = localStorage.getItem('userType')?.toLowerCase();
     const customerId = localStorage.getItem('customerId');
     const isFranchise = userType === 'franchise';
+    const isAdmin = userType === 'admin' || userType === 'super_admin';
+
     const [commonFilters, setCommonFilters] = useState({
         selectedFranchise: isFranchise ? customerId : '',
         startDate: '',
@@ -18,39 +21,43 @@ const FTransReportDashboard = () => {
         dateFilterType: 'SETTLEMENT_DATE'
     });
 
-    // Check if user is a franchise
-    
-
     useEffect(() => {
         if (isFranchise) {
             setCommonFilters(prev => ({ ...prev, selectedFranchise: customerId }));
         }
     }, [isFranchise, customerId]);
 
-    const reportTabs = [
+    const allReportTabs = [
         {
             id: 'transactions',
             name: 'Transaction Report',
             icon: FileText,
             component: FranchiseTransactionReport,
-            description: 'View franchise commission transactions'
+            description: 'View franchise commission transactions',
+            allowedRoles: ['admin', 'super_admin', 'franchise'] // accessible to all
+        },
+        {
+            id: 'transactions-tax',
+            name: 'Transaction (Taxes) Report',
+            icon: FileText,
+            component: FranchiseTransactionWithTaxReport,
+            description: 'View franchise commission transactions with taxes',
+            allowedRoles: ['admin', 'super_admin'] // only admin and super_admin
         },
         {
             id: 'merchant-performance',
             name: 'Merchant Performance',
             icon: BarChart3,
             component: FranchiseMerchantPerformanceReport,
-            description: 'Analyze merchant performance metrics'
+            description: 'Analyze merchant performance metrics',
+            allowedRoles: ['admin', 'super_admin', 'franchise'] // accessible to all
         }
-        // Add more tabs here as needed
-        // {
-        //     id: 'settlement-report',
-        //     name: 'Settlement Report',
-        //     icon: TrendingUp,
-        //     component: SettlementReport,
-        //     description: 'View settlement details'
-        // }
     ];
+
+    // Filter tabs based on user role
+    const reportTabs = allReportTabs.filter(tab =>
+        tab.allowedRoles.includes(userType)
+    );
 
     const currentReport = reportTabs.find(tab => tab.id === activeTab);
     const CurrentReportComponent = currentReport?.component;
@@ -82,8 +89,8 @@ const FTransReportDashboard = () => {
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                                                ? 'border-purple-500 text-purple-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            ? 'border-purple-500 text-purple-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                             }`}
                                     >
                                         <Icon className="w-4 h-4" />
