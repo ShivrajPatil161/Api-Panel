@@ -35,7 +35,8 @@ const MTransReportDashboard = () => {
             icon: FileText,
             component: MerchantTransactionReports,
             description: 'View detailed merchant transaction history'
-        }
+        },
+        
         // Future tabs can be added here
         // {
         //     id: 'settlement',

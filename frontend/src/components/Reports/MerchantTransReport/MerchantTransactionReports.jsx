@@ -71,6 +71,10 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
     const columnDefinitions = useMemo(() => {
         const columnHelper = createColumnHelper();
         return {
+            customTxnId: columnHelper.accessor('customTxnId', {
+                header: 'System ID',
+                cell: info => <span className="font-mono text-xs text-gray-900">{info.getValue()}</span>
+            }),
             txnId: columnHelper.accessor('txnId', {
                 header: 'Transaction ID',
                 cell: info => <span className="font-mono text-xs text-gray-900">{info.getValue()}</span>
@@ -161,7 +165,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
 
     // Priority order for columns
     const columnPriority = [
-        'txnId', 'actionOnBalance', 'txnDate', 'settleDate', 'txnAmount', 'settleAmount',
+        'customTxnId','txnId', 'actionOnBalance', 'txnDate', 'settleDate', 'txnAmount', 'settleAmount',
         'systemFee', 'commissionAmount', 'merchantName', 'franchiseName', 'brandType',
         'cardType', 'authCode', 'tid', 'cardClassification', 'state',
         'settlementPercentage', 'merchantRate', 'franchiseRate', 'commissionRate'
@@ -188,6 +192,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
     // Dynamic export configuration
     const exportConfig = useMemo(() => {
         const fieldMapping = {
+            customTxnId: { header: 'System ID', format: val => val },
             txnId: { header: 'Transaction ID', format: val => val },
             actionOnBalance: { header: 'Action', format: val => val },
             txnDate: { header: 'Transaction Date', format: val => new Date(val).toLocaleString() },
@@ -223,6 +228,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
             const row = {};
             exportConfig.keys.forEach(key => {
                 const fieldMapping = {
+                    customTxnId: { header: 'System ID', format: val => val },
                     txnId: { header: 'Transaction ID', format: val => val },
                     actionOnBalance: { header: 'Action', format: val => val },
                     txnDate: { header: 'Transaction Date', format: val => new Date(val).toLocaleString() },

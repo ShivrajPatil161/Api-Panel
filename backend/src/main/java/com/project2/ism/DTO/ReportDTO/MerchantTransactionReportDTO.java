@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerchantTransactionReportDTO {
+    private Long customTxnId;
     private String txnId;
     private String actionOnBalance;
     private LocalDateTime txnDate;
@@ -27,6 +28,7 @@ public class MerchantTransactionReportDTO {
     private BigDecimal franchiseRate;
     private BigDecimal commissionRate;
     private BigDecimal commissionAmount;
+    private BigDecimal gstAmount;
     private String brandType;
     private String cardType;
     private String cardClassification;
@@ -38,6 +40,7 @@ public class MerchantTransactionReportDTO {
 
     // Constructor with raw amounts
     public MerchantTransactionReportDTO(
+            Long customTxnId,
             String txnId,
             String actionOnBalance,
             LocalDateTime txnDate,
@@ -56,6 +59,7 @@ public class MerchantTransactionReportDTO {
             String franchiseName,
             String state
     ) {
+        this.customTxnId = customTxnId;
         this.txnId = txnId;
         this.actionOnBalance = actionOnBalance;
         this.txnDate = txnDate;
@@ -79,17 +83,17 @@ public class MerchantTransactionReportDTO {
         this.grossCharge = grossCharge;  // ADD this field to your DTO
 
         // Safe calculations
-        if (txnAmount != null && txnAmount.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal safeSettleAmount = merchantNetAmount != null ? merchantNetAmount : BigDecimal.ZERO;
+        if (txnAmount != null && txnAmount.compareTo(BigDecimal.ZERO) > 0 && merchantNetAmount != null) {
+
 
             if (franchiseNetAmount != null) {
                 // Dependent merchant (with franchise)
-                this.merchantRate = txnAmount.subtract(safeSettleAmount)
+                this.merchantRate = txnAmount.subtract(merchantNetAmount)
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
                         .multiply(BigDecimal.valueOf(100));
 
                 this.franchiseRate = txnAmount
-                        .subtract(safeSettleAmount.add(franchiseNetAmount))
+                        .subtract(merchantNetAmount.add(franchiseNetAmount))
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
                         .multiply(BigDecimal.valueOf(100));
 
@@ -97,7 +101,7 @@ public class MerchantTransactionReportDTO {
                 this.settlementPercentage = this.merchantRate;
             } else {
                 // Direct merchant (no franchise)
-                this.merchantRate = txnAmount.subtract(safeSettleAmount)
+                this.merchantRate = txnAmount.subtract(merchantNetAmount)
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
                         .multiply(BigDecimal.valueOf(100));
 
@@ -123,6 +127,22 @@ public class MerchantTransactionReportDTO {
         }
         return numerator.divide(denominator, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
+    }
+
+    public BigDecimal getGstAmount() {
+        return gstAmount;
+    }
+
+    public void setGstAmount(BigDecimal gstAmount) {
+        this.gstAmount = gstAmount;
+    }
+
+    public Long getCustomTxnId() {
+        return customTxnId;
+    }
+
+    public void setCustomTxnId(Long customTxnId) {
+        this.customTxnId = customTxnId;
     }
 
     public String getActionOnBalance() {

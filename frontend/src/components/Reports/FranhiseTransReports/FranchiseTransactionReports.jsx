@@ -70,6 +70,10 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
     const columnDefinitions = useMemo(() => {
         const columnHelper = createColumnHelper();
         return {
+            customTxnId: columnHelper.accessor('customTxnId', {
+                header: 'System ID',
+                cell: info => <span className="font-mono text-xs text-gray-900">{info.getValue()}</span>
+            }),
             txnId: columnHelper.accessor('txnId', {
                 header: 'Transaction ID',
                 cell: info => <span className="font-mono text-xs text-gray-900">{info.getValue()}</span>
@@ -77,6 +81,10 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
             txnDate: columnHelper.accessor('txnDate', {
                 header: 'Date',
                 cell: info => <span className="text-xs text-gray-700">{new Date(info.getValue()).toLocaleDateString()}</span>
+            }),
+            settleDate: columnHelper.accessor('settleDate', {
+                header: 'Settled On',
+                cell: info => <span className="text-xs text-gray-600">{new Date(info.getValue()).toLocaleDateString()}</span>
             }),
             txnAmount: columnHelper.accessor('txnAmount', {
                 header: 'Amount',
@@ -141,20 +149,17 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
             commissionRate: columnHelper.accessor('commissionRate', {
                 header: 'Commission Rate',
                 cell: info => <span className="text-xs text-orange-600">{info.getValue()}%</span>
-            }),
-            settleDate: columnHelper.accessor('settleDate', {
-                header: 'Settled On',
-                cell: info => <span className="text-xs text-gray-600">{new Date(info.getValue()).toLocaleDateString()}</span>
             })
+            
         };
     }, []);
 
     // Priority order for columns (most important first)
     const columnPriority = [
-        'txnId', 'txnDate', 'txnAmount', 'settleAmount', 'systemFee', 'commissionAmount',
+        'customTxnId', 'txnId', 'txnDate', 'settleDate', 'txnAmount', 'settleAmount', 'systemFee', 'commissionAmount',
         'merchantName', 'franchiseName', 'brandType', 'cardType', 'authCode', 'tid',
         'cardClassification', 'state', 'settlementRate', 'franchiseRate',
-        'merchantRate', 'commissionRate', 'settleDate'
+        'merchantRate', 'commissionRate'
     ];
 
     // Dynamically build columns based on available fields
@@ -178,8 +183,10 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
     // Dynamic export configuration based on available fields
     const exportConfig = useMemo(() => {
         const fieldMapping = {
+            customTxnId: { header: 'System ID', format: val => val },
             txnId: { header: 'Transaction ID', format: val => val },
             txnDate: { header: 'Transaction Date', format: val => new Date(val).toLocaleString() },
+            settleDate: { header: 'Settled On', format: val => new Date(val).toLocaleString() },
             txnAmount: { header: 'Amount (₹)', format: val => val },
             settleAmount: { header: 'Settle Amount (₹)', format: val => val },
             systemFee: { header: 'System Fee (₹)', format: val => val },
@@ -195,8 +202,8 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
             settlementRate: { header: 'Settlement Rate (%)', format: val => val },
             franchiseRate: { header: 'Franchise Rate (%)', format: val => val },
             merchantRate: { header: 'Merchant Rate (%)', format: val => val },
-            commissionRate: { header: 'Commission Rate (%)', format: val => val },
-            settleDate: { header: 'Settled On', format: val => new Date(val).toLocaleString() }
+            commissionRate: { header: 'Commission Rate (%)', format: val => val }
+            
         };
 
         const availableColumns = columnPriority.filter(field => availableFields.has(field));
@@ -212,8 +219,10 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
             const row = {};
             exportConfig.keys.forEach(key => {
                 const fieldMapping = {
+                    customTxnId: { header: 'System ID', format: val => val },
                     txnId: { header: 'Transaction ID', format: val => val },
                     txnDate: { header: 'Transaction Date', format: val => new Date(val).toLocaleString() },
+                    settleDate: { header: 'Settled On', format: val => new Date(val).toLocaleString() },
                     txnAmount: { header: 'Amount', format: val => val },
                     settleAmount: { header: 'Settle Amount', format: val => val },
                     systemFee: { header: 'System Fee', format: val => val },
@@ -229,8 +238,8 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
                     settlementRate: { header: 'Settlement Rate', format: val => `${val || 0}%` },
                     franchiseRate: { header: 'Franchise Rate', format: val => `${val || 0}%` },
                     merchantRate: { header: 'Merchant Rate', format: val => `${val || 0}%` },
-                    commissionRate: { header: 'Commission Rate', format: val => `${val || 0}%` },
-                    settleDate: { header: 'Settled On', format: val => new Date(val).toLocaleString() }
+                    commissionRate: { header: 'Commission Rate', format: val => `${val || 0}%` }
+                
                 };
 
                 const config = fieldMapping[key];

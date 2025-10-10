@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FranchiseTransactionReportDTO {
     private String txnId;
+    private Long customTxnId;
     private String actionOnBalance;
     private LocalDateTime txnDate;
     private BigDecimal txnAmount;
@@ -24,7 +25,10 @@ public class FranchiseTransactionReportDTO {
     private BigDecimal merchantRate;         // calculated from txnAmount & settleAmount
     private BigDecimal commissionRate;       // merchantRate - franchiseRate
     private BigDecimal commissionAmount;     // raw franchise commission
-
+    private BigDecimal gstAmount;
+    private BigDecimal tdsAmount;
+    private BigDecimal tdsPercentage;
+    private BigDecimal netCommissionAmount;
     private String brandType;
     private String cardType;
     private String cardClassification;
@@ -34,6 +38,7 @@ public class FranchiseTransactionReportDTO {
 
     public FranchiseTransactionReportDTO(
             String txnId,
+            Long customTxnId,
             String actionOnBalance,
             LocalDateTime txnDate,
             BigDecimal txnAmount,
@@ -44,6 +49,8 @@ public class FranchiseTransactionReportDTO {
             BigDecimal grossCharge,         // Can be NULL
             BigDecimal franchiseCommission, // ftd.netAmount (franchise's own netAmount)
             BigDecimal systemFee,           // Can be NULL
+            BigDecimal gstRate,
+            BigDecimal tdsRate,
             String brandType,
             String cardType,
             String cardClassification,
@@ -52,6 +59,7 @@ public class FranchiseTransactionReportDTO {
             String state
     ) {
         this.txnId = txnId;
+        this.customTxnId = customTxnId;
         this.actionOnBalance= actionOnBalance;
         this.txnDate = txnDate;
         this.txnAmount = txnAmount;
@@ -87,7 +95,12 @@ public class FranchiseTransactionReportDTO {
 
             this.commissionRate = this.merchantRate.subtract(this.franchiseRate);
             this.settlementRate = this.merchantRate;
-
+            this.tdsAmount = commissionAmount.multiply(tdsRate)
+                    .divide(BigDecimal.valueOf(100).add(tdsRate), 2, RoundingMode.HALF_UP);
+            this.tdsPercentage = tdsRate;
+            this.gstAmount = systemFee.multiply(gstRate)
+                    .divide(BigDecimal.valueOf(100).add(gstRate), 2, RoundingMode.HALF_UP);
+            System.out.println(this.gstAmount);
         } else {
             // Standalone franchise transaction (DEBIT/CREDIT not related to merchant)
             this.merchantRate = null;
@@ -95,6 +108,54 @@ public class FranchiseTransactionReportDTO {
             this.commissionRate = null;
             this.settlementRate = null;
         }
+    }
+
+    public BigDecimal getGstAmount() {
+        return gstAmount;
+    }
+
+    public void setGstAmount(BigDecimal gstAmount) {
+        this.gstAmount = gstAmount;
+    }
+
+    public BigDecimal getTdsAmount() {
+        return tdsAmount;
+    }
+
+    public void setTdsAmount(BigDecimal tdsAmount) {
+        this.tdsAmount = tdsAmount;
+    }
+
+    public BigDecimal getTdsPercentage() {
+        return tdsPercentage;
+    }
+
+    public void setTdsPercentage(BigDecimal tdsPercentage) {
+        this.tdsPercentage = tdsPercentage;
+    }
+
+    public BigDecimal getNetCommissionAmount() {
+        return netCommissionAmount;
+    }
+
+    public void setNetCommissionAmount(BigDecimal netCommissionAmount) {
+        this.netCommissionAmount = netCommissionAmount;
+    }
+
+    public Long getCustomTxnId() {
+        return customTxnId;
+    }
+
+    public void setCustomTxnId(Long customTxnId) {
+        this.customTxnId = customTxnId;
+    }
+
+    public String getActionOnBalance() {
+        return actionOnBalance;
+    }
+
+    public void setActionOnBalance(String actionOnBalance) {
+        this.actionOnBalance = actionOnBalance;
     }
 
     public String getTxnId() { return txnId; }

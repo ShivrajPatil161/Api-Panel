@@ -13,6 +13,7 @@ import com.project2.ism.Exception.BusinessException;
 import com.project2.ism.Exception.ValidationException;
 import com.project2.ism.Model.FranchiseTransactionDetails;
 import com.project2.ism.Model.MerchantTransactionDetails;
+import com.project2.ism.Model.Taxes;
 import com.project2.ism.Model.VendorTransactions;
 import com.project2.ism.Repository.FranchiseTransDetRepository;
 import com.project2.ism.Repository.MerchantTransDetRepository;
@@ -46,14 +47,16 @@ public class TransactionReportService {
 
     private final MerchantTransDetRepository merchantTransactionRepository;
     private final FranchiseTransDetRepository franchiseTransactionRepository;
+    private final TaxesService taxesService;
 
     private static final int MAX_DATE_RANGE_DAYS = 365;
     private static final int MAX_PAGE_SIZE = 1000;
 
     public TransactionReportService(MerchantTransDetRepository merchantTransactionRepository,
-                                    FranchiseTransDetRepository franchiseTransactionRepository) {
+                                    FranchiseTransDetRepository franchiseTransactionRepository, TaxesService taxesService) {
         this.merchantTransactionRepository = merchantTransactionRepository;
         this.franchiseTransactionRepository = franchiseTransactionRepository;
+        this.taxesService = taxesService;
     }
 
 
@@ -92,13 +95,23 @@ public class TransactionReportService {
                                 pageable);
             }
 
+            // Fetch GST percentage from database (consider caching this)
+            BigDecimal gstPercentage = getGstPercentage();
             // Get user role from Security Context
             String userRole = getUserRoleFromSecurityContext();
 
             // Apply role-based filtering
             List<MerchantTransactionReportDTO> adjustedTransactions = transactionPage.getContent()
                     .stream()
-                    .map(dto -> applyRoleBasedFiltering(dto, userRole))
+                    .map(dto -> {
+                        // Apply role-based filtering first
+                        MerchantTransactionReportDTO adjusted = applyRoleBasedFiltering(dto, userRole);
+
+                        // Calculate and set GST amount
+                        calculateAndSetGst(adjusted, gstPercentage);
+
+                        return adjusted;
+                    })
                     .collect(Collectors.toList());
 
             // Get summary
@@ -136,6 +149,23 @@ public class TransactionReportService {
         return "ADMIN";
     }
 
+    private BigDecimal getGstPercentage() {
+        // Fetch from taxes table (id = 3)
+        // Consider caching this value since it rarely changes
+        return taxesService.getTaxes().getGst();
+    }
+
+    // Helper method to calculate GST
+    private void calculateAndSetGst(MerchantTransactionReportDTO dto, BigDecimal gstPercentage) {
+        // Calculate GST on system fee (merchant's charge)
+        if (dto.getSystemFee() != null && gstPercentage != null) {
+            BigDecimal gstAmount = dto.getSystemFee()
+                    .multiply(gstPercentage)
+                    .divide(BigDecimal.valueOf(100).add(gstPercentage), 2, RoundingMode.HALF_UP);
+
+            dto.setGstAmount(gstAmount);
+        }
+    }
     // Apply role-based filtering
     private MerchantTransactionReportDTO applyRoleBasedFiltering(MerchantTransactionReportDTO dto, String role) {
         if ("ROLE_MERCHANT".equals(role) || "MERCHANT".equals(role)) {
@@ -260,7 +290,7 @@ public class TransactionReportService {
 
         MerchantTransactionDetails mtd = ftd.getMerchantTransactionDetail();
         VendorTransactions vt = null;
-
+        Taxes taxes = taxesService.getTaxes();
         // Get vendor transaction if merchant transaction exists
         if (mtd != null && mtd.getVendorTransactionId() != null) {
             vt = vendorTransactionMap.get(mtd.getVendorTransactionId());
@@ -270,6 +300,7 @@ public class TransactionReportService {
         return new FranchiseTransactionReportDTO(
                 // Vendor transaction ID (null for standalone CREDIT/DEBIT)
                 mtd != null ? mtd.getVendorTransactionId() : null,
+                ftd.getTransactionId(),
                 ftd.getActionOnBalance(),
                 // Transaction date
                 ftd.getTransactionDate(),
@@ -293,7 +324,8 @@ public class TransactionReportService {
 
                 // System fee
                 mtd != null ? mtd.getCharge() : null,            // systemFee
-
+                taxes.getGst(),
+                taxes.getTds(),
                 // Card details (null if no vendor transaction)
                 vt != null ? vt.getBrandType() : null,
                 vt != null ? vt.getCardType() : null,
