@@ -29,6 +29,7 @@ public class MerchantTransactionReportDTO {
     private BigDecimal commissionRate;
     private BigDecimal commissionAmount;
     private BigDecimal gstAmount;
+    private BigDecimal systemFeeExGST;
     private String brandType;
     private String cardType;
     private String cardClassification;
@@ -127,6 +128,14 @@ public class MerchantTransactionReportDTO {
         }
         return numerator.divide(denominator, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
+    }
+
+    public BigDecimal getSystemFeeExGST() {
+        return systemFeeExGST;
+    }
+
+    public void setSystemFeeExGST(BigDecimal systemFeeExGST) {
+        this.systemFeeExGST = systemFeeExGST;
     }
 
     public BigDecimal getGstAmount() {
