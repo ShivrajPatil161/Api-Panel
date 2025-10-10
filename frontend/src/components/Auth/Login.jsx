@@ -67,7 +67,7 @@ const Login = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-500 to-gray-950 flex items-center justify-center p-5">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-gray-500 to-blue-00 flex items-center justify-center p-5">
       <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-5xl flex animate-fadeInUp">
         
         {/* Left Side - Logo Section */}
@@ -85,17 +85,17 @@ const Login = () => {
         {/* Right Side - Login Form */}
         <div className="w-full md:w-1/2">
           {/* Header */}
-          <div className="bg-gradient-to-br from-blue-500 via-black to-indigo-600 text-white px-8 py-10 text-center">
+          <div className="bg-[#303a47] text-blue-500 px-8 py-10 text-center">
             <h1 className="text-3xl font-semibold mb-2">Welcome Back</h1>
-            <p className="text-blue-100 text-base"> Sign in to continue to your account </p>
+            <p className="text-gray-300  text-base"> Sign in to continue to your account </p>
           </div>
           
           {/* Form */}
-          <div className="p-8">
+          <div className="pl-8 pr-10 pb-8 pt-2 bg-[#303a47]">
             <form onSubmit={handleSubmit(onSubmit)} onKeyPress={handleKeyPress}>
-              <div className="space-y-6">
+              <div className="space-y-6 ">
                 {/* Email Field */}
-                <FormInput
+                <FormInput className='bg-gray-300 '
                   label="Email Address"
                   name="email"
                   type="email"
@@ -108,7 +108,7 @@ const Login = () => {
                   }} />
                 
                 {/* Password Field */}
-                <FormInput
+                <FormInput className='bg-gray-300 mb-8'
                   label="Password"
                   name="password"
                   type={showPassword ? "text" : "password"}
@@ -123,7 +123,7 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(prev => !prev)}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-gray-500 mb-8 hover:text-gray-700"
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
