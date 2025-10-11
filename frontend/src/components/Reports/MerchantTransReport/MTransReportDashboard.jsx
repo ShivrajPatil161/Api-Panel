@@ -10,6 +10,7 @@ import MerchantTransactionWithTaxesReports from './MerchantTransactionWithTaxesR
 
 const MTransReportDashboard = () => {
     const [activeTab, setActiveTab] = useState('transactions');
+    
     const [commonFilters, setCommonFilters] = useState({
         selectedFranchise: '',
         selectedMerchant: '',
@@ -29,20 +30,22 @@ const MTransReportDashboard = () => {
         }
     }, [isMerchant, customerId]);
 
-    const reportTabs = [
+    const allReportTabs = [
         {
             id: 'transactions',
             name: 'Transaction Report',
             icon: FileText,
             component: MerchantTransactionReports,
-            description: 'View detailed merchant transaction history'
+            description: 'View detailed merchant transaction history',
+            allowedRoles: ['admin', 'super_admin', 'franchise', 'merchant'] // accessible to all
         },
         {
             id: 'transactions-tax',
             name: 'Transaction (GST) Report',
             icon: FileText,
             component: MerchantTransactionWithTaxesReports,
-            description: 'View detailed merchant transaction with gst history'
+            description: 'View detailed merchant transaction with gst history',
+            allowedRoles: ['admin', 'super_admin'] // only admin and super_admin
         },
         // Future tabs can be added here
         // {
@@ -60,7 +63,10 @@ const MTransReportDashboard = () => {
         //     description: 'Analyze merchant performance metrics'
         // }
     ];
-
+    // Filter tabs based on user role
+    const reportTabs = allReportTabs.filter(tab =>
+        tab.allowedRoles.includes(userType)
+    );
     const currentReport = reportTabs.find(tab => tab.id === activeTab);
     const CurrentReportComponent = currentReport?.component;
 
