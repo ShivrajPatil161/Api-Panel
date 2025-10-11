@@ -76,7 +76,7 @@ public class FranchiseTransactionReportDTO {
 
         // Safe assignment - handle nulls
         this.settleAmount = merchantNetAmount != null ? merchantNetAmount : BigDecimal.ZERO;
-        this.systemFee = systemFee != null ? systemFee : BigDecimal.ZERO;
+        this.systemFee = grossCharge != null ? grossCharge : BigDecimal.ZERO;
         this.commissionAmount = franchiseCommission != null ? franchiseCommission : BigDecimal.ZERO;
 
         // Calculate rates only if we have valid data
@@ -85,24 +85,22 @@ public class FranchiseTransactionReportDTO {
 
             // This is a commission transaction (from merchant settlement)
             this.merchantRate = txnAmount
-                    .subtract(this.settleAmount)
+                    .subtract(settleAmount)
                     .divide(txnAmount, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100));
 
-            this.franchiseRate = txnAmount
-                    .subtract(this.settleAmount.add(this.commissionAmount))
-                    .divide(txnAmount, 4, RoundingMode.HALF_UP)
+            this.commissionRate = commissionAmount
+                    .divide(settleAmount, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100));
 
-            this.commissionRate = this.merchantRate.subtract(this.franchiseRate);
+            this.franchiseRate = this.merchantRate.subtract(this.commissionRate);
             this.settlementRate = this.merchantRate;
             this.tdsAmount = commissionAmount.multiply(tdsRate)
-                    .divide(BigDecimal.valueOf(100).add(tdsRate), 2, RoundingMode.HALF_UP);
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
             this.tdsPercentage = tdsRate;
-            this.gstAmount = systemFee.multiply(gstRate)
+            this.gstAmount = grossCharge.multiply(gstRate)
                     .divide(BigDecimal.valueOf(100).add(gstRate), 2, RoundingMode.HALF_UP);
-            System.out.println(this.gstAmount);
-            this.systemFeeExGST = systemFee.subtract(gstAmount);
+            this.systemFeeExGST = grossCharge.subtract(gstAmount);
         } else {
             // Standalone franchise transaction (DEBIT/CREDIT not related to merchant)
             this.merchantRate = null;

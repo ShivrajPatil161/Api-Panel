@@ -93,12 +93,11 @@ public class MerchantTransactionReportDTO {
                         .divide(txnAmount, 4, RoundingMode.HALF_UP)
                         .multiply(BigDecimal.valueOf(100));
 
-                this.franchiseRate = txnAmount
-                        .subtract(merchantNetAmount.add(franchiseNetAmount))
-                        .divide(txnAmount, 4, RoundingMode.HALF_UP)
+                this.commissionRate = commissionAmount
+                        .divide(settleAmount, 4, RoundingMode.HALF_UP)
                         .multiply(BigDecimal.valueOf(100));
 
-                this.commissionRate = merchantRate.subtract(franchiseRate);
+                this.franchiseRate = this.merchantRate.subtract(this.commissionRate);
                 this.settlementPercentage = this.merchantRate;
             } else {
                 // Direct merchant (no franchise)
