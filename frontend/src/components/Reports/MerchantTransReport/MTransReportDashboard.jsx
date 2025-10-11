@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, BarChart3, Store, Users } from 'lucide-react';
 
 import MerchantTransactionReports from './MerchantTransactionReports';
+import MerchantTransactionWithTaxesReports from './MerchantTransactionWithTaxesReports';
 // Future components can be imported here
 // import MerchantSettlementReport from './MerchantSettlementReport';
 // import MerchantAnalyticsReport from './MerchantAnalyticsReport';
@@ -36,7 +37,13 @@ const MTransReportDashboard = () => {
             component: MerchantTransactionReports,
             description: 'View detailed merchant transaction history'
         },
-        
+        {
+            id: 'transactions-tax',
+            name: 'Transaction (GST) Report',
+            icon: FileText,
+            component: MerchantTransactionWithTaxesReports,
+            description: 'View detailed merchant transaction with gst history'
+        },
         // Future tabs can be added here
         // {
         //     id: 'settlement',
