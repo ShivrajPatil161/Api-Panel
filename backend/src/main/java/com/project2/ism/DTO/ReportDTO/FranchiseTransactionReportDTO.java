@@ -101,6 +101,7 @@ public class FranchiseTransactionReportDTO {
             this.gstAmount = grossCharge.multiply(gstRate)
                     .divide(BigDecimal.valueOf(100).add(gstRate), 2, RoundingMode.HALF_UP);
             this.systemFeeExGST = grossCharge.subtract(gstAmount);
+            this.netCommissionAmount = commissionAmount.subtract(tdsAmount);
         } else {
             // Standalone franchise transaction (DEBIT/CREDIT not related to merchant)
             this.merchantRate = null;
