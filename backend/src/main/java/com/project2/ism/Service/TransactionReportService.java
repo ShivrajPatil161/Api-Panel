@@ -160,6 +160,10 @@ public class TransactionReportService {
     }
     // Apply role-based filtering
     private MerchantTransactionReportDTO applyRoleBasedFiltering(MerchantTransactionReportDTO dto, String role) {
+        // Replace systemFee with grossCharge for merchant view
+        if (dto.getGrossCharge() != null) {
+            dto.setSystemFee(dto.getGrossCharge());
+        }
         if ("ROLE_MERCHANT".equals(role) || "MERCHANT".equals(role)) {
             // Hide franchise information
             dto.setFranchiseName(null);
@@ -167,10 +171,7 @@ public class TransactionReportService {
             dto.setCommissionRate(null);
             dto.setCommissionAmount(null);
 
-            // Replace systemFee with grossCharge for merchant view
-            if (dto.getGrossCharge() != null) {
-                dto.setSystemFee(dto.getGrossCharge());
-            }
+
         }
         else if (role != null && (
                 role.equalsIgnoreCase("ROLE_ADMIN") ||

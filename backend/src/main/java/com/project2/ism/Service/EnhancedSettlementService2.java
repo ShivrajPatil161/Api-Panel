@@ -565,11 +565,16 @@ public class EnhancedSettlementService2 {
 
         BigDecimal merchantRate = BigDecimal.valueOf(merchantRatePercent).movePointLeft(2);
         BigDecimal franchiseRate = BigDecimal.valueOf(franchiseRatePercent).movePointLeft(2);
+        BigDecimal rateDiff = merchantRate.subtract(franchiseRate);
 
         BigDecimal merchantFee = amount.multiply(merchantRate).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal franchiseFee = amount.multiply(franchiseRate).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal franchiseCommission = merchantFee.subtract(franchiseFee).setScale(2, RoundingMode.HALF_UP);
+
         BigDecimal merchantNet = amount.subtract(merchantFee);
+
+        BigDecimal franchiseCommission = merchantNet.multiply(rateDiff).setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal systemShare = merchantFee.subtract(franchiseCommission).setScale(2, RoundingMode.HALF_UP);
+
 
         // --- lock merchant wallet first ---
         MerchantWallet merchantWallet = walletRepo.findByMerchantIdForUpdate(merchant.getId())
@@ -618,7 +623,7 @@ public class EnhancedSettlementService2 {
 //            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
             mtd.setMerchant(merchant);
             mtd.setGrossCharge(merchantFee);
-            mtd.setCharge(merchantFee.subtract(franchiseCommission));
+            mtd.setCharge(systemShare);
             mtd.setActionOnBalance("CREDIT");
             mtd.setVendorTransactionId(vt.getTransactionReferenceId());
             mtd.setTransactionDate(vt.getDate());
