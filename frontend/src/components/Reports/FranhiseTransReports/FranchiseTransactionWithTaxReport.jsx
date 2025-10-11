@@ -118,6 +118,10 @@ const FranchiseTransactionWithTaxReport = ({ filters: commonFilters, isFranchise
                 header: 'TDS %',
                 cell: info => info.getValue() ? <span className="font-semibold text-xs text-orange-600">{info.getValue()?.toLocaleString()}%</span> : <span className="text-xs text-gray-400">-</span>
             }),
+            netCommissionAmount: columnHelper.accessor('netCommissionAmount', {
+                header: 'Net Commission',
+                cell: info => info.getValue() ? <span className="font-semibold text-xs text-orange-600">₹{info.getValue()?.toLocaleString()}</span> : <span className="text-xs text-gray-400">-</span>
+            }),
             authCode: columnHelper.accessor('authCode', {
                 header: 'Auth Code',
                 cell: info => <span className="text-xs text-gray-600">{info.getValue() || '-'}</span>
@@ -171,7 +175,7 @@ const FranchiseTransactionWithTaxReport = ({ filters: commonFilters, isFranchise
 
     // Priority order for columns (most important first)
     const columnPriority = [
-        'customTxnId', 'txnId', 'txnDate', 'settleDate', 'txnAmount', 'settleAmount', 'systemFee','systemFeeExGST','gstAmount', 'commissionAmount','tdsAmount','tdsPercentage',
+        'customTxnId', 'txnId', 'txnDate', 'settleDate', 'txnAmount', 'settleAmount', 'systemFee', 'systemFeeExGST', 'gstAmount', 'commissionAmount', 'tdsAmount', 'tdsPercentage','netCommissionAmount',
         'merchantName', 'franchiseName', 'brandType', 'cardType', 'authCode', 'tid',
         'cardClassification', 'state', 'settlementRate', 'franchiseRate',
         'merchantRate', 'commissionRate'
@@ -210,6 +214,7 @@ const FranchiseTransactionWithTaxReport = ({ filters: commonFilters, isFranchise
             commissionAmount: { header: 'Commission (₹)', format: val => val },
             tdsAmount: { header: 'TDS (₹)', format: val => val },
             tdsPercentage: { header: 'TDS (%)', format: val => val },
+            netCommissionAmount: { header: 'Net Commission (₹)', format: val => val },
             authCode: { header: 'Auth Code', format: val => val },
             tid: { header: 'TID', format: val => val },
             brandType: { header: 'Brand Type', format: val => val },
@@ -250,6 +255,7 @@ const FranchiseTransactionWithTaxReport = ({ filters: commonFilters, isFranchise
                     commissionAmount: { header: 'Commission (₹)', format: val => val },
                     tdsAmount: { header: 'TDS (₹)', format: val => val },
                     tdsPercentage: { header: 'TDS (%)', format: val => val },
+                    netCommissionAmount: { header: 'Net Commission (₹)', format: val => val },
                     authCode: { header: 'Auth Code', format: val => val },
                     tid: { header: 'TID', format: val => val },
                     brandType: { header: 'Brand Type', format: val => val },

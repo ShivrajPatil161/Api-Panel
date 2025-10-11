@@ -364,6 +364,7 @@ public class TransactionReportService {
             dto.setGstAmount(null);
             dto.setTdsAmount(null);
             dto.setTdsPercentage(null);
+            dto.setNetCommissionAmount(null);
         }
 
         return dto;
