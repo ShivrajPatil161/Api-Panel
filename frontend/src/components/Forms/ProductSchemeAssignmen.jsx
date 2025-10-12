@@ -50,21 +50,23 @@ const Select = ({ label, name, register, errors, options, required = false, ...p
     </div>
 )
 
-// ==================== PRODUCT ASSIGNMENT FORM MODAL ====================
+// ==================== UPDATED PRODUCT ASSIGNMENT FORM MODAL ====================
 const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, isEdit = false }) => {
     const [franchises, setFranchises] = useState([])
     const [merchants, setMerchants] = useState([])
     const [franchiseProducts, setFranchiseProducts] = useState([])
     const [merchantProducts, setMerchantProducts] = useState([])
     const [pricingSchemes, setPricingSchemes] = useState([])
+    const [globalWarning, setGlobalWarning] = useState(null)  // NEW: Store global warning
+    const [selectedSchemeWarning, setSelectedSchemeWarning] = useState(null)  // NEW: Store selected scheme warning
     const [loading, setLoading] = useState(false)
     const [dataInitialized, setDataInitialized] = useState(false)
 
     const getDefaultValues = () => ({
-        customerType: '',        // Changed from assignedType
-        customerId: '',          // Changed from assignedTo
-        productId: '',           // Changed from product
-        schemeId: '',            // Changed from scheme
+        customerType: '',
+        customerId: '',
+        productId: '',
+        schemeId: '',
         effectiveDate: '',
         expiryDate: '',
         remarks: ''
@@ -81,12 +83,11 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         defaultValues: getDefaultValues()
     })
 
-    const watchedFields = watch(['customerType', 'customerId', 'productId'])
+    const watchedFields = watch(['customerType', 'customerId', 'productId', 'schemeId'])
 
     // Initialize form data on mount
     useEffect(() => {
         if (isEdit && initialData && !dataInitialized) {
-            // Reset form with initial data - using exact API field names
             reset({
                 customerType: initialData.customerType || '',
                 customerId: initialData.customerId?.toString() || '',
@@ -199,17 +200,27 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                         const response = await api.get(
                             `/pricing-schemes/valid-pricing-scheme?productId=${selectedProduct.productId}&productCategory=${selectedProduct.productCategory}&customerType=${customerType}`
                         )
-                        setPricingSchemes(response.data)
+
+                        // NEW: Handle the new response structure
+                        const { schemes, globalWarning: warning } = response.data
+                        setPricingSchemes(schemes || [])
+                        setGlobalWarning(warning)
+
+                        // Clear selected scheme warning when schemes list changes
+                        setSelectedSchemeWarning(null)
                     }
                 } catch (error) {
                     console.error('Error fetching pricing schemes:', error)
-                    toast.error(error?.response?.data?.message || 'Failed to fetch pricing schemes. Please try again.' )
+                    toast.error(error?.response?.data?.message || 'Failed to fetch pricing schemes. Please try again.')
                     setPricingSchemes([])
+                    setGlobalWarning(null)
                 } finally {
                     setLoading(false)
                 }
             } else if (!watchedFields[2]) {
                 setPricingSchemes([])
+                setGlobalWarning(null)
+                setSelectedSchemeWarning(null)
             }
         }
 
@@ -218,7 +229,17 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         }
     }, [watchedFields[2], watchedFields[0], franchiseProducts, merchantProducts, dataInitialized])
 
-    // Clear dependent fields when customer type changes (only after initialization and not in edit mode during load)
+    // NEW: Update selected scheme warning when scheme selection changes
+    useEffect(() => {
+        if (watchedFields[3] && pricingSchemes.length > 0) {
+            const selectedScheme = pricingSchemes.find(s => s.schemeCode === watchedFields[3])
+            setSelectedSchemeWarning(selectedScheme?.warning || null)
+        } else {
+            setSelectedSchemeWarning(null)
+        }
+    }, [watchedFields[3], pricingSchemes])
+
+    // Clear dependent fields when customer type changes
     useEffect(() => {
         if (dataInitialized && watchedFields[0] && !isEdit) {
             setValue('customerId', '')
@@ -227,22 +248,27 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             setFranchiseProducts([])
             setMerchantProducts([])
             setPricingSchemes([])
+            setGlobalWarning(null)
+            setSelectedSchemeWarning(null)
         }
     }, [watchedFields[0], setValue, dataInitialized, isEdit])
 
-    // Clear product and scheme when customerId changes (only in create mode)
+    // Clear product and scheme when customerId changes
     useEffect(() => {
         if (dataInitialized && watchedFields[1] && !isEdit) {
             setValue('productId', '')
             setValue('schemeId', '')
             setPricingSchemes([])
+            setGlobalWarning(null)
+            setSelectedSchemeWarning(null)
         }
     }, [watchedFields[1], setValue, dataInitialized, isEdit])
 
-    // Clear scheme when product changes (only in create mode)
+    // Clear scheme when product changes
     useEffect(() => {
         if (dataInitialized && watchedFields[2] && !isEdit) {
             setValue('schemeId', '')
+            setSelectedSchemeWarning(null)
         }
     }, [watchedFields[2], setValue, dataInitialized, isEdit])
 
@@ -251,7 +277,6 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         { value: 'MERCHANT', label: 'Merchant' }
     ]
 
-    // Dynamic options based on customer type
     const getCustomerOptions = () => {
         if (watchedFields[0] === 'FRANCHISE') {
             return franchises.map(franchise => ({
@@ -275,10 +300,11 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         }))
     }
 
+    // UPDATED: Use schemeCode as value now
     const getSchemeOptions = () => {
         return pricingSchemes.map(scheme => ({
-            value: scheme.id.toString(),
-            label: `${scheme.schemeCode} - ₹${scheme.rentalByMonth}/month`
+            value: scheme.schemeCode,
+            label: `${scheme.schemeCode} - ₹${scheme.monthlyRent}/month`
         }))
     }
 
@@ -286,15 +312,14 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         try {
             setLoading(true)
 
-            // Convert string IDs to numbers and prepare the exact payload expected by backend
             const assignmentData = {
                 customerType: data.customerType,
                 customerId: parseInt(data.customerId),
                 productId: parseInt(data.productId),
                 schemeId: parseInt(data.schemeId),
                 effectiveDate: data.effectiveDate,
-                expiryDate: data.expiryDate || null,  // Send null if empty
-                remarks: data.remarks || null         // Send null if empty
+                expiryDate: data.expiryDate || null,
+                remarks: data.remarks || null
             }
 
             let response
@@ -308,7 +333,6 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             onCancel()
         } catch (error) {
             console.error('Error saving assignment:', error)
-            // You might want to show an error message to the user here
             toast.error(error?.response?.data?.message || 'Failed to save assignment. Please try again.')
         } finally {
             setLoading(false)
@@ -318,6 +342,8 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     const handleCancel = () => {
         reset(getDefaultValues())
         setDataInitialized(false)
+        setGlobalWarning(null)
+        setSelectedSchemeWarning(null)
         onCancel()
     }
 
@@ -412,6 +438,51 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                                 />
                             </div>
                         </div>
+
+                        {/* NEW: Global Warning Banner - Shows if no vendor rates exist */}
+                        {globalWarning && (
+                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-yellow-700 font-medium">
+                                            Vendor Rate Warning
+                                        </p>
+                                        <p className="text-sm text-yellow-700 mt-1">
+                                            {globalWarning}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* NEW: Selected Scheme Warning - Shows if selected scheme rates are below vendor rates */}
+                        {selectedSchemeWarning && (
+                            <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-md">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-orange-700 font-medium">
+                                            Pricing Scheme Warning
+                                        </p>
+                                        <p className="text-sm text-orange-700 mt-1">
+                                            {selectedSchemeWarning}
+                                        </p>
+                                        <p className="text-xs text-orange-600 mt-2 italic">
+                                            This scheme can still be assigned, but the rates are below vendor costs.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Action Buttons */}
                         <div className="flex justify-end space-x-4 pt-4 border-t">
