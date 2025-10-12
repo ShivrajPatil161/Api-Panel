@@ -2,7 +2,9 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.VendorIDNameDTO;
 import com.project2.ism.DTO.VendorStatsDTO;
+import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Vendor.Vendor;
+import com.project2.ism.Repository.ProductRepository;
 import com.project2.ism.Repository.VendorRatesRepository;
 import com.project2.ism.Repository.VendorRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,9 +22,12 @@ public class VendorService {
 
     private final VendorRatesRepository vendorRatesRepository;
 
-    public VendorService(VendorRepository vendorRepository, VendorRatesRepository vendorRatesRepository) {
+    private final ProductRepository productRepository;
+
+    public VendorService(VendorRepository vendorRepository, VendorRatesRepository vendorRatesRepository, ProductRepository productRepository) {
         this.vendorRepository = vendorRepository;
         this.vendorRatesRepository = vendorRatesRepository;
+        this.productRepository = productRepository;
     }
 
     // Create or Save Vendor
@@ -46,7 +51,25 @@ public class VendorService {
         Vendor existingVendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cannot update. Vendor not found with ID: " + id));
 
-        updatedVendor.setId(existingVendor.getId()); // ensure ID consistency
+        updatedVendor.setId(existingVendor.getId());// ensure ID consistency
+        if(updatedVendor.getStatus()==false){
+            List<Product> vendorProducts = productRepository.findByVendorId(updatedVendor.getId());
+            if (vendorProducts != null) {
+                for (Product p : vendorProducts) {
+                    p.setStatus(false);
+                }
+                productRepository.saveAll(vendorProducts);
+            }
+        }
+        else{
+            List<Product> vendorProducts = productRepository.findByVendorId(updatedVendor.getId());
+            if (vendorProducts != null) {
+                for (Product p : vendorProducts) {
+                    p.setStatus(true);
+                }
+                productRepository.saveAll(vendorProducts);
+            }
+        }
         return vendorRepository.save(updatedVendor);
     }
 
@@ -91,4 +114,5 @@ public class VendorService {
     public List<Vendor> getAllActiveVendors() {
         return vendorRepository.findByStatusTrue();
     }
+
 }
