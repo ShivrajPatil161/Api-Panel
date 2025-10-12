@@ -1,5 +1,7 @@
     package com.project2.ism.Service;
 
+    import com.project2.ism.DTO.PricingSchemesDTOS.PricingSchemeWarningDTO;
+    import com.project2.ism.DTO.PricingSchemesDTOS.PricingSchemesResponseDTO;
     import com.project2.ism.Exception.ResourceNotFoundException;
     import com.project2.ism.Model.PricingScheme.PricingScheme;
     import com.project2.ism.Model.ProductCategory;
@@ -163,7 +165,7 @@
             return "SCHEME_001";
         }
 
-        public List<PricingScheme> getValidPricingScheme(Long productId, String productCategory, String customerType) {
+        public PricingSchemesResponseDTO getValidPricingScheme(Long productId, String productCategory, String customerType) {
             // ✅ Step 1: validate product + category
             if (!productRepository.existsById(productId)) {
                 throw new ResourceNotFoundException("Product not found with id " + productId);
@@ -173,54 +175,74 @@
 
             Long productCategoryId = category.getId();
 
+            // ✅ Step 2: get vendor rates for product (optional - may not exist)
+            VendorRates vendorRates = null;
+            String globalWarning = null;
 
-
-//            // ✅ Step 2: get vendor rates for product
-//            VendorRates vendorRates = vendorRatesService.getRatesByProductId(productId);
-//            if (vendorRates == null) {
-//                throw new ResourceNotFoundException("Vendor rates not found for product id " + productId);
-//            }
+            try {
+                vendorRates = vendorRatesService.getRatesByProductId(productId);
+            } catch (Exception e) {
+                // Vendor rates don't exist - set global warning
+                globalWarning = "No vendor rates configured for this product. Unable to validate pricing schemes against vendor costs.";
+            }
 
             // ✅ Step 3: fetch all pricing schemes for that category + customer type
             List<PricingScheme> schemes = pricingSchemeRepository
                     .findByProductCategory_IdAndCustomerType(productCategoryId, customerType);
 
-//            List<PricingScheme> validSchemes = new ArrayList<>();
-//
-//            for (PricingScheme scheme : schemes) {
-//                boolean valid = true;
-//
-//                // Check rental by month
-//                if (scheme.getRentalByMonth() < vendorRates.getMonthlyRent().doubleValue()) {
-//                    valid = false;
-//                }
-//
-//                // Map vendor card rates by card type for quick lookup
-//                Map<String, BigDecimal> vendorCardRateMap = vendorRates.getVendorCardRates()
-//                        .stream()
-//                        .collect(Collectors.toMap(VendorCardRates::getCardType, VendorCardRates::getRate));
-//
-//                // Check card rates (franchise/merchant specific if applicable)
-//                for (CardRate cardRate : scheme.getCardRates()) {
-//                    BigDecimal vendorRate = vendorCardRateMap.get(cardRate.getCardName());
-//                    if (vendorRate != null) {
-//                        double effectiveRate = cardRate.getRate() != null ? cardRate.getRate() :
-//                                (customerType.equalsIgnoreCase("FRANCHISE") ? cardRate.getFranchiseRate() : cardRate.getMerchantRate());
-//
-//                        if (effectiveRate < vendorRate.doubleValue()) {
-//                            valid = false;
-//                            break;
-//                        }
-//                    }
-//                }
-//
-//                if (valid) {
-//                    validSchemes.add(scheme);
-//                }
-//            }
-//
-//            return validSchemes;
-            return schemes;
+            List<PricingSchemeWarningDTO> schemeWarnings = new ArrayList<>();
+
+            // ✅ Step 4: Process each scheme and check against vendor rates
+            for (PricingScheme scheme : schemes) {
+                String warning = null;
+
+                // Only validate if vendor rates exist
+                if (vendorRates != null) {
+                    List<String> violations = new ArrayList<>();
+
+                    // Check monthly rent
+                    if (scheme.getRentalByMonth() < vendorRates.getMonthlyRent().doubleValue()) {
+                        violations.add(String.format("Monthly rent (%.2f) is below vendor rate (%.2f)",
+                                scheme.getRentalByMonth(),
+                                vendorRates.getMonthlyRent()));
+                    }
+
+                    // Map vendor card rates by card type for quick lookup
+                    Map<String, BigDecimal> vendorCardRateMap = vendorRates.getVendorCardRates()
+                            .stream()
+                            .collect(Collectors.toMap(VendorCardRates::getCardType, VendorCardRates::getRate));
+
+                    // Check card rates
+                    for (CardRate cardRate : scheme.getCardRates()) {
+                        BigDecimal vendorRate = vendorCardRateMap.get(cardRate.getCardName());
+                        if (vendorRate != null) {
+                            double effectiveRate = cardRate.getRate() != null ? cardRate.getRate() :
+                                    (customerType.equalsIgnoreCase("FRANCHISE") ? cardRate.getFranchiseRate() : cardRate.getMerchantRate());
+
+                            if (effectiveRate < vendorRate.doubleValue()) {
+                                violations.add(String.format("%s rate (%.2f%%) is below vendor rate (%.2f%%)",
+                                        cardRate.getCardName(),
+                                        effectiveRate,
+                                        vendorRate));
+                            }
+                        }
+                    }
+
+                    // Build warning message if violations exist
+                    if (!violations.isEmpty()) {
+                        warning = "Scheme rates below vendor costs: " + String.join("; ", violations);
+                    }
+                }
+
+                // Add scheme to response list
+                schemeWarnings.add(new PricingSchemeWarningDTO(
+                        scheme.getSchemeCode(),
+                        scheme.getRentalByMonth(),
+                        warning
+                ));
+            }
+
+            return new PricingSchemesResponseDTO(schemeWarnings, globalWarning);
         }
 
     }

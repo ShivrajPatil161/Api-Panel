@@ -1,6 +1,7 @@
 package com.project2.ism.Controller;
 
 import com.project2.ism.DTO.PricingSchemeDTO;
+import com.project2.ism.DTO.PricingSchemesDTOS.PricingSchemesResponseDTO;
 import com.project2.ism.Service.PricingSchemeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -284,8 +285,8 @@ public class PricingSchemeController {
 
 
     @GetMapping("/valid-pricing-scheme")
-    public ResponseEntity<?> validPricingScheme(@RequestParam Long productId, String productCategory,String customerType){
-        List<?> validScheme = pricingSchemeService.getValidPricingScheme(productId,productCategory,customerType);
+    public ResponseEntity<PricingSchemesResponseDTO> validPricingScheme(@RequestParam Long productId, String productCategory,String customerType){
+        PricingSchemesResponseDTO validScheme = pricingSchemeService.getValidPricingScheme(productId,productCategory,customerType);
         return ResponseEntity.ok(validScheme);
     }
 }
