@@ -22,7 +22,7 @@ const SettlementFooter = ({
     const hasSelections = selectedCount > 0;
 
     return (
-        <div className="bg-white border-t border-gray-200 px-6 py-4 sticky bottom-0 z-10 shadow-lg">
+        <div className="bg-white border-t border-gray-200 px-6 py-4 sticky bottom-0 z-10 shadow-lg scale-80">
             <div className="flex flex-col space-y-4">
 
                 {/* Global totals for franchise */}
