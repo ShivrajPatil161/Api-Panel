@@ -12,10 +12,14 @@ import java.time.LocalDateTime;
         indexes = {
                 @Index(name = "idx_vt_mid", columnList = "mid"),
                 @Index(name = "idx_vt_tid", columnList = "tid"),
-                @Index(name = "idx_vt_settled", columnList = "settled")
+                @Index(name = "idx_vendor_settled", columnList = "settled, date"),
+                @Index(name = "idx_vendor_mid_tid", columnList = "mid, tid, settled"),
+                @Index(name = "idx_vendor_batch", columnList = "settlement_batch_id")
         },
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_vendor_txn", columnNames = {"transactionReferenceId", "date","amount","mid","tid","txnType"})
+                @UniqueConstraint(
+                        name = "uk_vendor_txn",
+                        columnNames = {"transactionReferenceId", "date","amount","mid","tid","txnType"})
         }
 )
 

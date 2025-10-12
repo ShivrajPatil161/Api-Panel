@@ -185,9 +185,9 @@ const DirectSettlementPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className=" mx-auto px-4 sm:px-6 lg:px-8 ">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-2">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">Direct Settlement</h1>
                     <p className="text-gray-600">
                         Process settlement for individual merchant transactions
@@ -195,39 +195,39 @@ const DirectSettlementPage = () => {
                 </div>
 
                 {/* Merchant Selection */}
-                <div className="bg-white p-4 rounded-lg shadow-sm border mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Select Merchant</h3>
-                    <div className="max-w-md">
-                        <select
-                            value={selectedMerchantId}
-                            onChange={(e) => {
-                                setSelectedMerchantId(e.target.value);
-                                // Reset dependent state
-                                setProductId('');
-                                setCycleKey('');
-                                setSelectedTxIds([]);
-                                resetBatch();
-                                clearCandidates();
-                            }}
-                            disabled={isLoadingMerchants}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        >
-                            <option value="">Select a merchant</option>
-                            {merchants.map((merchant) => (
-                                <option key={merchant.id} value={merchant.id}>
-                                    {merchant.businessName || `Merchant ${merchant.id}`}
-                                </option>
-                            ))}
-                        </select>
-                        {isLoadingMerchants && (
-                            <p className="mt-1 text-sm text-gray-500">Loading merchants...</p>
-                        )}
+                <div className="bg-white grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg shadow-sm mb-2">
+                    <div>
+                        <h3 className="font-medium text-gray-900 mb-4">Select Merchant</h3>
+                        <div className="max-w-md">
+                            <select
+                                value={selectedMerchantId}
+                                onChange={(e) => {
+                                    setSelectedMerchantId(e.target.value);
+                                    // Reset dependent state
+                                    setProductId('');
+                                    setCycleKey('');
+                                    setSelectedTxIds([]);
+                                    resetBatch();
+                                    clearCandidates();
+                                }}
+                                disabled={isLoadingMerchants}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            >
+                                <option value="">Select a merchant</option>
+                                {merchants.map((merchant) => (
+                                    <option key={merchant.id} value={merchant.id}>
+                                        {merchant.businessName || `Merchant ${merchant.id}`}
+                                    </option>
+                                ))}
+                            </select>
+                            {isLoadingMerchants && (
+                                <p className="mt-1 text-sm text-gray-500">Loading merchants...</p>
+                            )}
+                        </div>
                     </div>
-                </div>
-
-                {/* Settlement Filters */}
+                     {/* Settlement Filters */}
                 {selectedMerchantId && (
-                    <div className="mb-6">
+                    <div className="">
                         <SettlementFilters
                             cycleKey={cycleKey}
                             setCycleKey={setCycleKey}
@@ -243,7 +243,7 @@ const DirectSettlementPage = () => {
                             <button
                                 onClick={handleCreateBatch}
                                 disabled={batchLoading}
-                                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 disabled:bg-gray-400"
+                                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 disabled:bg-gray-400"
                             >
                                 {batchLoading ? 'Creating Batch...' : 'Create Batch'}
                             </button>
@@ -251,10 +251,13 @@ const DirectSettlementPage = () => {
                     </div>
                 )}
 
+                </div>
+
+               
 
                 {/* Candidates Table */}
                 {batch && (
-                    <div className="mb-32"> {/* Extra bottom margin for sticky footer */}
+                    <div className="mb-15"> {/* Extra bottom margin for sticky footer */}
                         <CandidatesTable
                             candidates={candidates}
                             selectedTxIds={selectedTxIds}
