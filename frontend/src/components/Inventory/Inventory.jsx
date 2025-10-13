@@ -58,7 +58,12 @@ const InventoryManagement = () => {
             setOutwardData(Array.isArray(data) ? data : [])
         } catch (error) {
             console.error("Error fetching outward data:", error)
-            toast.error("Error fetching outward transactions. Please try again.")
+             const backendMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred";
+
+            toast.error(backendMessage);
         } finally {
             setLoading(false)
         }
@@ -80,7 +85,12 @@ const InventoryManagement = () => {
             setEditingOutward(null)
         } catch (error) {
             console.error("Error saving outward transaction:", error)
-            toast.error("Error saving outward transaction. Please try again.")
+            const backendMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred";
+
+            toast.error(backendMessage);
         } finally {
             setLoading(false)
         }
@@ -104,7 +114,12 @@ const InventoryManagement = () => {
                 await fetchOutwardData()
             } catch (error) {
                 console.error("Error deleting outward transaction:", error)
-                toast.error("Error deleting outward transaction. Please try again.")
+                const backendMessage =
+                error.response?.data?.message ||
+                error.message ||
+                "An unexpected error occurred";
+
+                toast.error(backendMessage);
             } finally {
                 setLoading(false)
             }
@@ -178,7 +193,7 @@ const InventoryManagement = () => {
                 await fetchInwardData()
             } catch (error) {
                 console.error('Error deleting inward transaction:', error)
-                toast.error('Error deleting inward transaction. Please try again.')
+                toast.error(error.message)
             } finally {
                 setLoading(false)
             }
@@ -193,7 +208,12 @@ const InventoryManagement = () => {
             setReturnData(Array.isArray(data) ? data : [])
         } catch (error) {
             console.error("Error fetching return data:", error)
-            toast.error("Error fetching return transactions. Please try again.")
+            const backendMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred";
+
+            toast.error(backendMessage);
         } finally {
             setLoading(false)
         }
@@ -213,13 +233,24 @@ const InventoryManagement = () => {
 
     // Refresh data after successful submission
     await fetchReturnData();
+    setIsReturnModalOpen(false);
+    setEditingReturn(null);
     
     // Return the result to the form
     return result;
   } catch (error) {
     console.error("Error saving return transaction:", error);
     // Re-throw to let the form handle the error display
+    const backendMessage =
+    error.response?.data?.message ||
+    error.message ||
+    "An unexpected error occurred";
+
+    toast.error(backendMessage);
     throw error;
+  }
+  finally {
+    setLoading(false);
   }
 };
 
@@ -247,7 +278,13 @@ const handleReturnCancel = () => {
                 await fetchReturnData()
             } catch (error) {
                 console.error("Error deleting return transaction:", error)
-                toast.error("Error deleting return transaction. Please try again.")
+                 console.error("Error fetching return data:", error)
+                const backendMessage =
+                error.response?.data?.message ||
+                error.message ||
+                "An unexpected error occurred";
+
+            toast.error(backendMessage);
             } finally {
                 setLoading(false)
             }

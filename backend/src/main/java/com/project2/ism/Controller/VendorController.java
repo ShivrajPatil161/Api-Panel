@@ -18,18 +18,18 @@ import java.util.List;
 @RequestMapping("/vendors")
 public class VendorController {
 
-    @Autowired
-    private VendorService vendorService;
+
+    private final VendorService vendorService;
+
+    public VendorController(VendorService vendorService) {
+        this.vendorService = vendorService;
+    }
 
     // 🔹 Create Vendor
     @PostMapping
     public ResponseEntity<?> createVendor(@Valid @RequestBody Vendor vendor) {
-        try {
             Vendor savedVendor = vendorService.createVendor(vendor);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedVendor);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while creating vendor.");
-        }
     }
 
     // 🔹 Get All Vendors
@@ -41,12 +41,8 @@ public class VendorController {
     // 🔹 Get Vendor by ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getVendorById(@PathVariable Long id) {
-        try {
             Vendor vendor = vendorService.getVendorById(id);
             return ResponseEntity.ok(vendor);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
     }
 
     // get all vendor with just id and name
@@ -58,27 +54,15 @@ public class VendorController {
     // 🔹 Update Vendor
     @PutMapping("/{id}")
     public ResponseEntity<?> updateVendor(@PathVariable Long id, @Valid @RequestBody Vendor vendor) {
-        try {
             Vendor updatedVendor = vendorService.updateVendor(id, vendor);
             return ResponseEntity.ok(updatedVendor);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while updating vendor.");
-        }
     }
 
     // 🔹 Delete Vendor
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteVendor(@PathVariable Long id) {
-        try {
             vendorService.deleteVendor(id);
             return ResponseEntity.ok("Vendor deleted successfully.");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while deleting vendor.");
-        }
     }
 
     @GetMapping("/stats")
