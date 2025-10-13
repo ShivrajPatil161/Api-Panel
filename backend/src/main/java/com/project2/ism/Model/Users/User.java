@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -50,6 +51,11 @@ public class User {
     @Column
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private LocalDateTime passwordLastChangedAt;
+
+    @Column(nullable = false)
+    private LocalDateTime passwordExpiryDate;
 
     private boolean isFirstLogin = true;
 
@@ -61,7 +67,28 @@ public class User {
         this.password = password;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        passwordLastChangedAt = LocalDateTime.now();// default 90-day expiry
     }
+    // ✅ Add helper method to check if password is expired
+    public boolean isPasswordExpired() {
+        return passwordExpiryDate != null && LocalDateTime.now().isAfter(passwordExpiryDate);
+    }
+    public LocalDateTime getPasswordLastChangedAt() {
+        return passwordLastChangedAt;
+    }
+
+    public void setPasswordLastChangedAt(LocalDateTime passwordLastChangedAt) {
+        this.passwordLastChangedAt = passwordLastChangedAt;
+    }
+
+    public LocalDateTime getPasswordExpiryDate() {
+        return passwordExpiryDate;
+    }
+
+    public void setPasswordExpiryDate(LocalDateTime passwordExpiryDate) {
+        this.passwordExpiryDate = passwordExpiryDate;
+    }
+
     // Getters and Setters
     public int getId() {
         return id;
@@ -152,6 +179,9 @@ public class User {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (passwordLastChangedAt == null) {
+            passwordLastChangedAt = LocalDateTime.now();
+        }
     }
 
     @PreUpdate

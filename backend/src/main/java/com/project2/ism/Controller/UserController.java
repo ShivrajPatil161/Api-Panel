@@ -31,35 +31,47 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User user) {
-        Optional<User> authenticatedUser = userService.loginUser(user.getEmail(), user.getPassword());
+        // ✅ Use updated login method that checks password expiry
+        UserService.LoginResult loginResult = userService.loginUser(user.getEmail(), user.getPassword());
 
-        if (authenticatedUser.isPresent()) {
-            User loggedInUser = authenticatedUser.get();
-            String token = jwtService.generateToken(loggedInUser.getEmail(), loggedInUser.getRole());
+        return switch (loginResult.getStatus()) {
+            case SUCCESS -> {
+                User loggedInUser = loginResult.getUser();
+                String token = jwtService.generateToken(loggedInUser.getEmail(), loggedInUser.getRole());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("email", loggedInUser.getEmail());
-            response.put("role", loggedInUser.getRole());
-            response.put("token", token);
-            response.put("message", "Login successful");
-            if(loggedInUser.isFirstLogin()){
-                response.put("firstLogin",loggedInUser.isFirstLogin());
-                loggedInUser.setFirstLogin(false);
+                Map<String, Object> response = new HashMap<>();
+                response.put("email", loggedInUser.getEmail());
+                response.put("role", loggedInUser.getRole());
+                response.put("token", token);
+                response.put("message", "Login successful");
 
+                if (loggedInUser.isFirstLogin()) {
+                    response.put("firstLogin", true);
+                }
+
+                // Only admins need hierarchical permissions
+                if ("ADMIN".equalsIgnoreCase(loggedInUser.getRole())
+                        || "SUPER_ADMIN".equalsIgnoreCase(loggedInUser.getRole())) {
+                    List<PermissionDTO> permissions =
+                            adminService.getCurrentUserPermissions(loggedInUser.getEmail());
+                    response.put("permissions", permissions);
+                }
+
+                yield ResponseEntity.ok(response);
             }
-            // Only admins need hierarchical permissions
-            if ("ADMIN".equalsIgnoreCase(loggedInUser.getRole())
-                    || "SUPER_ADMIN".equalsIgnoreCase(loggedInUser.getRole())) {
-                List<PermissionDTO> permissions =
-                        adminService.getCurrentUserPermissions(loggedInUser.getEmail());
-                response.put("permissions", permissions);
-            }
+            case PASSWORD_EXPIRED -> {
+                // ✅ Return special response for expired password
+                Map<String, Object> response = new HashMap<>();
+                response.put("error", "Password has expired");
+                response.put("passwordExpired", true);
+                response.put("email", loginResult.getUser().getEmail());
+                response.put("message", "Your password has expired. Please reset your password.");
 
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                yield ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            case INVALID_CREDENTIALS -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid Credentials"));
-        }
+        };
     }
 
 
