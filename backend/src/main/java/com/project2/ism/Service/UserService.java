@@ -149,11 +149,40 @@ public class UserService {
         SUCCESS,
         USER_NOT_FOUND,
         INVALID_CURRENT_PASSWORD,
-        SAME_PASSWORD
+        SAME_PASSWORD,
+        NOT_FIRST_LOGIN
     }
 
+//    @Transactional
+//    public ChangePasswordStatus changePassword(String email, String currentPassword, String newPassword) {
+//        Optional<User> userOptional = userRepository.findByEmail(email);
+//
+//        if (userOptional.isEmpty()) {
+//            return ChangePasswordStatus.USER_NOT_FOUND;
+//        }
+//
+//        User user = userOptional.get();
+//
+//        // Verify current password
+//        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+//            return ChangePasswordStatus.INVALID_CURRENT_PASSWORD;
+//        }
+//
+//        // Check if new password is same as current password
+//        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+//            return ChangePasswordStatus.SAME_PASSWORD;
+//        }
+//
+//        // Update password
+//        user.setPassword(passwordEncoder.encode(newPassword));
+//        userRepository.save(user);
+//
+//        return ChangePasswordStatus.SUCCESS;
+//    }
+
+
     @Transactional
-    public ChangePasswordStatus changePassword(String email, String currentPassword, String newPassword) {
+    public ChangePasswordStatus changePassword(String email, String currentPassword, String newPassword, boolean isFirstLogin) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isEmpty()) {
@@ -162,21 +191,37 @@ public class UserService {
 
         User user = userOptional.get();
 
-        // Verify current password
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            return ChangePasswordStatus.INVALID_CURRENT_PASSWORD;
+        // Check if the isFirstLogin flag matches the user's actual status
+        if (isFirstLogin && !user.isFirstLogin()) {
+            return ChangePasswordStatus.NOT_FIRST_LOGIN;
         }
 
-        // Check if new password is same as current password
-        if (passwordEncoder.matches(newPassword, user.getPassword())) {
-            return ChangePasswordStatus.SAME_PASSWORD;
+        // For non-first-login, verify current password
+        if (!isFirstLogin) {
+            if (currentPassword == null || currentPassword.isBlank()) {
+                return ChangePasswordStatus.INVALID_CURRENT_PASSWORD;
+            }
+
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                return ChangePasswordStatus.INVALID_CURRENT_PASSWORD;
+            }
+
+            // Check if new password is same as current password
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                return ChangePasswordStatus.SAME_PASSWORD;
+            }
         }
 
         // Update password
         user.setPassword(passwordEncoder.encode(newPassword));
+
+        // Set firstLogin to false if this was a first-time login
+        if (isFirstLogin && user.isFirstLogin()) {
+            user.setFirstLogin(false);
+        }
+
         userRepository.save(user);
 
         return ChangePasswordStatus.SUCCESS;
     }
-
 }

@@ -32,7 +32,7 @@ const Login = () => {
         localStorage.setItem("authToken", data.token);
         localStorage.setItem("userType", data.role);
         localStorage.setItem("userEmail", data.email);
-
+        localStorage.setItem("firstLogin", data.firstLogin);
         if (data.role === "ADMIN" || data.role === "SUPER_ADMIN") {
           // save permissions only for admins
           localStorage.setItem("permissions", JSON.stringify(data.permissions));

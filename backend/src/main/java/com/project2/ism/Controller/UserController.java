@@ -42,7 +42,11 @@ public class UserController {
             response.put("role", loggedInUser.getRole());
             response.put("token", token);
             response.put("message", "Login successful");
+            if(loggedInUser.isFirstLogin()){
+                response.put("firstLogin",loggedInUser.isFirstLogin());
+                loggedInUser.setFirstLogin(false);
 
+            }
             // Only admins need hierarchical permissions
             if ("ADMIN".equalsIgnoreCase(loggedInUser.getRole())
                     || "SUPER_ADMIN".equalsIgnoreCase(loggedInUser.getRole())) {
@@ -102,42 +106,96 @@ public class UserController {
         }
     }
 
+//    @PostMapping("/change-password")
+//    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request) {
+//        try {
+//            String email = request.get("email");
+//            String currentPassword = request.get("currentPassword");
+//            String newPassword = request.get("newPassword");
+//
+//            // Validate input
+//            if (email == null || email.isBlank() ||
+//                    currentPassword == null || currentPassword.isBlank() ||
+//                    newPassword == null || newPassword.isBlank()) {
+//                return ResponseEntity.badRequest()
+//                        .body(Map.of("error", "All fields are required"));
+//            }
+//
+//            if (newPassword.length() < 8) {
+//                return ResponseEntity.badRequest()
+//                        .body(Map.of("error", "New password must be at least 8 characters "));
+//            }
+//
+//            UserService.ChangePasswordStatus status =
+//                    userService.changePassword(email, currentPassword, newPassword);
+//
+//            return switch (status) {
+//                case SUCCESS -> ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+//                case USER_NOT_FOUND -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                        .body(Map.of("error", "User not found"));
+//                case INVALID_CURRENT_PASSWORD -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                        .body(Map.of("error", "Current password is incorrect"));
+//                case SAME_PASSWORD -> ResponseEntity.badRequest()
+//                        .body(Map.of("error", "New password must be different from current password"));
+//            };
+//        } catch (Exception ex) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(Map.of("error", "Something went wrong"));
+//        }
+//    }
+
+
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request) {
         try {
             String email = request.get("email");
             String currentPassword = request.get("currentPassword");
             String newPassword = request.get("newPassword");
+            Boolean isFirstLogin = request.get("isFirstLogin") != null
+                    ? Boolean.parseBoolean(request.get("isFirstLogin"))
+                    : false;
 
-            // Validate input
-            if (email == null || email.isBlank() ||
-                    currentPassword == null || currentPassword.isBlank() ||
-                    newPassword == null || newPassword.isBlank()) {
+            // Validate email and new password
+            if (email == null || email.isBlank() || newPassword == null || newPassword.isBlank()) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", "All fields are required"));
+                        .body(Map.of("error", "Email and new password are required"));
+            }
+
+            // For non-first-login, current password is required
+            if (!isFirstLogin && (currentPassword == null || currentPassword.isBlank())) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Current password is required"));
             }
 
             if (newPassword.length() < 8) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", "New password must be at least 8 characters "));
+                        .body(Map.of("error", "New password must be at least 8 characters"));
             }
 
-            UserService.ChangePasswordStatus status =
-                    userService.changePassword(email, currentPassword, newPassword);
+            UserService.ChangePasswordStatus status = userService.changePassword(
+                    email,
+                    currentPassword,
+                    newPassword,
+                    isFirstLogin
+            );
 
             return switch (status) {
-                case SUCCESS -> ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+                case SUCCESS -> ResponseEntity.ok(Map.of(
+                        "message", "Password changed successfully",
+                        "firstLogin", false
+                ));
                 case USER_NOT_FOUND -> ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "User not found"));
                 case INVALID_CURRENT_PASSWORD -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Current password is incorrect"));
                 case SAME_PASSWORD -> ResponseEntity.badRequest()
                         .body(Map.of("error", "New password must be different from current password"));
+                case NOT_FIRST_LOGIN -> ResponseEntity.badRequest()
+                        .body(Map.of("error", "This is not a first-time login. Current password is required"));
             };
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Something went wrong"));
         }
     }
-
 }
