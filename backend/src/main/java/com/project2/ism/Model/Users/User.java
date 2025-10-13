@@ -50,6 +50,9 @@ public class User {
     @Column
     private LocalDateTime updatedAt;
 
+
+    private boolean isFirstLogin = true;
+
     public User() {
     }
 
@@ -134,6 +137,14 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public boolean isFirstLogin() {
+        return isFirstLogin;
+    }
+
+    public void setFirstLogin(boolean firstLogin) {
+        isFirstLogin = firstLogin;
     }
 
     // JPA Lifecycle methods
