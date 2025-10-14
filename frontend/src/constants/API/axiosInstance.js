@@ -17,21 +17,37 @@ api.interceptors.request.use(config => {
 
 api.interceptors.response.use(
   response => response,
-  error => {
-    if (
-      error.response &&
-      (error.response.status === 401 || error.response.status === 403)
-    ) {
-      // Optional: check if error message mentions token expiry
-      if (error.response.data.message?.toLowerCase().includes("expired")) {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userType");
-        localStorage.removeItem("customerId");
-        localStorage.clear();
-        window.location.href = "/login";
-       
+error => {
+    if (error.response) {
+      const { status, data } = error.response;
+      
+      // ✅ Check for password expired scenario FIRST
+      // This prevents auto-logout for password expiry
+      if (data?.passwordExpired === true) {
+        // Let the calling component handle this (Login.jsx will redirect)
+        return Promise.reject(error);
+      }
+
+      // ✅ Handle token expiry or unauthorized access
+      if (status === 401 || status === 403) {
+        // Check if error message mentions token expiry
+        if (data?.message?.toLowerCase().includes("expired") || 
+            data?.message?.toLowerCase().includes("token")) {
+          
+          // Clear all auth data
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("userType");
+          localStorage.removeItem("userEmail");
+          localStorage.removeItem("customerId");
+          localStorage.removeItem("permissions");
+          localStorage.removeItem("firstLogin");
+          
+          // Redirect to login
+          window.location.href = "/login";
+        }
       }
     }
+    
     return Promise.reject(error);
   }
 );
