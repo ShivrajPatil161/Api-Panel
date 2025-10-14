@@ -197,12 +197,16 @@ public class UserService {
         return ResetStatus.INVALID;
     }
 
+
+
+    // Add new enum values
     public enum ChangePasswordStatus {
         SUCCESS,
         USER_NOT_FOUND,
         INVALID_CURRENT_PASSWORD,
         SAME_PASSWORD,
-        NOT_FIRST_LOGIN
+        NOT_FIRST_LOGIN,
+        PASSWORD_NOT_EXPIRED  // New: for when isFirstLogin=true but password isn't actually expired
     }
 
     @Transactional
@@ -215,13 +219,55 @@ public class UserService {
 
         User user = userOptional.get();
 
-        // ✅ Validate first login
-        if (isFirstLogin && !user.isFirstLogin()) {
-            return ChangePasswordStatus.NOT_FIRST_LOGIN;
+        // ✅ Determine the actual scenario
+        boolean isActualFirstLogin = user.isFirstLogin();
+        boolean isPasswordExpired = user.isPasswordExpired();
+
+        // ✅ SCENARIO 1: Actual First Login (admin-created account)
+        if (isFirstLogin && isActualFirstLogin) {
+            // No current password needed
+            // Check if new password is same as temporary password
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                return ChangePasswordStatus.SAME_PASSWORD;
+            }
+
+            // Update password
+            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setPasswordLastChangedAt(LocalDateTime.now());
+            user.setPasswordExpiryDate(LocalDateTime.now().plusDays(passwordExpiryDays));
+            user.setFirstLogin(false);
+
+            userRepository.save(user);
+            return ChangePasswordStatus.SUCCESS;
         }
 
-        // ✅ Validate current password if not first login
+        // ✅ SCENARIO 2: Password Expired (forced reset, no current password needed)
+        if (isFirstLogin && isPasswordExpired && !isActualFirstLogin) {
+            // This is an expired password reset
+            // No current password needed (user can't login anyway)
+
+            // Check if new password is same as old password
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                return ChangePasswordStatus.SAME_PASSWORD;
+            }
+
+            // Update password
+            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setPasswordLastChangedAt(LocalDateTime.now());
+            user.setPasswordExpiryDate(LocalDateTime.now().plusDays(passwordExpiryDays));
+
+            userRepository.save(user);
+            return ChangePasswordStatus.SUCCESS;
+        }
+
+        // ✅ SCENARIO 3: Invalid request (isFirstLogin=true but neither condition met)
+        if (isFirstLogin && !isActualFirstLogin && !isPasswordExpired) {
+            return ChangePasswordStatus.PASSWORD_NOT_EXPIRED;
+        }
+
+        // ✅ SCENARIO 4: Normal password change (requires current password)
         if (!isFirstLogin) {
+            // Validate current password
             if (currentPassword == null || currentPassword.isBlank()) {
                 return ChangePasswordStatus.INVALID_CURRENT_PASSWORD;
             }
@@ -230,22 +276,21 @@ public class UserService {
                 return ChangePasswordStatus.INVALID_CURRENT_PASSWORD;
             }
 
+            // Check if new password is same as current password
             if (passwordEncoder.matches(newPassword, user.getPassword())) {
                 return ChangePasswordStatus.SAME_PASSWORD;
             }
+
+            // Update password
+            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setPasswordLastChangedAt(LocalDateTime.now());
+            user.setPasswordExpiryDate(LocalDateTime.now().plusDays(passwordExpiryDays));
+
+            userRepository.save(user);
+            return ChangePasswordStatus.SUCCESS;
         }
 
-        // ✅ Update password and expiry
-        user.setPassword(passwordEncoder.encode(newPassword));
-        user.setPasswordLastChangedAt(LocalDateTime.now());
-        user.setPasswordExpiryDate(LocalDateTime.now().plusDays(passwordExpiryDays));
-
-        if (isFirstLogin && user.isFirstLogin()) {
-            user.setFirstLogin(false);
-        }
-
-        userRepository.save(user);
-
-        return ChangePasswordStatus.SUCCESS;
+        // Should never reach here, but just in case
+        return ChangePasswordStatus.INVALID_CURRENT_PASSWORD;
     }
 }
