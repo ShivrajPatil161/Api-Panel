@@ -356,6 +356,7 @@ import ErrorPage from './roleRoutes/ErrorPage.jsx'
 import { adminRoutes } from './roleRoutes/adminRoutes.jsx'
 import { franchiseRoutes } from './roleRoutes/franchiseRoutes.jsx'
 import { merchantRoutes } from './roleRoutes/merchantRoutes.jsx'
+import ResetPasswordExpired from '../components/Auth/ResetPasswordExpired.jsx'
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">
@@ -412,6 +413,10 @@ export const router = createBrowserRouter([
       {
         path: "reset-password",
         element: <ResetPassword />
+      },
+      {
+        path: "reset-password-expired",
+        element: <ResetPasswordExpired />
       },
       {
         path: "dashboard",
