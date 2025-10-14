@@ -123,7 +123,7 @@ const AdminManagementTable = ({ onEditPermissions, onRefresh }) => {
                         </div>
                         {!isSuperAdmin && (
                             <div className="text-xs text-gray-500">
-                                {row.original.allPermissions?.length || 0} permissions
+                                {row.original.permissions?.length || 0} permissions
                             </div>
                         )}
                     </div>

@@ -10,7 +10,7 @@ const EditPermissionsModal = ({ isOpen, onClose, admin, onSuccess }) => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [expandedModules, setExpandedModules] = useState(new Set());
-
+    
     useEffect(() => {
         if (isOpen && admin) {
             fetchPermissions();
@@ -24,8 +24,8 @@ const EditPermissionsModal = ({ isOpen, onClose, admin, onSuccess }) => {
             setPermissions(response.data || []);
 
             // Set currently selected permissions from admin data
-            if (admin?.allPermissions) {
-                const currentPermissions = extractAllPermissionNames(admin.allPermissions);
+            if (admin?.permissions) {
+                const currentPermissions = extractAllPermissionNames(admin.permissions);
                 setSelectedPermissions(currentPermissions);
             } else {
                 setSelectedPermissions([]);

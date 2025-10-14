@@ -236,6 +236,7 @@
 
                 // Add scheme to response list
                 schemeWarnings.add(new PricingSchemeWarningDTO(
+                        scheme.getId(),
                         scheme.getSchemeCode(),
                         scheme.getRentalByMonth(),
                         warning
