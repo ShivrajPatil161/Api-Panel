@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,20 @@ public class UserController {
                     response.put("firstLogin", true);
                 }
 
+                // ✅ Check password expiry warning
+                if (loggedInUser.getPasswordExpiryDate() != null) {
+                    LocalDate today = LocalDate.now();
+                    LocalDate expiryDate = loggedInUser.getPasswordExpiryDate().toLocalDate();
+                    long daysLeft = ChronoUnit.DAYS.between(today, expiryDate);
+
+                    if (daysLeft > 0 && daysLeft <= 15) {
+                        response.put("passwordExpiryWarning",
+                                "Your password will expire in " + daysLeft + " day" + (daysLeft > 1 ? "s" : "") +
+                                        ". Please change it before expiry.");
+                        response.put("daysLeftForPasswordExpiry", daysLeft);
+                    }
+                }
+
                 // Only admins need hierarchical permissions
                 if ("ADMIN".equalsIgnoreCase(loggedInUser.getRole())
                         || "SUPER_ADMIN".equalsIgnoreCase(loggedInUser.getRole())) {
@@ -67,7 +83,7 @@ public class UserController {
                 response.put("email", loginResult.getUser().getEmail());
                 response.put("message", "Your password has expired. Please reset your password.");
 
-                yield ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                yield ResponseEntity.status(428).body(response);
             }
             case INVALID_CREDENTIALS -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid Credentials"));
@@ -204,6 +220,8 @@ public class UserController {
                         .body(Map.of("error", "New password must be different from current password"));
                 case NOT_FIRST_LOGIN -> ResponseEntity.badRequest()
                         .body(Map.of("error", "This is not a first-time login. Current password is required"));
+                case PASSWORD_NOT_EXPIRED -> ResponseEntity.badRequest()
+                        .body(Map.of("error", "Password has not expired. Please use normal password change with current password"));
             };
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

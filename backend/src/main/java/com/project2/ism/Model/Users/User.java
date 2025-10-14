@@ -51,10 +51,10 @@ public class User {
     @Column
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime passwordLastChangedAt;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime passwordExpiryDate;
 
     private boolean isFirstLogin = true;
