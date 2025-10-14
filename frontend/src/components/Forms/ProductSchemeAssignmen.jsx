@@ -331,8 +331,11 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             let response
             if (isEdit && initialData?.id) {
                 response = await api.put(`/outward-schemes/${initialData.id}`, assignmentData)
+                toast.success("Scheme Assign Successfully Updated")
             } else {
                 response = await api.post('/outward-schemes', assignmentData)
+                toast.success("Scheme Assigned Successfully")
+
             }
 
             onSubmit(response.data)
