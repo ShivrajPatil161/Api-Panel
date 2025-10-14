@@ -14,4 +14,7 @@ public interface VendorRepository extends JpaRepository<Vendor, Long> {
 
     List<Vendor> findByStatusTrue();
 
+    boolean existsByNameIgnoreCase(String name);
+
+
 }

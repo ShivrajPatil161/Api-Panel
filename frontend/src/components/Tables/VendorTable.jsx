@@ -244,9 +244,13 @@ const VendorListPage = () => {
       setShowForm(false);
       setEditingVendor(null);
     } catch (error) {
-      const errorMessage = error?.response?.data?.message || 'Operation failed';
-      toast.error(errorMessage);
-    }
+      console.log(error);
+      
+        toast.error(
+        error.response?.data?.message ||       // backend message (like 409)
+        (error.request ? "No response from server" : error.message) || // network or other errors
+        "An unexpected error occurred"
+    );    }
   };
 
   const handleFormCancel = () => {

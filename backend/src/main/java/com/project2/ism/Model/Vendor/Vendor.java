@@ -19,12 +19,15 @@ public class Vendor {
     private Long id;
 
     @NotBlank(message = "Vendor name is required")
+    @Column(unique = true, nullable = false)
     private String name;
 
     @NotBlank(message = "Bank Type is required")
+    @Column(nullable = false)
     private String bankType;
 
     @NotNull(message = "status is required")
+    @Column(nullable = false)
     private Boolean status;
 
     // ========== Contact Person Information ==========
@@ -40,30 +43,24 @@ public class Vendor {
 
     // ========== Address Information ==========
 
-    @NotBlank(message = "Address is required")
     private String address;
 
-    @NotBlank(message = "city is required")
     private String city;
 
-    @NotBlank(message = "State is required")
     private String state;
 
-    @NotBlank(message = "Pincode is required")
     private String pinCode;
 
     // ========== Legal Information ==========
 
-    @NotBlank(message = "GST number is required")
     @Pattern(
-            regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$",
+            regexp = "^$|^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$",
             message = "Invalid GSTIN format"
     )
     private String gstNumber;
 
-    @NotBlank(message = "PAN number is required")
     @Pattern(
-            regexp = "[A-Z]{5}[0-9]{4}[A-Z]{1}",
+            regexp = "^$|^[A-Z]{5}[0-9]{4}[A-Z]{1}",
             message = "Invalid PAN format"
     )
     private String pan;
@@ -79,7 +76,6 @@ public class Vendor {
     @NotNull(message = "Credit period is required")
     private Integer creditPeriodDays;
 
-    @NotBlank(message = "Payment terms are required")
     private String paymentTerms;
 
     private String remarks;

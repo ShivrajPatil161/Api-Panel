@@ -67,7 +67,7 @@ const ResetPasswordExpired = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-br from-red-300 via-orange-400 to-yellow-300">
+        <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-300 via-gray-500 to-blue-100">
             <div className="flex-grow flex items-center justify-center p-5">
                 <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-5xl flex animate-fadeInUp">
 
@@ -79,8 +79,8 @@ const ResetPasswordExpired = () => {
                                 alt="Same Day Solution Logo"
                                 className="w-fit max-w-xs mx-auto mix-blend-lighten"
                             />
-                            <div className="bg-red-500/20 border border-red-500 rounded-lg p-4">
-                                <AlertTriangle className="text-red-400 mx-auto mb-2" size={48} />
+                            <div className="bg-red-500/20 border border-red-500 rounded-lg py-2 scale-80">
+                                <AlertTriangle className="text-red-400 mx-auto" size={48} />
                                 <p className="text-red-200 text-sm">
                                     Your password has expired for security reasons
                                 </p>
@@ -89,26 +89,30 @@ const ResetPasswordExpired = () => {
                     </div>
 
                     {/* Right Side - Reset Form */}
-                    <div className="w-full md:w-1/2">
+                    <div className="w-full md:w-1/2 bg-[#303a47]">
                         {/* Header */}
-                        <div className="bg-[#303a47] text-orange-400 px-8 py-10 text-center">
-                            <KeyRound className="mx-auto mb-3" size={48} />
-                            <h1 className="text-3xl font-semibold mb-2">Password Expired</h1>
-                            <p className="text-gray-300 text-base">
+                        <div className=" text-red-400 mt-4  text-center">
+                            <div className='flex items-center justify-center'>
+                                <KeyRound className="" size={20} />
+                            <h1 className="text-2xl font-semibold">Password Expired</h1>
+                            </div>
+                            <div className=''>
+                                <p className="text-gray-300 text-sm ">
                                 Please set a new password to continue
                             </p>
-                            <p className="text-sm text-gray-400 mt-2">
+                            <p className="text-sm text-gray-400 ">
                                 {email}
                             </p>
+                            </div>
                         </div>
 
                         {/* Form */}
-                        <div className="pl-8 pr-10 pb-8 pt-6 bg-[#303a47]">
+                        <div className="pl-8 pr-10 pb-9 pt-4 ">
                             <form onSubmit={handleSubmit(onSubmit)}>
-                                <div className="space-y-6">
+                                <div className="space-y-4">
                                     {/* Warning Message */}
-                                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                        <div className="flex items-start gap-3">
+                                    <div className="bg-red-50 border border-red-200 scale-85 rounded-lg p-4">
+                                        <div className="flex items-start gap-3 ">
                                             <AlertTriangle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
                                             <div className="text-sm text-red-800">
                                                 <p className="font-semibold mb-1">Password Security Requirements:</p>
@@ -200,12 +204,12 @@ const ResetPasswordExpired = () => {
                 </div>
             </div>
 
-            <footer className="text-center py-2 bg-gradient-to-br from-gray-500 to-gray-700">
-                <p className="text-white text-xs tracking-wide">
-                    © {new Date().getFullYear()}{" "}
-                    <span className="font-medium">Powered by Shashwat Infotech Pvt. Ltd.</span>
-                </p>
-            </footer>
+           <footer className="text-center py-2 bg-gradient-to-br from-gray-500 to-gray-700">
+        <p className="text-white text-xs tracking-wide">
+          © {new Date().getFullYear()}{" "}
+          <span className="font-medium">Powered by Shashwat Infotech Pvt. Ltd.</span>
+        </p>
+      </footer>
         </div>
     );
 };

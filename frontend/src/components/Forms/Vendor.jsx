@@ -176,7 +176,7 @@ const FormActions = ({ onCancel, isSubmitting, isEdit }) => (
 // Validation Schema using Zod
 const vendorSchema = z.object({
   name: z.string().min(2, 'Vendor name must be at least 2 characters'),
-  bankType: z.enum(['Central Bank', 'Private Sector', 'Public Sector', 'Co-operative', 'Rural Banks'], {
+  bankType: z.enum(['Central Bank', 'Private Sector', 'Public Sector', 'Co-operative', 'Rural Banks','Other'], {
     required_error: "Bank type is required"
   }),
   // optional contactPerson
@@ -206,7 +206,8 @@ const BANK_TYPE_OPTIONS = [
   { value: 'Private Sector', label: 'Private Sector' },
   { value: 'Public Sector', label: 'Public Sector' },
   { value: 'Co-operative', label: 'Co-operative' },
-  { value: 'Rural Banks', label: 'Rural Banks' }
+  { value: 'Rural Banks', label: 'Rural Banks' },
+  { value: 'Other', label: 'Other' }
 ];
 
 // Default form values
