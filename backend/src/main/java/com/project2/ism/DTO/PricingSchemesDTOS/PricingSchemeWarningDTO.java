@@ -5,16 +5,26 @@ package com.project2.ism.DTO.PricingSchemesDTOS;
  * Individual pricing scheme summary with warning
  */
 public class PricingSchemeWarningDTO {
+    private Long schemeId;
     private String schemeCode;
     private Double monthlyRent;
     private String warning;  // Warning if below vendor rates, null otherwise
 
     public PricingSchemeWarningDTO() {}
 
-    public PricingSchemeWarningDTO(String schemeCode, Double monthlyRent, String warning) {
+    public PricingSchemeWarningDTO(Long schemeId,String schemeCode, Double monthlyRent, String warning) {
+        this.schemeId = schemeId;
         this.schemeCode = schemeCode;
         this.monthlyRent = monthlyRent;
         this.warning = warning;
+    }
+
+    public Long getSchemeId() {
+        return schemeId;
+    }
+
+    public void setSchemeId(Long schemeId) {
+        this.schemeId = schemeId;
     }
 
     // Getters and Setters

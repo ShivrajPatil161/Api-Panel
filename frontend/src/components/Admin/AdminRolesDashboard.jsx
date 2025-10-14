@@ -171,7 +171,7 @@ const AdminRolesDashboard = () => {
                         </div>
                         {!isSuperAdmin && (
                             <div className="text-xs text-gray-500">
-                                {row.original.allPermissions?.length || 0} permissions
+                                {row.original.permissions?.length || 0} permissions
                             </div>
                         )}
                     </div>
@@ -359,7 +359,7 @@ const AdminRolesDashboard = () => {
                             <StatCard
                                 title="Total Administrators"
                                 value={loading ? '...' : data.length}
-                                subtitle="Including super admins"
+                                subtitle=""
                                 icon={Users}
                                 color="blue"
                             />
