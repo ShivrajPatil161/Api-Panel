@@ -61,6 +61,11 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     const [selectedSchemeWarning, setSelectedSchemeWarning] = useState(null)  // NEW: Store selected scheme warning
     const [loading, setLoading] = useState(false)
     const [dataInitialized, setDataInitialized] = useState(false)
+    // Add loading states for each data fetch
+    const [loadingCustomers, setLoadingCustomers] = useState(false)
+    const [loadingProducts, setLoadingProducts] = useState(false)
+    const [loadingSchemes, setLoadingSchemes] = useState(false)
+
 
     const getDefaultValues = () => ({
         customerType: '',
@@ -80,7 +85,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         reset,
         setValue
     } = useForm({
-        defaultValues: getDefaultValues()
+        defaultValues: initialData ? initialData: getDefaultValues()
     })
 
     const watchedFields = watch(['customerType', 'customerId', 'productId', 'schemeId'])
@@ -89,7 +94,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     useEffect(() => {
         if (isEdit && initialData && !dataInitialized) {
             reset({
-                customerType: initialData.customerType || '',
+                customerType: initialData.customerType?.toUpperCase() || '',
                 customerId: initialData.customerId?.toString() || '',
                 productId: initialData.productId?.toString() || '',
                 schemeId: initialData.schemeId?.toString() || '',
@@ -110,7 +115,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
             if (!watchedFields[0]) return
 
             try {
-                setLoading(true)
+                setLoadingCustomers(true)
                 if (watchedFields[0] === 'FRANCHISE') {
                     const response = await api.get('/franchise')
                     setFranchises(response.data)
@@ -128,7 +133,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                     setMerchants([])
                 }
             } finally {
-                setLoading(false)
+                setLoadingCustomers(false)
             }
         }
 
@@ -142,14 +147,14 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         const fetchFranchiseProducts = async () => {
             if (watchedFields[0] === 'FRANCHISE' && watchedFields[1]) {
                 try {
-                    setLoading(true)
+                    setLoadingProducts(true)
                     const response = await api.get(`/franchise/products/${watchedFields[1]}`)
                     setFranchiseProducts(response.data)
                 } catch (error) {
                     console.error('Error fetching franchise products:', error)
                     setFranchiseProducts([])
                 } finally {
-                    setLoading(false)
+                    setLoadingProducts(false)
                 }
             } else if (watchedFields[0] === 'FRANCHISE' && !watchedFields[1]) {
                 setFranchiseProducts([])
@@ -166,14 +171,14 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         const fetchMerchantProducts = async () => {
             if (watchedFields[0] === 'MERCHANT' && watchedFields[1]) {
                 try {
-                    setLoading(true)
+                    setLoadingProducts(true)
                     const response = await api.get(`/merchants/products/${watchedFields[1]}`)
                     setMerchantProducts(response.data)
                 } catch (error) {
                     console.error('Error fetching merchant products:', error)
                     setMerchantProducts([])
                 } finally {
-                    setLoading(false)
+                    setLoadingProducts(false)
                 }
             } else if (watchedFields[0] === 'MERCHANT' && !watchedFields[1]) {
                 setMerchantProducts([])
@@ -190,7 +195,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         const fetchPricingSchemes = async () => {
             if (watchedFields[2] && watchedFields[0]) {
                 try {
-                    setLoading(true)
+                    setLoadingSchemes(true)
                     const selectedProduct = watchedFields[0] === 'FRANCHISE'
                         ? franchiseProducts.find(p => p.productId.toString() === watchedFields[2])
                         : merchantProducts.find(p => p.productId.toString() === watchedFields[2])
@@ -215,7 +220,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
                     setPricingSchemes([])
                     setGlobalWarning(null)
                 } finally {
-                    setLoading(false)
+                    setLoadingSchemes(false)
                 }
             } else if (!watchedFields[2]) {
                 setPricingSchemes([])
@@ -277,6 +282,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         { value: 'MERCHANT', label: 'Merchant' }
     ]
 
+    
     const getCustomerOptions = () => {
         if (watchedFields[0] === 'FRANCHISE') {
             return franchises.map(franchise => ({
@@ -303,7 +309,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
     // UPDATED: Use schemeCode as value now
     const getSchemeOptions = () => {
         return pricingSchemes.map(scheme => ({
-            value: scheme.schemeCode,
+            value: scheme.schemeId,
             label: `${scheme.schemeCode} - ₹${scheme.monthlyRent}/month`
         }))
     }
@@ -345,6 +351,28 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         setGlobalWarning(null)
         setSelectedSchemeWarning(null)
         onCancel()
+    }
+
+    // Calculate if we're ready to show the form
+    const isLoadingInitialData = isEdit && (
+        loadingCustomers ||
+        loadingProducts ||
+        loadingSchemes ||
+        (watchedFields[0] && getCustomerOptions().length === 0) ||
+        (watchedFields[1] && getProductOptions().length === 0) ||
+        (watchedFields[2] && getSchemeOptions().length === 0)
+    )
+
+    // Show loading state
+    if (isLoadingInitialData) {
+        return (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-8 text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading assignment data...</p>
+                </div>
+            </div>
+        )
     }
 
     return (

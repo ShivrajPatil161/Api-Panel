@@ -65,12 +65,12 @@ const PermissionsManagement = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleEdit = (permission) => {
+    const handleEdit = (permission , parentId) => {
         setEditingPermission(permission);
         setFormData({
             name: permission.name,
             description: permission.description || '',
-            parentId: permission.parent?.id || null
+            parentId: parentId || null
         });
         setShowCreateForm(true);
     };
@@ -497,7 +497,7 @@ const PermissionsManagement = () => {
                                                 </div>
                                                 <div className="flex items-center space-x-1">
                                                     <button
-                                                        onClick={() => handleEdit(child)}
+                                                        onClick={() => handleEdit(child,module?.id)}
                                                         className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                     >
                                                         <Edit3 className="w-3 h-3" />
