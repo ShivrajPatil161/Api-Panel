@@ -385,7 +385,20 @@ const TransactionUpload = () => {
 
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Upload failed. Please try again.");
+      let backendMessage =
+      error?.response?.data?.message ||
+      error?.response?.data ||
+      error.message ||
+      "Upload failed. Please try again.";
+
+      // Simplify MySQL duplicate entry message
+      if (backendMessage.includes("Duplicate entry")) {
+      const match = backendMessage.match(/Duplicate entry '([^']+)'/);
+      if (match) backendMessage = `Duplicate entry found: ${match[1]}`;
+      else backendMessage = "Duplicate entry found.";
+      }
+
+      toast.error(backendMessage);
     } finally {
       setUploading(false);
     }
