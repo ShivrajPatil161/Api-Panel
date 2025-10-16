@@ -40,7 +40,7 @@ public class InventoryService {
 
             int totalQty = serials.size();
 
-            int reservedQty = (int) serials.stream()
+            int returnedQty = (int) serials.stream()
                     .filter(s -> s.getReturnTransaction() != null)
                     .count();
 
@@ -53,7 +53,7 @@ public class InventoryService {
                     p.getProductName(),
                     p.getVendor().getName(),
                     totalQty,
-                    reservedQty,
+                    returnedQty,
                     availableQty
             );
         });
