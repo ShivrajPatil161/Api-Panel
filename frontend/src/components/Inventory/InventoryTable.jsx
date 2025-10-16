@@ -90,10 +90,10 @@ const InventoryTable = () => {
             ),
         },
         {
-            accessorKey: 'reserved',
-            header: 'Reserved',
+            accessorKey: 'returned',
+            header: 'Returned',
             cell: ({ row }) => (
-                <div className="text-center text-yellow-600 font-medium">{row.getValue('reserved')}</div>
+                <div className="text-center text-yellow-600 font-medium">{row.getValue('returned')}</div>
             ),
         },
         {

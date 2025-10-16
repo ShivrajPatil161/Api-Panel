@@ -5,17 +5,17 @@ public class InventoryDTO {
     private String productName;
     private String vendorName;
     private int totalQuantity;
-    private int reserved;
+    private int returned;
     private int available;
     private String status;
 
-    public InventoryDTO(String productCode, String productName,String vendorName,
-                        int totalQuantity, int reserved, int available) {
+    public InventoryDTO(String productCode, String productName, String vendorName,
+                        int totalQuantity, int returned, int available) {
         this.productCode = productCode;
         this.productName = productName;
         this.vendorName = vendorName;
         this.totalQuantity = totalQuantity;
-        this.reserved = reserved;
+        this.returned = returned;
         this.available = available;
         this.status = available > 0 ? "In Stock" : "Out of Stock";
     }
@@ -46,12 +46,12 @@ public class InventoryDTO {
         this.totalQuantity = totalQuantity;
     }
 
-    public int getReserved() {
-        return reserved;
+    public int getReturned() {
+        return returned;
     }
 
-    public void setReserved(int reserved) {
-        this.reserved = reserved;
+    public void setReturned(int returned) {
+        this.returned = returned;
     }
 
     public int getAvailable() {
