@@ -21,16 +21,17 @@ public class UploadRecordService {
 
     private final TransactionRepository transactionRepository;
     private final UploadRecordRepository uploadRecordRepository;
-
     private final VendorRepository vendorRepository;
-
     private final ProductRepository productRepository;
+    private final ExcelParser excelParser;
 
-    public UploadRecordService(TransactionRepository tr, UploadRecordRepository ur, VendorRepository vendorRepository, ProductRepository productRepository) {
+
+    public UploadRecordService(TransactionRepository tr, UploadRecordRepository ur, VendorRepository vendorRepository, ProductRepository productRepository, ExcelParser excelParser) {
         this.transactionRepository = tr;
         this.uploadRecordRepository = ur;
         this.vendorRepository = vendorRepository;
         this.productRepository = productRepository;
+        this.excelParser = excelParser;
     }
 
     public String handleFileUpload(Long vendorId, Long productId, MultipartFile file) throws Exception {
@@ -43,10 +44,11 @@ public class UploadRecordService {
         rec.setVendor(vendor);
         rec.setProduct(product);
         rec.setFileName(file.getOriginalFilename());
-        uploadRecordRepository.save(rec);
 
-        List<VendorTransactions> txs = ExcelParser.parse(file.getInputStream());
+
+        List<VendorTransactions> txs = excelParser.parse(file.getInputStream());
         transactionRepository.saveAll(txs);
+        uploadRecordRepository.save(rec);
         return "Success";
     }
 }

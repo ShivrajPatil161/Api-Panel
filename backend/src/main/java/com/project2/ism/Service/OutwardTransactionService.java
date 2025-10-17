@@ -14,7 +14,9 @@ import com.project2.ism.Repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,6 +76,17 @@ public class OutwardTransactionService {
             OutwardTransactions outward = dto.toEntity(franchise, merchant, product,serialRepo);
             return outwardTransactionRepository.save(outward);
         }
+
+
+        // 👇 Helper method should be private and inside this service
+        public String generateDeliveryNumber() {
+            String prefix = "D";
+            String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            long countToday = outwardTransactionRepository.countByDispatchDate(LocalDate.now()) + 1;
+            String sequence = String.format("%03d", countToday);
+            return prefix + "-" + datePart + "-" + sequence;
+        }
+
 
         @Transactional
         public OutwardTransactions updateFromDTO(Long id, OutwardTransactionDTO dto) {

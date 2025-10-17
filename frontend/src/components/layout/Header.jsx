@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation, Link } from 'react-router';
 import {
   User,
   LogOut,
@@ -223,9 +223,11 @@ const Header = ({ userType }) => {
                       </p>
                     </div>
                     <div className="py-2">
+                     {!["admin" , "super_admin"].includes(userType) && (<Link to="/dashboard/profile">
                       <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        <User className="h-4 w-4 mr-3" /> Profile Settings
+                        <User className="h-4 w-4 mr-3" /> View Profile 
                       </button>
+                     </Link>)}
                       <button
                         onClick={handleOpenPasswordModal}
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
