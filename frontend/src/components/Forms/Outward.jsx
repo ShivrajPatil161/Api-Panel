@@ -294,6 +294,27 @@ const OutwardFormModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
   const selectedCustomerType = watch('customerType')
   const quantity = watch('quantity')
 
+  // Fetch scheme code on mount for new schemes OR when reusing
+  useEffect(() => {
+    if (!editData && isOpen) {
+      fetchNewDeliveryNumber()
+    }
+    
+  }, [editData])
+
+ const fetchNewDeliveryNumber = async () => {
+    try {
+      const response = await api.get('/outward-transactions/generate-delivery-number')
+
+      if (response.status === 200) {
+        setValue('deliveryNumber', response?.data)
+      }
+    } catch (error) {
+      console.error('Error fetching Delivery Number:', error)
+    }
+  }   
+  
+
   // API Functions with proper error handling
   const fetchCategories = useCallback(async () => {
     setCategoriesLoading(true)

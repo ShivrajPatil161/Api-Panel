@@ -33,11 +33,19 @@ public class OutwardTransactionController {
         return ResponseEntity.ok(dtoList);
     }
 
+    @GetMapping("/generate-delivery-number")
+    public ResponseEntity<String> generateDeliveryNumberForForm() {
+        String deliveryNumber = service.generateDeliveryNumber();
+        return ResponseEntity.ok(deliveryNumber);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<OutwardTransactionDTO> getById(@PathVariable Long id) {
         OutwardTransactions entity = service.getById(id);
         return ResponseEntity.ok(OutwardTransactionDTO.fromEntity(entity));
     }
+
+
 
     @PostMapping
     public ResponseEntity<OutwardTransactionDTO> create(@Valid @RequestBody OutwardTransactionDTO outwardDTO) {
@@ -81,4 +89,5 @@ public class OutwardTransactionController {
         int updated = service.backfillReceivedDateByFranchise(franchiseId);
         return ResponseEntity.ok("Updated receivedDateByFranchise for " + updated + " product serial numbers.");
     }
+
 }

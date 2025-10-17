@@ -5,6 +5,7 @@ import MainReportsPageForNow from '../../components/Reports/MainReportsPageForNo
 import Payout from '../../components/Payout/Payout.jsx'
 import CreditCardBillPayment from '../../components/Payout/CreditCardBillPayment.jsx'
 import MTransReportDashboard from '../../components/Reports/MerchantTransReport/MTransReportDashboard.jsx'
+import ViewProfile from '../../components/layout/ViewProfile.jsx'
 import SupportTickets from '../../components/Tables/SupportTicket.jsx'
 
 export const merchantRoutes = [
@@ -39,6 +40,10 @@ export const merchantRoutes = [
     element: <Payout />
   },
   {
+    path: 'profile',
+    element: <ViewProfile />
+  },
+   {
     path: 'support-ticket',
     element: <SupportTickets />
   },
