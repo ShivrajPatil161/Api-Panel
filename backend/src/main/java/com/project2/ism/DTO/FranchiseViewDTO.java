@@ -2,6 +2,8 @@ package com.project2.ism.DTO;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+
 public class FranchiseViewDTO {
 
 
@@ -33,6 +35,7 @@ public class FranchiseViewDTO {
     private String bankProof;
     private String franchiseAgreement;
 
+    private BigDecimal walletBalance;
     // Getters & Setters
     // (Generate in IntelliJ)
 
@@ -45,7 +48,7 @@ public class FranchiseViewDTO {
         this.franchiseName = franchiseName;
     }
 
-    public FranchiseViewDTO(String franchiseName,    String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, String panCardDocument, String gstCertificate, String addressProof, String bankProof, String franchiseAgreement) {
+    public FranchiseViewDTO(String franchiseName,    String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, String panCardDocument, String gstCertificate, String addressProof, String bankProof, String franchiseAgreement,BigDecimal walletBalance) {
 
         this.legalName = legalName;
         this.businessType = businessType;
@@ -70,6 +73,7 @@ public class FranchiseViewDTO {
         this.addressProof = addressProof;
         this.bankProof = bankProof;
         this.franchiseAgreement = franchiseAgreement;
+        this.walletBalance = walletBalance;
     }
 
 
@@ -248,5 +252,13 @@ public class FranchiseViewDTO {
 
     public void setFranchiseAgreement(String franchiseAgreement) {
         this.franchiseAgreement = franchiseAgreement;
+    }
+
+    public BigDecimal getWalletBalance() {
+        return walletBalance;
+    }
+
+    public void setWalletBalance(BigDecimal walletBalance) {
+        this.walletBalance = walletBalance;
     }
 }

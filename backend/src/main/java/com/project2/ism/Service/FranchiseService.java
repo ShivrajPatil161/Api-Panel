@@ -178,11 +178,12 @@ public class FranchiseService {
                 franchise.getBankDetails().getIfsc(),
                 franchise.getBankDetails().getBranchName(),
                 franchise.getBankDetails().getAccountType(),
-                null, // panCardDocument - MultipartFile (not stored in entity)
-                null, // gstCertificate - MultipartFile (not stored in entity)
-                null, // addressProof - MultipartFile (not stored in entity)
-                null, // bankProof - MultipartFile (not stored in entity)
-                null  // franchiseAgreement - MultipartFile (not stored in entity)
+                franchise.getUploadDocuments().getPanProof(), // panCardDocument - MultipartFile (not stored in entity)
+                franchise.getUploadDocuments().getGstCertificateProof(), // gstCertificate - MultipartFile (not stored in entity)
+                franchise.getUploadDocuments().getAddressProof(), // addressProof - MultipartFile (not stored in entity)
+                franchise.getUploadDocuments().getBankAccountProof(), // bankProof - MultipartFile (not stored in entity)
+                franchise.getUploadDocuments().getOther1(),  // franchiseAgreement - MultipartFile (not stored in entity),
+                getWalletBalance(franchise.getId())
         );
 
         return dto;
