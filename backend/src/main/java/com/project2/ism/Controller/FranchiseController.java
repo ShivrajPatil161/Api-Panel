@@ -147,7 +147,7 @@ public class FranchiseController {
     @GetMapping("/{id}")
     public ResponseEntity<FranchiseDetailsDTO> getFranchiseById(@PathVariable Long id) {
         try {
-            Franchise franchise = franchiseService.getFranchiseById(id);
+            FranchiseViewDTO franchise = franchiseService.getFranchiseViewDTOById(id);
             List<MerchantListDTO> merchants = merchantService.getMerchantsByFranchise(id);
             FranchiseDetailsDTO response = new FranchiseDetailsDTO(franchise, merchants);
             return ResponseEntity.ok(response);
