@@ -306,7 +306,6 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         }))
     }
 
-    // UPDATED: Use schemeCode as value now
     const getSchemeOptions = () => {
         return pricingSchemes.map(scheme => ({
             value: scheme.schemeId,

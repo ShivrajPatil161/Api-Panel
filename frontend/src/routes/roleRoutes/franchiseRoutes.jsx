@@ -9,6 +9,9 @@ import FTransReportDashboard from '../../components/Reports/FranhiseTransReports
 import Payout from '../../components/Payout/Payout.jsx'
 import ViewProfile from '../../components/layout/ViewProfile.jsx'
 
+import SupportTickets from '../../components/Tables/SupportTicket.jsx'
+
+
 export const franchiseRoutes = [
   {
     index: true,
@@ -47,6 +50,10 @@ export const franchiseRoutes = [
   {
     path: 'profile',
     element: <ViewProfile />
+  },
+   {
+    path: 'support-ticket',
+    element: <SupportTickets />
   },
   {
     path: 'reports',

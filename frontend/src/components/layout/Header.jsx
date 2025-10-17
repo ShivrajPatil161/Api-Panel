@@ -6,7 +6,8 @@ import {
   ChevronDown,
   Settings,
   HelpCircle,
-  Wallet
+  Wallet,
+  Ticket
 } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
 import logoImage from '../../assets/SD-2.jpg';
@@ -234,9 +235,21 @@ const Header = ({ userType }) => {
                       >
                         <Settings className="h-4 w-4 mr-3" /> Change Password
                       </button>
-                      <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        <HelpCircle className="h-4 w-4 mr-3" /> Help & Support
-                      </button>
+                      <Link to="/dashboard/support-ticket">
+                        <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          {["admin", "super_admin"].includes(userType) ? (
+                            <>
+                              <Ticket className="h-4 w-4 mr-3" />
+                              Support Dashboard
+                            </>
+                          ) : (
+                            <>
+                              <HelpCircle className="h-4 w-4 mr-3" />
+                              Help & Support
+                            </>
+                          )}
+                        </button>
+                      </Link>
                     </div>
                     <div className="border-t border-gray-200 py-2">
                       <button
