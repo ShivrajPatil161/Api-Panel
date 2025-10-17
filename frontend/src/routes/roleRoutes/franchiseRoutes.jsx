@@ -7,6 +7,7 @@ import MainReportsPageForNow from '../../components/Reports/MainReportsPageForNo
 import MTransReportDashboard from '../../components/Reports/MerchantTransReport/MTransReportDashboard.jsx'
 import FTransReportDashboard from '../../components/Reports/FranhiseTransReports/FTransReportDashboard.jsx'
 import Payout from '../../components/Payout/Payout.jsx'
+import SupportTickets from '../../components/Tables/SupportTicket.jsx'
 
 export const franchiseRoutes = [
   {
@@ -42,6 +43,10 @@ export const franchiseRoutes = [
   {
     path: 'payout',
     element: <Payout />
+  },
+  {
+    path: 'support-ticket',
+    element: <SupportTickets />
   },
   {
     path: 'reports',
