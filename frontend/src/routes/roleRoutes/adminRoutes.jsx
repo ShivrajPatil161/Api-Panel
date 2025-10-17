@@ -35,12 +35,17 @@ import MerchantReports from '../../components/Reports/MerchantReports.jsx'
 import AuditHistoryComponent from '../../components/Admin/AuditHistoryComponent.jsx'
 import StockReport from '../../components/Reports/StockReport.jsx'
 import TaxesManagement from '../../components/Admin/TaxesManagement.jsx'
+import AdminSupportTickets from '../../components/Admin/AdminSupportTickets.jsx'
 
 
 export const adminRoutes = [
   {
     index: true,
     element: <Dashboard />
+  },
+  {
+    path: "support-ticket",
+    element:<AdminSupportTickets />
   },
   {
     path: "role-management",

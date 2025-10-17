@@ -559,7 +559,8 @@ import {
   Coins,
   Eye,
   Package2,
-  IndianRupee
+  IndianRupee,
+  Ticket
 } from 'lucide-react';
 import { flattenPermissions } from "./permissionHelper";
 import logoImage from '../../assets/SD-2.jpg';
@@ -906,6 +907,7 @@ const MENU_CONFIGS = {
       icon: Coins,
       iconColor: '',
     },
+    
     {
       title: 'Reports',
       path: '/dashboard/reports',
@@ -950,6 +952,7 @@ const MENU_CONFIGS = {
       icon: Coins,
       iconColor: '',
     },
+    
     {
       title: 'Card Details',
       key: 'card-details',
