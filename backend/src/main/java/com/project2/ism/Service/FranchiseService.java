@@ -154,6 +154,39 @@ public class FranchiseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Franchise not found with ID: " + id));
     }
 
+    public FranchiseViewDTO getFranchiseViewDTOById(Long id) {
+        // Get the franchise entity using existing method
+        Franchise franchise = getFranchiseById(id);
+
+        // Create and populate the DTO
+        FranchiseViewDTO dto = new FranchiseViewDTO(
+                franchise.getFranchiseName(),
+                franchise.getLegalName(),
+                franchise.getBusinessType(),
+                franchise.getGstNumber(),
+                franchise.getPanNumber(),
+                franchise.getRegistrationNumber(),
+                franchise.getAddress(),
+                franchise.getContactPerson().getName(),
+                franchise.getContactPerson().getPhoneNumber(),
+                franchise.getContactPerson().getAlternatePhoneNum(),
+                franchise.getContactPerson().getEmail(),
+                franchise.getContactPerson().getLandlineNumber(),
+                franchise.getBankDetails().getBankName(),
+                franchise.getBankDetails().getAccountHolderName(),
+                franchise.getBankDetails().getAccountNumber(),
+                franchise.getBankDetails().getIfsc(),
+                franchise.getBankDetails().getBranchName(),
+                franchise.getBankDetails().getAccountType(),
+                null, // panCardDocument - MultipartFile (not stored in entity)
+                null, // gstCertificate - MultipartFile (not stored in entity)
+                null, // addressProof - MultipartFile (not stored in entity)
+                null, // bankProof - MultipartFile (not stored in entity)
+                null  // franchiseAgreement - MultipartFile (not stored in entity)
+        );
+
+        return dto;
+    }
     public Franchise updateFranchise(Long id, FranchiseFormDTO dto) throws IOException {
         Franchise franchise = getFranchiseById(id);
 
@@ -413,4 +446,7 @@ public class FranchiseService {
                 .map(FranchiseWallet::getAvailableBalance)
                 .orElse(BigDecimal.ZERO); // if wallet row not present yet
     }
+
+
+
 }
