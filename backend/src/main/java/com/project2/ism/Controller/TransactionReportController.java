@@ -4,19 +4,27 @@ import com.project2.ism.DTO.ReportDTO.ApiResponse;
 import com.project2.ism.DTO.ReportDTO.TransactionReportDTO;
 
 import com.project2.ism.DTO.ReportDTO.TransactionReportDTO.*;
+import com.project2.ism.Exception.BusinessException;
 import com.project2.ism.Service.TransactionReportService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.Parameter;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import java.io.ByteArrayInputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -855,4 +865,122 @@ public class TransactionReportController {
 
         return ResponseEntity.ok(analysis);
     }
+
+
+
+// excel export
+
+    /**
+     * Export all merchant transactions as Excel (optimized for large datasets)
+     * GET /api/v1/reports/transactions/merchant/export-all
+     */
+    @GetMapping("/merchant/export-all")
+    public ResponseEntity<Resource> exportAllMerchantTransactions(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType,
+            @RequestParam(value = "merchantType", required = false) String merchantType, // NEW PARAM
+            @RequestParam(value = "includeTaxes", defaultValue = "false") Boolean includeTaxes) {
+
+        logger.info("Exporting all merchant transactions: startDate={}, endDate={}, dateFilter={}, merchantType={}, includeTaxes={}",
+                startDate, endDate, dateFilterType, merchantType, includeTaxes);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setTransactionStatus(status);
+            request.setTransactionType(transactionType);
+            request.setDateFilterType(dateFilterType);
+            request.setMerchantType(merchantType); // NEW: DIRECT, FRANCHISE, or null
+            request.setMerchantId(null); // null means ALL merchants of selected type
+
+            String userRole = getUserRoleFromSecurityContext();
+
+            // Generate Excel file
+            ByteArrayInputStream excelStream = transactionReportService
+                    .exportAllMerchantTransactionsToExcel(request, includeTaxes, userRole);
+
+            InputStreamResource resource = new InputStreamResource(excelStream);
+
+            String merchantTypeLabel = merchantType != null ? merchantType.toLowerCase() + "_" : "";
+            String filename = String.format("merchant_transactions_%s%s_to_%s.xlsx",
+                    merchantTypeLabel,
+                    LocalDate.parse(startDate.substring(0, 10)),
+                    LocalDate.parse(endDate.substring(0, 10)));
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(resource);
+
+        } catch (Exception e) {
+            logger.error("Error exporting all merchant transactions", e);
+            throw new BusinessException("Failed to export transactions: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Export all franchise transactions as Excel (optimized for large datasets)
+     * GET /api/v1/reports/transactions/franchise/export-all
+     */
+    @GetMapping("/franchise/export-all")
+    public ResponseEntity<Resource> exportAllFranchiseTransactions(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "transactionType", required = false) String transactionType,
+            @RequestParam(value = "dateFilterType", defaultValue = "TRANSACTION_DATE") String dateFilterType,
+            @RequestParam(value = "includeTaxes", defaultValue = "false") Boolean includeTaxes) {
+
+        logger.info("Exporting all franchise transactions: startDate={}, endDate={}, dateFilter={}, includeTaxes={}",
+                startDate, endDate, dateFilterType, includeTaxes);
+
+        try {
+            TransactionReportRequest request = new TransactionReportRequest();
+            request.setStartDate(LocalDateTime.parse(startDate));
+            request.setEndDate(LocalDateTime.parse(endDate));
+            request.setTransactionStatus(status);
+            request.setTransactionType(transactionType);
+            request.setDateFilterType(dateFilterType);
+            request.setFranchiseId(null); // null means ALL franchises
+
+            String userRole = getUserRoleFromSecurityContext();
+
+            // Generate Excel file
+            ByteArrayInputStream excelStream = transactionReportService
+                    .exportAllFranchiseTransactionsToExcel(request, includeTaxes, userRole);
+
+            InputStreamResource resource = new InputStreamResource(excelStream);
+
+            String filename = String.format("franchise_transactions_%s_to_%s.xlsx",
+                    LocalDate.parse(startDate.substring(0, 10)),
+                    LocalDate.parse(endDate.substring(0, 10)));
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(resource);
+
+        } catch (Exception e) {
+            logger.error("Error exporting all franchise transactions", e);
+            throw new BusinessException("Failed to export transactions: " + e.getMessage());
+        }
+    }
+
+    private String getUserRoleFromSecurityContext() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getAuthorities() != null) {
+            return authentication.getAuthorities().stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse("ADMIN");
+        }
+        return "ADMIN";
+    }
+
+
+
 }

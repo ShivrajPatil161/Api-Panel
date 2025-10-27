@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Repository
 public interface MerchantTransDetRepository extends JpaRepository<MerchantTransactionDetails,Long> {
@@ -149,6 +150,55 @@ public interface MerchantTransDetRepository extends JpaRepository<MerchantTransa
             @Param("transactionType") String transactionType);
 
 
+// for export excel
+    // In MerchantTransactionRepository
+
+    // Transaction date based - with merchant type filter
+    @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
+            "mtd.transactionId, mtd.vendorTransactionId, mtd.actionOnBalance, mtd.transactionDate, mtd.amount, " +
+            "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
+            "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
+            "vt.brandType, vt.cardType, vt.cardClassification, " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, mtd.tranStatus) " +
+            "FROM MerchantTransactionDetails mtd " +
+            "LEFT JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "LEFT JOIN FranchiseTransactionDetails ftd ON ftd.vendorTransactionId = mtd.vendorTransactionId " +
+            "AND ftd.franchise.id = mtd.merchant.franchise.id " +
+            "WHERE mtd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
+            "AND (:merchantType IS NULL OR " +
+            "     (:merchantType = 'DIRECT' AND mtd.merchant.franchise IS NULL) OR " +
+            "     (:merchantType = 'FRANCHISE' AND mtd.merchant.franchise IS NOT NULL)) " +
+            "ORDER BY mtd.transactionDate DESC")
+    Stream<MerchantTransactionReportDTO> streamAllMerchantTransactionsByFilters(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("transactionType") String transactionType,
+            @Param("merchantType") String merchantType);
+
+    // Settlement date based - with merchant type filter
+    @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
+            "mtd.transactionId, mtd.vendorTransactionId, mtd.actionOnBalance, mtd.transactionDate, mtd.amount, " +
+            "mtd.updatedDateAndTimeOfTransaction, vt.authCode, vt.tid, " +
+            "mtd.netAmount, mtd.grossCharge, ftd.netAmount, mtd.charge, " +
+            "vt.brandType, vt.cardType, vt.cardClassification, " +
+            "mtd.merchant.businessName, ftd.franchise.franchiseName, mtd.tranStatus) " +
+            "FROM MerchantTransactionDetails mtd " +
+            "LEFT JOIN VendorTransactions vt ON vt.transactionReferenceId = mtd.vendorTransactionId " +
+            "LEFT JOIN FranchiseTransactionDetails ftd ON ftd.vendorTransactionId = mtd.vendorTransactionId " +
+            "AND ftd.franchise.id = mtd.merchant.franchise.id " +
+            "WHERE mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
+            "AND (:merchantType IS NULL OR " +
+            "     (:merchantType = 'DIRECT' AND mtd.merchant.franchise IS NULL) OR " +
+            "     (:merchantType = 'FRANCHISE' AND mtd.merchant.franchise IS NOT NULL)) " +
+            "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
+    Stream<MerchantTransactionReportDTO> streamAllMerchantTransactionsBySettlementDateFilters(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("transactionType") String transactionType,
+            @Param("merchantType") String merchantType);
+    /// /-------
 
     @Query("SELECT mtd.transactionType, COUNT(mtd), SUM(mtd.amount) " +
             "FROM MerchantTransactionDetails mtd WHERE " +

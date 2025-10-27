@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Repository
 public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTransactionDetails, Long> {
@@ -157,6 +158,29 @@ public interface FranchiseTransDetRepository extends JpaRepository<FranchiseTran
             @Param("status") String status,
             @Param("transactionType") String transactionType);
 
+// export excel
+    // In FranchiseTransactionRepository
+    @Query("SELECT ftd FROM FranchiseTransactionDetails ftd " +
+            "LEFT JOIN FETCH ftd.merchantTransactionDetail mtd " +
+            "LEFT JOIN FETCH ftd.franchise f " +
+            "WHERE ftd.transactionDate BETWEEN :startDate AND :endDate " +
+            "AND (:transactionType IS NULL OR ftd.transactionType = :transactionType) " +
+            "ORDER BY ftd.transactionDate DESC")
+    Stream<FranchiseTransactionDetails> streamAllFranchiseTransactionsByFilters(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("transactionType") String transactionType);
+
+    @Query("SELECT ftd FROM FranchiseTransactionDetails ftd " +
+            "LEFT JOIN FETCH ftd.merchantTransactionDetail mtd " +
+            "LEFT JOIN FETCH ftd.franchise f " +
+            "WHERE ftd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+            "AND (:transactionType IS NULL OR ftd.transactionType = :transactionType) " +
+            "ORDER BY ftd.updatedDateAndTimeOfTransaction DESC")
+    Stream<FranchiseTransactionDetails> streamAllFranchiseTransactionsBySettlementDateFilters(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("transactionType") String transactionType);
 
     // 3. Performance by merchant (via link to MerchantTransactionDetails)
     @Query("SELECT mtd.merchant.id, mtd.merchant.businessName, COUNT(ftd), SUM(ftd.amount), SUM(ftd.netAmount) " +
