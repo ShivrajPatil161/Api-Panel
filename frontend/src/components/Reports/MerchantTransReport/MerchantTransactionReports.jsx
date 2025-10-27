@@ -15,7 +15,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
         ...commonFilters,
         transactionType: 'CREDIT'
     });
-
+    const [merchantType, setMerchantType] = useState('direct'); // 'direct' or 'franchise'
     const customerId = localStorage.getItem('customerId');
     const isMerchant = userType === 'merchant';
 
@@ -25,24 +25,65 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
             const params = {
                 startDate: `${localFilters.startDate}T00:00:00`,
                 endDate: `${localFilters.endDate}T23:59:59`,
-                merchantId: isMerchant ? customerId : localFilters.selectedMerchant,
                 status: 'SETTLED',
                 dateFilterType: localFilters.dateFilterType,
-                page: 0,
-                size: 100,
-                ...(localFilters.transactionType !== 'All' && { transactionType: localFilters.transactionType })
+                ...(localFilters.transactionType !== 'All' && { transactionType: localFilters.transactionType }),
             };
 
-            const response = await api.get('/v1/reports/transactions/merchant/enhanced', { params });
+            // 🟡 CASE 1: Export ALL merchants (Excel file)
+            if (localFilters.selectedMerchant === 'ALL') {
+                const exportParams = {
+                    ...params,
+                    merchantType: merchantType.toUpperCase(), // DIRECT or FRANCHISE
+                    includeTaxes: false, // optional; change if you need taxes included
+                };
 
-            if (response.data.success) {
-                setTransactions(response.data.data.transactions);
-                setSummary(response.data.data.summary);
-                setReportInfo({
-                    reportGeneratedAt: response.data.data.reportGeneratedAt,
-                    totalPages: response.data.data.totalPages,
-                    totalElements: response.data.data.totalElements
+                const response = await api.get('/v1/reports/transactions/merchant/export-all', {
+                    params: exportParams,
+                    responseType: 'blob', // important for binary file
                 });
+
+                // Convert to Blob and trigger browser download
+                const blob = new Blob([response.data], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                });
+
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+
+                // Try to extract filename from backend header
+                const disposition = response.headers['content-disposition'];
+                const filename = disposition
+                    ? disposition.split('filename=')[1]
+                    : `merchant_transactions_${merchantType.toLowerCase()}_${localFilters.startDate}_to_${localFilters.endDate}.xlsx`;
+
+                link.setAttribute('download', filename.replace(/"/g, ''));
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+            }
+            // 🟢 CASE 2: Specific merchant (normal paginated API)
+            else {
+                const response = await api.get('/v1/reports/transactions/merchant/enhanced', {
+                    params: {
+                        ...params,
+                        merchantId: isMerchant ? customerId : localFilters.selectedMerchant,
+                        page: 0,
+                        size: 100,
+                    },
+                });
+
+                if (response.data.success) {
+                    setTransactions(response.data.data.transactions);
+                    setSummary(response.data.data.summary);
+                    setReportInfo({
+                        reportGeneratedAt: response.data.data.reportGeneratedAt,
+                        totalPages: response.data.data.totalPages,
+                        totalElements: response.data.data.totalElements,
+                    });
+                }
             }
         } catch (error) {
             console.error('Error fetching transactions:', error);
@@ -51,6 +92,7 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
             setLoading(false);
         }
     };
+
 
     // Detect which fields are available in the data
     const availableFields = useMemo(() => {
@@ -374,6 +416,8 @@ const MerchantTransactionReports = ({ filters: commonFilters, userType }) => {
                     userType={userType}
                     reportType="transactions"
                     onGenerate={fetchTransactions}
+                    merchantType={merchantType}
+                    setMerchantType={setMerchantType}
                 />
             </div>
 

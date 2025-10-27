@@ -28,6 +28,7 @@ public class ExcelParser {
             DateTimeFormatter.ofPattern("dd-MM-uuuu HH:mm"),
             DateTimeFormatter.ofPattern("dd-MM-yy HH:mm"),
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
             DateTimeFormatter.ofPattern("MM/dd/yy HH:mm"),
             DateTimeFormatter.ofPattern("M/dd/yy HH:mm"),
             DateTimeFormatter.ofPattern("M/d/yy HH:mm"),
@@ -117,8 +118,8 @@ public class ExcelParser {
         t.setStatus(get(r, colIndex, "Status", fmt));
         t.setSettledOn(parseDate(get(r, colIndex, "Settled On", fmt)));
         t.setLabels(get(r, colIndex, "Labels", fmt));
-        t.setMid(get(r, colIndex, "MID", fmt));
-        t.setTid(get(r, colIndex, "TID", fmt));
+        t.setMid(getMidOrTid(r, colIndex, "MID"));
+        t.setTid(getMidOrTid(r, colIndex, "TID"));
         t.setBatchNumber(get(r, colIndex, "Batch#", fmt));
         t.setRef(get(r, colIndex, "Ref#", fmt));
         t.setRef1(get(r, colIndex, "Ref# 1", fmt));
@@ -187,4 +188,23 @@ public class ExcelParser {
                 && (t.getEmail() == null || t.getEmail().isEmpty())
                 && t.getAmount() == null;
     }
+
+    private static String getMidOrTid(Row r, Map<String, Integer> idx, String key) {
+        Integer c = idx.get(key);
+        if (c == null) return "";
+        Cell cell = r.getCell(c);
+        if (cell == null) return "";
+
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            case NUMERIC ->
+                // Convert large numbers to plain string to avoid scientific notation
+                    new BigDecimal(cell.getNumericCellValue()).toPlainString();
+            case FORMULA ->
+                // Evaluate formula if needed
+                    new BigDecimal(cell.getNumericCellValue()).toPlainString();
+            default -> "";
+        };
+    }
+
 }

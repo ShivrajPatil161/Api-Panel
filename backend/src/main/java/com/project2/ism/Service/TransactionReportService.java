@@ -17,6 +17,10 @@ import com.project2.ism.Model.Taxes;
 import com.project2.ism.Model.VendorTransactions;
 import com.project2.ism.Repository.FranchiseTransDetRepository;
 import com.project2.ism.Repository.MerchantTransDetRepository;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -29,15 +33,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional(readOnly = true)
@@ -464,6 +469,360 @@ public class TransactionReportService {
                         "totalCommission", row[4]
                         ))
                 .collect(Collectors.toList());
+    }
+
+
+
+    /**
+     * Export all merchant transactions to Excel using streaming for memory efficiency
+     */
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportAllMerchantTransactionsToExcel(
+            TransactionReportRequest request, Boolean includeTaxes, String userRole) {
+
+        logger.info("Exporting all merchant transactions to Excel with streaming...");
+        validateReportRequest(request);
+
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Merchant Transactions");
+
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            createMerchantExcelHeader(headerRow, includeTaxes, userRole);
+
+            // Stream data and write to Excel
+            AtomicInteger rowNum = new AtomicInteger(1);
+            BigDecimal gstPercentage = includeTaxes ? getGstPercentage() : null;
+
+            Stream<MerchantTransactionReportDTO> transactionStream;
+
+            if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+                transactionStream = merchantTransactionRepository
+                        .streamAllMerchantTransactionsBySettlementDateFilters(
+                                request.getStartDate(),
+                                request.getEndDate(),
+                                request.getTransactionType(),
+                                request.getMerchantType());
+            } else {
+                transactionStream = merchantTransactionRepository
+                        .streamAllMerchantTransactionsByFilters(
+                                request.getStartDate(),
+                                request.getEndDate(),
+                                request.getTransactionType(),
+                                request.getMerchantType());
+            }
+
+            transactionStream.forEach(dto -> {
+                // Apply role-based filtering
+                MerchantTransactionReportDTO filteredDto = applyRoleBasedFiltering(dto, userRole);
+
+                // Calculate GST if needed
+                if (includeTaxes && gstPercentage != null) {
+                    calculateAndSetGst(filteredDto, gstPercentage);
+                }
+
+                // Create row
+                Row row = sheet.createRow(rowNum.getAndIncrement());
+                populateMerchantExcelRow(row, filteredDto, includeTaxes, userRole);
+
+                // Flush every 1000 rows to manage memory
+                if (rowNum.get() % 1000 == 0) {
+                    logger.info("Processed {} rows", rowNum.get());
+                }
+            });
+
+            // Auto-size columns
+            int columnCount = includeTaxes ? (isAdminRole(userRole) ? 20 : 15) : 12;
+            for (int i = 0; i < columnCount; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            logger.info("Successfully exported {} merchant transactions to Excel", rowNum.get() - 1);
+
+            return new ByteArrayInputStream(out.toByteArray());
+
+        } catch (Exception e) {
+            logger.error("Error exporting merchant transactions to Excel", e);
+            throw new BusinessException("Failed to export to Excel: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Export all franchise transactions to Excel using streaming
+     */
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportAllFranchiseTransactionsToExcel(
+            TransactionReportRequest request, Boolean includeTaxes, String userRole) {
+
+        logger.info("Exporting all franchise transactions to Excel with streaming...");
+        validateReportRequest(request);
+
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Franchise Transactions");
+
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            createFranchiseExcelHeader(headerRow, includeTaxes, userRole);
+
+            // Prepare vendor transaction map for batch loading
+            Stream<FranchiseTransactionDetails> transactionStream;
+
+            if ("SETTLEMENT_DATE".equals(request.getDateFilterType())) {
+                transactionStream = franchiseTransactionRepository
+                        .streamAllFranchiseTransactionsBySettlementDateFilters(
+                                request.getStartDate(),
+                                request.getEndDate(),
+                                request.getTransactionType());
+            } else {
+                transactionStream = franchiseTransactionRepository
+                        .streamAllFranchiseTransactionsByFilters(
+                                request.getStartDate(),
+                                request.getEndDate(),
+                                request.getTransactionType());
+            }
+
+            // Process in batches for vendor transaction lookup
+            AtomicInteger rowNum = new AtomicInteger(1);
+            List<FranchiseTransactionDetails> batch = new ArrayList<>();
+
+            transactionStream.forEach(ftd -> {
+                batch.add(ftd);
+
+                // Process batch every 500 records
+                if (batch.size() >= 500) {
+                    processFranchiseBatchToExcel(workbook, sheet, batch, rowNum, includeTaxes, userRole);
+                    batch.clear();
+                }
+            });
+
+            // Process remaining batch
+            if (!batch.isEmpty()) {
+                processFranchiseBatchToExcel(workbook, sheet, batch, rowNum, includeTaxes, userRole);
+            }
+
+            // Auto-size columns
+            int columnCount = includeTaxes ? (isAdminRole(userRole) ? 22 : 18) : 15;
+            for (int i = 0; i < columnCount; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            logger.info("Successfully exported {} franchise transactions to Excel", rowNum.get() - 1);
+
+            return new ByteArrayInputStream(out.toByteArray());
+
+        } catch (Exception e) {
+            logger.error("Error exporting franchise transactions to Excel", e);
+            throw new BusinessException("Failed to export to Excel: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Process franchise batch with vendor transaction lookup
+     */
+    private void processFranchiseBatchToExcel(Workbook workbook, Sheet sheet,
+                                              List<FranchiseTransactionDetails> batch, AtomicInteger rowNum,
+                                              Boolean includeTaxes, String userRole) {
+
+        // Collect vendor transaction IDs
+        List<String> vendorTransactionIds = batch.stream()
+                .map(FranchiseTransactionDetails::getMerchantTransactionDetail)
+                .filter(Objects::nonNull)
+                .map(MerchantTransactionDetails::getVendorTransactionId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Batch fetch vendor transactions
+        Map<String, VendorTransactions> vendorTransactionMap = new HashMap<>();
+        if (!vendorTransactionIds.isEmpty()) {
+            List<VendorTransactions> vendorTransactions =
+                    franchiseTransactionRepository.findByTransactionReferenceIdIn(vendorTransactionIds);
+            vendorTransactionMap = vendorTransactions.stream()
+                    .collect(Collectors.toMap(
+                            VendorTransactions::getTransactionReferenceId,
+                            vt -> vt,
+                            (existing, replacement) -> existing
+                    ));
+        }
+
+        // Process each transaction in batch
+        final Map<String, VendorTransactions> finalVendorMap = vendorTransactionMap;
+        batch.forEach(ftd -> {
+            FranchiseTransactionReportDTO dto = mapToFranchiseTransactionReportDTO(ftd, finalVendorMap);
+            dto = applyFranchiseRoleBasedFiltering(dto, userRole);
+
+            Row row = sheet.createRow(rowNum.getAndIncrement());
+            populateFranchiseExcelRow(row, dto, includeTaxes, userRole);
+        });
+
+        logger.info("Processed batch, total rows: {}", rowNum.get());
+    }
+
+    /**
+     * Create header for merchant Excel export
+     */
+    private void createMerchantExcelHeader(Row headerRow, Boolean includeTaxes, String userRole) {
+        int colNum = 0;
+
+        // Common headers
+        headerRow.createCell(colNum++).setCellValue("Transaction ID");
+        headerRow.createCell(colNum++).setCellValue("Vendor Transaction ID");
+        headerRow.createCell(colNum++).setCellValue("Action");
+        headerRow.createCell(colNum++).setCellValue("Transaction Date");
+        headerRow.createCell(colNum++).setCellValue("Settlement Date");
+        headerRow.createCell(colNum++).setCellValue("Amount");
+        headerRow.createCell(colNum++).setCellValue("Auth Code");
+        headerRow.createCell(colNum++).setCellValue("TID");
+        headerRow.createCell(colNum++).setCellValue("Net Amount");
+        headerRow.createCell(colNum++).setCellValue("System Fee");
+        headerRow.createCell(colNum++).setCellValue("Merchant Name");
+        headerRow.createCell(colNum++).setCellValue("Status");
+
+        // Franchise info (not for merchants)
+        if (!isMerchantRole(userRole)) {
+            headerRow.createCell(colNum++).setCellValue("Franchise Name");
+        }
+
+        // Tax columns (only if includeTaxes and admin)
+        if (includeTaxes && isAdminRole(userRole)) {
+            headerRow.createCell(colNum++).setCellValue("System Fee (Ex GST)");
+            headerRow.createCell(colNum++).setCellValue("GST Amount");
+            headerRow.createCell(colNum++).setCellValue("GST %");
+        }
+
+        // Card details
+        headerRow.createCell(colNum++).setCellValue("Brand Type");
+        headerRow.createCell(colNum++).setCellValue("Card Type");
+        headerRow.createCell(colNum++).setCellValue("Card Classification");
+    }
+
+    /**
+     * Create header for franchise Excel export
+     */
+    private void createFranchiseExcelHeader(Row headerRow, Boolean includeTaxes, String userRole) {
+        int colNum = 0;
+
+        // Common headers
+        headerRow.createCell(colNum++).setCellValue("Transaction ID");
+        headerRow.createCell(colNum++).setCellValue("Vendor Transaction ID");
+        headerRow.createCell(colNum++).setCellValue("Action");
+        headerRow.createCell(colNum++).setCellValue("Transaction Date");
+        headerRow.createCell(colNum++).setCellValue("Settlement Date");
+        headerRow.createCell(colNum++).setCellValue("Amount");
+        headerRow.createCell(colNum++).setCellValue("Auth Code");
+        headerRow.createCell(colNum++).setCellValue("TID");
+        headerRow.createCell(colNum++).setCellValue("Merchant Net Amount");
+        headerRow.createCell(colNum++).setCellValue("System Fee");
+        headerRow.createCell(colNum++).setCellValue("Franchise Commission");
+        headerRow.createCell(colNum++).setCellValue("Merchant Name");
+        headerRow.createCell(colNum++).setCellValue("Franchise Name");
+        headerRow.createCell(colNum++).setCellValue("Status");
+
+        // Tax columns (only if includeTaxes and admin)
+        if (includeTaxes && isAdminRole(userRole)) {
+            headerRow.createCell(colNum++).setCellValue("System Fee (Ex GST)");
+            headerRow.createCell(colNum++).setCellValue("GST Amount");
+            headerRow.createCell(colNum++).setCellValue("TDS Amount");
+            headerRow.createCell(colNum++).setCellValue("TDS %");
+            headerRow.createCell(colNum++).setCellValue("Net Commission");
+        }
+
+        // Card details
+        headerRow.createCell(colNum++).setCellValue("Brand Type");
+        headerRow.createCell(colNum++).setCellValue("Card Type");
+        headerRow.createCell(colNum++).setCellValue("Card Classification");
+    }
+
+    /**
+     * Populate merchant Excel row
+     */
+    private void populateMerchantExcelRow(Row row, MerchantTransactionReportDTO dto,
+                                          Boolean includeTaxes, String userRole) {
+        int colNum = 0;
+
+        row.createCell(colNum++).setCellValue(dto.getCustomTxnId() != null ? dto.getCustomTxnId().toString() : "");
+        row.createCell(colNum++).setCellValue(dto.getTxnId() != null ? dto.getTxnId() : "");
+        row.createCell(colNum++).setCellValue(dto.getActionOnBalance() != null ? dto.getActionOnBalance() : "");
+        row.createCell(colNum++).setCellValue(dto.getTxnDate() != null ? dto.getTxnDate().toString() : "");
+        row.createCell(colNum++).setCellValue(dto.getSettleDate() != null ? dto.getSettleDate().toString() : "");
+        row.createCell(colNum++).setCellValue(dto.getTxnAmount() != null ? dto.getTxnAmount().doubleValue() : 0.0);
+        row.createCell(colNum++).setCellValue(dto.getAuthCode() != null ? dto.getAuthCode() : "");
+        row.createCell(colNum++).setCellValue(dto.getTid() != null ? dto.getTid() : "");
+        row.createCell(colNum++).setCellValue(dto.getSettleAmount() != null ? dto.getSettleAmount().doubleValue() : 0.0);
+        row.createCell(colNum++).setCellValue(dto.getSystemFee() != null ? dto.getSystemFee().doubleValue() : 0.0);
+        row.createCell(colNum++).setCellValue(dto.getMerchantName() != null ? dto.getMerchantName() : "");
+        row.createCell(colNum++).setCellValue(dto.getState() != null ? dto.getState() : "");
+
+        if (!isMerchantRole(userRole)) {
+            row.createCell(colNum++).setCellValue(dto.getFranchiseName() != null ? dto.getFranchiseName() : "N/A");
+        }
+
+        if (includeTaxes && isAdminRole(userRole)) {
+            row.createCell(colNum++).setCellValue(dto.getSystemFeeExGST() != null ? dto.getSystemFeeExGST().doubleValue() : 0.0);
+            row.createCell(colNum++).setCellValue(dto.getGstAmount() != null ? dto.getGstAmount().doubleValue() : 0.0);
+
+            row.createCell(colNum++).setCellValue(taxesService.getTaxes().getGst() != null ? taxesService.getTaxes().getGst().doubleValue() : 0.0);
+        }
+
+        row.createCell(colNum++).setCellValue(dto.getBrandType() != null ? dto.getBrandType() : "");
+        row.createCell(colNum++).setCellValue(dto.getCardType() != null ? dto.getCardType() : "");
+        row.createCell(colNum++).setCellValue(dto.getCardClassification() != null ? dto.getCardClassification() : "");
+    }
+
+    /**
+     * Populate franchise Excel row
+     */
+    private void populateFranchiseExcelRow(Row row, FranchiseTransactionReportDTO dto,
+                                           Boolean includeTaxes, String userRole) {
+        int colNum = 0;
+
+        row.createCell(colNum++).setCellValue(dto.getCustomTxnId() != null ? dto.getCustomTxnId().toString() : "");
+        row.createCell(colNum++).setCellValue(dto.getTxnId() != null ? dto.getTxnId() : "");
+        row.createCell(colNum++).setCellValue(dto.getActionOnBalance() != null ? dto.getActionOnBalance() : "");
+        row.createCell(colNum++).setCellValue(dto.getTxnDate() != null ? dto.getTxnDate().toString() : "");
+        row.createCell(colNum++).setCellValue(dto.getSettleDate() != null ? dto.getSettleDate().toString() : "");
+        row.createCell(colNum++).setCellValue(dto.getTxnAmount() != null ? dto.getTxnAmount().doubleValue() : 0.0);
+        row.createCell(colNum++).setCellValue(dto.getAuthCode() != null ? dto.getAuthCode() : "");
+        row.createCell(colNum++).setCellValue(dto.getTid() != null ? dto.getTid() : "");
+        row.createCell(colNum++).setCellValue(dto.getSettleAmount() != null ? dto.getSettleAmount().doubleValue() : 0.0);
+        row.createCell(colNum++).setCellValue(dto.getSystemFee() != null ? dto.getSystemFee().doubleValue() : 0.0);
+        row.createCell(colNum++).setCellValue(dto.getCommissionAmount() != null ? dto.getCommissionAmount().doubleValue() : 0.0);
+        row.createCell(colNum++).setCellValue(dto.getMerchantName() != null ? dto.getMerchantName() : "");
+        row.createCell(colNum++).setCellValue(dto.getFranchiseName() != null ? dto.getFranchiseName() : "");
+        row.createCell(colNum++).setCellValue(dto.getState() != null ? dto.getState() : "");
+
+        if (includeTaxes && isAdminRole(userRole)) {
+            row.createCell(colNum++).setCellValue(dto.getSystemFeeExGST() != null ? dto.getSystemFeeExGST().doubleValue() : 0.0);
+            row.createCell(colNum++).setCellValue(dto.getGstAmount() != null ? dto.getGstAmount().doubleValue() : 0.0);
+            row.createCell(colNum++).setCellValue(dto.getTdsAmount() != null ? dto.getTdsAmount().doubleValue() : 0.0);
+            row.createCell(colNum++).setCellValue(dto.getTdsPercentage() != null ? dto.getTdsPercentage().doubleValue() : 0.0);
+            row.createCell(colNum++).setCellValue(dto.getNetCommissionAmount() != null ? dto.getNetCommissionAmount().doubleValue() : 0.0);
+        }
+
+        row.createCell(colNum++).setCellValue(dto.getBrandType() != null ? dto.getBrandType() : "");
+        row.createCell(colNum++).setCellValue(dto.getCardType() != null ? dto.getCardType() : "");
+        row.createCell(colNum++).setCellValue(dto.getCardClassification() != null ? dto.getCardClassification() : "");
+    }
+
+    /**
+     * Helper methods for role checking
+     */
+    private boolean isAdminRole(String role) {
+        if (role == null) return false;
+        String normalized = role.toUpperCase();
+        return normalized.contains("ADMIN") || normalized.contains("SUPER_ADMIN");
+    }
+
+    private boolean isMerchantRole(String role) {
+        if (role == null) return false;
+        String normalized = role.toUpperCase();
+        return normalized.contains("MERCHANT");
     }
 
 

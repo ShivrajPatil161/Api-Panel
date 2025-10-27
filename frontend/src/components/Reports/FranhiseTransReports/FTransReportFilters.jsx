@@ -95,7 +95,9 @@ const FTransReportFilters = ({ filters, onChange, isFranchise, reportType, onGen
                                 <option key={franchise.id} value={franchise.id}>
                                     {franchise.franchiseName} - {franchise.contactPersonName}
                                 </option>
+                                
                             ))}
+                            <option value="ALL">ALL</option>
                         </select>
                     </div>
                 )}

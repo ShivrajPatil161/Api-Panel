@@ -22,25 +22,59 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
             const params = {
                 startDate: `${localFilters.startDate}T00:00:00`,
                 endDate: `${localFilters.endDate}T23:59:59`,
-                franchiseId: localFilters.selectedFranchise,
                 status: 'SETTLED',
                 dateFilterType: localFilters.dateFilterType,
-                page: 0,
-                size: 100,
                 ...(localFilters.transactionType !== 'All' && { transactionType: localFilters.transactionType })
             };
 
-            const response = await api.get('/v1/reports/transactions/franchise/enhanced', { params });
-
-            if (response.data.success) {
-                setTransactions(response.data.data.transactions);
-                setSummary(response.data.data.summary);
-                setReportInfo({
-                    reportGeneratedAt: response.data.data.reportGeneratedAt,
-                    totalPages: response.data.data.totalPages,
-                    totalElements: response.data.data.totalElements,
-                    reportType: response.data.data.reportType
+            // 🟡 CASE 1: Franchise = ALL → Export Excel
+            if (localFilters.selectedFranchise === 'ALL') {
+                const response = await api.get('/v1/reports/transactions/franchise/export-all', {
+                    params,
+                    responseType: 'blob', // important for file download
                 });
+
+                const blob = new Blob([response.data], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                });
+
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+
+                // optional custom filename from response header
+                const disposition = response.headers['content-disposition'];
+                const filename = disposition
+                    ? disposition.split('filename=')[1]
+                    : `franchise_transactions_${localFilters.startDate}_to_${localFilters.endDate}.xlsx`;
+
+                link.setAttribute('download', filename.replace(/"/g, ''));
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+            }
+            // 🟢 CASE 2: Specific franchise → Normal paginated API
+            else {
+                const response = await api.get('/v1/reports/transactions/franchise/enhanced', {
+                    params: {
+                        ...params,
+                        franchiseId: localFilters.selectedFranchise,
+                        page: 0,
+                        size: 100,
+                    },
+                });
+
+                if (response.data.success) {
+                    setTransactions(response.data.data.transactions);
+                    setSummary(response.data.data.summary);
+                    setReportInfo({
+                        reportGeneratedAt: response.data.data.reportGeneratedAt,
+                        totalPages: response.data.data.totalPages,
+                        totalElements: response.data.data.totalElements,
+                        reportType: response.data.data.reportType,
+                    });
+                }
             }
         } catch (error) {
             console.error('Error fetching transactions:', error);
@@ -49,6 +83,7 @@ const FranchiseTransactionReport = ({ filters: commonFilters, isFranchise }) => 
             setLoading(false);
         }
     };
+
 
     // Detect which fields are available in the data
     const availableFields = useMemo(() => {

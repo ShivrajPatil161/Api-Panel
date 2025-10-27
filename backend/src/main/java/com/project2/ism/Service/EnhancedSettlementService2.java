@@ -85,16 +85,16 @@ public class EnhancedSettlementService2 {
                 .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
 
         // For direct merchants, reuse existing batches with same product
-        if (merchant.getFranchise() == null) {
-            Optional<MerchantSettlementBatch> existing = batchRepo
-                    .findByMerchantIdAndCycleKeyAndProductIdAndStatusIn(
-                            merchantId, cycleKey, productId, Arrays.asList("DRAFT", "OPEN"));
-
-            if (existing.isPresent()) {
-                log.debug("Found existing batch {} for merchant {}", existing.get().getId(), merchantId);
-                return existing.get();
-            }
-        }
+//        if (merchant.getFranchise() == null) {
+//            Optional<MerchantSettlementBatch> existing = batchRepo
+//                    .findByMerchantIdAndCycleKeyAndProductIdAndStatusIn(
+//                            merchantId, cycleKey, productId, Arrays.asList("DRAFT", "OPEN"));
+//
+//            if (existing.isPresent()) {
+//                log.debug("Found existing batch {} for merchant {}", existing.get().getId(), merchantId);
+//                return existing.get();
+//            }
+//        }
 
         // Create new batch
         return createBatch(merchantId,productId, cycleKey, createdBy, null);

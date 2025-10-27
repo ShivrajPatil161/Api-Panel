@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import api from '../../../constants/API/axiosInstance';
 
-const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenerate }) => {
+const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenerate, merchantType, setMerchantType }) => {
     const [merchants, setMerchants] = useState([]);
     const [franchises, setFranchises] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [merchantType, setMerchantType] = useState('direct'); // 'direct' or 'franchise'
+    // const [merchantType, setMerchantType] = useState('direct'); // 'direct' or 'franchise'
 
     const isAdmin = ['admin', 'super_admin'].includes(userType);
     const isFranchise = userType === 'franchise';
@@ -175,6 +175,7 @@ const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenera
                                     {franchise.franchiseName} - {franchise.contactPersonName}
                                 </option>
                             ))}
+                            
                         </select>
                     </div>
                 )}
@@ -197,6 +198,8 @@ const MTransReportFilters = ({ filters, onChange, userType, reportType, onGenera
                                     {merchant.businessName} - {merchant.contactPersonName}
                                 </option>
                             ))}
+                            {merchantType === "direct" && 
+                                <option value="ALL">ALL</option>}
                         </select>
                     </div>
                 )}
