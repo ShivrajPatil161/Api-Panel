@@ -5,7 +5,7 @@ import Sidebar from './Sidebar.jsx'
 
 const Layout = () => {
 
-  const userType = localStorage.getItem("userType").toLowerCase()
+  const userType = "super_admin"
   return (
     <div className="flex h-screen bg-gray-100 relative">
       {/* Sidebar - Positioned absolutely to overlay */}
