@@ -54,18 +54,7 @@ const SchemeList = () => {
                 </div>
             ),
         },
-        {
-            accessorKey: 'customerType',
-            header: 'Customer Type',
-            cell: ({ row }) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.getValue('customerType') === 'franchise'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-green-100 text-green-800'
-                    }`}>
-                    {row.getValue('customerType') === 'franchise' ? 'Franchise' : 'Direct Merchant'}
-                </span>
-            ),
-        },
+       
         {
             accessorKey: 'productCategoryName',
             header: 'Product Category',
@@ -75,40 +64,36 @@ const SchemeList = () => {
                 </div>
             ),
         },
+        // {
+        //     accessorKey: 'rentalByMonth',
+        //     header: 'Monthly Rental',
+        //     cell: ({ row }) => (
+        //         <div className="text-gray-900 font-medium">
+        //             ₹{row.getValue('rentalByMonth')}
+        //         </div>
+        //     ),
+        // },
         {
-            accessorKey: 'rentalByMonth',
-            header: 'Monthly Rental',
-            cell: ({ row }) => (
-                <div className="text-gray-900 font-medium">
-                    ₹{row.getValue('rentalByMonth')}
-                </div>
-            ),
-        },
-        {
-            accessorKey: 'cardRates',
-            header: 'Card Types & Rates',
+            accessorKey: 'channelRates',
+            header: 'Channel Types & Rates',
             cell: ({ row }) => {
-                const cardRates = row.getValue('cardRates') || []
-                const customerType = row.getValue('customerType')
+                const channelRates = row.getValue('channelRates') || []
+                
                 const maxVisible = 2
 
                 return (
                     <div className="text-xs text-gray-600 max-w-xs">
-                        {cardRates.slice(0, maxVisible).map((rate, index) => (
+                        {channelRates.slice(0, maxVisible).map((rate, index) => (
                             <div key={index} className="mb-1">
-                                <span className="font-medium text-gray-800">{rate.cardName}:</span>
-                                {customerType === 'franchise' ? (
-                                    <span className="ml-1">
-                                        F: {rate.franchiseRate}% | M: {rate.merchantRate}%
-                                    </span>
-                                ) : (
+                                <span className="font-medium text-gray-800">{rate.channelName}:</span>
+                               
                                     <span className="ml-1">{rate.rate}%</span>
-                                )}
+                                
                             </div>
                         ))}
-                        {cardRates.length > maxVisible && (
+                        {channelRates.length > maxVisible && (
                             <div className="text-gray-500 italic">
-                                ...and {cardRates.length - maxVisible} more
+                                ...and {channelRates.length - maxVisible} more
                             </div>
                         )}
                     </div>
@@ -278,7 +263,6 @@ const SchemeList = () => {
 
     // Calculate stats
     const totalSchemes = schemes.length
-    const franchiseSchemes = schemes.filter(s => s.customerType === 'franchise').length
     const merchantSchemes = schemes.filter(s => s.customerType === 'direct_merchant').length
     const totalRent = totalSchemes > 0
         ? Math.round(schemes.reduce((acc, s) => acc + (s.rentalByMonth || 0), 0) )
@@ -307,7 +291,7 @@ const SchemeList = () => {
                             <IndianRupee className="h-8 w-8 text-blue-600" />
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">Pricing Scheme Management</h1>
-                                <p className="text-gray-600">Manage pricing schemes for franchises and direct merchants</p>
+                                <p className="text-gray-600">Manage pricing schemes for partners</p>
                             </div>
                         </div>
                         <button
@@ -320,7 +304,7 @@ const SchemeList = () => {
                     </div>
                 </div>
 
-                {/* Stats Cards */}
+                {/* Stats Channels */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center">
@@ -333,42 +317,32 @@ const SchemeList = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                                <Building2 className="h-6 w-6 text-green-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Franchise Schemes</p>
-                                <p className="text-2xl font-bold text-gray-900">{franchiseSchemes}</p>
-                            </div>
-                        </div>
-                    </div>
+                   
                     <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center">
                             <div className="p-2 bg-purple-100 rounded-lg">
                                 <Users className="h-6 w-6 text-purple-600" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Merchant Schemes</p>
+                                <p className="text-sm font-medium text-gray-600">Partner Schemes</p>
                                 <p className="text-2xl font-bold text-gray-900">{merchantSchemes}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    {/* <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center">
                             <div className="p-2 bg-yellow-100 rounded-lg">
-                                <CreditCard className="h-6 w-6 text-yellow-600" />
+                                <CreditChannel className="h-6 w-6 text-yellow-600" />
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Total Monthly Rent</p>
                                 <p className="text-2xl font-bold text-gray-900">₹{totalRent}</p>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
-                {/* Table Card */}
+                {/* Table Channel */}
                 <div className="bg-white rounded-lg shadow-sm">
                     {/* Table Header */}
                     <div className="p-6 border-b border-gray-200">
@@ -513,26 +487,23 @@ const SchemeList = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Scheme Code</label>
                                     <p className="text-gray-900">{viewingScheme.schemeCode}</p>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer Type</label>
-                                    <p className="text-gray-900 capitalize">{viewingScheme.customerType?.replace('_', ' ')}</p>
-                                </div>
-                                <div>
+                               
+                                {/* <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Rental</label>
                                     <p className="text-gray-900">₹{viewingScheme.rentalByMonth}</p>
-                                </div>
+                                </div> */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Card Types</label>
-                                    <p className="text-gray-900">{viewingScheme.cardRates?.length || 0} types</p>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Channel Types</label>
+                                    <p className="text-gray-900">{viewingScheme.channelRates?.length || 0} types</p>
                                 </div>
                             </div>
 
                             <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Card Rates</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Channel Rates</label>
                                 <div className="space-y-2">
-                                    {viewingScheme.cardRates?.map((rate, index) => (
+                                    {viewingScheme.channelRates?.map((rate, index) => (
                                         <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                            <span className="font-medium">{rate.cardName}</span>
+                                            <span className="font-medium">{rate.channelName}</span>
                                             <div className="text-sm text-gray-600">
                                                 {viewingScheme.customerType === 'franchise'
                                                     ? `Franchise: ${rate.franchiseRate}% | Merchant: ${rate.merchantRate}%`
@@ -540,7 +511,7 @@ const SchemeList = () => {
                                                 }
                                             </div>
                                         </div>
-                                    )) || <p className="text-gray-500">No card rates configured</p>}
+                                    )) || <p className="text-gray-500">No channel rates configured</p>}
                                 </div>
                             </div>
 

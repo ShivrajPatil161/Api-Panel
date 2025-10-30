@@ -28,18 +28,13 @@ public class PricingScheme {
     @Column(name = "rental_by_month", nullable = false)
     private Double rentalByMonth;
 
-    @Column(name = "gst")
-    private Double gst;
-
-    @Column(name = "customer_type", nullable = false)
-    private String customerType;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @OneToMany(mappedBy = "pricingScheme", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
-    private List<CardRate> cardRates = new ArrayList<>();
+    private List<ChannelRate> channelRates = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -59,15 +54,15 @@ public class PricingScheme {
     }
 
     // Helper method to add card rate
-    public void addCardRate(CardRate cardRate) {
-        cardRates.add(cardRate);
-        cardRate.setPricingScheme(this);
+    public void addChannelRate(ChannelRate channelRate) {
+        channelRates.add(channelRate);
+        channelRate.setPricingScheme(this);
     }
 
     // Helper method to remove card rate
-    public void removeCardRate(CardRate cardRate) {
-        cardRates.remove(cardRate);
-        cardRate.setPricingScheme(null);
+    public void removeCardRate(ChannelRate channelRate) {
+        channelRates.remove(channelRate);
+        channelRate.setPricingScheme(null);
     }
 
     public ProductCategory getProductCategory() {
@@ -103,14 +98,6 @@ public class PricingScheme {
         this.rentalByMonth = rentalByMonth;
     }
 
-    public String getCustomerType() {
-        return customerType;
-    }
-
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -119,14 +106,14 @@ public class PricingScheme {
         this.description = description;
     }
 
-    public List<CardRate> getCardRates() {
-        return cardRates;
+    public List<ChannelRate> getChannelRates() {
+        return channelRates;
     }
 
-    public void setCardRates(List<CardRate> cardRates) {
-        this.cardRates = cardRates;
-        if (cardRates != null) {
-            cardRates.forEach(cardRate -> cardRate.setPricingScheme(this));
+    public void setChannelRates(List<ChannelRate> channelRates) {
+        this.channelRates = channelRates;
+        if (channelRates != null) {
+            channelRates.forEach(cardRate -> cardRate.setPricingScheme(this));
         }
     }
 
@@ -146,11 +133,5 @@ public class PricingScheme {
         this.updatedAt = updatedAt;
     }
 
-    public Double getGst() {
-        return gst;
-    }
 
-    public void setGst(Double gst) {
-        this.gst = gst;
-    }
 }

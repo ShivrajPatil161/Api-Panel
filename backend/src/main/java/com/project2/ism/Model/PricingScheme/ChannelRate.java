@@ -5,23 +5,18 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "card_rates")
-public class CardRate {
+@Table(name = "channel_rates")
+public class ChannelRate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "card_name", nullable = false)
-    private String cardName;
+    @Column(name = "channel_name", nullable = false)
+    private String channelName;
 
     @Column(name = "rate")
     private Double rate;//-for direct merchant
 
-    @Column(name = "franchise_rate")
-    private Double franchiseRate;
-
-    @Column(name = "merchant_rate")
-    private Double merchantRate;//merchant belonging to franchise
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pricing_scheme_id")
@@ -37,12 +32,12 @@ public class CardRate {
         this.id = id;
     }
 
-    public String getCardName() {
-        return cardName;
+    public String getChannelName() {
+        return channelName;
     }
 
-    public void setCardName(String cardName) {
-        this.cardName = cardName;
+    public void setChannelName(String channelName) {
+        this.channelName = channelName;
     }
 
     public Double getRate() {
@@ -53,21 +48,6 @@ public class CardRate {
         this.rate = rate;
     }
 
-    public Double getFranchiseRate() {
-        return franchiseRate;
-    }
-
-    public void setFranchiseRate(Double franchiseRate) {
-        this.franchiseRate = franchiseRate;
-    }
-
-    public Double getMerchantRate() {
-        return merchantRate;
-    }
-
-    public void setMerchantRate(Double merchantRate) {
-        this.merchantRate = merchantRate;
-    }
 
     public PricingScheme getPricingScheme() {
         return pricingScheme;
