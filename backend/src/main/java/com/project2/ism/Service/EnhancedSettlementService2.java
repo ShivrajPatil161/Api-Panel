@@ -240,7 +240,7 @@
 //                return SettlementResultDTO.alreadySettled(vendorTxId);
 //            }
 //
-//            Merchant merchant = getMerchant(merchantId);
+//            Merchant merchant = getApiPartner(merchantId);
 //            ProductSerialNumbers device = findDeviceForTransaction(vt, merchant);
 //
 //            validateTransactionBelongsToMerchant(vt, device, merchantId);
@@ -364,7 +364,7 @@
 //                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + vendorTxId));
 //    }
 //
-//    private Merchant getMerchant(Long merchantId) {
+//    private Merchant getApiPartner(Long merchantId) {
 //        return merchantRepository.findById(merchantId)
 //                .orElseThrow(() -> new IllegalArgumentException("Merchant not found: " + merchantId));
 //    }
@@ -406,9 +406,9 @@
 //    }
 //
 //    private void validateTransactionBelongsToMerchant(VendorTransactions vt, ProductSerialNumbers device, Long expectedMerchantId) {
-//        if (!expectedMerchantId.equals(device.getMerchant().getId())) {
+//        if (!expectedMerchantId.equals(device.getApiPartner().getId())) {
 //            throw new IllegalStateException("Transaction " + vt.getTransactionReferenceId() +
-//                    " belongs to different merchant: " + device.getMerchant().getId());
+//                    " belongs to different merchant: " + device.getApiPartner().getId());
 //        }
 //    }
 //
@@ -419,7 +419,7 @@
 //        LocalDate txnDate = vt.getDate() != null ? vt.getDate().toLocalDate() : LocalDate.now();
 //
 //// Get merchant from device directly
-//        Merchant merchant = device.getMerchant();
+//        Merchant merchant = device.getApiPartner();
 //        Long franchiseId = merchant.getFranchise() != null ? merchant.getFranchise().getId() : null;
 //
 //        Optional<CustomerSchemeAssignment> schemeAssignment;
@@ -480,7 +480,7 @@
 //                    MerchantWallet w = new MerchantWallet();
 //                    Merchant mRef = new Merchant();
 //                    mRef.setId(merchant.getId());
-//                    w.setMerchant(mRef);
+//                    w.setApiPartner(mRef);
 //                    w.setAvailableBalance(BigDecimal.ZERO);
 //                    w.setLastUpdatedAmount(BigDecimal.ZERO);
 //                    w.setLastUpdatedAt(LocalDateTime.now());
@@ -496,7 +496,7 @@
 //        // --- First create transaction details ---
 //        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
 //            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
-//            mtd.setMerchant(merchant);
+//            mtd.setApiPartner(merchant);
 //            mtd.setCharge(fee);
 //            mtd.setActionOnBalance("CREDIT");
 //            mtd.setVendorTransactionId(vt.getTransactionReferenceId());
@@ -582,7 +582,7 @@
 //                    MerchantWallet w = new MerchantWallet();
 //                    Merchant mRef = new Merchant();
 //                    mRef.setId(merchant.getId());
-//                    w.setMerchant(mRef);
+//                    w.setApiPartner(mRef);
 //                    w.setAvailableBalance(BigDecimal.ZERO);
 //                    w.setLastUpdatedAmount(BigDecimal.ZERO);
 //                    w.setLastUpdatedAt(LocalDateTime.now());
@@ -621,7 +621,7 @@
 //        if (!merchantTxnRepo.existsByVendorTransactionId(vt.getInternalId().toString())) {
 //
 ////            MerchantTransactionDetails mtd = new MerchantTransactionDetails();
-//            mtd.setMerchant(merchant);
+//            mtd.setApiPartner(merchant);
 //            mtd.setGrossCharge(merchantFee);
 //            mtd.setCharge(systemShare);
 //            mtd.setActionOnBalance("CREDIT");
@@ -703,7 +703,7 @@
 //
 //            ProductSerialNumbers device = deviceOpt.get();
 //
-//            if (!expectedMerchantId.equals(device.getMerchant().getId())) {
+//            if (!expectedMerchantId.equals(device.getApiPartner().getId())) {
 //                return SettlementCandidateDTO.notFound(vt, "WRONG_MERCHANT");
 //            }
 //
@@ -713,7 +713,7 @@
 //            }
 //
 //            // 🔹 Determine merchant/franchise for scheme lookup
-//            Merchant merchant = device.getMerchant();
+//            Merchant merchant = device.getApiPartner();
 //            Long franchiseId = merchant.getFranchise() != null ? merchant.getFranchise().getId() : null;
 //
 //            LocalDate txnDate = vt.getDate() != null ? vt.getDate().toLocalDate() : LocalDate.now();

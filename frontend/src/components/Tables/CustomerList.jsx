@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, act } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
     useReactTable,
     getCoreRowModel,
@@ -14,16 +14,10 @@ import {
     Eye,
     Edit,
     Trash2,
-    ChevronDown,
-    ChevronRight,
     Store,
-    Users,
     Wallet,
     Package,
     MapPin,
-    Phone,
-    Mail,
-    Calendar,
     TrendingUp,
     AlertCircle,
     X,
@@ -31,15 +25,13 @@ import {
     FileText,
     Image as ImageIcon,
     Handshake,
-    Users2
+    Calendar
 } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 // Import API functions
 import { 
-    franchiseApi, 
-    merchantApi, 
-    customerApi, 
+    apiPartnerApi, 
     fileApi, 
     handleApiError 
 } from '../../constants/API/customerApi'
@@ -66,7 +58,7 @@ const StatusBadge = ({ status }) => {
 const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', size = 'sm', className = '' }) => {
     const variants = {
         ghost: 'hover:bg-green-100 text-green-600 hover:text-green-900',
-        primary: ' text-blue-700 hover:bg-blue-100',
+        primary: 'text-blue-700 hover:bg-blue-100',
         danger: 'hover:bg-red-50 text-red-600 hover:text-red-700'
     }
 
@@ -92,7 +84,6 @@ const DocumentPreview = ({ documentPath, documentName, onClose }) => {
     const [error, setError] = useState(null)
     const [blobUrl, setBlobUrl] = useState(null)
 
-    // Clean up the document path
     const cleanPath = documentPath
         ?.replace(/\\\\/g, '/')
         ?.replace(/\\/g, '/')
@@ -102,7 +93,6 @@ const DocumentPreview = ({ documentPath, documentName, onClose }) => {
     const isPdf = /\.pdf$/i.test(cleanPath || '')
     const filename = cleanPath?.split('/').pop()
 
-    // Fetch file data on component mount
     useEffect(() => {
         if (!cleanPath) return
 
@@ -124,7 +114,6 @@ const DocumentPreview = ({ documentPath, documentName, onClose }) => {
 
         fetchFile()
 
-        // Cleanup blob URL on unmount
         return () => {
             if (blobUrl) {
                 window.URL.revokeObjectURL(blobUrl)
@@ -234,26 +223,15 @@ const DocumentPreview = ({ documentPath, documentName, onClose }) => {
     )
 }
 
-// Enhanced View Modal Component
-const ViewModal = ({ customer, customerType, onClose }) => {
+// View Modal Component
+const ViewModal = ({ apiPartner, onClose }) => {
     const [documents, setDocuments] = useState({})
 
-    // Helper function to get the correct data structure
-    const getCustomerData = () => {
-        if (customerType === 'franchise') {
-            return customer?.franchise || customer
-        } else {
-            return customer
-        }
-    }
-
-    const customerData = getCustomerData()
-
     useEffect(() => {
-        if (customerData?.uploadDocuments) {
-            setDocuments(customerData.uploadDocuments)
+        if (apiPartner?.uploadDocuments) {
+            setDocuments(apiPartner.uploadDocuments)
         }
-    }, [customerData])
+    }, [apiPartner])
 
     const DocumentItem = ({ docKey, docPath, docName }) => {
         const [previewDoc, setPreviewDoc] = useState(null)
@@ -319,32 +297,7 @@ const ViewModal = ({ customer, customerType, onClose }) => {
         )
     }
 
-    // Helper functions for display
-    const getDisplayName = () => {
-        if (customerType === 'franchise') {
-            return customerData?.franchiseName || customerData?.businessName || 'N/A'
-        } else {
-            return customerData?.businessName || 'N/A'
-        }
-    }
-
-    const getContactPerson = () => {
-        if (customerType === 'franchise') {
-            return customerData?.contactPerson
-        } else {
-            return customerData?.contactPerson || {
-                name: customerData?.contactPersonName,
-                phoneNumber: customerData?.contactPersonPhone,
-                email: customerData?.contactPersonEmail,
-                alternatePhoneNum: customerData?.alternatePhoneNum,
-                landlineNumber: customerData?.landlineNumber
-            }
-        }
-    }
-
-    const contactPerson = getContactPerson()
-
-    if (!customer) return null
+    if (!apiPartner) return null
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 p-4">
@@ -352,10 +305,8 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-semibold">
-                            {customerType === 'franchise' ? 'Franchise Details' : 'Merchant Details'}
-                        </h2>
-                        <p className="text-gray-600">{getDisplayName()}</p>
+                        <h2 className="text-xl font-semibold">API Partner Details</h2>
+                        <p className="text-gray-600">{apiPartner?.businessName || 'N/A'}</p>
                     </div>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
                         <X className="w-6 h-6" />
@@ -369,28 +320,25 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                         <div>
                             <h3 className="font-semibold mb-3">Basic Information</h3>
                             <div className="space-y-2">
-                                <div><strong>Business Name:</strong> {getDisplayName()}</div>
-                                <div><strong>Legal Name:</strong> {customerData?.legalName || 'N/A'}</div>
-                                <div><strong>Business Type:</strong> {customerData?.businessType || 'N/A'}</div>
-                                <div><strong>GST Number:</strong> {customerData?.gstNumber || 'N/A'}</div>
-                                <div><strong>PAN Number:</strong> {customerData?.panNumber || 'N/A'}</div>
-                                <div><strong>Registration Number:</strong> {customerData?.registrationNumber || 'N/A'}</div>
-                                <div><strong>Status:</strong> <StatusBadge status={customerData?.status || customer?.status || 'active'} /></div>
-                                {customerType === 'merchant' && customer?.franchiseName && (
-                                    <div><strong>Franchise:</strong> {customer.franchiseName}</div>
-                                )}
+                                <div><strong>Business Name:</strong> {apiPartner?.businessName || 'N/A'}</div>
+                                <div><strong>Legal Name:</strong> {apiPartner?.legalName || 'N/A'}</div>
+                                <div><strong>Business Type:</strong> {apiPartner?.businessType || 'N/A'}</div>
+                                <div><strong>GST Number:</strong> {apiPartner?.gstNumber || 'N/A'}</div>
+                                <div><strong>PAN Number:</strong> {apiPartner?.panNumber || 'N/A'}</div>
+                                <div><strong>Registration Number:</strong> {apiPartner?.registrationNumber || 'N/A'}</div>
+                                <div><strong>Status:</strong> <StatusBadge status={apiPartner?.status || 'active'} /></div>
                             </div>
                         </div>
 
                         <div>
                             <h3 className="font-semibold mb-3">Contact Information</h3>
                             <div className="space-y-2">
-                                <div><strong>Contact Person:</strong> {contactPerson?.name || 'N/A'}</div>
-                                <div><strong>Mobile:</strong> {contactPerson?.phoneNumber || 'N/A'}</div>
-                                <div><strong>Email:</strong> {contactPerson?.email || 'N/A'}</div>
-                                <div><strong>Alternate Mobile:</strong> {contactPerson?.alternatePhoneNum || 'N/A'}</div>
-                                <div><strong>Landline:</strong> {contactPerson?.landlineNumber || 'N/A'}</div>
-                                <div><strong>Address:</strong> {customerData?.address || customer?.address || 'N/A'}</div>
+                                <div><strong>Contact Person:</strong> {apiPartner?.contactPerson?.name || apiPartner?.contactPersonName || 'N/A'}</div>
+                                <div><strong>Mobile:</strong> {apiPartner?.contactPerson?.phoneNumber || apiPartner?.contactPersonPhone || 'N/A'}</div>
+                                <div><strong>Email:</strong> {apiPartner?.contactPerson?.email || apiPartner?.contactPersonEmail || 'N/A'}</div>
+                                <div><strong>Alternate Mobile:</strong> {apiPartner?.contactPerson?.alternatePhoneNum || apiPartner?.alternatePhoneNum || 'N/A'}</div>
+                                <div><strong>Landline:</strong> {apiPartner?.contactPerson?.landlineNumber || apiPartner?.landlineNumber || 'N/A'}</div>
+                                <div><strong>Address:</strong> {apiPartner?.address || 'N/A'}</div>
                             </div>
                         </div>
                     </div>
@@ -399,12 +347,12 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                     <div>
                         <h3 className="font-semibold mb-3">Bank Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><strong>Bank Name:</strong> {customerData?.bankDetails?.bankName || 'N/A'}</div>
-                            <div><strong>Account Holder:</strong> {customerData?.bankDetails?.accountHolderName || 'N/A'}</div>
-                            <div><strong>Account Number:</strong> {customerData?.bankDetails?.accountNumber || 'N/A'}</div>
-                            <div><strong>IFSC Code:</strong> {customerData?.bankDetails?.ifsc || 'N/A'}</div>
-                            <div><strong>Branch:</strong> {customerData?.bankDetails?.branchName || 'N/A'}</div>
-                            <div><strong>Account Type:</strong> {customerData?.bankDetails?.accountType || 'N/A'}</div>
+                            <div><strong>Bank Name:</strong> {apiPartner?.bankDetails?.bankName || 'N/A'}</div>
+                            <div><strong>Account Holder:</strong> {apiPartner?.bankDetails?.accountHolderName || 'N/A'}</div>
+                            <div><strong>Account Number:</strong> {apiPartner?.bankDetails?.accountNumber || 'N/A'}</div>
+                            <div><strong>IFSC Code:</strong> {apiPartner?.bankDetails?.ifsc || 'N/A'}</div>
+                            <div><strong>Branch:</strong> {apiPartner?.bankDetails?.branchName || 'N/A'}</div>
+                            <div><strong>Account Type:</strong> {apiPartner?.bankDetails?.accountType || 'N/A'}</div>
                         </div>
                     </div>
 
@@ -423,83 +371,37 @@ const ViewModal = ({ customer, customerType, onClose }) => {
                         </div>
                     </div>
 
-                    {/* Franchise Merchants Section */}
-                    {customerType === 'franchise' && customer?.merchants && customer.merchants.length > 0 && (
-                        <div>
-                            <h3 className="font-semibold mb-3">Associated Merchants ({customer.merchants.length})</h3>
-                            <div className="space-y-3">
-                                {customer.merchants.map((merchant) => (
-                                    <div key={merchant.id} className="p-4 bg-gray-50 rounded-lg">
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <div className="font-medium">{merchant.businessName}</div>
-                                                <div className="text-sm text-gray-600">{merchant.businessType}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-sm"><strong>Contact:</strong> {merchant.contactPersonName}</div>
-                                                <div className="text-sm"><strong>Email:</strong> {merchant.contactPersonEmail}</div>
-                                                <div className="text-sm"><strong>Phone:</strong> {merchant.contactPersonPhone}</div>
-                                            </div>
-                                            <div>
-                                                <StatusBadge status={merchant.status} />
-                                                <div className="text-sm mt-1">Balance: ₹{merchant.walletBalance?.toLocaleString() || '0'}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
                     {/* Additional Info */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
                         <div className="text-center">
                             <Wallet className="w-8 h-8 mx-auto text-green-600 mb-2" />
                             <div className="text-sm text-gray-600">Wallet Balance</div>
-                            <div className="font-semibold">₹{(customerData?.walletBalance || customer?.walletBalance || 0).toLocaleString()}</div>
+                            <div className="font-semibold">₹{(apiPartner?.walletBalance || 0).toLocaleString()}</div>
                         </div>
-                        {(customerType === 'merchant' || (customerType === 'franchise' && customerData?.monthlyRevenue !== undefined)) && (
-                            <div className="text-center">
-                                <TrendingUp className="w-8 h-8 mx-auto text-blue-600 mb-2" />
-                                <div className="text-sm text-gray-600">Monthly Revenue</div>
-                                <div className="font-semibold">₹{(customerData?.monthlyRevenue || customer?.monthlyRevenue || 0).toLocaleString()}</div>
-                            </div>
-                        )}
+                        <div className="text-center">
+                            <TrendingUp className="w-8 h-8 mx-auto text-blue-600 mb-2" />
+                            <div className="text-sm text-gray-600">Monthly Revenue</div>
+                            <div className="font-semibold">₹{(apiPartner?.monthlyRevenue || 0).toLocaleString()}</div>
+                        </div>
                         <div className="text-center">
                             <Calendar className="w-8 h-8 mx-auto text-purple-600 mb-2" />
                             <div className="text-sm text-gray-600">Created On</div>
                             <div className="font-semibold">
-                                {(customerData?.createdAt || customer?.createdAt) ?
-                                    new Date(customerData?.createdAt || customer?.createdAt).toLocaleDateString() : 'N/A'}
+                                {apiPartner?.createdAt ? new Date(apiPartner.createdAt).toLocaleDateString() : 'N/A'}
                             </div>
                         </div>
                     </div>
-
-                    {/* Approval Status for Direct Merchants */}
-                    {customerType === 'merchant' && customer?.approved !== undefined && (
-                        <div className="pt-4 border-t">
-                            <div className="flex items-center space-x-2">
-                                <strong>Approval Status:</strong>
-                                <span className={`px-2 py-1 rounded text-sm ${customer.approved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                    {customer.approved ? 'Approved' : 'Pending Approval'}
-                                </span>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
     )
 }
 
-// Main Customer List Component
-const CustomerListComponent = () => {
-    const [activeTab, setActiveTab] = useState('franchises')
+// Main API Partner List Component
+const ApiPartnerListComponent = () => {
     const [globalFilter, setGlobalFilter] = useState('')
     const [expanded, setExpanded] = useState({})
-    const [franchises, setFranchises] = useState([])
-    const [merchants, setMerchants] = useState([])
-    const [directMerchants, setDirectMerchants] = useState([])
+    const [apiPartners, setApiPartners] = useState([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [viewModal, setViewModal] = useState(null)
@@ -508,149 +410,79 @@ const CustomerListComponent = () => {
 
     const columnHelper = createColumnHelper()
 
-    // API Functions using the modular API
-    const fetchFranchises = async () => {
-        try {
-            setLoading(true)
-            setError(null)
-            const response = await franchiseApi.getAll()
-            setFranchises(response.data)
-        } catch (err) {
-            const errorInfo = handleApiError(err, 'Failed to load franchises')
-            setError(errorInfo.message)
-            toast.error(errorInfo.message)
-        } finally {
-            setLoading(false)
-        }
-    }
+    // Replace the fetchApiPartners function with this:
 
-    const fetchMerchants = async () => {
-        try {
-            setLoading(true)
-            setError(null)
-            const response = await merchantApi.getAllDirect()
-            setMerchants(response.data)
-        } catch (err) {
-            const errorInfo = handleApiError(err, 'Failed to load merchants')
-            setError(errorInfo.message)
-            toast.error(errorInfo.message)
-        } finally {
-            setLoading(false)
-        }
+const fetchApiPartners = async () => {
+    try {
+        setLoading(true)
+        setError(null)
+        const response = await apiPartnerApi.getAll() // Changed from getAllDirect()
+        setApiPartners(response.data)
+    } catch (err) {
+        const errorInfo = handleApiError(err, 'Failed to load API partners')
+        setError(errorInfo.message)
+        toast.error(errorInfo.message)
+    } finally {
+        setLoading(false)
     }
+}
 
-    const fetchDirectMerchants = async () => {
+    const fetchApiPartnerDetails = async (id) => {
         try {
-            setLoading(true)
-            setError(null)
-            const response = await merchantApi.getAllFranchiseMerchants()
-            setDirectMerchants(response.data)
+            const response = await apiPartnerApi.getDetails(id)
+            setViewModal({ apiPartner: response.data })
         } catch (err) {
-            const errorInfo = handleApiError(err, 'Failed to load merchants')
-            setError(errorInfo.message)
-            toast.error(errorInfo.message)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const fetchCustomerDetails = async (id, type) => {
-        try {
-            const response = await customerApi.getCustomerDetails(id, type)
-            setViewModal({ customer: response.data, type })
-        } catch (err) {
-            const errorInfo = handleApiError(err, 'Failed to load customer details')
+            const errorInfo = handleApiError(err, 'Failed to load API partner details')
             toast.error(errorInfo.message)
         }
     }
 
-    const handleEditCustomer = async (id, type) => {
+    const handleEditApiPartner = async (id) => {
         try {
             setLoading(true)
-            const response = await customerApi.getCustomerDetails(id, type)
-
-            // Extract the correct customer data based on type
-            let customerData;
-            if (type === 'franchise') {
-                // For franchise, the data is in response.data.franchise
-                customerData = response.data.franchise || response.data
-            } else {
-                // For merchant, the data is directly in response.data
-                // but might also be in response.data.merchant
-                customerData = response.data.merchant || response.data
-            }
+            const response = await apiPartnerApi.getDetails(id)
+            const apiPartnerData = response.data.apiPartner || response.data
 
             setEditModal({
-                customer: customerData,
-                type,
-                customerId: id
+                apiPartner: apiPartnerData,
+                apiPartnerId: id
             })
         } catch (err) {
-            const errorInfo = handleApiError(err, 'Failed to load customer data for editing')
+            const errorInfo = handleApiError(err, 'Failed to load API partner data for editing')
             toast.error(errorInfo.message)
         } finally {
             setLoading(false)
         }
     }
 
-    const handleDeleteCustomer = async (id, type) => {
-        if (window.confirm(`Are you sure you want to delete this ${type}?`)) {
+    const handleDeleteApiPartner = async (id) => {
+        if (window.confirm('Are you sure you want to delete this API partner?')) {
             try {
-                await customerApi.deleteCustomer(id, type)
-                toast.success(`${type === 'franchise' ? 'Franchise' : 'Merchant'} deleted successfully`)
-
-                // Refresh data
-                if (type === 'franchise') {
-                    fetchFranchises()
-                } else {
-                    fetchMerchants()
-                }
+                await apiPartnerApi.delete(id)
+                toast.success('API Partner deleted successfully')
+                fetchApiPartners()
             } catch (err) {
-                const errorInfo = handleApiError(err, 'Failed to delete customer')
+                const errorInfo = handleApiError(err, 'Failed to delete API partner')
                 toast.error(errorInfo.message)
             }
         }
     }
 
-    // Handle successful edit
     const handleEditSuccess = () => {
         setEditModal(null)
-        // Refresh the data
-        if (activeTab === 'franchises'){
-            fetchFranchises()
-        }
-        else if (activeTab === 'merchants') {
-                fetchMerchants()
-        }
-        else {fetchDirectMerchants()
-        }
+        fetchApiPartners()
     }
 
-    // Handle document preview
     const handleDocumentPreview = (filePath, documentName) => {
         setDocumentPreview({ documentPath: filePath, documentName })
     }
 
-    // Load initial data
     useEffect(() => {
-        fetchFranchises(),
-        fetchDirectMerchants(),
-        fetchMerchants()
+        fetchApiPartners()
     }, [])
 
-    // Handle tab changes
-    const handleTabChange = (tab) => {
-        setActiveTab(tab)
-        if (tab === 'direct merchants' && directMerchants.length === 0) {
-            fetchDirectMerchants()
-        }
-        if (tab === 'merchants' && merchants.length === 0) {
-            fetchMerchants()
-        }
-    }
-
-    // Franchise Columns
-    const franchiseColumns = useMemo(() => [
+    // API Partner Columns
+    const apiPartnerColumns = useMemo(() => [
         columnHelper.accessor('id', {
             header: 'ID',
             cell: (info) => (
@@ -658,188 +490,12 @@ const CustomerListComponent = () => {
             ),
             size: 80,
         }),
-        columnHelper.accessor('franchiseName', {
-            header: 'Franchise Name',
+        columnHelper.accessor('businessName', {
+            header: 'Business Name',
             cell: (info) => (
                 <div className="flex items-center space-x-3">
                     <div className="p-2 bg-blue-50 rounded-lg">
-                        <Store className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                        <div className="font-medium text-gray-900">{info.getValue()}</div>
-                        <div className="text-sm text-gray-500">{info.row.original.contactPerson?.name}</div>
-                    </div>
-                </div>
-            ),
-            size: 250,
-        }),
-        columnHelper.accessor('address', {
-            header: 'Location',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{info.getValue()}</span>
-                </div>
-            ),
-        }),
-        columnHelper.accessor('merchantCount', {
-            header: 'Merchants',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">{info.getValue()}</span>
-                </div>
-            ),
-            size: 100,
-        }),
-        columnHelper.accessor('walletBalance', {
-            header: 'Wallet Balance',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <Wallet className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">₹{(info.getValue() || 0).toLocaleString()}</span>
-                </div>
-            ),
-        }),
-        columnHelper.accessor('status', {
-            header: 'Status',
-            cell: (info) => <StatusBadge status={info.getValue() || 'active'} />,
-            size: 100,
-        }),
-        columnHelper.display({
-            id: 'actions',
-            header: 'Actions',
-            cell: ({ row }) => (
-                <div className="flex items-center space-x-1">
-                    <ActionButton
-                        icon={Eye}
-                        onClick={() => fetchCustomerDetails(row.original.id, 'franchise')}
-                        variant="primary"
-
-                    />
-                    <ActionButton
-                        icon={Edit}
-                        onClick={() => handleEditCustomer(row.original.id, 'franchise')}
-                        variant="ghost"
-                    />
-                    <ActionButton
-                        icon={Trash2}
-                        onClick={() => handleDeleteCustomer(row.original.id, 'franchise')}
-                        variant="danger"
-                    />
-                </div>
-            ),
-            size: 120,
-        }),
-    ], [columnHelper])
-
-    // Merchant Columns
-    const merchantColumns = useMemo(() => [
-        columnHelper.accessor('id', {
-            header: 'ID',
-            cell: (info) => (
-                <span className="font-mono text-sm text-gray-600">#{info.getValue()}</span>
-            ),
-            size: 80,
-        }),
-        columnHelper.accessor('businessName', {
-            header: 'Business Name',
-            cell: (info) => (
-                <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-green-50 rounded-lg">
-                        <Store className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                        <div className="font-medium text-gray-900">{info.getValue()}</div>
-                        <div className="text-sm text-gray-500">Franchise : {info.row.original.franchiseName}</div>
-                    </div>
-                </div>
-            ),
-            size: 250,
-        }),
-        
-        columnHelper.accessor('address', {
-            header: 'Location',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{info.getValue()}</span>
-                </div>
-            ),
-        }),
-        columnHelper.accessor('products', {
-            header: 'Products',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <Package className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">{info.getValue() || 0}</span>
-                </div>
-            ),
-            size: 100,
-        }),
-        columnHelper.accessor('walletBalance', {
-            header: 'Wallet Balance',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <Wallet className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">₹{(info.getValue() || 0).toLocaleString()}</span>
-                </div>
-            ),
-        }),
-        columnHelper.accessor('monthlyRevenue', {
-            header: 'Monthly Revenue',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">₹{(info.getValue() || 0).toLocaleString()}</span>
-                </div>
-            ),
-        }),
-        columnHelper.accessor('status', {
-            header: 'Status',
-            cell: (info) => <StatusBadge status={info.getValue() || 'active'} />,
-            size: 100,
-        }),
-        columnHelper.display({
-            id: 'actions',
-            header: 'Actions',
-            cell: ({ row }) => (
-                <div className="flex items-center space-x-1">
-                    <ActionButton
-                        icon={Eye}
-                        onClick={() => fetchCustomerDetails(row.original.id, 'merchant')}
-                        variants="primary"
-                    />
-                    <ActionButton
-                        icon={Edit}
-                        onClick={() => handleEditCustomer(row.original.id, 'merchant')}
-                        variants='ghost'
-                    />
-                    <ActionButton
-                        icon={Trash2}
-                        onClick={() => handleDeleteCustomer(row.original.id, 'merchant')}
-                        variant="danger"
-                    />
-                </div>
-            ),
-            size: 120,
-        }),
-    ], [columnHelper])
-
-     const directMerchantColumns = useMemo(() => [
-        columnHelper.accessor('id', {
-            header: 'ID',
-            cell: (info) => (
-                <span className="font-mono text-sm text-gray-600">#{info.getValue()}</span>
-            ),
-            size: 80,
-        }),
-        columnHelper.accessor('businessName', {
-            header: 'Business Name',
-            cell: (info) => (
-                <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-green-50 rounded-lg">
-                        <Store className="w-4 h-4 text-green-600" />
+                        <Handshake className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
                         <div className="font-medium text-gray-900">{info.getValue()}</div>
@@ -849,7 +505,6 @@ const CustomerListComponent = () => {
             ),
             size: 250,
         }),
-        
         columnHelper.accessor('address', {
             header: 'Location',
             cell: (info) => (
@@ -899,17 +554,17 @@ const CustomerListComponent = () => {
                 <div className="flex items-center space-x-1">
                     <ActionButton
                         icon={Eye}
-                        onClick={() => fetchCustomerDetails(row.original.id, 'merchant')}
+                        onClick={() => fetchApiPartnerDetails(row.original.id)}
+                        variant="primary"
                     />
                     <ActionButton
                         icon={Edit}
-                        onClick={() => handleEditCustomer(row.original.id, 'merchant')}
-                        // variant=
+                        onClick={() => handleEditApiPartner(row.original.id)}
+                        variant="ghost"
                     />
                     <ActionButton
                         icon={Trash2}
-                        className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
-                        onClick={() => handleDeleteCustomer(row.original.id, 'merchant')}
+                        onClick={() => handleDeleteApiPartner(row.original.id)}
                         variant="danger"
                     />
                 </div>
@@ -920,18 +575,8 @@ const CustomerListComponent = () => {
 
     // Table instance
     const table = useReactTable({
-          data:
-    activeTab === "franchises"
-      ? franchises
-      : activeTab === "direct merchants"
-      ? merchants
-      : directMerchants,
-  columns:
-    activeTab === "franchises"
-      ? franchiseColumns
-      : activeTab === "merchants"
-      ? merchantColumns
-      : directMerchantColumns,
+        data: apiPartners,
+        columns: apiPartnerColumns,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
@@ -952,22 +597,19 @@ const CustomerListComponent = () => {
 
     const TableHeader = ({ title, count }) => (
         <div className="flex items-center justify-between mb-4">
-           
             <div className='flex items-center'>
-                {!title.includes("Merchant") ? 
-                 <Handshake className='text-blue-600 mr-3'/>
-                : <Users2 className='text-blue-600 mr-3'/>}
-               <div>
-                 <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-                <p className="text-gray-600 mt-1">{count} total customers</p>
-               </div>
+                <Handshake className='text-blue-600 mr-3' size={32} />
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+                    <p className="text-gray-600 mt-1">{count} total API partners</p>
+                </div>
             </div>
             <div className="flex items-center space-x-4">
                 <div className="relative">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search customers..."
+                        placeholder="Search API partners..."
                         value={globalFilter}
                         onChange={(e) => setGlobalFilter(e.target.value)}
                         className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -985,7 +627,7 @@ const CustomerListComponent = () => {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
                     <p className="text-gray-600 mb-4">{error}</p>
                     <button
-                        onClick={() => activeTab === 'franchises' ? fetchFranchises() : fetchMerchants()}
+                        onClick={fetchApiPartners}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
                         Try Again
@@ -996,47 +638,12 @@ const CustomerListComponent = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p">
-            <div className=" mx-auto">
-                {/* Tabs */}
-                <div className="border-b border-gray-200 mb-8">
-                    <nav className="-mb-px flex space-x-8">
-                        <button
-                            onClick={() => handleTabChange('franchises')}
-                            className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'franchises'
-                                ? 'border-blue-500 text-blue-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                }`}
-                        >
-                            Franchises
-                        </button>
-                        
-                         <button
-                            onClick={() => handleTabChange('merchants')}
-                            className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'merchants'
-                                ? 'border-blue-500 text-blue-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                }`}
-                        >
-                            Merchants
-                        </button>
-
-                        <button
-                            onClick={() => handleTabChange('direct merchants')}
-                            className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'direct merchants'
-                                ? 'border-blue-500 text-blue-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                }`}
-                        >
-                            Direct Merchants
-                        </button>
-                    </nav>
-                </div>
-
+        <div className="min-h-screen bg-gray-50 p-6">
+            <div className="mx-auto">
                 {/* Header */}
                 <TableHeader
-                    title={activeTab === 'franchises' ? 'Franchise Management' : activeTab === 'direct merchants' ? 'Direct Merchant Management':'Merchant Management'}
-                    count={activeTab === 'franchises' ? franchises.length : activeTab === 'merchants' ?  directMerchants.length : merchants.length}
+                    title="API Partner Management"
+                    count={apiPartners.length}
                 />
 
                 {/* Table */}
@@ -1163,13 +770,11 @@ const CustomerListComponent = () => {
 
                 {/* Edit Modal */}
                 {editModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-90 p-4">
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full overflow-auto">
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-bold">
-                                        Edit {editModal.type === 'franchise' ? 'Franchise' : 'Merchant'}
-                                    </h2>
+                                    <h2 className="text-xl font-bold">Edit API Partner</h2>
                                     <button
                                         onClick={() => setEditModal(null)}
                                         className="p-2 hover:bg-gray-100 rounded-lg"
@@ -1181,11 +786,11 @@ const CustomerListComponent = () => {
                                 <CustomerOnboarding
                                     isModal={true}
                                     isEditMode={true}
-                                    customerData={editModal.customer}
-                                    customerId={editModal.customerId}
+                                    customerData={editModal.apiPartner}
+                                    customerId={editModal.apiPartnerId}
                                     onClose={() => setEditModal(null)}
                                     onSuccess={handleEditSuccess}
-                                    customerType={activeTab === 'franchises' ? 'franchise' : 'merchant'}
+                                    customerType="apiPartner"
                                 />
                             </div>
                         </div>
@@ -1204,8 +809,7 @@ const CustomerListComponent = () => {
                 {/* View Modal */}
                 {viewModal && (
                     <ViewModal
-                        customer={viewModal.customer}
-                        customerType={viewModal.type}
+                        apiPartner={viewModal.apiPartner}
                         onClose={() => setViewModal(null)}
                     />
                 )}
@@ -1214,5 +818,5 @@ const CustomerListComponent = () => {
     )
 }
 
-export default CustomerListComponent
+export default ApiPartnerListComponent
 export { DocumentPreview }

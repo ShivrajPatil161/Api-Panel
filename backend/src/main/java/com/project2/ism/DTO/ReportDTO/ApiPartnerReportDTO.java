@@ -2,7 +2,7 @@ package com.project2.ism.DTO.ReportDTO;
 
 import java.math.BigDecimal;
 
-public class MerchantReportDTO {
+public class ApiPartnerReportDTO {
     private String businessName;
     private String franchiseName;
     private BigDecimal walletBalance;
@@ -15,7 +15,7 @@ public class MerchantReportDTO {
     private String contactPersonPhoneNumber;
     private String contactPersonEmail;
 
-    public MerchantReportDTO(String businessName, String franchiseName, BigDecimal walletBalance, Long totalDevices, Long totalProducts, String gstNumber, String panNumber, String registrationNumber, String contactPersonName, String contactPersonPhoneNumber, String contactPersonEmail) {
+    public ApiPartnerReportDTO(String businessName, String franchiseName, BigDecimal walletBalance, Long totalDevices, Long totalProducts, String gstNumber, String panNumber, String registrationNumber, String contactPersonName, String contactPersonPhoneNumber, String contactPersonEmail) {
         this.businessName = businessName;
         this.franchiseName = franchiseName;
         this.walletBalance = walletBalance;

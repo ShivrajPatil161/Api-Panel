@@ -57,8 +57,8 @@
 //        existingSerial.setOutwardTransaction(outward);
 //        existingSerial.setFranchise(outward.getFranchise());
 //        // Set merchant if this is a merchant transaction
-//        if (outward.getMerchant() != null) {
-//            existingSerial.setMerchant(outward.getMerchant());
+//        if (outward.getApiPartner() != null) {
+//            existingSerial.setApiPartner(outward.getApiPartner());
 //        }
 //
 //        // Keep all other fields unchanged (inward transaction, product, etc.)
@@ -80,7 +80,7 @@
 //
 //        existingSerial.setFranchise(ret.getFranchise());
 //        // Clear merchant (product is back from field)
-//        existingSerial.setMerchant(null);
+//        existingSerial.setApiPartner(null);
 //
 //        // Clear outward transaction
 //        existingSerial.setOutwardTransaction(null);

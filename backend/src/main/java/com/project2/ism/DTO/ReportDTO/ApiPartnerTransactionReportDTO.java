@@ -8,7 +8,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MerchantTransactionReportDTO {
+public class ApiPartnerTransactionReportDTO {
     private Long customTxnId;
     private String txnId;
     private String actionOnBalance;
@@ -40,7 +40,7 @@ public class MerchantTransactionReportDTO {
     // Getters and setters...
 
     // Constructor with raw amounts
-    public MerchantTransactionReportDTO(
+    public ApiPartnerTransactionReportDTO(
             Long customTxnId,
             String txnId,
             String actionOnBalance,

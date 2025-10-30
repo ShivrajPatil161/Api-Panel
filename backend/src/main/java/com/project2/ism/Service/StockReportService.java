@@ -81,10 +81,10 @@
 //        dto.setStatus(status);
 //
 //        // Allocation info - Check both direct allocation and outward transaction
-//        if (psn.getMerchant() != null) {
+//        if (psn.getApiPartner() != null) {
 //            dto.setAllocationType("MERCHANT");
-//            dto.setAllocatedToId(psn.getMerchant().getId());
-//            dto.setAllocatedToName(psn.getMerchant().getBusinessName());
+//            dto.setAllocatedToId(psn.getApiPartner().getId());
+//            dto.setAllocatedToName(psn.getApiPartner().getBusinessName());
 //            dto.setAllocatedToType("MERCHANT");
 //        } else if (psn.getFranchise() != null) {
 //            dto.setAllocationType("FRANCHISE");
@@ -93,10 +93,10 @@
 //            dto.setAllocatedToType("FRANCHISE");
 //        } else if (psn.getOutwardTransaction() != null) {
 //            // Check outward transaction for allocation
-//            if (psn.getOutwardTransaction().getMerchant() != null) {
+//            if (psn.getOutwardTransaction().getApiPartner() != null) {
 //                dto.setAllocationType("MERCHANT");
-//                dto.setAllocatedToId(psn.getOutwardTransaction().getMerchant().getId());
-//                dto.setAllocatedToName(psn.getOutwardTransaction().getMerchant().getBusinessName());
+//                dto.setAllocatedToId(psn.getOutwardTransaction().getApiPartner().getId());
+//                dto.setAllocatedToName(psn.getOutwardTransaction().getApiPartner().getBusinessName());
 //                dto.setAllocatedToType("MERCHANT");
 //            } else if (psn.getOutwardTransaction().getFranchise() != null) {
 //                dto.setAllocationType("FRANCHISE");
@@ -150,7 +150,7 @@
 //        if (psn.getReturnTransaction() != null) {
 //            return "RETURNED";
 //        }
-//        if (psn.getOutwardTransaction() != null || psn.getMerchant() != null || psn.getFranchise() != null) {
+//        if (psn.getOutwardTransaction() != null || psn.getApiPartner() != null || psn.getFranchise() != null) {
 //            return "ALLOCATED";
 //        }
 //        return "AVAILABLE";
@@ -179,8 +179,8 @@
 //
 //        // Allocation type counts
 //        long toMerchants = serialNumbers.stream()
-//                .filter(psn -> psn.getMerchant() != null ||
-//                        (psn.getOutwardTransaction() != null && psn.getOutwardTransaction().getMerchant() != null))
+//                .filter(psn -> psn.getApiPartner() != null ||
+//                        (psn.getOutwardTransaction() != null && psn.getOutwardTransaction().getApiPartner() != null))
 //                .count();
 //        summary.setAllocatedToMerchants(toMerchants);
 //

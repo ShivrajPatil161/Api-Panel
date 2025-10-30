@@ -100,7 +100,7 @@
 //                    MerchantWallet w = new MerchantWallet();
 //                    Merchant mRef = new Merchant();
 //                    mRef.setId(merchant.getId());
-//                    w.setMerchant(mRef);
+//                    w.setApiPartner(mRef);
 //                    w.setAvailableBalance(BigDecimal.ZERO);
 //                    w.setLastUpdatedAmount(BigDecimal.ZERO);
 //                    w.setLastUpdatedAt(LocalDateTime.now());
@@ -127,7 +127,7 @@
 //        LocalDateTime now = LocalDateTime.now();
 //
 //        MerchantTransactionDetails transaction = new MerchantTransactionDetails();
-//        transaction.setMerchant(merchant);
+//        transaction.setApiPartner(merchant);
 //        transaction.setAmount(amount);
 //        transaction.setBalBeforeTran(balanceBeforeTran);
 //        transaction.setBalAfterTran(balanceAfterTran);

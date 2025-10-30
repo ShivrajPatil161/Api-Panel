@@ -1,21 +1,20 @@
 // DTO for Merchant Stats
 package com.project2.ism.DTO;
 
-import java.math.BigDecimal;
 import java.util.List;
 
-public class MerchantStatsDTO {
+public class ApiPartnerStatsDTO {
     private Long merchantId;
     private Long outwardTransactions;
     private Long returnTransactions;
     private Long productsAllocated;
  //   private BigDecimal walletBalance;
 
-    private List<MerchantProductSummaryDTO> products;
+    private List<ApiPartnerProductSummaryDTO> products;
 
-    public MerchantStatsDTO(Long merchantId, Long outwardTransactions,
-                            Long productsAllocated, //BigDecimal walletBalance,
-                            List<MerchantProductSummaryDTO> products) {
+    public ApiPartnerStatsDTO(Long merchantId, Long outwardTransactions,
+                              Long productsAllocated, //BigDecimal walletBalance,
+                              List<ApiPartnerProductSummaryDTO> products) {
         this.merchantId = merchantId;
         this.outwardTransactions = outwardTransactions;
         this.productsAllocated = productsAllocated;
@@ -65,11 +64,11 @@ public class MerchantStatsDTO {
 //        this.walletBalance = walletBalance;
 //    }
 
-    public List<MerchantProductSummaryDTO> getProducts() {
+    public List<ApiPartnerProductSummaryDTO> getProducts() {
         return products;
     }
 
-    public void setProducts(List<MerchantProductSummaryDTO> products) {
+    public void setProducts(List<ApiPartnerProductSummaryDTO> products) {
         this.products = products;
     }
 }

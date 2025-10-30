@@ -399,11 +399,11 @@
 //        this.deviceSerial = deviceSerial;
 //    }
 //
-//    public String getMerchant() {
+//    public String getApiPartner() {
 //        return merchant;
 //    }
 //
-//    public void setMerchant(String merchant) {
+//    public void setApiPartner(String merchant) {
 //        this.merchant = merchant;
 //    }
 //

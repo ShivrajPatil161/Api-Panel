@@ -107,11 +107,11 @@
 //        this.franchise = franchise;
 //    }
 //
-//    public Merchant getMerchant() {
+//    public Merchant getApiPartner() {
 //        return merchant;
 //    }
 //
-//    public void setMerchant(Merchant merchant) {
+//    public void setApiPartner(Merchant merchant) {
 //        this.merchant = merchant;
 //    }
 //

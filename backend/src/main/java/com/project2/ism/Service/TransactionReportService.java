@@ -341,7 +341,7 @@
 //                vt != null ? vt.getCardClassification() : null,
 //
 //                // Business names
-//                mtd != null && mtd.getMerchant() != null ? mtd.getMerchant().getBusinessName() : null,
+//                mtd != null && mtd.getApiPartner() != null ? mtd.getApiPartner().getBusinessName() : null,
 //                ftd.getFranchise() != null ? ftd.getFranchise().getFranchiseName() : null,
 //
 //                // Transaction status

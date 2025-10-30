@@ -1,28 +1,25 @@
 package com.project2.ism.Repository;
 
-import com.project2.ism.DTO.ReportDTO.FranchiseReportsDTO;
-import com.project2.ism.DTO.ReportDTO.MerchantReportDTO;
-import com.project2.ism.Model.Users.Merchant;
+import com.project2.ism.Model.Users.ApiPartner;
+import com.project2.ism.Model.Users.ApiPartner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MerchantRepository extends JpaRepository<Merchant, Long> {
+public interface ApiPartnerRepository extends JpaRepository<ApiPartner, Long> {
 
 //    List<Merchant> findByFranchiseIsNull();
 //    List<Merchant> findByFranchiseIsNotNull();
-    List<Merchant> findByIsApprovedFalse();
+    List<ApiPartner> findByIsApprovedFalse();
 
-//    Optional<Merchant> findByContactPerson_Email(String email);
+    Optional<ApiPartner> findByContactPerson_Email(String email);
 //    @Query("SELECT m.franchise FROM Merchant m WHERE m.id = :merchantId")
-//
-//
+
+
 //    List<Merchant> findByFranchiseId(Long franchiseId);
 //
 //    @Query("SELECT m FROM Merchant m WHERE m.franchise.id = :franchiseId AND m.status = 'ACTIVE'")

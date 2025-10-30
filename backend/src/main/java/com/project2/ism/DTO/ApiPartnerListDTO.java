@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MerchantListDTO {
+public class ApiPartnerListDTO {
     private Long id;
     private String businessName;
     private String businessType;
@@ -14,8 +14,6 @@ public class MerchantListDTO {
     private String contactPersonEmail;
     private String contactPersonPhone;
     private String address;
-    private Long franchiseId;
-    private String franchiseName;
     private Integer products;
     private BigDecimal walletBalance;
     private BigDecimal monthlyRevenue;
@@ -23,13 +21,12 @@ public class MerchantListDTO {
     private LocalDateTime createdAt;
 
     // Constructors
-    public MerchantListDTO() {}
+    public ApiPartnerListDTO() {}
 
-    public MerchantListDTO(Long id, String businessName, String businessType,
-                           String contactPersonName, String contactPersonEmail,
-                           String contactPersonPhone, String address, Long franchiseId,
-                           String franchiseName, Integer products, BigDecimal walletBalance,
-                           BigDecimal monthlyRevenue, String status, LocalDateTime createdAt) {
+    public ApiPartnerListDTO(Long id, String businessName, String businessType,
+                             String contactPersonName, String contactPersonEmail,
+                             String contactPersonPhone, String address, Integer products, BigDecimal walletBalance,
+                             BigDecimal monthlyRevenue, String status, LocalDateTime createdAt) {
         this.id = id;
         this.businessName = businessName;
         this.businessType = businessType;
@@ -37,8 +34,6 @@ public class MerchantListDTO {
         this.contactPersonEmail = contactPersonEmail;
         this.contactPersonPhone = contactPersonPhone;
         this.address = address;
-        this.franchiseId = franchiseId;
-        this.franchiseName = franchiseName;
         this.products = products;
         this.walletBalance = walletBalance;
         this.monthlyRevenue = monthlyRevenue;
@@ -46,12 +41,11 @@ public class MerchantListDTO {
         this.createdAt = createdAt;
     }
 
-    public MerchantListDTO(Long id,String businessName,String contactPersonEmail,BigDecimal walletBalance,Long franchiseId){
+    public ApiPartnerListDTO(Long id, String businessName, String contactPersonEmail, BigDecimal walletBalance){
         this.id = id;
         this.businessName = businessName;
         this.contactPersonEmail = contactPersonEmail;
         this.walletBalance = walletBalance;
-        this.franchiseId = franchiseId;
     }
 
     // Getters and Setters
@@ -75,12 +69,6 @@ public class MerchantListDTO {
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
-
-    public Long getFranchiseId() { return franchiseId; }
-    public void setFranchiseId(Long franchiseId) { this.franchiseId = franchiseId; }
-
-    public String getFranchiseName() { return franchiseName; }
-    public void setFranchiseName(String franchiseName) { this.franchiseName = franchiseName; }
 
     public Integer getProducts() { return products; }
     public void setProducts(Integer products) { this.products = products; }
