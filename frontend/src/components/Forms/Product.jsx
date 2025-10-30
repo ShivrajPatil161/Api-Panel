@@ -78,19 +78,9 @@ const productSchema = z.object({
     z.literal("new") // allow "new" string for add category
   ]),
   newCategoryName: z.string().optional(),
-  model: z.string().min(2, 'Model is required').or(z.literal('')),
-  brand: z.string().min(2, 'Brand is required').or(z.literal('')),
-  description: z.string().min(10, 'Description must be at least 10 characters').or(z.literal('')),
-  warrantyPeriod: z.number().min(0, 'Warranty period must be 0 or more months'),
-  warrantyType: z.enum(['manufacturer', 'vendor', 'none']),
-  hsn: z.string().regex(/^[0-9]{4,8}$/, 'HSN must be 4-8 digits'),
+ 
   status: z.boolean(),
-  minOrderQuantity: z.number().min(1, 'Minimum order quantity must be at least 1').or(z.literal('')),
-  maxOrderQuantity: z.number().min(1, 'Maximum order quantity must be at least 1').or(z.literal('')),
   remarks: z.string().nullable().optional().default("")
-}).refine((data) => data.maxOrderQuantity >= data.minOrderQuantity, {
-  message: "Maximum quantity must be greater than or equal to minimum quantity",
-  path: ["maxOrderQuantity"],
 }).refine((data) => {
   if (data.productCategoryId === 'new' && (!data.newCategoryName || data.newCategoryName.trim().length < 2)) {
     return false;
@@ -279,22 +269,17 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
     defaultValues: initialData ? {
       ...initialData,
       vendorId: initialData.vendor?.id || '',
-      productCategoryId: initialData?.productCategory?.id || '',
-      warrantyType: initialData?.warrantyType || 'manufacturer'
+      productCategoryId: initialData?.productCategory?.id || ''
     } : {
       productName: '',
       vendorId: '',
       productCategoryId: '',
       newCategoryName: '',
-      model: '',
-      brand: '',
+  
       description: '',
-      warrantyPeriod: 12,
-        warrantyType: 'manufacturer',
-      hsn: '',
+     
       status: true,
-      minOrderQuantity: 1,
-      maxOrderQuantity: 100,
+      
       remarks: ''
     }
   });
@@ -356,15 +341,11 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
         productName: data.productName,
         vendor: { id: Number(data.vendorId) },
         productCategory: { id: Number(categoryId),categoryName: categoryName },
-        model: data.model,
-        brand: data.brand,
+        
         description: data.description,
-        warrantyPeriod: data.warrantyPeriod,
-        warrantyType: data.warrantyType,
-        hsn: data.hsn,
+        
         status: data.status,
-        minOrderQuantity: data.minOrderQuantity,
-        maxOrderQuantity: data.maxOrderQuantity,
+        
         remarks: data.remarks || null
       };
 
@@ -395,11 +376,7 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
     setValue('status', !watchStatus);
   };
 
-  const warrantyTypes = [
-    { value: 'manufacturer', label: 'Manufacturer Warranty' },
-    { value: 'vendor', label: 'Vendor Warranty' },
-    { value: 'none', label: 'No Warranty' }
-  ];
+
 
   if (dataLoading) {
     return (
@@ -460,24 +437,11 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   required
                   placeholder="Enter product name"
                 />
-
-                <InputField
-                  label="Brand"
-                  name="brand"
-                  register={register}
-                  error={errors.brand}
-                  
-                  placeholder="Enter brand name"
+                <StatusToggle
+                  status={watchStatus}
+                  onToggle={toggleStatus}
                 />
-
-                <InputField
-                  label="Model"
-                  name="model"
-                  register={register}
-                  error={errors.model}
-                  
-                  placeholder="Enter model number"
-                />
+                
 
                 <div className="md:col-span-2">
                   <TextareaField
@@ -490,80 +454,12 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   />
                 </div>
 
-                <StatusToggle
-                  status={watchStatus}
-                  onToggle={toggleStatus}
-                />
+                
               </div>
             </div>
 
             {/* Warranty & Legal */}
-            <div>
-              <SectionHeader
-                icon={<FileText className="h-5 w-5 mr-2 text-green-600" />}
-                title="Warranty & Legal Information"
-              />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <InputField
-                  label="Warranty Period (Months)"
-                  name="warrantyPeriod"
-                  register={register}
-                  error={errors.warrantyPeriod}
-                  type="number"
-                  min="0"
-                  required
-                  placeholder="12"
-                />
-
-                <SelectField
-                  label="Warranty Type"
-                  name="warrantyType"
-                  register={register}
-                  error={errors.warrantyType}
-                  options={warrantyTypes}
-                  required
-                />
-
-                <InputField
-                  label="HSN Code"
-                  name="hsn"
-                  register={register}
-                  error={errors.hsn}
-                  required
-                  placeholder="Enter HSN code"
-                  maxLength={8}
-                />
-              </div>
-            </div>
-
-            {/* Order Quantities */}
-            <div>
-              <SectionHeader title="Order Quantities" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField
-                  label="Minimum Order Quantity"
-                  name="minOrderQuantity"
-                  register={register}
-                  error={errors.minOrderQuantity}
-                  type="number"
-                  min="1"
-                  
-                  placeholder="1"
-                />
-
-                <InputField
-                  label="Maximum Order Quantity"
-                  name="maxOrderQuantity"
-                  register={register}
-                  error={errors.maxOrderQuantity}
-                  type="number"
-                  min="1"
-                  
-                  placeholder="100"
-                />
-              </div>
-            </div>
-
+           
             {/* Remarks */}
             <TextareaField
               label="Remarks"
