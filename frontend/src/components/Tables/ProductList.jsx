@@ -143,7 +143,7 @@ const ProductViewModal = ({ product, onClose }) => {
             </div>
             <div className="flex items-center space-x-2">
               <span className="font-medium">Category:</span>
-              <CategoryBadge categoryName={product.productCategory.categoryName} />
+              {product.productCategory.categoryName}
             </div>
            
             <div className="flex items-center space-x-2">
@@ -319,7 +319,7 @@ const ProductList = () => {
       }),
       columnHelper.accessor('productCategory.categoryName', {
         header: 'Category',
-        cell: info => <CategoryBadge categoryName={info.getValue()} />,
+        cell: info => {info.getValue()} ,
       }),
      
       columnHelper.accessor('status', {
