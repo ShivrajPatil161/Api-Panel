@@ -279,10 +279,36 @@ public class ProductService {
     }
 
     private String generateProductCode(ProductCategory category) {
+        String categoryName = category.getCategoryName().trim();
+        String shortCode;
+
+        // Split by whitespace
+        String[] words = categoryName.split("\\s+");
+
+        if (words.length > 1) {
+            // Multi-word category → take first letter of each
+            StringBuilder initials = new StringBuilder();
+            for (String word : words) {
+                if (!word.isEmpty()) {
+                    initials.append(Character.toUpperCase(word.charAt(0)));
+                }
+            }
+            shortCode = initials.toString();
+        } else {
+            // Single word → check if already short form (all uppercase and <= 4 letters)
+            if (categoryName.equals(categoryName.toUpperCase()) && categoryName.length() <= 4) {
+                shortCode = categoryName; // already short form like POS, QR
+            } else {
+                // Otherwise take first 2 or 3 letters and uppercase them
+                shortCode = categoryName.substring(0, Math.min(3, categoryName.length())).toUpperCase();
+            }
+        }
+
         return String.format("%s-%d-%d",
-                category.getCategoryName().toUpperCase(),
+                shortCode,
                 category.getCategoryCode(),
                 category.getProductCount()
         );
     }
+
 }

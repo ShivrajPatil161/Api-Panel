@@ -89,14 +89,7 @@ export const adminRoutes = [
         index: true,
         element: <ProductList />
       },
-      {
-        path: "pricing",
-        element: <SchemeList />
-      },
-      {
-        path: "products-assign",
-        element: <ProductAssignment />
-      },
+    
       {
         path: "inventory",
         element: <InventoryManagement />
@@ -109,6 +102,21 @@ export const adminRoutes = [
         path: "customer-products",
         element: <CustomerProductsList />
       }
+    ]
+  },
+  {
+    path: "schemes",
+    children: [
+      {
+        path: "pricing",
+        element: <SchemeList />
+      },
+      {
+        path: "products-assign",
+        element: <ProductAssignment />
+      },
+      
+      
     ]
   },
   // Customer routes
