@@ -194,15 +194,11 @@ public class ProductService {
             throw new IllegalArgumentException("Product category information is missing");
         }
 
-        product.setModel(dto.getModel());
-        product.setBrand(dto.getBrand());
+
         product.setDescription(dto.getDescription());
-        product.setWarrantyPeriod(dto.getWarrantyPeriod());
-        product.setWarrantyType(dto.getWarrantyType());
-        product.setHsn(dto.getHsn());
+
         product.setStatus(dto.isStatus());
-        product.setMinOrderQuantity(dto.getMinOrderQuantity());
-        product.setMaxOrderQuantity(dto.getMaxOrderQuantity());
+
         product.setRemarks(dto.getRemarks());
 
         return product;
@@ -228,15 +224,11 @@ public class ProductService {
                 product.getProductCode(),
                 vendorDTO,
                 categoryDTO,
-                product.getModel(),
-                product.getBrand(),
+
                 product.getDescription(),
-                product.getWarrantyPeriod(),
-                product.getWarrantyType(),
-                product.getHsn(),
+
                 product.getStatus(),
-                product.getMinOrderQuantity(),
-                product.getMaxOrderQuantity(),
+
                 product.getRemarks()
         );
     }
@@ -252,33 +244,15 @@ public class ProductService {
             product.setVendor(vendor);
         }
 
-        if (StringUtils.hasText(dto.getModel())) {
-            product.setModel(dto.getModel());
-        }
-        if (StringUtils.hasText(dto.getBrand())) {
-            product.setBrand(dto.getBrand());
-        }
+
         if (StringUtils.hasText(dto.getDescription())) {
             product.setDescription(dto.getDescription());
         }
-        if (dto.getWarrantyPeriod() != null) {
-            product.setWarrantyPeriod(dto.getWarrantyPeriod());
-        }
-        if (StringUtils.hasText(dto.getWarrantyType())) {
-            product.setWarrantyType(dto.getWarrantyType());
-        }
-        if (StringUtils.hasText(dto.getHsn())) {
-            product.setHsn(dto.getHsn());
-        }
+
+
 
         product.setStatus(dto.isStatus());
 
-        if (dto.getMinOrderQuantity() != null) {
-            product.setMinOrderQuantity(dto.getMinOrderQuantity());
-        }
-        if (dto.getMaxOrderQuantity() != null) {
-            product.setMaxOrderQuantity(dto.getMaxOrderQuantity());
-        }
         if (StringUtils.hasText(dto.getRemarks())) {
             product.setRemarks(dto.getRemarks());
         }
