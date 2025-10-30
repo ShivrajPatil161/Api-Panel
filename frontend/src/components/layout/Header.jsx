@@ -10,7 +10,7 @@ import {
   Ticket
 } from 'lucide-react';
 import api from '../../constants/API/axiosInstance';
-import logoImage from '../../assets/SD-2.jpg';
+import logoImage from '../../assets/AP2.png';
 import ChangePasswordModal from './ChangePasswordModal';
 
 const Header = ({ userType }) => {

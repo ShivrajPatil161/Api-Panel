@@ -186,7 +186,7 @@ import { toast } from 'react-toastify'
 import { Button, FormInput } from '../Forms/Common/common';
 import api from '../../constants/API/axiosInstance';
 import { Eye, EyeOff } from 'lucide-react';
-import logoImage from '../../assets/SD.jpg';
+import logoImage from '../../assets/AP1.png';
 
 const Login = () => {
   const navigate = useNavigate();

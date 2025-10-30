@@ -28,7 +28,7 @@ import {
   IdCard
 } from 'lucide-react';
 import { flattenPermissions } from "./permissionHelper";
-import logoImage from '../../assets/SD-2.jpg';
+import logoImage from '../../assets/AP2.png';
 
 
 // Reusable Menu Item Component
