@@ -54,7 +54,7 @@
 //                .orElseThrow(() -> new RuntimeException("Franchise not found"));
 //        // ✅ create distribution record
 //        ProductDistribution distribution = new ProductDistribution();
-//        distribution.setMerchant(merchant);
+//        distribution.setApiPartner(merchant);
 //        distribution.setFranchise(franchise);
 //        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 //        distribution.setDistributedBy(email);
@@ -144,9 +144,9 @@
 //            dto.setFranchiseId(entity.getFranchise().getId());
 //            dto.setFranchiseName(entity.getFranchise().getFranchiseName());
 //        }
-//        if (entity.getMerchant() != null) {
-//            dto.setMerchantId(entity.getMerchant().getId());
-//            dto.setMerchantName(entity.getMerchant().getBusinessName());
+//        if (entity.getApiPartner() != null) {
+//            dto.setMerchantId(entity.getApiPartner().getId());
+//            dto.setMerchantName(entity.getApiPartner().getBusinessName());
 //        }
 //        if (entity.getProductSerialNumbers() != null) {
 //            dto.setSerialNumbers( entity.getProductSerialNumbers().stream()

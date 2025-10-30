@@ -148,7 +148,7 @@
 //    public ResponseEntity<FranchiseDetailsDTO> getFranchiseById(@PathVariable Long id) {
 //        try {
 //            FranchiseViewDTO franchise = franchiseService.getFranchiseViewDTOById(id);
-//            List<MerchantListDTO> merchants = merchantService.getMerchantsByFranchise(id);
+//            List<ApiPartnerListDTO> merchants = merchantService.getMerchantsByFranchise(id);
 //            FranchiseDetailsDTO response = new FranchiseDetailsDTO(franchise, merchants);
 //            return ResponseEntity.ok(response);
 //        } catch (Exception e) {

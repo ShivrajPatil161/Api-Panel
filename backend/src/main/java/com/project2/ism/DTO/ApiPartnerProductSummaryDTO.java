@@ -1,6 +1,6 @@
 package com.project2.ism.DTO;
 
-public class MerchantProductSummaryDTO {
+public class ApiPartnerProductSummaryDTO {
 
     private Long outwardId;
     private Long productId;
@@ -9,8 +9,8 @@ public class MerchantProductSummaryDTO {
     private String productCategory;
     private Integer totalQuantity;
 
-    public MerchantProductSummaryDTO(Long outwardId, Long productId, String productName, String productCode,
-                                     String productCategory, Integer totalQuantity) {
+    public ApiPartnerProductSummaryDTO(Long outwardId, Long productId, String productName, String productCode,
+                                       String productCategory, Integer totalQuantity) {
         this.outwardId = outwardId;
         this.productId = productId;
         this.productName = productName;
@@ -18,8 +18,8 @@ public class MerchantProductSummaryDTO {
         this.productCategory = productCategory;
         this.totalQuantity = totalQuantity;
     }
-    public MerchantProductSummaryDTO(Long productId, String productName, String productCode,
-                                     String productCategory, Integer totalQuantity) {
+    public ApiPartnerProductSummaryDTO(Long productId, String productName, String productCode,
+                                       String productCategory, Integer totalQuantity) {
         this.productId = productId;
         this.productName = productName;
         this.productCode = productCode;

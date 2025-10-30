@@ -113,7 +113,7 @@
 //        t.setRrn(get(r, colIndex, "RRN", fmt));
 //        t.setInvoiceNumber(get(r, colIndex, "Invoice#", fmt));
 //        t.setDeviceSerial(get(r, colIndex, "Device Serial", fmt));
-//        t.setMerchant(get(r, colIndex, "Merchant", fmt));
+//        t.setApiPartner(get(r, colIndex, "Merchant", fmt));
 //        t.setCategory(get(r, colIndex, "Category", fmt));
 //        t.setStatus(get(r, colIndex, "Status", fmt));
 //        t.setSettledOn(parseDate(get(r, colIndex, "Settled On", fmt)));

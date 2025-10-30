@@ -1,7 +1,6 @@
 package com.project2.ism.Model.Users;
 
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.persistence.PrePersist;
@@ -10,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-public class Merchant extends CustomerBase {
+public class ApiPartner extends CustomerBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -77,7 +76,7 @@ public class Merchant extends CustomerBase {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-    public Merchant() {
+    public ApiPartner() {
     }
 
     public Long getId() {

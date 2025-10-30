@@ -2,9 +2,8 @@ package com.project2.ism.DTO;
 
 import org.springframework.web.multipart.MultipartFile;
 
-public class MerchantFormDTO {
+public class ApiPartnerFormDTO {
 
-    private Long franchiseId;
     private String businessName;
     private String legalName;
     private String businessType;
@@ -36,8 +35,7 @@ public class MerchantFormDTO {
     private boolean isApproved;
 
     //constructor
-    public MerchantFormDTO(Long franchiseId,String businessName, String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, MultipartFile panCardDocument, MultipartFile gstCertificate, MultipartFile addressProof, MultipartFile bankProof, MultipartFile franchiseAgreement,boolean isApproved) {
-        this.franchiseId = franchiseId;
+    public ApiPartnerFormDTO(String businessName, String legalName, String businessType, String gstNumber, String panNumber, String registrationNumber, String businessAddress, String primaryContactName, String primaryContactMobile, String alternateContactMobile, String primaryContactEmail, String landlineNumber, String bankName, String accountHolderName, String accountNumber, String ifscCode, String branchName, String accountType, MultipartFile panCardDocument, MultipartFile gstCertificate, MultipartFile addressProof, MultipartFile bankProof, MultipartFile franchiseAgreement, boolean isApproved) {
         this.businessName = businessName;
         this.legalName = legalName;
         this.businessType = businessType;
@@ -72,14 +70,6 @@ public class MerchantFormDTO {
 
     public void setApproved(boolean approved) {
         isApproved = approved;
-    }
-
-    public Long getFranchiseId() {
-        return franchiseId;
-    }
-
-    public void setFranchiseId(Long franchiseId) {
-        this.franchiseId = franchiseId;
     }
 
     public String getBusinessName() {

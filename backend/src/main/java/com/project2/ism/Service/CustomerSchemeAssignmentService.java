@@ -81,7 +81,7 @@
 //        } else if ("MERCHANT".equalsIgnoreCase(dto.getCustomerType()) && dto.getCustomerId() != null) {
 //            Merchant merchant = merchantRepository.findById(dto.getCustomerId())
 //                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"));
-//            entity.setMerchant(merchant);
+//            entity.setApiPartner(merchant);
 //        }
 //
 //        CustomerSchemeAssignment saved = assignmentRepo.save(entity);
@@ -157,7 +157,7 @@
 //
 //        // Clear existing customer assignments
 //        entity.setFranchise(null);
-//        entity.setMerchant(null);
+//        entity.setApiPartner(null);
 //
 //        // Set new customer assignment
 //        if ("FRANCHISE".equals(dto.getCustomerType()) && dto.getCustomerId() != null) {
@@ -167,7 +167,7 @@
 //        } else if ("MERCHANT".equals(dto.getCustomerType()) && dto.getCustomerId() != null) {
 //            Merchant merchant = merchantRepository.findById(dto.getCustomerId())
 //                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"));
-//            entity.setMerchant(merchant);
+//            entity.setApiPartner(merchant);
 //        }
 //
 //        CustomerSchemeAssignment saved = assignmentRepo.save(entity);
@@ -203,9 +203,9 @@
 //        if ("FRANCHISE".equalsIgnoreCase(entity.getCustomerType()) && entity.getFranchise() != null) {
 //            dto.setCustomerId(entity.getFranchise().getId());
 //            dto.setCustomerName(entity.getFranchise().getFranchiseName());
-//        } else if ("MERCHANT".equalsIgnoreCase(entity.getCustomerType()) && entity.getMerchant() != null) {
-//            dto.setCustomerId(entity.getMerchant().getId());
-//            dto.setCustomerName(entity.getMerchant().getBusinessName());
+//        } else if ("MERCHANT".equalsIgnoreCase(entity.getCustomerType()) && entity.getApiPartner() != null) {
+//            dto.setCustomerId(entity.getApiPartner().getId());
+//            dto.setCustomerName(entity.getApiPartner().getBusinessName());
 //        }
 //
 //        return dto;
@@ -356,12 +356,12 @@
 //            dto.setCustomerName(entity.getFranchise().getFranchiseName());
 //            dto.setFranchiseAddress(entity.getFranchise().getAddress());
 //            dto.setFranchiseContact(entity.getFranchise().getContactPerson().getPhoneNumber());
-//        } else if ("MERCHANT".equalsIgnoreCase(entity.getCustomerType()) && entity.getMerchant() != null) {
-//            dto.setCustomerId(entity.getMerchant().getId());
-//            dto.setCustomerName(entity.getMerchant().getBusinessName());
-//            dto.setMerchantBusinessName(entity.getMerchant().getBusinessName());
-//            dto.setMerchantAddress(entity.getMerchant().getAddress());
-//            dto.setMerchantContact(entity.getMerchant().getContactPerson().getPhoneNumber());
+//        } else if ("MERCHANT".equalsIgnoreCase(entity.getCustomerType()) && entity.getApiPartner() != null) {
+//            dto.setCustomerId(entity.getApiPartner().getId());
+//            dto.setCustomerName(entity.getApiPartner().getBusinessName());
+//            dto.setMerchantBusinessName(entity.getApiPartner().getBusinessName());
+//            dto.setMerchantAddress(entity.getApiPartner().getAddress());
+//            dto.setMerchantContact(entity.getApiPartner().getContactPerson().getPhoneNumber());
 //        }
 //
 //        return dto;

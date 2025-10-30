@@ -1,48 +1,25 @@
 import api from './axiosInstance';
 
-// Franchise APIs
-export const franchiseApi = {
-  // Get all franchises
-  getAll: () => api.get('/franchise'),
 
-  // Get franchise by ID
-  getById: (id) => api.get(`/franchise/${id}`),
-
-  // Create franchise
-  create: (data) => api.post('/franchise', data),
-
-  // Update franchise
-  update: (id, data) => api.put(`/franchise/${id}`, data),
-
-  // Delete franchise
-  delete: (id) => api.delete(`/franchise/${id}`),
-};
-
-// Merchant APIs
-export const merchantApi = {
+// Api Partner APIs
+export const apiPartnerApi = {
   // Get all merchants (including both franchise and direct merchants)
-  getAll: () => api.get('/merchants'),
+  getAll: () => api.get('/api-Partner'),
 
   // Get all direct merchants only
-  getAllDirect: () => api.get('/merchants/direct-merchant'),
-
-  // Get all franchise merchants only (merchants under franchises)
-  getAllFranchiseMerchants: () => api.get('/merchants/franchise-merchant'),
+  getAllDirect: () => api.get('/api-Partner/api-Partners'),
 
   // Get merchant by ID
-  getById: (id) => api.get(`/merchants/${id}`),
+  getById: (id) => api.get(`/api-Partner/${id}`),
 
   // Create merchant
-  create: (data) => api.post('/merchants', data),
+  create: (data) => api.post('/api-Partner', data),
 
   // Update merchant
-  update: (id, data) => api.put(`/merchants/${id}`, data),
+  update: (id, data) => api.put(`/api-Partner/${id}`, data),
 
   // Delete merchant
-  delete: (id) => api.delete(`/merchants/${id}`),
-
-  // Get merchants by franchise ID
-  getByFranchise: (franchiseId) => api.get(`/merchants/franchise/${franchiseId}`),
+  delete: (id) => api.delete(`/api-Partner/${id}`),
 };
 
 // File/Document APIs
@@ -70,24 +47,24 @@ export const customerApi = {
   // Get customer details (automatically determines type)
   getCustomerDetails: async (id, type) => {
     // Handle franchiseMerchant type as merchant for API call
-    const apiType = type === 'franchiseMerchant' ? 'merchant' : type;
-    const endpoint = apiType === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
+    const apiType = type === 'api-Partner';
+    const endpoint = apiType ===`${id}`;
     return api.get(endpoint);
   },
 
   // Delete customer (automatically determines type)
   deleteCustomer: async (id, type) => {
     // Handle franchiseMerchant type as merchant for API call
-    const apiType = type === 'franchiseMerchant' ? 'merchant' : type;
-    const endpoint = apiType === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
+    const apiType = type === 'api-Partner';
+    const endpoint = apiType ===`${id}`;
     return api.delete(endpoint);
   },
 
   // Update customer (automatically determines type)
   updateCustomer: async (id, type, data) => {
     // Handle franchiseMerchant type as merchant for API call
-    const apiType = type === 'franchiseMerchant' ? 'merchant' : type;
-    const endpoint = apiType === 'franchise' ? `/franchise/${id}` : `/merchants/${id}`;
+    const apiType = type === 'api-Partner';
+    const endpoint = apiType ===`${id}`;
     return api.put(endpoint, data);
   },
 };
