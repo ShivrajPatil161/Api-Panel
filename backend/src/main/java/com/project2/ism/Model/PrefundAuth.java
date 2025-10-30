@@ -8,9 +8,7 @@ public class PrefundAuth {
     private Long transactionId;
     private String depositType;
     private LocalDateTime depositDate;
-    private
     private BigDecimal amount;
     private String accountNumber;
     private String action;
-    private
 }

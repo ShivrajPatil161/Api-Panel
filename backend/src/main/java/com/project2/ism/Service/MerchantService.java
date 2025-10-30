@@ -10,7 +10,7 @@
 //import com.project2.ism.Model.InventoryTransactions.ProductSerialNumbers;
 //import com.project2.ism.Model.Product;
 //import com.project2.ism.Model.MerchantWallet;
-//import com.project2.ism.Model.UploadDocuments;
+//import com.project2.ism.Model.Users.UploadDocuments;
 //import com.project2.ism.Model.Users.BankDetails;
 //import com.project2.ism.Model.Users.Franchise;
 //import com.project2.ism.Model.Users.Merchant;
@@ -33,13 +33,10 @@
 //public class MerchantService {
 //
 //    private final MerchantRepository merchantRepository;
-//    private final FranchiseRepository franchiseRepository;
-//    private final FileStorageService fileStorageService;
+////    private final FileStorageService fileStorageService;
 //    private final UserService userService;
 //
-//    private final OutwardTransactionRepository outwardRepo;
 //
-//    private final ProductSerialsRepository serialRepo;
 //
 //    private final MerchantWalletRepository merchantWalletRepository;
 //
