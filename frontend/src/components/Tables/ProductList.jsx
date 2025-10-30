@@ -81,23 +81,7 @@ const StatusBadge = ({ status }) => (
   </span>
 );
 
-const CategoryBadge = ({ categoryName }) => {
-  const getCategoryStyle = (category) => {
-    switch (category?.toUpperCase()) {
-      case 'POS': return 'bg-blue-100 text-blue-800';
-      case 'QR_SCANNER': return 'bg-green-100 text-green-800';
-      case 'CARD_READER': return 'bg-yellow-100 text-yellow-800';
-      case 'PRINTER': return 'bg-red-100 text-red-800';
-      default: return 'bg-purple-100 text-purple-800';
-    }
-  };
 
-  return (
-    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryStyle(categoryName)}`}>
-      {categoryName || 'Unknown'}
-    </span>
-  );
-};
 
 const ActionButtons = ({ product, onView, onEdit, onDelete }) => (
   <div className="flex space-x-1">
@@ -161,32 +145,15 @@ const ProductViewModal = ({ product, onClose }) => {
               <span className="font-medium">Category:</span>
               <CategoryBadge categoryName={product.productCategory.categoryName} />
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Brand:</span>
-              <span>{product.brand}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Model:</span>
-              <span>{product.model}</span>
-            </div>
+           
             <div className="flex items-center space-x-2">
               <span className="font-medium">Status:</span>
               <StatusBadge status={product.status} />
             </div>
-            <div className="flex items-center space-x-2">
-              <Shield className="text-purple-500" size={16} />
-              <span className="font-medium">Warranty:</span>
-              <span>{product.warrantyPeriod} months ({product.warrantyType})</span>
-            </div>
+            
           </div>
 
-          {product.hsn && (
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">HSN:</span>
-              <span>{product.hsn}</span>
-            </div>
-          )}
-
+         
           {product.description && (
             <div>
               <span className="font-medium">Description:</span>
@@ -194,16 +161,7 @@ const ProductViewModal = ({ product, onClose }) => {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Min Order Qty:</span>
-              <span>{product.minOrderQuantity}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Max Order Qty:</span>
-              <span>{product.maxOrderQuantity}</span>
-            </div>
-          </div>
+      
 
           {product.remarks && (
             <div>
@@ -363,30 +321,12 @@ const ProductList = () => {
         header: 'Category',
         cell: info => <CategoryBadge categoryName={info.getValue()} />,
       }),
-      columnHelper.accessor('model', {
-        header: 'Model',
-        cell: info => (
-          <div>
-            <div className="text-sm font-medium">{info.getValue()}</div>
-            <div className="text-xs text-gray-500">{info.row.original.brand}</div>
-          </div>
-        ),
-      }),
+     
       columnHelper.accessor('status', {
         header: 'Status',
         cell: info => <StatusBadge status={info.getValue()} />,
       }),
-      columnHelper.accessor('warrantyPeriod', {
-        header: 'Warranty',
-        cell: info => (
-          <div>
-            <div className="text-sm font-medium">{info.getValue()} months</div>
-            <div className="text-xs text-gray-500 capitalize">
-              {info.row.original.warrantyType?.toLowerCase().replace('_', ' ') || 'Unknown'}
-            </div>
-          </div>
-        ),
-      }),
+      
       columnHelper.display({
         id: 'actions',
         header: 'Actions',
@@ -429,7 +369,6 @@ const ProductList = () => {
   const handleEdit = (product) => {
     const editData = {
       ...product,
-      warrantyType: product.warrantyType?.toLowerCase() || 'manufacturer',
     };
     setEditingProduct(editData);
     setShowForm(true);
@@ -566,17 +505,7 @@ const ProductList = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Shield className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg Warranty</p>
-                <p className="text-2xl font-bold text-gray-900">{avgWarranty} months</p>
-              </div>
-            </div>
-          </div>
+         
         </div>
 
         {/* Search Bar */}
