@@ -133,7 +133,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductDTO> getProductsByCriteria(Long vendorId, String brand,
                                                   Long categoryId, Pageable pageable) {
-        return productRepository.findProductsByCriteria(vendorId, brand, categoryId, pageable)
+        return productRepository.findProductsByCriteria(vendorId, categoryId, pageable)
                 .map(this::mapToDTO);
     }
 

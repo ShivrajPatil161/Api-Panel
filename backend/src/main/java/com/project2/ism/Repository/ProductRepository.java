@@ -39,10 +39,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     List<Product> findByStatusOrderByProductNameAsc(Boolean status);
 
-    /**
-     * Find products by brand
-     */
-    List<Product> findByBrandIgnoreCaseOrderByProductNameAsc(String brand);
 
     /**
      * Search products by multiple fields
@@ -50,8 +46,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE " +
             "LOWER(p.productName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
             "LOWER(p.productCode) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            "LOWER(p.brand) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            "LOWER(p.model) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+
             "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Product> searchProducts(@Param("searchTerm") String searchTerm, Pageable pageable);
 
@@ -60,18 +55,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     @Query("SELECT p FROM Product p WHERE " +
             "(:vendorId IS NULL OR p.vendor.id = :vendorId) AND " +
-            "(:brand IS NULL OR LOWER(p.brand) = LOWER(:brand)) AND " +
             "(:categoryId IS NULL OR p.productCategory.id = :categoryId)")
     Page<Product> findProductsByCriteria(@Param("vendorId") Long vendorId,
-                                         @Param("brand") String brand,
+
                                          @Param("categoryId") Long categoryId,
                                          Pageable pageable);
 
-    /**
-     * Find products with low stock (assuming you have stock management)
-     */
-    @Query("SELECT p FROM Product p WHERE p.minOrderQuantity > p.maxOrderQuantity")
-    List<Product> findProductsWithInvalidQuantityRange();
 
     /**
      * Count products by category
@@ -90,10 +79,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     Long countByStatus(Boolean status);
 
-    /**
-     * Find products by warranty period range
-     */
-    List<Product> findByWarrantyPeriodBetween(Integer minWarranty, Integer maxWarranty);
 
     /**
      * Find products created in a date range
@@ -102,15 +87,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCreatedAtBetween(@Param("startDate") java.time.LocalDateTime startDate,
                                          @Param("endDate") java.time.LocalDateTime endDate);
 
-    /**
-     * Find distinct brands
-     */
-    @Query("SELECT DISTINCT p.brand FROM Product p ORDER BY p.brand")
-    List<String> findDistinctBrands();
 
-    /**
-     * Find distinct models by brand
-     */
-    @Query("SELECT DISTINCT p.model FROM Product p WHERE LOWER(p.brand) = LOWER(:brand) ORDER BY p.model")
-    List<String> findDistinctModelsByBrand(@Param("brand") String brand);
+
 }
