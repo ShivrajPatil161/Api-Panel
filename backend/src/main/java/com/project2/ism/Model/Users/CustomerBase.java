@@ -1,6 +1,7 @@
 package com.project2.ism.Model.Users;
 
 
+import com.project2.ism.Model.ContactPerson;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
