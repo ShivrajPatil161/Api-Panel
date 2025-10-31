@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 // Reusable Input Component
-const FormInput = ({  label, name,  register,  error,  required = false,  type = "text", placeholder = "",  maxLength,  style, ...props}) => (
+export const FormInput = ({  label, name,  register,  error,  required = false,  type = "text", placeholder = "",  maxLength,  style, ...props}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
       {label} {required && <span className="text-red-500">*</span>}
@@ -30,7 +30,7 @@ const FormInput = ({  label, name,  register,  error,  required = false,  type =
 );
 
 // Reusable Textarea Component
-const FormTextarea = ({  label,  name,  register,  error, required = false,  rows = 3,  placeholder = "",  ...props}) => (
+export const FormTextarea = ({  label,  name,  register,  error, required = false,  rows = 3,  placeholder = "",  ...props}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
       {label} {required && <span className="text-red-500">*</span>}
@@ -49,7 +49,7 @@ const FormTextarea = ({  label,  name,  register,  error, required = false,  row
 );
 
 // Reusable Select Component
-const FormSelect = ({  label,  name,  register, error, required = false,  options = [],  placeholder = "Select an option", ...props}) => (
+export const FormSelect = ({  label,  name,  register, error, required = false,  options = [],  placeholder = "Select an option", ...props}) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
       {label} {required && <span className="text-red-500">*</span>}
@@ -76,7 +76,7 @@ const FormSelect = ({  label,  name,  register, error, required = false,  option
 );
 
 // Status Toggle Component
-const StatusToggle = ({ status, onToggle }) => (
+export const StatusToggle = ({ status, onToggle }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-2">
       Status
@@ -104,7 +104,7 @@ const StatusToggle = ({ status, onToggle }) => (
 );
 
 // Section Header Component
-const SectionHeader = ({ icon: Icon, title }) => (
+export const SectionHeader = ({ icon: Icon, title }) => (
   <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
     <Icon className="h-5 w-5 mr-2 text-blue-600" />
     {title}
@@ -112,7 +112,7 @@ const SectionHeader = ({ icon: Icon, title }) => (
 );
 
 // Form Section Component
-const FormSection = ({ title, icon, children }) => (
+export const FormSection = ({ title, icon, children }) => (
   <div>
     <SectionHeader icon={icon} title={title} />
     {children}
@@ -120,14 +120,14 @@ const FormSection = ({ title, icon, children }) => (
 );
 
 // Grid Layout Component
-const GridLayout = ({ columns = "1 md:2", gap = "6", children }) => (
+export const GridLayout = ({ columns = "1 md:2", gap = "6", children }) => (
   <div className={`grid grid-cols-${columns.replace(' md:', ' md:grid-cols-')} gap-${gap}`}>
     {children}
   </div>
 );
 
 // Modal Container Component
-const Modal = ({ title, subtitle, onClose, children }) => (
+export const Modal = ({ title, subtitle, onClose, children }) => (
   <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
     <div className="bg-gray-100 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
       {/* Header */}
@@ -154,7 +154,7 @@ const Modal = ({ title, subtitle, onClose, children }) => (
 );
 
 // Form Actions Component
-const FormActions = ({ onCancel, isSubmitting, isEdit }) => (
+export const FormActions = ({ onCancel, isSubmitting, isEdit, entityName = 'Vendor' }) => (
   <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
     <button
       type="button"
@@ -168,10 +168,11 @@ const FormActions = ({ onCancel, isSubmitting, isEdit }) => (
       disabled={isSubmitting}
       className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
-      {isSubmitting ? 'Saving...' : isEdit ? 'Update Vendor' : 'Create Vendor'}
+      {isSubmitting ? 'Saving...' : isEdit ? `Update ${entityName}` : `Create ${entityName}`}
     </button>
   </div>
 );
+
 
 // Validation Schema using Zod
 const vendorSchema = z.object({
