@@ -29,7 +29,7 @@ const RootRedirect = () => {
 
 // 🧠 Function that selects routes dynamically at runtime
 const getRoutesForUser = () => {
-  const userType = "super_admin"
+  const userType = localStorage.getItem("userType")?.toLowerCase()
 console.log(userType)
   if (userType === 'admin' || userType === 'super_admin') {
     console.log('adminRoutes', adminRoutes)
