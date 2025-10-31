@@ -275,8 +275,8 @@ const MENU_CONFIGS = {
           { title: 'Vendor List', path: '/dashboard/vendors', icon: Users, permission: 'Vendor List' },
           { title: 'Product List', path: '/dashboard/inventory', icon: Package, permission: 'Product List' },
           { title: 'Vendor Rates', path: '/dashboard/vendors/rates', icon: DollarSign, permission: 'Vendor Rates' },
-          { title: 'Vendor Routing', path: '/dashboard/vendors/vendor-routing', icon: Route, permission: 'Vendor Routing' },
-          { title: 'Vendor Credentials', path: '/dashboard/vendors/vendor-credentials', icon: IdCard, permission: 'Vendor Credentials' }
+          { title: 'Vendor Routing', path: '/dashboard/vendors/routing', icon: Route, permission: 'Vendor Routing' },
+          { title: 'Vendor Credentials', path: '/dashboard/vendors/credentials', icon: IdCard, permission: 'Vendor Credentials' }
         ]
       },
       {

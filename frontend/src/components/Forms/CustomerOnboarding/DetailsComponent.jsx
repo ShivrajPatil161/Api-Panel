@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
-
 import { FileText, X, Download, Eye, Trash2 } from 'lucide-react'
 import api from "../../../constants/API/axiosInstance"
 import { toast } from 'react-toastify'
-
 
 // Form validation patterns
 const VALIDATION_PATTERNS = {
@@ -19,6 +17,7 @@ const FILE_CONSTRAINTS = {
     maxSize: 5 * 1024 * 1024, // 5MB
     allowedTypes: ['image/jpeg', 'image/png', 'application/pdf']
 }
+
 // Document Preview Component
 export const DocumentPreview = ({ documentPath, documentName, onClose }) => {
     const [loading, setLoading] = useState(true)
@@ -216,8 +215,6 @@ const FormTextarea = ({ label, name, register, errors, required = false, ...prop
     </div>
 )
 
-
-
 const DocumentUpload = ({ label, name, register, errors, required = false, existingFile = null, onPreview = null, onDelete = null }) => (
     <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -283,100 +280,14 @@ const DocumentUpload = ({ label, name, register, errors, required = false, exist
     </div>
 )
 
-// Customer Type Selection
-export const CustomerTypeSelection = ({ onSelect }) => (
-    <div className="text-center py-8">
-        <h2 className="text-2xl font-semibold mb-8 text-gray-800">Select Customer Type</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <button
-                onClick={() => onSelect('franchise')}
-                className="group p-8 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
-            >
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🏢</div>
-                <h3 className="text-xl font-semibold mb-2">Franchise</h3>
-                <p className="text-gray-600">Register as a franchise owner with multiple locations</p>
-            </button>
-
-            <button
-                onClick={() => onSelect('merchant')}
-                className="group p-8 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
-            >
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">🏪</div>
-                <h3 className="text-xl font-semibold mb-2">Merchant</h3>
-                <p className="text-gray-600">Register as an individual merchant business</p>
-            </button>
-        </div>
-    </div>
-)
-
-// Franchise Selection Component
-export const FranchiseSelectionForm = ({ register, errors, franchises, loading }) => {
-    const [association, setAssociation] = useState("franchise") // default can be 'franchise' or 'independent'
-
-    return (
-        <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Franchise Association</h3>
-
-            {/* Radio buttons */}
-            <div className="flex items-center space-x-6 mb-4">
-                <label className="flex items-center space-x-2">
-                    <input
-                        type="radio"
-                        value="independent"
-                        checked={association === "independent"}
-                        onChange={() => setAssociation("independent")}
-                        className="text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-gray-700">Independent Merchant</span>
-                </label>
-
-                <label className="flex items-center space-x-2">
-                    <input
-                        type="radio"
-                        value="franchise"
-                        checked={association === "franchise"}
-                        onChange={() => setAssociation("franchise")}
-                        className="text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-gray-700">Belongs to Franchise</span>
-                </label>
-            </div>
-
-            {/* Franchise dropdown only if "franchise" is selected */}
-            {association === "franchise" && (
-                <>
-                    {loading ? (
-                        <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                            <span className="ml-2 text-gray-600">Loading franchises...</span>
-                        </div>
-                    ) : (
-                        <FormSelect
-                            label="Select Franchise"
-                            name="franchiseId"
-                            register={register}
-                            errors={errors}
-                            required
-                            options={franchises}
-                            placeholder="Choose the franchise"
-                        />
-                    )}
-                </>
-            )}
-        </div>
-    )
-}
-
 // Step Components
-export const BasicDetailsForm = ({ register, errors, customerType }) => (
+export const BasicDetailsForm = ({ register, errors }) => (
     <div className="bg-gray-50 p-6 rounded-lg">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            {customerType === 'franchise' ? 'Franchise' : 'Merchant'} Basic Details
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Partner Basic Details</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput
-                label={customerType === 'franchise' ? 'Franchise Name' : 'Business Name'}
+                label="Business Name"
                 name="businessName"
                 register={register}
                 errors={errors}

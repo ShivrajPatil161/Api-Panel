@@ -36,6 +36,10 @@ import AuditHistoryComponent from '../../components/Admin/AuditHistoryComponent.
 import StockReport from '../../components/Reports/StockReport.jsx'
 import TaxesManagement from '../../components/Admin/TaxesManagement.jsx'
 import AdminSupportTickets from '../../components/Admin/AdminSupportTickets.jsx'
+import VendorCredentialsTable from '../../components/Tables/VendorCredentialsTable.jsx'
+import VendorRouting from '../../components/Tables/VendorRoutingTable.jsx'
+import VendorRoutingTable from '../../components/Tables/VendorRoutingTable.jsx'
+import AdminBankTable from '../../components/Tables/AdminBankTable.jsx'
 
 
 export const adminRoutes = [
@@ -67,6 +71,10 @@ export const adminRoutes = [
     path: "taxes-management",
     element: <TaxesManagement />
   },
+  {
+    path: "admin-bank",
+    element: <AdminBankTable />
+  },
   // Vendors routes
   {
     path: "vendors",
@@ -78,6 +86,14 @@ export const adminRoutes = [
       {
         path: "rates",
         element: <VendorRatesManagement />
+      },
+      {
+        path: "credentials",
+        element: <VendorCredentialsTable />
+      },
+      {
+        path: "routing",
+        element: <VendorRoutingTable />
       }
     ]
   },
