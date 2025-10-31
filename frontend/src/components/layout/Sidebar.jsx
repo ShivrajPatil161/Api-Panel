@@ -25,7 +25,8 @@ import {
   Ticket,
   IndianRupeeIcon,
   Route,
-  IdCard
+  IdCard,
+  Fingerprint
 } from 'lucide-react';
 import { flattenPermissions } from "./permissionHelper";
 import logoImage from '../../assets/AP2.png';
@@ -343,7 +344,7 @@ const MENU_CONFIGS = {
       icon: Package,
       iconColor: '',
       children: [
-        { title: 'Inward Entry', path: '/dashboard/customers/inward-products', icon: Package },
+
         { title: 'Product List', path: '/dashboard/inventory/customer-products', icon: Package }
       ]
     },
@@ -352,6 +353,13 @@ const MENU_CONFIGS = {
       key: 'payment',
       path: '/dashboard/credit-card-bill-payment',
       icon: Banknote,
+      iconColor: ''
+    },
+    {
+      title: 'PreFunding Auth',
+      key: 'prefund-auth',
+      path: '/dashboard/pre-funding-auth',
+      icon: Fingerprint,
       iconColor: ''
     },
     {
