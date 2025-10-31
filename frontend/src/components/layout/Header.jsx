@@ -123,7 +123,7 @@ const Header = ({ userType }) => {
       '/dashboard/payout': 'Payout',
       '/dashboard/credit-card-bill-payment': 'Credit Card'
     };
-    return routeTitles[path] || 'Supply Chain Management';
+    return routeTitles[path] || 'API panel';
   };
 
   const getBreadcrumb = () => {
