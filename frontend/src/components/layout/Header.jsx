@@ -41,7 +41,7 @@ const Header = ({ userType }) => {
         });
         localStorage.setItem("customerId", res?.data?.id)
       } else if (userType === 'merchant') {
-        const res = await api.get('/merchants/profile', {
+        const res = await api.get('/partners/profile', {
           params: {
             email: userEmail
           }

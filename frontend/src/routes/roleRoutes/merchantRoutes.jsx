@@ -7,6 +7,7 @@ import CreditCardBillPayment from '../../components/Payout/CreditCardBillPayment
 import MTransReportDashboard from '../../components/Reports/MerchantTransReport/MTransReportDashboard.jsx'
 import ViewProfile from '../../components/layout/ViewProfile.jsx'
 import SupportTickets from '../../components/Tables/SupportTicket.jsx'
+import PreFundAuthTable from '../../components/Tables/PreFundAuthTable.jsx'
 
 export const merchantRoutes = [
   {
@@ -38,6 +39,10 @@ export const merchantRoutes = [
   {
     path: 'payout',
     element: <Payout />
+  },
+  {
+    path: 'pre-funding-auth',
+    element: <PreFundAuthTable />
   },
   {
     path: 'profile',
