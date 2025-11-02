@@ -48,7 +48,7 @@ const AdminRolesDashboard = () => {
     const [selectedAdmin, setSelectedAdmin] = useState(null);
     const [totalPermissions, setTotalPermissions] = useState(0);
 
-    const userType = localStorage.getItem('userType');
+    const userType = localStorage.getItem('userType').toUpperCase();
     const isSuperAdmin = userType === 'SUPER_ADMIN';
 
     const columnHelper = createColumnHelper();

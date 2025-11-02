@@ -35,7 +35,7 @@ public class PrefundRequest {
     @Column(name = "deposit_image")
     private String depositImage;
 
-    @Enumerated(EnumType.STRING)
+
     @Column(nullable = false)
     private String status = "Pending";
 

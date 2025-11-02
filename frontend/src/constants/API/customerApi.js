@@ -4,22 +4,22 @@ import api from './axiosInstance';
 // Api Partner APIs
 export const apiPartnerApi = {
   // Get all merchants (including both franchise and direct merchants)
-  getAll: () => api.get('/api-Partner'),
+  getAll: () => api.get('/partners'),
 
   // Get all direct merchants only
-  getAllDirect: () => api.get('/api-Partner/api-Partners'),
+  getAllDirect: () => api.get('/partners/api-Partners'),
 
   // Get merchant by ID
-  getById: (id) => api.get(`/api-Partner/${id}`),
+  getById: (id) => api.get(`/partners/${id}`),
 
   // Create merchant
-  create: (data) => api.post('/api-Partner', data),
+  create: (data) => api.post('/partners', data),
 
   // Update merchant
-  update: (id, data) => api.put(`/api-Partner/${id}`, data),
+  update: (id, data) => api.put(`/partners/${id}`, data),
 
   // Delete merchant
-  delete: (id) => api.delete(`/api-Partner/${id}`),
+  delete: (id) => api.delete(`/partners/${id}`),
 };
 
 // File/Document APIs

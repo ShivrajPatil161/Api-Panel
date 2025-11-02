@@ -2,7 +2,7 @@
 //
 //import com.project2.ism.Model.*;
 //import com.project2.ism.Model.Users.Franchise;
-//import com.project2.ism.Model.Users.Merchant;
+//import com.project2.ism.Model.Users.ApiPartner;
 //import com.project2.ism.Repository.*;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.stereotype.Service;
@@ -14,8 +14,6 @@
 //@Service
 //public class WalletAdjustmentService {
 //
-//    @Autowired
-//    private FranchiseRepository franchiseRepository;
 //
 //    @Autowired
 //    private MerchantRepository merchantRepository;

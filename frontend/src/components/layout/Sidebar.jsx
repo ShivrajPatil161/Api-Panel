@@ -301,8 +301,7 @@ const MENU_CONFIGS = {
         children: [
           { title: 'Customer List', path: '/dashboard/customers', icon: Users, permission: 'Customer List' },
           { title: 'Onboard Customer', path: '/dashboard/customers/onboard', icon: UserPlus, permission: 'Onboard Customer' },
-          { title: 'Merchant Approval', path: '/dashboard/customers/admin-approval', icon: UserPlus, permission: 'Merchant Approval' },
-          { title: 'API Partner Credentials', path: '/dashboard/cutomers/api-partner-credentials', icon: IdCard, permission: 'API Partner Credentials' },
+          { title: 'Partner Credentials', path: '/dashboard/customers/partner-credentials', icon: IdCard, permission: 'Partner Credentials' },
           { title: 'PreFunding Authorization', path: '/dashboard/customers/pre-funding-authorization', icon: Users, permission: 'Pre-Funding Authorization' }
         ]
       },
@@ -416,7 +415,7 @@ const Sidebar = ({ userType }) => {
         'Dashboard', 'Admin Management', 'Logs', 'Taxes Manage', 'Edit History', 'Wallet Adjustment','Admin Bank',
         'Vendors', 'Vendor List', 'Product List', 'Vendor Rates', 'Vendor Routing', 'Vendor Credentials',
         'Inventory', 'Pricing Scheme', 'Product Scheme Assign', 'Inventory Management',
-        'Customers', 'Customer List', 'Onboard Customer', 'Merchant Approval', 'API Partner Credentials','Pre-Funding Authorization',
+        'Customers', 'Customer List', 'Onboard Customer', 'Merchant Approval', 'Partner Credentials','Pre-Funding Authorization',
         'Reports'
       ]);
     }

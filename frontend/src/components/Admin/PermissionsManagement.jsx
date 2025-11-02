@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit3, Trash2, Shield, AlertTriangle, CheckCircle, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Search, Edit3, Trash2, Shield, CheckCircle, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../constants/API/axiosInstance';
 
@@ -35,10 +35,8 @@ const PermissionsManagement = () => {
         }
     };
 
-    // Filter to get only parent permissions (modules)
     const parentPermissions = permissions;
 
-    // Filter permissions based on search
     const filteredPermissions = permissions.filter(permission =>
         permission.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         permission.description?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -65,7 +63,7 @@ const PermissionsManagement = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleEdit = (permission , parentId) => {
+    const handleEdit = (permission, parentId) => {
         setEditingPermission(permission);
         setFormData({
             name: permission.name,
@@ -87,7 +85,6 @@ const PermissionsManagement = () => {
                 description: formData.description
             };
 
-            // Add parent_id if creating a child permission
             if (formData.parentId) {
                 payload.parent_id = formData.parentId;
             }
@@ -97,11 +94,9 @@ const PermissionsManagement = () => {
                 : "/admin/permissions";
 
             const method = editingPermission ? "put" : "post";
-            const response = await api[method](url, payload);
+            await api[method](url, payload);
 
-            // Refresh permissions list
             await fetchPermissions();
-
             toast.success(editingPermission ? "Permission updated successfully" : "Permission created successfully");
             resetForm();
         } catch (error) {
@@ -122,7 +117,7 @@ const PermissionsManagement = () => {
 
         try {
             await api.delete(`/admin/permissions/${permission.id}`);
-            await fetchPermissions(); // Refresh list
+            await fetchPermissions();
             toast.success(`Permission "${permission.name}" deleted successfully`);
         } catch (error) {
             const message = error.response?.data?.message || "Failed to delete permission";
@@ -147,81 +142,6 @@ const PermissionsManagement = () => {
         setExpandedModules(newExpanded);
     };
 
-    const predefinedModules = [
-        {
-            name: 'Vendors',
-            description: 'Manage vendors, add products, vendor rates',
-            children: [
-                { name: 'Vendor List', description: 'View and manage vendor list' },
-                { name: 'Vendor Rates', description: 'Manage vendor pricing rates' },
-                { name: 'Product List', description: 'View vendor products' }
-            ]
-        },
-        {
-            name: 'Inventory',
-            description: 'Price scheme of products, inventory management - inward/outward/return',
-            children: [
-                { name: 'Pricing Scheme', description: 'Manage product pricing schemes' },
-                { name: 'Product Scheme Assign', description: 'Assign schemes to products' },
-                { name: 'Inventory', description: 'Manage inventory operations' }
-            ]
-        },
-        {
-            name: 'Customers',
-            description: 'Customer onboarding, approval, distribution',
-            children: [
-                { name: 'Customer List', description: 'View customer list' },
-                { name: 'Onboard Customer', description: 'Add new customers' },
-                { name: 'Merchant Approval', description: 'Approve merchant applications' },
-                { name: 'Products Distribution', description: 'Manage product distribution' }
-            ]
-        },
-        {
-            name: 'Other',
-            description: 'Miscellaneous operations',
-            children: [
-                { name: 'File Upload', description: 'Upload files' },
-                { name: 'Charge Calculation', description: 'Calculate charges' },
-                { name: 'Batch Status', description: 'View batch status' }
-            ]
-        },
-        {
-            name: 'Reports',
-            description: 'Fetch and export reports',
-            children: [
-                { name: 'Franchise Reports', description: 'Generate franchise reports' }
-            ]
-        }
-    ];
-
-    const addPredefinedModule = async (module) => {
-        try {
-            // First create parent permission
-            const parentResponse = await api.post("/admin/permissions", {
-                name: module.name,
-                description: module.description
-            });
-
-            const parentId = parentResponse.data.id;
-
-            // Then create child permissions
-            for (const child of module.children) {
-                await api.post("/admin/permissions", {
-                    name: child.name,
-                    description: child.description,
-                    parent_id: parentId
-                });
-            }
-
-            await fetchPermissions(); // Refresh list
-            toast.success(`Module "${module.name}" with ${module.children.length} permissions added successfully`);
-        } catch (error) {
-            console.error("Failed to add predefined module:", error);
-            const message = error.response?.data?.message || "Failed to add module";
-            toast.error(message);
-        }
-    };
-
     if (loading) {
         return (
             <div className="p-6">
@@ -236,7 +156,7 @@ const PermissionsManagement = () => {
     }
 
     return (
-        <div className="p-6 max-w-6xl mx-auto">
+        <div className="p-6  mx-auto">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Permissions Management</h1>
                 <p className="text-gray-600 mt-1">Create and manage system permissions and modules</p>
@@ -262,32 +182,6 @@ const PermissionsManagement = () => {
                     <span>Create Permission</span>
                 </button>
             </div>
-
-            {/* Quick Setup */}
-            {parentPermissions.length === 0 && (
-                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start space-x-3">
-                        <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                            <h3 className="text-sm font-medium text-blue-800">Quick Setup</h3>
-                            <p className="text-sm text-blue-700 mt-1 mb-3">
-                                Add predefined permission modules to get started quickly:
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                                {predefinedModules.map((module) => (
-                                    <button
-                                        key={module.name}
-                                        onClick={() => addPredefinedModule(module)}
-                                        className="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
-                                    >
-                                        {module.name} ({module.children.length})
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Create/Edit Form Modal */}
             {showCreateForm && (
@@ -497,7 +391,7 @@ const PermissionsManagement = () => {
                                                 </div>
                                                 <div className="flex items-center space-x-1">
                                                     <button
-                                                        onClick={() => handleEdit(child,module?.id)}
+                                                        onClick={() => handleEdit(child, module?.id)}
                                                         className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                     >
                                                         <Edit3 className="w-3 h-3" />
