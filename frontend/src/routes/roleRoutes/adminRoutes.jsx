@@ -8,7 +8,6 @@ import CustomerListComponent from '../../components/Tables/CustomerList.jsx'
 import SchemeList from '../../components/Tables/SchemeList.jsx'
 import ProductAssignment from '../../components/Tables/ProductAssign_Scheme.jsx'
 import MerchantListComponent from '../../components/Tables/MerchantList.jsx'
-import VendorProductUploadForm from '../../components/Forms/FileUpload.jsx'
 import AdminApproval from '../../components/Admin/AdminApproval.jsx'
 import InventoryManagement from '../../components/Inventory/Inventory.jsx'
 import CustomerProductsList from '../../components/Tables/CustomerProducts/CustomerProductsList.jsx'
@@ -16,15 +15,12 @@ import TransactionUpload from '../../components/Forms/FileUpload.jsx'
 import TransactionSelectionForm from '../../components/Forms/ChargeCalculation.jsx'
 import SettlementBatchStatusMonitor from '../../components/Tables/SettlementBatchStatusMonitor.jsx'
 import ProductOutward from '../../components/Tables/ProductOutward.jsx'
-import MainReportsPageForNow from '../../components/Reports/MainReportsPageForNow.jsx'
 import AdminRolesDashboard from '../../components/Admin/AdminRolesDashboard.jsx'
 import BusinessLogs from '../../components/Admin/BusinessLogs.jsx'
 import WalletAdjustment from '../../components/Admin/WalletAdjustment.jsx'
 import ProductDistributionList from '../../components/Tables/ProductDistributionList.jsx'
 import FranchiseReports from '../../components/Reports/FranchiseReports.jsx'
 import VendorReports from '../../components/Reports/VendorReports.jsx'
-import MerchantTransactionReports from '../../components/Reports/MerchantTransReport/MerchantTransactionReports.jsx'
-import FranchiseTransactionReport from '../../components/Reports/FranhiseTransReports/FranchiseTransactionReports.jsx'
 import InwardTransactionReport from '../../components/Reports/InwardTransactionReports.jsx'
 import OutwardTransactionReport from '../../components/Reports/OutwardTransactionReports.jsx'
 import ReturnTransactionReport from '../../components/Reports/ReturnTransactionReports.jsx'
@@ -37,11 +33,10 @@ import StockReport from '../../components/Reports/StockReport.jsx'
 import TaxesManagement from '../../components/Admin/TaxesManagement.jsx'
 import AdminSupportTickets from '../../components/Admin/AdminSupportTickets.jsx'
 import VendorCredentialsTable from '../../components/Tables/VendorCredentialsTable.jsx'
-import VendorRouting from '../../components/Tables/VendorRoutingTable.jsx'
 import VendorRoutingTable from '../../components/Tables/VendorRoutingTable.jsx'
 import AdminBankTable from '../../components/Tables/AdminBankTable.jsx'
 import PreFundAuthTable from '../../components/Tables/PreFundAuthTable.jsx'
-import PartnerCredentials from '../../components/Tables/PartnerCredentials.jsx'
+import PartnerCredentialTable from '../../components/Tables/PartnerCredentialTable.jsx'
 
 
 export const adminRoutes = [
@@ -168,7 +163,7 @@ export const adminRoutes = [
       },
       {
         path: "partner-credentials",
-        element: <PartnerCredentials />
+        element: <PartnerCredentialTable />
       }
     ]
   },

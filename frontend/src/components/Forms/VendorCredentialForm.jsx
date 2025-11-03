@@ -17,17 +17,8 @@ const vendorCredentialSchema = z.object({
   clientSecret: z.string().optional(),
   username: z.string().optional(),
   password: z.string().optional(),
-  isWlAdmin: z.boolean(),
-  wlAdminId: z.string().optional(),
+
   isActive: z.boolean()
-}).refine((data) => {
-  if (data.isWlAdmin && !data.wlAdminId) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'WL Admin selection is required when WL-Admin is enabled',
-  path: ['wlAdminId']
 });
 
 // Reusable Components
@@ -209,13 +200,12 @@ const VendorCredentialForm = ({
       clientSecret: '',
       username: '',
       password: '',
-      isWlAdmin: false,
-      wlAdminId: '',
+      
       isActive: true
     }
   });
 
-  const isWlAdmin = watch('isWlAdmin');
+  
 
   // Mock data
   const vendorOptions = [
@@ -233,13 +223,7 @@ const VendorCredentialForm = ({
     { value: 'water', label: 'Water' }
   ];
 
-  const wlAdminOptions = [
-    { value: 'admin1', label: 'Admin 1' },
-    { value: 'admin2', label: 'Admin 2' },
-    { value: 'admin3', label: 'Admin 3' },
-    { value: 'admin4', label: 'Admin 4' },
-    { value: 'admin5', label: 'Admin 5' }
-  ];
+  
 
   const handleFormSubmit = (data) => {
     onSubmit(data);
@@ -364,7 +348,7 @@ const VendorCredentialForm = ({
               control={control}
               error={errors.baseUrlUat}
               required
-              placeholder="https://uat.example.com/api"
+              placeholder="https://something.example.com/api"
             />
           </GridLayout>
         </FormSection>
@@ -395,27 +379,6 @@ const VendorCredentialForm = ({
         {/* Configuration */}
         <FormSection title="Configuration" icon={User}>
           <GridLayout columns={2}>
-            <StatusToggle
-              label="Is WL-Admin"
-              name="isWlAdmin"
-              control={control}
-              activeLabel="Yes"
-              inactiveLabel="No"
-              activeColor="blue"
-            />
-              {isWlAdmin && (
-            
-              <FormSelect
-                label="Select WL Admin"
-                name="wlAdminId"
-                control={control}
-                error={errors.wlAdminId}
-                required
-                options={wlAdminOptions}
-                placeholder="Select WL Admin"
-              />
-            
-          )}
             <StatusToggle
               label="Status"
               name="isActive"

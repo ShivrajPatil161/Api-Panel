@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -13,36 +13,83 @@ import {
     ChevronRight, Plus, CreditCard
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-
+import api from '../../constants/API/axiosInstance';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AdminBankForm from '../Forms/AdminBankForm';
-
-// Mock data - just 2 rows
-const MOCK_BANKS = [
-    {
-        id: 1,
-        bankName: 'HDFC Bank',
-        accountNumber: '123456789012',
-        ifscCode: 'HDFC0001234',
-        charges: true,
-        chargesType: 'percentage'
-    },
-    {
-        id: 2,
-        bankName: 'State Bank of India',
-        accountNumber: '987654321098',
-        ifscCode: 'SBIN0005678',
-        charges: false,
-        chargesType: ''
-    }
-];
+import { createAdminBank, deleteAdminBank, getAdminBanks, updateAdminBank } from '../../constants/API/adminBanks';
 
 const AdminBankTable = () => {
-    const [banks, setBanks] = useState(MOCK_BANKS);
+    /// we can make one state for these 3 (showform , editingbank,viewingbank ) with one state
     const [showForm, setShowForm] = useState(false);
     const [editingBank, setEditingBank] = useState(null);
     const [viewingBank, setViewingBank] = useState(null);
     const [globalFilter, setGlobalFilter] = useState('');
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize: 10,
+    });
+    const queryClient = useQueryClient()
+    
+    
 
+    const { data, isLoading, isError, error } = useQuery({
+        queryKey: ['adminBanks', {
+            page: pagination.pageIndex,
+            size: pagination.pageSize,
+            sortBy: "id",
+            sortOrder: 'ASC'
+        }],
+        queryFn: getAdminBanks,
+        staleTime: 5 * 60 * 1000, // 5 minutes — data considered “fresh” during this time
+        cacheTime: 30 * 60 * 1000, // keep cached data in memory for 30 minutes (optional)
+        keepPreviousData: true,
+        refetchOnWindowFocus: false,
+    })
+
+
+    // Create mutation
+    const createMutation = useMutation({
+        mutationFn: createAdminBank,
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries(['adminBanks'])
+            toast.success(`${variables.bankName} created successfully!`)
+            setShowForm(false)
+            setEditingBank(null)
+        },
+        onError: (error) => {
+            toast.error(error.message || 'Failed to create bank')
+        }
+    })
+
+    // Update mutation
+    const updateMutation = useMutation({
+        mutationFn: updateAdminBank,
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries(['adminBanks'])
+            toast.success(`${variables.data.bankName} updated successfully!`)
+            setShowForm(false)
+            setEditingBank(null)
+        },
+        onError: (error) => {
+            toast.error(error.message || 'Failed to update bank')
+        }
+    })
+
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: deleteAdminBank,
+        onSuccess: () => {
+            queryClient.invalidateQueries(['adminBanks'])
+        },
+        onError: (error) => {
+            toast.error(error.message || 'Failed to delete bank')
+        }
+    })
+
+    const adminBanks = data?.content || []
+    const totalPages = data?.totalPages || 0
+    const totalElements = data?.totalElements || 0
+    console.log(adminBanks, totalPages)
     const columnHelper = createColumnHelper();
 
     const columns = useMemo(
@@ -75,8 +122,8 @@ const AdminBankTable = () => {
                 cell: info => (
                     <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${info.getValue()
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
                             }`}
                     >
                         {info.getValue() ? 'Enabled' : 'Disabled'}
@@ -125,23 +172,25 @@ const AdminBankTable = () => {
     );
 
     const table = useReactTable({
-        data: banks,
+        data: adminBanks,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         state: {
             globalFilter,
         },
         onGlobalFilterChange: setGlobalFilter,
-        initialState: {
-            pagination: {
-                pageSize: 10,
-            },
-        },
+        manualPagination: false,
     });
 
+
+
+   
+    
+
+
+ 
     const handleAddBank = () => {
         setEditingBank(null);
         setShowForm(true);
@@ -195,27 +244,22 @@ const AdminBankTable = () => {
     };
 
     const performDelete = (bankId, bankName) => {
-        setBanks(banks.filter(bank => bank.id !== bankId));
-        toast.success(`${bankName} deleted successfully!`);
-    };
+        deleteMutation.mutate(bankId, {
+            onSuccess: () => {
+                toast.success(`${bankName} deleted successfully!`)
+            }
+        })
+    }
 
     const handleFormSubmit = (data) => {
-        const isEditing = !!editingBank;
-        const bankName = data.bankName;
+        const isEditing = !!editingBank
 
         if (isEditing) {
-            setBanks(banks.map(bank =>
-                bank.id === editingBank.id ? { ...bank, ...data } : bank
-            ));
-            toast.success(`${bankName} updated successfully!`);
+            updateMutation.mutate({ id: editingBank.id, data })
         } else {
-            const newBank = { ...data, id: banks.length + 1 };
-            setBanks([...banks, newBank]);
-            toast.success(`${bankName} created successfully!`);
+            createMutation.mutate(data)
         }
-        setShowForm(false);
-        setEditingBank(null);
-    };
+    }
 
     const handleFormCancel = () => {
         setShowForm(false);
@@ -226,9 +270,9 @@ const AdminBankTable = () => {
         setViewingBank(null);
     };
 
-    const totalBanks = banks.length;
-    const chargesEnabled = banks.filter(b => b.charges === true).length;
-    const chargesDisabled = banks.filter(b => b.charges === false).length;
+    const totalBanks = totalElements;
+    const chargesEnabled = adminBanks.filter(b => b.charges === true).length;
+    const chargesDisabled = adminBanks.filter(b => b.charges === false).length;
 
     return (
         <div className="min-h-screen bg-gray-50 pr-4">
@@ -310,87 +354,93 @@ const AdminBankTable = () => {
 
                     {/* Table */}
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                {table.getHeaderGroups().map(headerGroup => (
-                                    <tr key={headerGroup.id}>
-                                        {headerGroup.headers.map(header => (
-                                            <th
-                                                key={header.id}
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                                                onClick={header.column.getToggleSortingHandler()}
-                                            >
-                                                <div className="flex items-center space-x-1">
-                                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                                    {{
-                                                        asc: ' 🔼',
-                                                        desc: ' 🔽',
-                                                    }[header.column.getIsSorted()] ?? null}
-                                                </div>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {table.getRowModel().rows.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={columns.length} className="px-6 py-12 text-center">
-                                            <div className="flex flex-col items-center space-y-2">
-                                                <CreditCard className="h-12 w-12 text-gray-400" />
-                                                <p className="text-gray-500">No banks found</p>
-                                                <button
-                                                    onClick={handleAddBank}
-                                                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        {isLoading ? (
+                            <div className="flex justify-center items-center py-12">
+                                <div className="text-gray-500">Loading...</div>
+                            </div>
+                        ) : (
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    {table.getHeaderGroups().map(headerGroup => (
+                                        <tr key={headerGroup.id}>
+                                            {headerGroup.headers.map(header => (
+                                                <th
+                                                    key={header.id}
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                                    onClick={header.column.getToggleSortingHandler()}
                                                 >
-                                                    Add First Bank
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    table.getRowModel().rows.map(row => (
-                                        <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                                            {row.getVisibleCells().map(cell => (
-                                                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
+                                                    <div className="flex items-center space-x-1">
+                                                        {flexRender(header.column.columnDef.header, header.getContext())}
+                                                        {{
+                                                            asc: ' 🔼',
+                                                            desc: ' 🔽',
+                                                        }[header.column.getIsSorted()] ?? null}
+                                                    </div>
+                                                </th>
                                             ))}
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ))}
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {table.getRowModel().rows.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={columns.length} className="px-6 py-12 text-center">
+                                                <div className="flex flex-col items-center space-y-2">
+                                                    <CreditCard className="h-12 w-12 text-gray-400" />
+                                                    <p className="text-gray-500">No banks found</p>
+                                                    <button
+                                                        onClick={handleAddBank}
+                                                        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                                    >
+                                                        Add First Bank
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        table.getRowModel().rows.map(row => (
+                                            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                                                {row.getVisibleCells().map(cell => (
+                                                    <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
 
                     {/* Pagination */}
-                    {table.getRowModel().rows.length > 0 && (
+                    {!isLoading && table.getRowModel().rows.length > 0 && (
                         <div className="px-6 py-4 border-t border-gray-200">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
                                     <span className="text-sm text-gray-700">
-                                        Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+                                        Showing {pagination.pageIndex * pagination.pageSize + 1} to{' '}
                                         {Math.min(
-                                            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                                            table.getFilteredRowModel().rows.length
+                                            (pagination.pageIndex + 1) * pagination.pageSize,
+                                            totalElements
                                         )}{' '}
-                                        of {table.getFilteredRowModel().rows.length} results
+                                        of {totalElements} results
                                     </span>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <button
-                                        onClick={() => table.previousPage()}
-                                        disabled={!table.getCanPreviousPage()}
+                                        onClick={() => setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex - 1 }))}
+                                        disabled={pagination.pageIndex === 0}
                                         className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                     </button>
                                     <span className="text-sm text-gray-700">
-                                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                                        Page {pagination.pageIndex + 1} of {totalPages}
                                     </span>
                                     <button
-                                        onClick={() => table.nextPage()}
-                                        disabled={!table.getCanNextPage()}
+                                        onClick={() => setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
+                                        disabled={pagination.pageIndex >= totalPages - 1}
                                         className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                                     >
                                         <ChevronRight className="h-4 w-4" />
