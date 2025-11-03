@@ -6,7 +6,7 @@
     import com.project2.ism.Model.PricingScheme.PricingScheme;
     import com.project2.ism.Model.ProductCategory;
     import com.project2.ism.Model.Vendor.VendorRates;
-    import com.project2.ism.Model.Vendor.VendorCardRates;
+    import com.project2.ism.Model.Vendor.VendorChannelRates;
     import com.project2.ism.Model.PricingScheme.ChannelRate;
     import com.project2.ism.Repository.PricingSchemeRepository;
     import com.project2.ism.Repository.ProductCategoryRepository;
@@ -199,14 +199,14 @@
                                 vendorRates.getMonthlyRent()));
                     }
 
-                    // Map vendor card rates by card type for quick lookup
-                    Map<String, BigDecimal> vendorCardRateMap = vendorRates.getVendorCardRates()
+                    // Map vendor channel rates by channel type for quick lookup
+                    Map<String, BigDecimal> vendorChannelRateMap = vendorRates.getVendorChannelRates()
                             .stream()
-                            .collect(Collectors.toMap(VendorCardRates::getCardType, VendorCardRates::getRate));
+                            .collect(Collectors.toMap(VendorChannelRates::getChannelType, VendorChannelRates::getRate));
 
                     // Check channel rates
                     for (ChannelRate channelRate : scheme.getChannelRates()) {
-                        BigDecimal vendorRate = vendorCardRateMap.get(channelRate.getChannelName());
+                        BigDecimal vendorRate = vendorChannelRateMap.get(channelRate.getChannelName());
                         if (vendorRate != null) {
                             double effectiveRate = channelRate.getRate();
 

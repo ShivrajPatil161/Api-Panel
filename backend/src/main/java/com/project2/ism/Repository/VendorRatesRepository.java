@@ -25,11 +25,11 @@ public interface VendorRatesRepository extends JpaRepository<VendorRates, Long> 
             "WHERE vr.effectiveDate <= :today AND vr.expiryDate >= :today")
     BigDecimal sumActiveMonthlyRent(@Param("today") LocalDate today1, @Param("today") LocalDate today2);
 
-    @Query("SELECT vcr.cardType, COUNT(vcr) FROM VendorCardRates vcr GROUP BY vcr.cardType")
-    List<Object[]> groupByCardType();
+    @Query("SELECT vcr.channelType, COUNT(vcr) FROM VendorChannelRates vcr GROUP BY vcr.channelType")
+    List<Object[]> groupByChannelType();
 
-    default Map<String, Long> countGroupByCardType() {
-        return groupByCardType().stream()
+    default Map<String, Long> countGroupByChannelType() {
+        return groupByChannelType().stream()
                 .collect(Collectors.toMap(
                         row -> (String) row[0],
                         row -> (Long) row[1]

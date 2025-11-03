@@ -112,8 +112,8 @@ public class VendorService {
         // Total Monthly Rent
         dto.totalMonthlyRent = vendorRatesRepository.sumActiveMonthlyRent(today, today);
 
-        // Card Type Distribution
-        dto.cardTypeDistribution = vendorRatesRepository.countGroupByCardType();
+        // Channel Type Distribution
+        dto.channelTypeDistribution = vendorRatesRepository.countGroupByChannelType();
 
         return dto;
     }

@@ -21,11 +21,7 @@ public class ApiPartner extends CustomerBase {
     @Column(name = "status")
     private String status = "ACTIVE";
 
-    @Column(name = "wallet_balance", precision = 10, scale = 2)
-    private BigDecimal walletBalance = BigDecimal.ZERO;
 
-    @Column(name = "monthly_revenue", precision = 12, scale = 2)
-    private BigDecimal monthlyRevenue = BigDecimal.ZERO;
 
     @Column(name = "products")
     private Integer products = 0;
@@ -50,11 +46,6 @@ public class ApiPartner extends CustomerBase {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public BigDecimal getWalletBalance() { return walletBalance; }
-    public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }
-
-    public BigDecimal getMonthlyRevenue() { return monthlyRevenue; }
-    public void setMonthlyRevenue(BigDecimal monthlyRevenue) { this.monthlyRevenue = monthlyRevenue; }
 
     public Integer getProducts() { return products; }
     public void setProducts(Integer products) { this.products = products; }

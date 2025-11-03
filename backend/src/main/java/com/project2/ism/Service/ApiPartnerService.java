@@ -92,8 +92,7 @@ public class ApiPartnerService {
 
         // Set default values
         apiPartner.setStatus("ACTIVE");
-        apiPartner.setWalletBalance(BigDecimal.ZERO);
-        apiPartner.setMonthlyRevenue(BigDecimal.ZERO);
+
         apiPartner.setProducts(0);
         apiPartner.setCreatedAt(LocalDateTime.now());
         apiPartner.setUpdatedAt(LocalDateTime.now());
@@ -297,7 +296,6 @@ public class ApiPartnerService {
                 apiPartner.getAddress(),
                 apiPartner.getProducts() != null ? apiPartner.getProducts() : 0,
                 getWalletBalance(apiPartner.getId()),
-                apiPartner.getMonthlyRevenue() != null ? apiPartner.getMonthlyRevenue() : BigDecimal.ZERO,
                 apiPartner.getStatus() != null ? apiPartner.getStatus() : "ACTIVE",
                 apiPartner.getCreatedAt()
         );

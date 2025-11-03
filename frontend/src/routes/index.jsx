@@ -9,7 +9,6 @@ import ResetPassword from '../components/Auth/ResetPassword.jsx'
 import ErrorPage from './roleRoutes/ErrorPage.jsx'
 
 import { adminRoutes } from './roleRoutes/adminRoutes.jsx'
-import { franchiseRoutes } from './roleRoutes/franchiseRoutes.jsx'
 import { merchantRoutes } from './roleRoutes/merchantRoutes.jsx'
 import ResetPasswordExpired from '../components/Auth/ResetPasswordExpired.jsx'
 
@@ -35,10 +34,7 @@ console.log(userType)
     console.log('adminRoutes', adminRoutes)
     return adminRoutes
   }
-  if (userType === 'franchise') {
-    console.log('franchiseRoutes', franchiseRoutes)
-    return franchiseRoutes
-  }
+
   if (userType === 'merchant') {
     console.log('merchantRoutes', merchantRoutes)
     return merchantRoutes
@@ -76,11 +72,11 @@ export const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          //<ProtectedRoute>
+          <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <Layout />
             </Suspense>
-          //</ProtectedRoute>
+          </ProtectedRoute>
         ),
         // 👇 Dynamically inject only current user's routes
         children: getRoutesForUser()

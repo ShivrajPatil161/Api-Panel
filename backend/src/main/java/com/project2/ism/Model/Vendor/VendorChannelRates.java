@@ -10,26 +10,26 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "vendor_card_rates")
-public class VendorCardRates {
+@Table(name = "vendor_channel_rates")
+public class VendorChannelRates {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "card type required")
-    private String cardType;
+    @NotBlank(message = "channel type required")
+    private String channelType;
 
-    @NotNull(message = "card rate required ")
+    @NotNull(message = "channel rate required ")
     @DecimalMin(value = "0.0", inclusive = true, message = "Rate must be positive")
     @DecimalMax(value = "100.0", inclusive = true, message = "Rate must be less than or equal to 100")
     private BigDecimal rate;
 
     @ManyToOne
-    @JoinColumn(name = "vendor_rate_id", nullable = false)
+    @JoinColumn(name = "vendor_channel_id", nullable = false)
     @JsonBackReference
     private VendorRates vendorRates;
 
-    public VendorCardRates() {
+    public VendorChannelRates() {
     }
 
     public Long getId() {
@@ -40,12 +40,12 @@ public class VendorCardRates {
         this.id = id;
     }
 
-    public String getCardType() {
-        return cardType;
+    public String getChannelType() {
+        return channelType;
     }
 
-    public void setCardType(String cardType) {
-        this.cardType = cardType;
+    public void setChannelType(String channelType) {
+        this.channelType = channelType;
     }
 
     public BigDecimal getRate() {

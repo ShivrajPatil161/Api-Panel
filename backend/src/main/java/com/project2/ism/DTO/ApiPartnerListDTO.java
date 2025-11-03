@@ -16,7 +16,6 @@ public class ApiPartnerListDTO {
     private String address;
     private Integer products;
     private BigDecimal walletBalance;
-    private BigDecimal monthlyRevenue;
     private String status;
     private LocalDateTime createdAt;
 
@@ -26,7 +25,7 @@ public class ApiPartnerListDTO {
     public ApiPartnerListDTO(Long id, String businessName, String businessType,
                              String contactPersonName, String contactPersonEmail,
                              String contactPersonPhone, String address, Integer products, BigDecimal walletBalance,
-                             BigDecimal monthlyRevenue, String status, LocalDateTime createdAt) {
+                             String status, LocalDateTime createdAt) {
         this.id = id;
         this.businessName = businessName;
         this.businessType = businessType;
@@ -36,7 +35,6 @@ public class ApiPartnerListDTO {
         this.address = address;
         this.products = products;
         this.walletBalance = walletBalance;
-        this.monthlyRevenue = monthlyRevenue;
         this.status = status;
         this.createdAt = createdAt;
     }
@@ -75,9 +73,6 @@ public class ApiPartnerListDTO {
 
     public BigDecimal getWalletBalance() { return walletBalance; }
     public void setWalletBalance(BigDecimal walletBalance) { this.walletBalance = walletBalance; }
-
-    public BigDecimal getMonthlyRevenue() { return monthlyRevenue; }
-    public void setMonthlyRevenue(BigDecimal monthlyRevenue) { this.monthlyRevenue = monthlyRevenue; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

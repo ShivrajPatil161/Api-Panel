@@ -25,7 +25,7 @@ public class VendorRates {
     @NotNull(message = "expiry date required")
     private LocalDate expiryDate;
 
-    @NotNull(message = "card rate required ")
+    @NotNull(message = "channel rate required ")
     @DecimalMin(value = "0.0", inclusive = false, message = "Rent must be greater than zero")
     @Digits(integer = 10, fraction = 2, message = "Monthly rent must be a valid amount")
     private BigDecimal monthlyRent;
@@ -42,7 +42,7 @@ public class VendorRates {
 
     @OneToMany(mappedBy = "vendorRates", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<VendorCardRates> vendorCardRates = new ArrayList<>();
+    private List<VendorChannelRates> vendorChannelRates = new ArrayList<>();
 
     private String remark;
 
@@ -56,15 +56,15 @@ public class VendorRates {
         }
     }
 
-    public void addVendorCardRate(VendorCardRates vendorCardRate) {
-        vendorCardRates.add(vendorCardRate);
-        vendorCardRate.setVendorRates(this);
+    public void addVendorChannelRate(VendorChannelRates vendorChannelRate) {
+        vendorChannelRates.add(vendorChannelRate);
+        vendorChannelRate.setVendorRates(this);
     }
 
-    // Helper method to remove card rate
-    public void removeCardRate(VendorCardRates vendorCardRate) {
-        vendorCardRates.remove(vendorCardRate);
-        vendorCardRate.setVendorRates(null);
+    // Helper method to remove channel rate
+    public void removeChannelRate(VendorChannelRates vendorChannelRate) {
+        vendorChannelRates.remove(vendorChannelRate);
+        vendorChannelRate.setVendorRates(null);
     }
 
 
@@ -108,14 +108,14 @@ public class VendorRates {
         this.vendor = vendor;
     }
 
-    public List<VendorCardRates> getVendorCardRates() {
-        return vendorCardRates;
+    public List<VendorChannelRates> getVendorChannelRates() {
+        return vendorChannelRates;
     }
 
-    public void setVendorCardRates(List<VendorCardRates> vendorCardRates) {
-        this.vendorCardRates = vendorCardRates;
-        if (vendorCardRates != null) {
-            vendorCardRates.forEach(cardRate -> cardRate.setVendorRates(this));
+    public void setVendorChannelRates(List<VendorChannelRates> vendorChannelRates) {
+        this.vendorChannelRates = vendorChannelRates;
+        if (vendorChannelRates != null) {
+            vendorChannelRates.forEach(channelRate -> channelRate.setVendorRates(this));
         }
     }
 

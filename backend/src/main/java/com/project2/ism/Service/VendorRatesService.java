@@ -1,7 +1,7 @@
 package com.project2.ism.Service;
 
 import com.project2.ism.Exception.ResourceNotFoundException;
-import com.project2.ism.Model.Vendor.VendorCardRates;
+import com.project2.ism.Model.Vendor.VendorChannelRates;
 import com.project2.ism.Model.Vendor.VendorRates;
 import com.project2.ism.Repository.VendorRatesRepository;
 import jakarta.validation.Valid;
@@ -45,10 +45,10 @@ public class VendorRatesService {
         existingRates.setProduct(updatedRates.getProduct());
         existingRates.setRemark(updatedRates.getRemark());
 
-        // Replace vendorCardRates
-        existingRates.getVendorCardRates().clear();
-        for (VendorCardRates cardRate : updatedRates.getVendorCardRates()) {
-            existingRates.addVendorCardRate(cardRate); // helper method sets back-reference
+        // Replace vendorChannelRates
+        existingRates.getVendorChannelRates().clear();
+        for (VendorChannelRates channelRate : updatedRates.getVendorChannelRates()) {
+            existingRates.addVendorChannelRate(channelRate); // helper method sets back-reference
         }
 
         return vendorRatesRepository.save(existingRates);
@@ -71,10 +71,10 @@ public class VendorRatesService {
 //        existingRates.setProduct(updatedRates.getProduct());
 //        existingRates.setRemark(updatedRates.getRemark());
 //
-//        // Replace vendorCardRates
-//        existingRates.getVendorCardRates().clear();
-//        for (VendorCardRates cardRate : updatedRates.getVendorCardRates()) {
-//            existingRates.addVendorCardRate(cardRate);
+//        // Replace vendorChannelRates
+//        existingRates.getVendorChannelRates().clear();
+//        for (VendorChannelRates channelRate : updatedRates.getVendorChannelRates()) {
+//            existingRates.addVendorChannelRate(channelRate);
 //        }
 //
 //        System.out.println("About to save...");

@@ -1,6 +1,6 @@
 package com.project2.ism.DTO;
 
-import com.project2.ism.Model.Vendor.VendorCardRates;
+import com.project2.ism.Model.Vendor.VendorChannelRates;
 import com.project2.ism.Model.Vendor.VendorRates;
 
 import java.math.BigDecimal;
@@ -18,7 +18,7 @@ public record VendorRatesDTO(
         String productName,
         String productCode,
         String remark,
-        List<VendorCardRateDTO> vendorCardRates
+        List<VendorChannelRateDTO> vendorChannelRates
 ) {
     public static VendorRatesDTO fromEntity(VendorRates entity) {
         return new VendorRatesDTO(
@@ -32,23 +32,23 @@ public record VendorRatesDTO(
                 entity.getProduct().getProductName(),
                 entity.getProduct().getProductCode(),
                 entity.getRemark(),
-                entity.getVendorCardRates().stream()
-                        .map(VendorCardRateDTO::fromEntity)
+                entity.getVendorChannelRates().stream()
+                        .map(VendorChannelRateDTO::fromEntity)
                         .toList()
         );
     }
 }
 
 // Nested record (package-private, no `public` keyword)
-record VendorCardRateDTO(
+record VendorChannelRateDTO(
         Long id,
-        String cardType,
+        String channelType,
         BigDecimal rate
 ) {
-    public static VendorCardRateDTO fromEntity(VendorCardRates entity) {
-        return new VendorCardRateDTO(
+    public static VendorChannelRateDTO fromEntity(VendorChannelRates entity) {
+        return new VendorChannelRateDTO(
                 entity.getId(),
-                entity.getCardType(),
+                entity.getChannelType(),
                 entity.getRate()
         );
     }
