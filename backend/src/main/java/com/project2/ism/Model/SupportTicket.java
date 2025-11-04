@@ -19,14 +19,10 @@ public class SupportTicket {
     private String description;
 
     @Column(nullable = false)
-    private String customerType;
-
-    @Column(nullable = false)
-    private Long customerId;
+    private Long partnerId;
 
     @Column(nullable = false)
     private String status;
-
 
     private String resolvedBy;
 
@@ -36,7 +32,6 @@ public class SupportTicket {
     private LocalDateTime createdAt;
 
     private LocalDateTime resolvedAt;
-
 
     @PrePersist
     protected void onCreate(){
@@ -68,20 +63,12 @@ public class SupportTicket {
         this.description = description;
     }
 
-    public String getCustomerType() {
-        return customerType;
+    public Long getPartnerId() {
+        return partnerId;
     }
 
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
-    }
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
+    public void setPartnerId(Long partnerId) {
+        this.partnerId = partnerId;
     }
 
     public String getStatus() {

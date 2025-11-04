@@ -25,6 +25,7 @@ import { toast } from 'react-toastify';
 import ProductMasterForm from '../Forms/Product';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../../constants/API/productApi';
 import StatsCard from '../UI/StatsCard';
+import PageHeader from '../UI/PageHeader';
 
 
 
@@ -449,27 +450,20 @@ const ProductList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pr-4">
-      <div className="max-w-7xl mx-auto">
+      <div className=" mx-auto">
+
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Package className="text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
-                <p className="text-gray-600">Manage your all vendor products</p>
-              </div>
-            </div>
-            {(userType === 'admin' || userType === "super_admin") && (
-              <button
-                onClick={handleAddProduct}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <span>+ Add Product</span>
-              </button>
-            )}
-          </div>
-        </div>
+        <PageHeader
+          icon={Package}
+          iconColor="text-blue-600"
+          title="Product Management"
+          description="Manage your all vendor products"
+          {...((userType === 'admin' || userType === 'super_admin') && {
+            buttonText: "+ Add Product",
+            onButtonClick: handleAddProduct,
+            buttonColor: "bg-blue-600 hover:bg-blue-700"
+          })}
+        />
 
 
         {/* Stats Cards */}

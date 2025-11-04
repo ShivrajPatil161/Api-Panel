@@ -18,7 +18,8 @@ import VendorCredentialForm from '../Forms/VendorCredentialForm';
 import VendorCredentialView from '../View/VendorCredentialView';
 import TableShimmer from '../Shimmer/TableShimmer';
 import { createVendorCredential, deleteVendorCredential, getVendorCredentials, updateVendorCredential } from '../../constants/API/vendorCredentials';
-
+import PageHeader from '../UI/PageHeader';
+import StatsCard from '../UI/StatsCard';
 const VendorCredentialTable = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingCredential, setEditingCredential] = useState(null);
@@ -290,61 +291,44 @@ const VendorCredentialTable = () => {
     return (
         <div className="min-h-screen bg-gray-50 pr-4">
             <div className="max-w-7xl mx-auto">
+
                 {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <Key className="text-blue-600" />
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Vendor Credentials</h1>
-                                <p className="text-gray-600">Manage vendor API credentials and authentication</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleAddCredential}
-                            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            <Plus className="h-5 w-5" />
-                            <span>Add Credential</span>
-                        </button>
-                    </div>
-                </div>
+                <PageHeader
+                icon={Key}
+                iconColor="text-blue-600"
+                title="Vendor Credentials"
+                description="Manage vendor API credentials and authentication"
+                buttonText="Add Credential"
+                buttonIcon={Plus}
+                onButtonClick={handleAddCredential}
+                buttonColor="bg-blue-600 hover:bg-blue-700"
+                />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Key className="h-6 w-6 text-blue-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Total Credentials</p>
-                                <p className="text-2xl font-bold text-gray-900">{totalCredentials}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                                <Shield className="h-6 w-6 text-green-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Active</p>
-                                <p className="text-2xl font-bold text-gray-900">{activeCredentials}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-red-100 rounded-lg">
-                                <Shield className="h-6 w-6 text-red-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Inactive</p>
-                                <p className="text-2xl font-bold text-gray-900">{inactiveCredentials}</p>
-                            </div>
-                        </div>
-                    </div>
+                <StatsCard
+                    icon={Key}
+                    iconColor="text-blue-600"
+                    bgColor="bg-blue-100"
+                    label="Total Credentials"
+                    value={totalCredentials}
+                />
+                
+                <StatsCard
+                    icon={Shield}
+                    iconColor="text-green-600"
+                    bgColor="bg-green-100"
+                    label="Active"
+                    value={activeCredentials}
+                />
+                
+                <StatsCard
+                    icon={Shield}
+                    iconColor="text-red-600"
+                    bgColor="bg-red-100"
+                    label="Inactive"
+                    value={inactiveCredentials}
+                />
                 </div>
 
                 {/* Table Card */}

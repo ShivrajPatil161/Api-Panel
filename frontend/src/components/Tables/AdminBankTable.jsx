@@ -19,6 +19,7 @@ import AdminBankForm from '../Forms/AdminBankForm';
 import { createAdminBank, deleteAdminBank, getAdminBanks, updateAdminBank } from '../../constants/API/adminBanks';
 import StatsCard from '../UI/StatsCard';
 import TableShimmer from '../Shimmer/TableShimmer';
+import PageHeader from '../UI/PageHeader';
 
 const AdminBankTable = () => {
     
@@ -283,27 +284,16 @@ const AdminBankTable = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 pr-4">
-            <div className="max-w-7xl mx-auto">
+            <div className="mx-auto">
                 {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <CreditCard className="text-blue-600" />
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Bank Management</h1>
-                                <p className="text-gray-600">Manage all your bank accounts and information</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleAddBank}
-                            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            <Plus className="h-5 w-5" />
-                            <span>Add Bank</span>
-                        </button>
-                    </div>
-                </div>
-
+                <PageHeader
+                    icon={CreditCard}
+                    title="Bank Management"
+                    description="Manage all your bank accounts and information"
+                    buttonText="Add Bank"
+                    buttonIcon={Plus}
+                    onButtonClick={handleAddBank}
+                    />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

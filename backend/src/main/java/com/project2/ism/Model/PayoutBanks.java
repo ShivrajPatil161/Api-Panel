@@ -74,11 +74,11 @@
 //        this.customerType = customerType;
 //    }
 //
-//    public Long getCustomerId() {
+//    public Long getPartnerId() {
 //        return customerId;
 //    }
 //
-//    public void setCustomerId(Long customerId) {
+//    public void setPartnerId(Long customerId) {
 //        this.customerId = customerId;
 //    }
 //

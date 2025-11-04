@@ -21,8 +21,6 @@ public class ApiPartner extends CustomerBase {
     @Column(name = "status")
     private String status = "ACTIVE";
 
-
-
     @Column(name = "products")
     private Integer products = 0;
 
