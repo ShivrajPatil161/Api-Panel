@@ -19,7 +19,7 @@
 //    public ResponseEntity<?> adjustFranchiseWallet(@RequestBody WalletAdjustmentRequest request) {
 //        try {
 //            walletAdjustmentService.adjustFranchiseWallet(
-//                    request.getCustomerId(),
+//                    request.getPartnerId(),
 //                    request.getActionOnBalance(),
 //                    request.getAmount(),
 //                    request.getRemark()
@@ -34,7 +34,7 @@
 //    public ResponseEntity<?> adjustMerchantWallet(@RequestBody WalletAdjustmentRequest request) {
 //        try {
 //            walletAdjustmentService.adjustMerchantWallet(
-//                    request.getCustomerId(),
+//                    request.getPartnerId(),
 //                    request.getActionOnBalance(),
 //                    request.getAmount(),
 //                    request.getRemark()
@@ -75,11 +75,11 @@
 //            this.availableBalance = availableBalance;
 //        }
 //
-//        public Long getCustomerId() {
+//        public Long getPartnerId() {
 //            return customerId;
 //        }
 //
-//        public void setCustomerId(Long customerId) {
+//        public void setPartnerId(Long customerId) {
 //            this.customerId = customerId;
 //        }
 //
@@ -99,11 +99,11 @@
 //        private BigDecimal amount;
 //        private String remark;
 //
-//        public Long getCustomerId() {
+//        public Long getPartnerId() {
 //            return customerId;
 //        }
 //
-//        public void setCustomerId(Long customerId) {
+//        public void setPartnerId(Long customerId) {
 //            this.customerId = customerId;
 //        }
 //
