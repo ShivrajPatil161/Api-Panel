@@ -7,6 +7,10 @@ import com.project2.ism.DTO.PrefunAuth.PrefundResponseDTO;
 import com.project2.ism.Model.PrefundRequest;
 import com.project2.ism.Repository.PrefundRequestRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,22 +66,29 @@ public class PrefundAuthService {
     /**
      * Get all pending requests (for admin)
      */
-    public List<PrefundResponseDTO> getAllPendingRequests() {
-        return prefundRequestRepository.findByStatus("Pending")
-                .stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
+    public Page<PrefundResponseDTO> getAllPendingRequests(Pageable pageable) {
+        Sort sort = Sort.by(Sort.Order.desc("createDateTime"));
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        Page<PrefundRequest> resultPage = prefundRequestRepository.findByStatus("Pending", sortedPageable);
+
+        return resultPage.map(this::convertToResponseDTO);
     }
+
+
 
     /**
      * Get all requests by specific user
      */
-    public List<PrefundResponseDTO> getRequestsByUser(String username) {
-        return prefundRequestRepository.findByRequestedBy(username)
-                .stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
+    public Page<PrefundResponseDTO> getRequestsByUser(String username, Pageable pageable) {
+        Sort sort = Sort.by(Sort.Order.desc("createDateTime"));
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        Page<PrefundRequest> resultPage = prefundRequestRepository.findByRequestedBy(username, sortedPageable);
+
+        return resultPage.map(this::convertToResponseDTO);
     }
+
 
     /**
      * Get requests by user and status
@@ -92,12 +103,13 @@ public class PrefundAuthService {
     /**
      * Get all requests (for admin)
      */
-    public List<PrefundResponseDTO> getAllRequests() {
-        return prefundRequestRepository.findAll()
-                .stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
+    public Page<PrefundResponseDTO> getAllRequests(Pageable pageable) {
+        Page<PrefundRequest> resultPage = prefundRequestRepository.findAllOrdered(pageable);
+        return resultPage.map(this::convertToResponseDTO);
     }
+
+
+
 
     /**
      * Approve or reject a prefund request

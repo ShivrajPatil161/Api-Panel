@@ -4,14 +4,20 @@ package com.project2.ism.Controller;
 import com.project2.ism.DTO.PrefunAuth.ApproveRejectDTO;
 import com.project2.ism.DTO.PrefunAuth.PrefundRequestDTO;
 import com.project2.ism.DTO.PrefunAuth.PrefundResponseDTO;
+import com.project2.ism.DTO.ReportDTO.ApiResponse;
 import com.project2.ism.Service.PrefundAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -41,19 +47,47 @@ public class PrefundAuthController {
      * Admin: Get all pending requests
      */
     @GetMapping("/admin/pending")
-    public ResponseEntity<List<PrefundResponseDTO>> getAllPendingRequests() {
-        List<PrefundResponseDTO> requests = prefundAuthService.getAllPendingRequests();
-        return ResponseEntity.ok(requests);
+    public ResponseEntity<ApiResponse<Page<PrefundResponseDTO>>> getAllPendingRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDir) {
+
+        Sort.Direction direction = sortDir.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Page<PrefundResponseDTO> pendingRequests = prefundAuthService.getAllPendingRequests(pageable);
+
+        ApiResponse<Page<PrefundResponseDTO>> response = new ApiResponse<>(
+                true,
+                "Fetched pending requests successfully",
+                pendingRequests,
+                null,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     /**
-     * Admin: Get all requests
+     * Admin: Get all requests (paginated)
      */
     @GetMapping("/admin/all")
-    public ResponseEntity<List<PrefundResponseDTO>> getAllRequests() {
-        List<PrefundResponseDTO> requests = prefundAuthService.getAllRequests();
-        return ResponseEntity.ok(requests);
+    public ResponseEntity<ApiResponse<Page<PrefundResponseDTO>>> getAllRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PrefundResponseDTO> requests = prefundAuthService.getAllRequests(pageable);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "Fetched all requests successfully",
+                requests,
+                null,
+                LocalDateTime.now()
+        ));
     }
+
 
     /**
      * Admin: Approve or reject a request
@@ -71,10 +105,22 @@ public class PrefundAuthController {
      * User: Get all their requests
      */
     @GetMapping("/my-requests")
-    public ResponseEntity<List<PrefundResponseDTO>> getMyRequests(Authentication authentication) {
+    public ResponseEntity<ApiResponse<Page<PrefundResponseDTO>>> getMyRequests(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
         String username = authentication.getName();
-        List<PrefundResponseDTO> requests = prefundAuthService.getRequestsByUser(username);
-        return ResponseEntity.ok(requests);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PrefundResponseDTO> requests = prefundAuthService.getRequestsByUser(username, pageable);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "Fetched user requests successfully",
+                requests,
+                null,
+                LocalDateTime.now()
+        ));
     }
 
     /**

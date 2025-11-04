@@ -37,6 +37,7 @@ import VendorRoutingTable from '../../components/Tables/VendorRoutingTable.jsx'
 import AdminBankTable from '../../components/Tables/AdminBankTable.jsx'
 import PreFundAuthTable from '../../components/Tables/PreFundAuthTable.jsx'
 import PartnerCredentialTable from '../../components/Tables/PartnerCredentialTable.jsx'
+import PrefundRequestsTable from '../../components/Tables/PrefundRequestsTable.jsx'
 
 
 export const adminRoutes = [
@@ -159,7 +160,7 @@ export const adminRoutes = [
       
       {
         path: "pre-funding-authorization",
-        element: <PreFundAuthTable />
+        element: <PrefundRequestsTable />
       },
       {
         path: "partner-credentials",
