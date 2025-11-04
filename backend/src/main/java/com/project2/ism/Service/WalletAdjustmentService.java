@@ -1,7 +1,6 @@
 //package com.project2.ism.Service;
 //
 //import com.project2.ism.Model.*;
-//import com.project2.ism.Model.Users.Franchise;
 //import com.project2.ism.Model.Users.ApiPartner;
 //import com.project2.ism.Repository.*;
 //import org.springframework.beans.factory.annotation.Autowired;
@@ -15,20 +14,16 @@
 //public class WalletAdjustmentService {
 //
 //
-//    @Autowired
-//    private MerchantRepository merchantRepository;
-//
-//    @Autowired
-//    private FranchiseWalletRepository franchiseWalletRepository;
-//
-//    @Autowired
-//    private MerchantWalletRepository merchantWalletRepository;
-//
-//    @Autowired
-//    private FranchiseTransDetRepository franchiseTransactionRepository;
+//    private final ApiPartnerRepository apiPartnerRepository;
+//    private final ApiPartnerWalletRepository apiPartnerWalletRepository;
 //
 //    @Autowired
 //    private MerchantTransDetRepository merchantTransactionRepository;
+//
+//    public WalletAdjustmentService(ApiPartnerRepository apiPartnerRepository, ApiPartnerWalletRepository apiPartnerWalletRepository) {
+//        this.apiPartnerRepository = apiPartnerRepository;
+//        this.apiPartnerWalletRepository = apiPartnerWalletRepository;
+//    }
 //
 //    @Transactional
 //    public void adjustFranchiseWallet(Long franchiseId, String actionOnBalance, BigDecimal amount, String remark) {

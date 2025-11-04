@@ -105,19 +105,19 @@ const VendorRateView = ({ vendorData, onClose, isOpen }) => {
                         </div>
                     </div>
 
-                    {/* Card Rates */}
+                    {/* Channel Rates */}
                     <div className="mt-6">
                         <div className="flex items-center mb-4">
                             <CreditCard className="h-5 w-5 text-purple-600 mr-2" />
-                            <h3 className="text-lg font-semibold text-gray-900">Card Rates</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">Channel Rates</h3>
                         </div>
-                        {vendorData.vendorCardRates && vendorData.vendorCardRates.length > 0 ? (
+                        {vendorData.vendorChannelRates && vendorData.vendorChannelRates.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {vendorData.vendorCardRates.map((rate, index) => (
+                                {vendorData.vendorChannelRates.map((rate, index) => (
                                     <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <p className="text-sm font-medium text-gray-600">{rate.cardType}</p>
+                                                <p className="text-sm font-medium text-gray-600">{rate.channelType}</p>
                                                 <p className="text-lg font-bold text-purple-600">{rate.rate}%</p>
                                             </div>
                                         </div>
@@ -125,7 +125,7 @@ const VendorRateView = ({ vendorData, onClose, isOpen }) => {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-500 bg-gray-50 rounded-lg p-4 text-center">No card rates configured</p>
+                            <p className="text-gray-500 bg-gray-50 rounded-lg p-4 text-center">No channel rates configured</p>
                         )}
                     </div>
 

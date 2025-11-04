@@ -18,9 +18,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AdminBankForm from '../Forms/AdminBankForm';
 import { createAdminBank, deleteAdminBank, getAdminBanks, updateAdminBank } from '../../constants/API/adminBanks';
 import StatsCard from '../UI/StatsCard';
+import TableShimmer from '../Shimmer/TableShimmer';
 
 const AdminBankTable = () => {
-    /// we can make one state for these 3 (showform , editingbank,viewingbank ) with one state
+    
     const [showForm, setShowForm] = useState(false);
     const [editingBank, setEditingBank] = useState(null);
     const [viewingBank, setViewingBank] = useState(null);
@@ -275,6 +276,11 @@ const AdminBankTable = () => {
     const chargesEnabled = adminBanks.filter(b => b.charges === true).length;
     const chargesDisabled = adminBanks.filter(b => b.charges === false).length;
 
+
+    if (isLoading) {
+        return <TableShimmer rows={10} columns={8}/>
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 pr-4">
             <div className="max-w-7xl mx-auto">
@@ -345,11 +351,6 @@ const AdminBankTable = () => {
 
                     {/* Table */}
                     <div className="overflow-x-auto">
-                        {isLoading ? (
-                            <div className="flex justify-center items-center py-12">
-                                <div className="text-gray-500">Loading...</div>
-                            </div>
-                        ) : (
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     {table.getHeaderGroups().map(headerGroup => (
@@ -401,7 +402,7 @@ const AdminBankTable = () => {
                                     )}
                                 </tbody>
                             </table>
-                        )}
+                      
                     </div>
 
                     {/* Pagination */}
