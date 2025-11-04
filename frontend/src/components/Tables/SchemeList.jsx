@@ -15,6 +15,7 @@ import { toast } from 'react-toastify'
 import PricingSchemeFormModal from '../Forms/PricingForm'
 import schemeApi from '../../constants/API/schemeApi'
 import { set } from 'react-hook-form'
+import StatsCard from '../UI/StatsCard'
 
 const SchemeList = () => {
     const [schemes, setSchemes] = useState([])
@@ -304,42 +305,36 @@ const SchemeList = () => {
                     </div>
                 </div>
 
+                
+
                 {/* Stats Channels */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Package className="h-6 w-6 text-blue-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Total Schemes</p>
-                                <p className="text-2xl font-bold text-gray-900">{totalSchemes}</p>
-                            </div>
-                        </div>
-                    </div>
-                   
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-purple-100 rounded-lg">
-                                <Users className="h-6 w-6 text-purple-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Partner Schemes</p>
-                                <p className="text-2xl font-bold text-gray-900">{merchantSchemes}</p>
-                            </div>
-                        </div>
-                    </div>
-                    {/* <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-yellow-100 rounded-lg">
-                                <CreditChannel className="h-6 w-6 text-yellow-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Total Monthly Rent</p>
-                                <p className="text-2xl font-bold text-gray-900">₹{totalRent}</p>
-                            </div>
-                        </div>
-                    </div> */}
+                    <StatsCard
+                        icon={Package}
+                        iconColor="text-blue-600"
+                        bgColor="bg-blue-100"
+                        label="Total Schemes"
+                        value={totalSchemes}
+                    />
+                    
+                    <StatsCard
+                        icon={Users}
+                        iconColor="text-purple-600"
+                        bgColor="bg-purple-100"
+                        label="Partner Schemes"
+                        value={merchantSchemes}
+                    />
+                    
+                    {/* Uncomment when needed:
+                    <StatsCard
+                        icon={CreditChannel}
+                        iconColor="text-yellow-600"
+                        bgColor="bg-yellow-100"
+                        label="Total Monthly Rent"
+                        value={totalRent}
+                        suffix="₹"
+                    />
+                    */}
                 </div>
 
                 {/* Table Channel */}

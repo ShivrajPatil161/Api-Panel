@@ -5,6 +5,8 @@ import VendorRateForm from '../Forms/VendorRate'
 import { getAllVendorRates, createVendorRate, updateVendorRate, deleteVendorRate } from '../../constants/API/vendorRates'
 import VendorRateView from '../View/VendorRateView'
 import { set } from 'react-hook-form'
+import StatsCard from '../UI/StatsCard';
+
 
 const VendorRateList = () => {
     const [data, setData] = useState([])
@@ -360,42 +362,32 @@ const VendorRateList = () => {
                     </div>
                 </div>
 
+
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded-lg shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Users className="h-6 w-6 text-blue-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Total Rates</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.totalVendors}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                                <Building2 className="h-6 w-6 text-green-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Active Rates</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.activeRates}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-red-100 rounded-lg">
-                                <Calendar className="h-6 w-6 text-red-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Expired Rates</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.expiredRates}</p>
-                            </div>
-                        </div>
-                    </div>
-                   
+                <StatsCard
+                    icon={Users}
+                    iconColor="text-blue-600"
+                    bgColor="bg-blue-100"
+                    label="Total Rates"
+                    value={stats.totalVendors}
+                />
+                
+                <StatsCard
+                    icon={Building2}
+                    iconColor="text-green-600"
+                    bgColor="bg-green-100"
+                    label="Active Rates"
+                    value={stats.activeRates}
+                />
+                
+                <StatsCard
+                    icon={Calendar}
+                    iconColor="text-red-600"
+                    bgColor="bg-red-100"
+                    label="Expired Rates"
+                    value={stats.expiredRates}
+                />
                 </div>
 
                 {/* Table Card */}

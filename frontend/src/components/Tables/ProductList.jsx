@@ -22,9 +22,10 @@ import {
   XCircle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-
 import ProductMasterForm from '../Forms/Product';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../../constants/API/productApi';
+import StatsCard from '../UI/StatsCard';
+
 
 
 // Modular Components
@@ -470,42 +471,32 @@ const ProductList = () => {
           </div>
         </div>
 
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900">{totalElements}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Products</p>
-                <p className="text-2xl font-bold text-gray-900">{activeProducts}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="h-6 w-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Inactive Products</p>
-                <p className="text-2xl font-bold text-gray-900">{inactiveProducts}</p>
-              </div>
-            </div>
-          </div>
-         
+          <StatsCard
+            icon={Package}
+            iconColor="text-blue-600"
+            bgColor="bg-blue-100"
+            label="Total Products"
+            value={totalElements}
+          />
+          
+          <StatsCard
+            icon={CheckCircle}
+            iconColor="text-green-600"
+            bgColor="bg-green-100"
+            label="Active Products"
+            value={activeProducts}
+          />
+          
+          <StatsCard
+            icon={XCircle}
+            iconColor="text-red-600"
+            bgColor="bg-red-100"
+            label="Inactive Products"
+            value={inactiveProducts}
+          />
         </div>
 
         {/* Search Bar */}
