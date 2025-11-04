@@ -17,6 +17,7 @@ import api from '../../constants/API/axiosInstance';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AdminBankForm from '../Forms/AdminBankForm';
 import { createAdminBank, deleteAdminBank, getAdminBanks, updateAdminBank } from '../../constants/API/adminBanks';
+import StatsCard from '../UI/StatsCard';
 
 const AdminBankTable = () => {
     /// we can make one state for these 3 (showform , editingbank,viewingbank ) with one state
@@ -297,43 +298,33 @@ const AdminBankTable = () => {
                     </div>
                 </div>
 
+
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Building2 className="h-6 w-6 text-blue-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Total Banks</p>
-                                <p className="text-2xl font-bold text-gray-900">{totalBanks}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                                <CreditCard className="h-6 w-6 text-green-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Charges Enabled</p>
-                                <p className="text-2xl font-bold text-gray-900">{chargesEnabled}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-gray-100 rounded-lg">
-                                <CreditCard className="h-6 w-6 text-gray-600" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Charges Disabled</p>
-                                <p className="text-2xl font-bold text-gray-900">{chargesDisabled}</p>
-                            </div>
-                        </div>
-                    </div>
+                <StatsCard
+                    icon={Building2}
+                    iconColor="text-blue-600"
+                    bgColor="bg-blue-100"
+                    label="Total Banks"
+                    value={totalBanks}
+                />
+                
+                <StatsCard
+                    icon={CreditCard}
+                    iconColor="text-green-600"
+                    bgColor="bg-green-100"
+                    label="Charges Enabled"
+                    value={chargesEnabled}
+                />
+                
+                <StatsCard
+                    icon={CreditCard}
+                    iconColor="text-gray-600"
+                    bgColor="bg-gray-100"
+                    label="Charges Disabled"
+                    value={chargesDisabled}
+                />
                 </div>
-
                 {/* Table Card */}
                 <div className="bg-white rounded-lg shadow-sm">
                     {/* Table Header */}

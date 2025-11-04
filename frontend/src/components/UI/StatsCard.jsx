@@ -1,7 +1,7 @@
 // StatsCard.jsx
 import React from 'react';
 
-const StatsCard = ({ icon: Icon, iconColor, bgColor, label, value, suffix = '' }) => {
+const StatsCard = ({ icon: Icon, iconColor, bgColor, label, value, prefix = '', suffix = '' }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center">
@@ -11,7 +11,7 @@ const StatsCard = ({ icon: Icon, iconColor, bgColor, label, value, suffix = '' }
         <div className="ml-4">
           <p className="text-sm font-medium text-gray-600">{label}</p>
           <p className="text-2xl font-bold text-gray-900">
-            {value}{suffix}
+            {prefix}{value}{suffix}
           </p>
         </div>
       </div>
