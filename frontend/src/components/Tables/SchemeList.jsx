@@ -16,6 +16,7 @@ import PricingSchemeFormModal from '../Forms/PricingForm'
 import schemeApi from '../../constants/API/schemeApi'
 import { set } from 'react-hook-form'
 import StatsCard from '../UI/StatsCard'
+import PageHeader from '../UI/PageHeader'
 
 const SchemeList = () => {
     const [schemes, setSchemes] = useState([])
@@ -284,28 +285,19 @@ const SchemeList = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 pr-4">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex justify-between items-center">
-                        <div className='flex items-center space-x-3'>
-                            <IndianRupee className="h-8 w-8 text-blue-600" />
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Pricing Scheme Management</h1>
-                                <p className="text-gray-600">Manage pricing schemes for partners</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleCreate}
-                            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Plus size={20} />
-                            <span>Add Scheme</span>
-                        </button>
-                    </div>
-                </div>
+            <div className="mx-auto">
 
-                
+                {/* Header */}
+                <PageHeader
+                icon={IndianRupee}
+                iconColor="text-blue-600"
+                title="Pricing Scheme Management"
+                description="Manage pricing schemes for partners"
+                buttonText="Add Scheme"
+                buttonIcon={Plus}
+                onButtonClick={handleCreate}
+                buttonColor="bg-blue-600 hover:bg-blue-700"
+                />
 
                 {/* Stats Channels */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

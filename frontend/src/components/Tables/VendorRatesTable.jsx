@@ -6,6 +6,7 @@ import { getAllVendorRates, createVendorRate, updateVendorRate, deleteVendorRate
 import VendorRateView from '../View/VendorRateView'
 import { set } from 'react-hook-form'
 import StatsCard from '../UI/StatsCard';
+import PageHeader from '../UI/PageHeader'
 
 
 const VendorRateList = () => {
@@ -336,31 +337,20 @@ const VendorRateList = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 pr-4">
-            <div className="max-w-7xl mx-auto">
+            <div className="mx-auto">
+
                 {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <CreditCard className="h-8 w-8 text-blue-600" />
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Vendor Rate Management</h1>
-                                <p className="text-gray-600">Manage vendor rates and device rental pricing</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleAddVendorRate}
-                            disabled={submitting}
-                            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {submitting ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                                <Plus className="h-5 w-5" />
-                            )}
-                            <span>Add Rate</span>
-                        </button>
-                    </div>
-                </div>
+                <PageHeader
+                icon={CreditCard}
+                iconColor="text-blue-600"
+                title="Vendor Rate Management"
+                description="Manage vendor rates and device rental pricing"
+                buttonText="Add Rate"
+                buttonIcon={submitting ? Loader2 : Plus}
+                onButtonClick={handleAddVendorRate}
+                buttonColor="bg-blue-600 hover:bg-blue-700"
+                buttonDisabled={submitting}
+                />
 
 
                 {/* Stats Cards */}
