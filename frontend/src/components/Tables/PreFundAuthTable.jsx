@@ -14,6 +14,7 @@ import {
   Download, DollarSign, Calendar, User, Smartphone
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import StatsCard from '../UI/StatsCard';
 
 const PrefundingAuthorizationTable = () => {
   const [requests, setRequests] = useState([]);
@@ -351,54 +352,41 @@ const PrefundingAuthorizationTable = () => {
           </div>
         </div>
 
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Requests</p>
-                <p className="text-2xl font-bold text-gray-900">{totalRequests}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">{pendingRequests}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Approved</p>
-                <p className="text-2xl font-bold text-gray-900">{approvedRequests}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="h-6 w-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Rejected</p>
-                <p className="text-2xl font-bold text-gray-900">{rejectedRequests}</p>
-              </div>
-            </div>
-          </div>
+          <StatsCard
+            icon={FileText}
+            iconColor="text-blue-600"
+            bgColor="bg-blue-100"
+            label="Total Requests"
+            value={totalRequests}
+          />
+          
+          <StatsCard
+            icon={Clock}
+            iconColor="text-yellow-600"
+            bgColor="bg-yellow-100"
+            label="Pending"
+            value={pendingRequests}
+          />
+          
+          <StatsCard
+            icon={CheckCircle}
+            iconColor="text-green-600"
+            bgColor="bg-green-100"
+            label="Approved"
+            value={approvedRequests}
+          />
+          
+          <StatsCard
+            icon={XCircle}
+            iconColor="text-red-600"
+            bgColor="bg-red-100"
+            label="Rejected"
+            value={rejectedRequests}
+          />
         </div>
-
         {/* Table Card */}
         <div className="bg-white rounded-lg shadow-sm">
           {/* Table Header */}

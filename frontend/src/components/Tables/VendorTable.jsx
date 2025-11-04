@@ -19,6 +19,8 @@ import { toast } from 'react-toastify';
 import VendorForm from '../Forms/Vendor';
 import VendorViewModal from '../View/VendorView';
 import vendorApi from '../../constants/API/vendorApi';
+import StatsCard from '../UI/StatsCard';
+
 
 const VendorListPage = () => {
   const [vendors, setVendors] = useState([]);
@@ -305,51 +307,39 @@ const VendorListPage = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Vendors</p>
-                <p className="text-2xl font-bold text-gray-900">{totalVendors}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Building2 className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Vendors</p>
-                <p className="text-2xl font-bold text-gray-900">{activeVendors}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Building2 className="h-6 w-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Inactive Vendors</p>
-                <p className="text-2xl font-bold text-gray-900">{inactiveVendors}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg Credit Period</p>
-                <p className="text-2xl font-bold text-gray-900">{avgCreditPeriod} days</p>
-              </div>
-            </div>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <StatsCard
+              icon={Users}
+              iconColor="text-blue-600"
+              bgColor="bg-blue-100"
+              label="Total Vendors"
+              value={totalVendors}
+            />
+      
+            <StatsCard
+              icon={Building2}
+              iconColor="text-green-600"
+              bgColor="bg-green-100"
+              label="Active Vendors"
+              value={activeVendors}
+            />
+      
+            <StatsCard
+              icon={Building2}
+              iconColor="text-red-600"
+              bgColor="bg-red-100"
+              label="Inactive Vendors"
+              value={inactiveVendors}
+            />
+      
+            <StatsCard
+              icon={Calendar}
+              iconColor="text-yellow-600"
+              bgColor="bg-yellow-100"
+              label="Avg Credit Period"
+              value={avgCreditPeriod}
+              suffix=" days"
+            />
         </div>
 
         {/* Table Card */}

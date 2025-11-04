@@ -10,6 +10,7 @@ import {
 import api from '../../constants/API/axiosInstance';
 import PrefundRequestForm from '../Forms/PrefundRequestForm'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import StatsCard from '../UI/StatsCard';
 
 /**
  * Table component to display partner's prefund requests
