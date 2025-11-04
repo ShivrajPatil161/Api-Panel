@@ -20,6 +20,7 @@ import VendorForm from '../Forms/Vendor';
 import VendorViewModal from '../View/VendorView';
 import vendorApi from '../../constants/API/vendorApi';
 import StatsCard from '../UI/StatsCard';
+import PageHeader from '../UI/PageHeader';
 
 
 const VendorListPage = () => {
@@ -285,26 +286,19 @@ const VendorListPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pr-4">
-      <div className="max-w-7xl mx-auto">
+      <div className=" mx-auto">
+
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Users className=" text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Vendor Management</h1>
-                <p className="text-gray-600">Manage all your vendor information and relationships</p>
-              </div>
-            </div>
-            <button
-              onClick={handleAddVendor}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Add Vendor</span>
-            </button>
-          </div>
-        </div>
+        <PageHeader
+          icon={Users}
+          iconColor="text-blue-600"
+          title="Vendor Management"
+          description="Manage all your vendor information and relationships"
+          buttonText="Add Vendor"
+          buttonIcon={Plus}
+          onButtonClick={handleAddVendor}
+          buttonColor="bg-blue-600 hover:bg-blue-700"
+        />
 
         {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
