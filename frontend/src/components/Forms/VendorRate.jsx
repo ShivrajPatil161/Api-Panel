@@ -83,21 +83,21 @@ const MonthlyRent = ({ register, errors }) => {
   )
 }
 
-// Card Rate Item Component
-const CardRateItem = ({ index, register, errors, onRemove }) => {
+// Channel Rate Item Component
+const ChannelRateItem = ({ index, register, errors, onRemove }) => {
   return (
     <div className="flex items-end gap-3 p-3 bg-white border border-gray-200 rounded-lg">
       <div className="flex-1">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Card Type <span className="text-red-500">*</span>
+          Channel Type <span className="text-red-500">*</span>
         </label>
         <input
-          {...register(`vendorCardRates.${index}.cardType`, { required: 'Card type is required' })}
+          {...register(`vendorChannelRates.${index}.channelType`, { required: 'Channel type is required' })}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter card type"
+          placeholder="Enter channel type"
         />
-        {errors.vendorCardRates?.[index]?.cardType && (
-          <p className="mt-1 text-sm text-red-500">{errors.vendorCardRates[index].cardType.message}</p>
+        {errors.vendorChannelRates?.[index]?.channelType && (
+          <p className="mt-1 text-sm text-red-500">{errors.vendorChannelRates[index].channelType.message}</p>
         )}
       </div>
 
@@ -106,7 +106,7 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
           Rate (%) <span className="text-red-500">*</span>
         </label>
         <input
-          {...register(`vendorCardRates.${index}.rate`, {
+          {...register(`vendorChannelRates.${index}.rate`, {
             required: 'Rate is required',
             min: { value: 0, message: 'Rate must be positive' },
             max: { value: 100, message: 'Rate cannot exceed 100%' }
@@ -118,8 +118,8 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="e.g., 2.5"
         />
-        {errors.vendorCardRates?.[index]?.rate && (
-          <p className="mt-1 text-sm text-red-500">{errors.vendorCardRates[index].rate.message}</p>
+        {errors.vendorChannelRates?.[index]?.rate && (
+          <p className="mt-1 text-sm text-red-500">{errors.vendorChannelRates[index].rate.message}</p>
         )}
       </div>
 
@@ -127,7 +127,7 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
         type="button"
         onClick={onRemove}
         className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-        title="Remove card type"
+        title="Remove channel type"
       >
         <X size={20} />
       </button>
@@ -136,91 +136,91 @@ const CardRateItem = ({ index, register, errors, onRemove }) => {
 }
 
 
-// Card Rates Component in vendor - rates  
-const CardRates = ({ control, register, errors }) => {
+// Channel Rates Component in vendor - rates  
+const ChannelRates = ({ control, register, errors }) => {
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "vendorCardRates"
+    name: "vendorChannelRates"
   });
 
-  const [selectedCardType, setSelectedCardType] = useState('');
-  const [cardTypes, setCardTypes] = useState([]);
+  const [selectedChannelType, setSelectedChannelType] = useState('');
+  const [channelTypes, setChannelTypes] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newCardTypeName, setNewCardTypeName] = useState('');
+  const [newChannelTypeName, setNewChannelTypeName] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Load card types from database
+  // Load channel types from database
   useEffect(() => {
-    const loadCardTypes = async () => {
+    const loadChannelTypes = async () => {
       try {
-        const response = await api.get('/card-types');
-        setCardTypes(response.data);
+        const response = await api.get('/channel-types');
+        setChannelTypes(response.data);
       } catch (error) {
-        console.error('Failed to load card types:', error);
+        console.error('Failed to load channel types:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadCardTypes();
+    loadChannelTypes();
   }, []);
 
-  const addDatabaseCardRate = () => {
-    if (selectedCardType) {
-      append({ cardType: selectedCardType, rate: '' });
-      setSelectedCardType('');
+  const addDatabaseChannelRate = () => {
+    if (selectedChannelType) {
+      append({ channelType: selectedChannelType, rate: '' });
+      setSelectedChannelType('');
     }
   };
 
 
-  const handleAddNewCardType = async () => {
-    if (!newCardTypeName.trim()) return;
+  const handleAddNewChannelType = async () => {
+    if (!newChannelTypeName.trim()) return;
 
     try {
-      const response = await api.post('/card-types', {
-        cardName: newCardTypeName.trim()
+      const response = await api.post('/channel-types', {
+        channelName: newChannelTypeName.trim()
       });
 
-      // Refresh card types list
-      const updatedResponse = await api.get('/card-types');
-      setCardTypes(updatedResponse.data);
+      // Refresh channel types list
+      const updatedResponse = await api.get('/channel-types');
+      setChannelTypes(updatedResponse.data);
 
-      // Add the new card type to form and select it
-      append({ cardType: response.data.cardName, rate: '' });
+      // Add the new channel type to form and select it
+      append({ channelType: response.data.channelName, rate: '' });
 
       // Reset modal
-      setNewCardTypeName('');
+      setNewChannelTypeName('');
       setShowAddModal(false);
     } catch (error) {
-      console.error('Failed to create card type:', error);
-      alert('Failed to create card type. It might already exist.');
+      console.error('Failed to create channel type:', error);
+      alert('Failed to create channel type. It might already exist.');
     }
   };
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-700">Card Processing Rates</h3>
+        <h3 className="text-lg font-semibold text-gray-700">Channel Processing Rates</h3>
         <div className="flex gap-3">
           <div className="flex gap-2">
             <select
-              value={selectedCardType}
-              onChange={(e) => setSelectedCardType(e.target.value)}
+              value={selectedChannelType}
+              onChange={(e) => setSelectedChannelType(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             >
               <option value="">
-                {loading ? 'Loading...' : 'Select card type'}
+                {loading ? 'Loading...' : 'Select channel type'}
               </option>
-              {cardTypes.map(cardType => (
-                <option key={cardType.id} value={cardType.cardName}>
-                  {cardType.cardName}
+              {channelTypes.map(channelType => (
+                <option key={channelType.id} value={channelType.channelName}>
+                  {channelType.channelName}
                 </option>
               ))}
             </select>
             <button
               type="button"
-              onClick={addDatabaseCardRate}
-              disabled={!selectedCardType || loading}
+              onClick={addDatabaseChannelRate}
+              disabled={!selectedChannelType || loading}
               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               Add Selected
@@ -240,7 +240,7 @@ const CardRates = ({ control, register, errors }) => {
 
       <div className="space-y-3">
         {fields.map((field, index) => (
-          <CardRateItem
+          <ChannelRateItem
             key={field.id}
             index={index}
             register={register}
@@ -250,30 +250,30 @@ const CardRates = ({ control, register, errors }) => {
         ))}
         {fields.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <p className="text-sm">No card types added yet.</p>
-            <p className="text-xs mt-1">Use the buttons above to add card types from database or create custom ones.</p>
+            <p className="text-sm">No channel types added yet.</p>
+            <p className="text-xs mt-1">Use the buttons above to add channel types from database or create custom ones.</p>
           </div>
         )}
       </div>
 
-      {/* Add New Card Type Modal */}
+      {/* Add New Channel Type Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">New Card Type</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">New Channel Type</h3>
               <input
                 type="text"
-                placeholder="Enter new card type"
-                value={newCardTypeName}
-                onChange={(e) => setNewCardTypeName(e.target.value)}
+                placeholder="Enter new channel type"
+                value={newChannelTypeName}
+                onChange={(e) => setNewChannelTypeName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddNewCardType();
+                  if (e.key === 'Enter') handleAddNewChannelType();
                   if (e.key === 'Escape') {
                     setShowAddModal(false);
-                    setNewCardTypeName('');
+                    setNewChannelTypeName('');
                   }
                 }}
               />
@@ -281,15 +281,15 @@ const CardRates = ({ control, register, errors }) => {
                 <button
                   onClick={() => {
                     setShowAddModal(false);
-                    setNewCardTypeName('');
+                    setNewChannelTypeName('');
                   }}
                   className="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleAddNewCardType}
-                  disabled={!newCardTypeName.trim()}
+                  onClick={handleAddNewChannelType}
+                  disabled={!newChannelTypeName.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
                   Save
@@ -469,7 +469,7 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
     effectiveDate: '',
     expiryDate: '',
     monthlyRent: '',
-    vendorCardRates: [],
+    vendorChannelRates: [],
     remark: ''
   })
 
@@ -494,16 +494,16 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
   useEffect(() => {
     if (initialData && (isEdit || isReuse)) {
       if (isReuse) {
-        // For reuse mode, copy only monthlyRent, remark, and card rates without IDs
+        // For reuse mode, copy only monthlyRent, remark, and channel rates without IDs
         setValue('monthlyRent', initialData.monthlyRent)
         setValue('remark', initialData.remark)
 
-        // Copy card rates but remove their IDs
-        const cardRatesWithoutIds = initialData.vendorCardRates.map(rate => {
+        // Copy channel rates but remove their IDs
+        const channelRatesWithoutIds = initialData.vendorChannelRates.map(rate => {
           const { id, ...rateWithoutId } = rate
           return rateWithoutId
         })
-        setValue('vendorCardRates', cardRatesWithoutIds)
+        setValue('vendorChannelRates', channelRatesWithoutIds)
 
         // Ensure these are empty
         setValue('vendor', '')
@@ -528,24 +528,24 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
   const onFormSubmit = (data) => {
     console.log(data)
 
-    // Filter card rates based on customer type
-    const filteredCardRates = data.vendorCardRates.filter(rate =>
-      rate.rate && parseFloat(rate.rate) > 0 && rate.cardType.trim()
+    // Filter channel rates based on customer type
+    const filteredChannelRates = data.vendorChannelRates.filter(rate =>
+      rate.rate && parseFloat(rate.rate) > 0 && rate.channelType.trim()
     )
 
-    // Remove IDs from card rates if reusing
-    const processedCardRates = isReuse
-      ? filteredCardRates.map(rate => {
+    // Remove IDs from channel rates if reusing
+    const processedChannelRates = isReuse
+      ? filteredChannelRates.map(rate => {
         const { id, ...rateWithoutId } = rate
         return rateWithoutId
       })
-      : filteredCardRates
+      : filteredChannelRates
 
     const filteredData = {
       ...data,
       vendor: { id: Number(data.vendor) },
       product: { id: Number(data.productId) },
-      vendorCardRates: processedCardRates
+      vendorChannelRates: processedChannelRates
     }
 
     // Remove ID if reusing (so backend treats it as new creation)
@@ -589,7 +589,7 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
                   <strong>Note:</strong> You're creating a new vendor rate based on an existing one.
-                  The monthly rent and card rates have been pre-filled. Please select a vendor, product,
+                  The monthly rent and channel rates have been pre-filled. Please select a vendor, product,
                   and set new effective and expiry dates.
                 </p>
               </div>
@@ -619,7 +619,7 @@ const VendorRateForm = ({ onCancel, onSubmit, initialData = null, isEdit = false
               isReuse={isReuse}
             />
             <MonthlyRent register={register} errors={errors} />
-            <CardRates control={control} register={register} errors={errors} />
+            <ChannelRates control={control} register={register} errors={errors} />
 
             {/* Remarks */}
             <div className="bg-gray-50 p-4 rounded-lg">

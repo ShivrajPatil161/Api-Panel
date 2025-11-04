@@ -84,8 +84,8 @@ const VendorRateList = () => {
             ),
             size: 120
         }),
-        columnHelper.accessor('vendorCardRates', {
-            header: 'Card Rates',
+        columnHelper.accessor('vendorChannelRates', {
+            header: 'Channel Rates',
             cell: info => {
                 const rates = info.getValue() || []
                 const displayRates = rates.slice(0, 2)
@@ -96,7 +96,7 @@ const VendorRateList = () => {
                         {displayRates.length > 0 ? (
                             displayRates.map((rate, index) => (
                                 <div key={index} className="text-xs">
-                                    <span className="text-gray-600">{rate.cardType}:</span>{' '}
+                                    <span className="text-gray-600">{rate.channelType}:</span>{' '}
                                     <span className="font-medium">{rate.rate}%</span>
                                 </div>
                             ))
@@ -360,7 +360,7 @@ const VendorRateList = () => {
                     </div>
                 </div>
 
-                {/* Stats Cards */}
+                {/* Stats Channels */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-white p-6 rounded-lg shadow">
                         <div className="flex items-center">
@@ -398,7 +398,7 @@ const VendorRateList = () => {
                    
                 </div>
 
-                {/* Table Card */}
+                {/* Table Channel */}
                 <div className="bg-white rounded-lg shadow">
                     {/* Table Header */}
                     <div className="p-6 border-b border-gray-200">

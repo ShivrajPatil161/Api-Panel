@@ -2,6 +2,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Building2, Key, Globe, Shield, User, ToggleLeft, ToggleRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import api from '../../constants/API/axiosInstance';
 
 // Validation Schema
 const vendorCredentialSchema = z.object({
@@ -171,20 +173,19 @@ const FormActions = ({ onCancel, isSubmitting, isEdit }) => (
   </div>
 );
 
-// Main Component
-const VendorCredentialForm = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
+const VendorCredentialForm = ({
+  isOpen,
+  onClose,
+  onSubmit,
   initialData = null,
-  mode = 'create'
 }) => {
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    watch
+    watch,
+    setValue,
   } = useForm({
     resolver: zodResolver(vendorCredentialSchema),
     defaultValues: initialData || {
@@ -200,50 +201,105 @@ const VendorCredentialForm = ({
       clientSecret: '',
       username: '',
       password: '',
-      
-      isActive: true
+      isActive: true,
+    },
+  })
+
+  const [vendors, setVendors] = useState([])
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [productsLoading, setProductsLoading] = useState(false)
+
+  const selectedVendor = watch('vendor')
+
+  // ✅ Fetch vendors when modal opens
+  useEffect(() => {
+   
+      fetchVendors()
+   
+  }, [])
+
+  // ✅ Fetch products when vendor changes
+  useEffect(() => {
+    if (selectedVendor) {
+      fetchProductsByVendor(selectedVendor)
+    } else {
+      setProducts([])
     }
-  });
+  }, [selectedVendor])
 
-  
+  // ✅ Fetch vendors
+  const fetchVendors = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get('/vendors/id_name')
+      const vendorOptions = response.data.map(vendor => ({
+        value: vendor.id.toString(),
+        label: vendor.name,
+        id: vendor.id,
+      }))
+      setVendors(vendorOptions)
+    } catch (error) {
+      console.error('Error fetching vendors:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  // Mock data
-  const vendorOptions = [
-    { value: 'vendor1', label: 'Vendor 1' },
-    { value: 'vendor2', label: 'Vendor 2' },
-    { value: 'vendor3', label: 'Vendor 3' },
-    { value: 'vendor4', label: 'Vendor 4' }
-  ];
+  // ✅ Fetch products by vendor
+  const fetchProductsByVendor = async (vendorId, preselectedProductId = null) => {
+    try {
+      setProductsLoading(true)
+      const response = await api.get(`/products/vendor/${vendorId}`)
+      const productOptions = response.data.map(product => ({
+        value: product.id.toString(),
+        label: `${product.productCode} - ${product.productName}`,
+        id: product.id,
+      }))
+      setProducts(productOptions)
 
-  const productOptions = [
-    { value: 'recharge', label: 'Recharge' },
-    { value: 'bill_payment', label: 'Bill Payment' },
-    { value: 'dth', label: 'DTH' },
-    { value: 'electricity', label: 'Electricity' },
-    { value: 'water', label: 'Water' }
-  ];
+      // preselect if editing existing credential
+      if (preselectedProductId) {
+        setValue('product', preselectedProductId.toString())
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error)
+      setProducts([])
+    } finally {
+      setProductsLoading(false)
+    }
+  }
 
-  
+  // ✅ Preload products if editing
+  useEffect(() => {
+    if (initialData?.vendor && initialData?.product) {
+      fetchProductsByVendor(initialData.vendor, initialData.product)
+    }
+  }, [initialData])
 
   const handleFormSubmit = (data) => {
-    onSubmit(data);
-    reset();
-  };
+    onSubmit(data)
+    //reset()
+  }
 
   const handleClose = () => {
-    reset();
-    onClose();
-  };
+    reset()
+    onClose()
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <Modal
-      title={mode === 'create' ? 'Add New Vendor Credential' : 'Edit Vendor Credential'}
-      subtitle={mode === 'create' ? 'Register new vendor API credentials' : 'Update vendor API credentials'}
+      title={initialData ? 'Edit Vendor Credential' : 'Add New Vendor Credential'}
+      subtitle={
+        initialData
+          ? 'Update vendor API credentials'
+          : 'Register new vendor API credentials'
+      }
       onClose={handleClose}
     >
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-8">
         {/* Basic Information */}
         <FormSection title="Basic Information" icon={Building2}>
           <GridLayout columns={2}>
@@ -253,8 +309,9 @@ const VendorCredentialForm = ({
               control={control}
               error={errors.vendor}
               required
-              options={vendorOptions}
-              placeholder="Select Vendor"
+              options={vendors}
+              placeholder={loading ? 'Loading vendors...' : 'Select Vendor'}
+              disabled={loading}
             />
 
             <FormSelect
@@ -263,25 +320,31 @@ const VendorCredentialForm = ({
               control={control}
               error={errors.product}
               required
-              options={productOptions}
-              placeholder="Select Product"
+              options={products}
+              placeholder={
+                selectedVendor
+                  ? productsLoading
+                    ? 'Loading products...'
+                    : 'Select Product'
+                  : 'Select vendor first'
+              }
+              disabled={!selectedVendor || productsLoading}
             />
           </GridLayout>
         </FormSection>
 
-        {/* Authentication Information */}
+        {/* Authentication Info */}
         <FormSection title="Authentication Information" icon={Shield}>
           <div className="space-y-6">
             <GridLayout columns={2}>
               <FormInput
-              label="Token"
-              name="token"
-              control={control}
-              error={errors.token}
-              placeholder="Enter authentication token"
-            />
-
-             <FormInput
+                label="Token"
+                name="token"
+                control={control}
+                error={errors.token}
+                placeholder="Enter authentication token"
+              />
+              <FormInput
                 label="Salt Key"
                 name="saltKey"
                 control={control}
@@ -298,9 +361,6 @@ const VendorCredentialForm = ({
                 error={errors.clientId}
                 placeholder="Enter client ID"
               />
-
-             
-
               <FormInput
                 label="Client Secret"
                 name="clientSecret"
@@ -309,7 +369,6 @@ const VendorCredentialForm = ({
                 type="password"
                 placeholder="Enter client secret"
               />
-
               <FormInput
                 label="Username"
                 name="username"
@@ -317,7 +376,6 @@ const VendorCredentialForm = ({
                 error={errors.username}
                 placeholder="Enter username"
               />
-
               <FormInput
                 label="Password"
                 name="password"
@@ -330,7 +388,7 @@ const VendorCredentialForm = ({
           </div>
         </FormSection>
 
-        {/* API URLs - UAT Environment */}
+        {/* URLs */}
         <FormSection title="UAT Environment URLs" icon={Globe}>
           <GridLayout columns={2}>
             <FormInput
@@ -341,19 +399,17 @@ const VendorCredentialForm = ({
               required
               placeholder="https://uat.example.com/token"
             />
-
             <FormInput
               label="Base URL UAT"
               name="baseUrlUat"
               control={control}
               error={errors.baseUrlUat}
               required
-              placeholder="https://something.example.com/api"
+              placeholder="https://uat.example.com/api"
             />
           </GridLayout>
         </FormSection>
 
-        {/* API URLs - Production Environment */}
         <FormSection title="Production Environment URLs" icon={Globe}>
           <GridLayout columns={2}>
             <FormInput
@@ -364,7 +420,6 @@ const VendorCredentialForm = ({
               required
               placeholder="https://prod.example.com/token"
             />
-
             <FormInput
               label="Base URL Prod"
               name="baseUrlProd"
@@ -376,7 +431,7 @@ const VendorCredentialForm = ({
           </GridLayout>
         </FormSection>
 
-        {/* Configuration */}
+        {/* Status */}
         <FormSection title="Configuration" icon={User}>
           <GridLayout columns={2}>
             <StatusToggle
@@ -388,19 +443,17 @@ const VendorCredentialForm = ({
               activeColor="green"
             />
           </GridLayout>
-
-          
         </FormSection>
 
         {/* Form Actions */}
         <FormActions
           onCancel={handleClose}
           isSubmitting={isSubmitting}
-          isEdit={mode === 'edit'}
+          isEdit={!!initialData}
         />
       </form>
     </Modal>
-  );
-};
+  )
+}
 
-export default VendorCredentialForm;
+export default VendorCredentialForm
