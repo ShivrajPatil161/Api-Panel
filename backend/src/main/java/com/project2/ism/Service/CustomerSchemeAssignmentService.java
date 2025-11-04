@@ -48,7 +48,7 @@
 //        Product product = productRepository.findById(dto.getProductId())
 //                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 //
-//        Long customerId = dto.getCustomerId();
+//        Long customerId = dto.getPartnerId();
 //        String customerType = dto.getCustomerType();
 //
 //        // 🔍 Check for overlaps before assigning
@@ -74,12 +74,12 @@
 //        entity.setRemarks(dto.getRemarks());
 //
 //        // Set either franchise or merchant based on customer type
-//        if ("FRANCHISE".equalsIgnoreCase(dto.getCustomerType()) && dto.getCustomerId() != null) {
-//            Franchise franchise = franchiseRepository.findById(dto.getCustomerId())
+//        if ("FRANCHISE".equalsIgnoreCase(dto.getCustomerType()) && dto.getPartnerId() != null) {
+//            Franchise franchise = franchiseRepository.findById(dto.getPartnerId())
 //                    .orElseThrow(() -> new ResourceNotFoundException("Franchise not found"));
 //            entity.setFranchise(franchise);
-//        } else if ("MERCHANT".equalsIgnoreCase(dto.getCustomerType()) && dto.getCustomerId() != null) {
-//            Merchant merchant = merchantRepository.findById(dto.getCustomerId())
+//        } else if ("MERCHANT".equalsIgnoreCase(dto.getCustomerType()) && dto.getPartnerId() != null) {
+//            Merchant merchant = merchantRepository.findById(dto.getPartnerId())
 //                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"));
 //            entity.setApiPartner(merchant);
 //        }
@@ -160,12 +160,12 @@
 //        entity.setApiPartner(null);
 //
 //        // Set new customer assignment
-//        if ("FRANCHISE".equals(dto.getCustomerType()) && dto.getCustomerId() != null) {
-//            Franchise franchise = franchiseRepository.findById(dto.getCustomerId())
+//        if ("FRANCHISE".equals(dto.getCustomerType()) && dto.getPartnerId() != null) {
+//            Franchise franchise = franchiseRepository.findById(dto.getPartnerId())
 //                    .orElseThrow(() -> new ResourceNotFoundException("Franchise not found"));
 //            entity.setFranchise(franchise);
-//        } else if ("MERCHANT".equals(dto.getCustomerType()) && dto.getCustomerId() != null) {
-//            Merchant merchant = merchantRepository.findById(dto.getCustomerId())
+//        } else if ("MERCHANT".equals(dto.getCustomerType()) && dto.getPartnerId() != null) {
+//            Merchant merchant = merchantRepository.findById(dto.getPartnerId())
 //                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"));
 //            entity.setApiPartner(merchant);
 //        }
@@ -201,10 +201,10 @@
 //
 //        // Set customer ID and name based on type
 //        if ("FRANCHISE".equalsIgnoreCase(entity.getCustomerType()) && entity.getFranchise() != null) {
-//            dto.setCustomerId(entity.getFranchise().getId());
+//            dto.setPartnerId(entity.getFranchise().getId());
 //            dto.setCustomerName(entity.getFranchise().getFranchiseName());
 //        } else if ("MERCHANT".equalsIgnoreCase(entity.getCustomerType()) && entity.getApiPartner() != null) {
-//            dto.setCustomerId(entity.getApiPartner().getId());
+//            dto.setPartnerId(entity.getApiPartner().getId());
 //            dto.setCustomerName(entity.getApiPartner().getBusinessName());
 //        }
 //
@@ -352,12 +352,12 @@
 //        dto.setCustomerType(entity.getCustomerType());
 //
 //        if ("FRANCHISE".equalsIgnoreCase(entity.getCustomerType()) && entity.getFranchise() != null) {
-//            dto.setCustomerId(entity.getFranchise().getId());
+//            dto.setPartnerId(entity.getFranchise().getId());
 //            dto.setCustomerName(entity.getFranchise().getFranchiseName());
 //            dto.setFranchiseAddress(entity.getFranchise().getAddress());
 //            dto.setFranchiseContact(entity.getFranchise().getContactPerson().getPhoneNumber());
 //        } else if ("MERCHANT".equalsIgnoreCase(entity.getCustomerType()) && entity.getApiPartner() != null) {
-//            dto.setCustomerId(entity.getApiPartner().getId());
+//            dto.setPartnerId(entity.getApiPartner().getId());
 //            dto.setCustomerName(entity.getApiPartner().getBusinessName());
 //            dto.setMerchantBusinessName(entity.getApiPartner().getBusinessName());
 //            dto.setMerchantAddress(entity.getApiPartner().getAddress());
