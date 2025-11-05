@@ -7,6 +7,9 @@ import VendorRateView from '../View/VendorRateView'
 import { set } from 'react-hook-form'
 import StatsCard from '../UI/StatsCard';
 import PageHeader from '../UI/PageHeader'
+import TableHeader from '../UI/TableHeader'
+import Table from '../UI/Table'
+import Pagination from '../UI/Pagination'
 
 
 const VendorRateList = () => {
@@ -380,113 +383,27 @@ const VendorRateList = () => {
                 />
                 </div>
 
-                {/* Table Channel */}
+                {/* Table card */}
                 <div className="bg-white rounded-lg shadow">
                     {/* Table Header */}
-                    <div className="p-6 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-900">Vendor Rate List</h2>
-                            <div className="flex items-center space-x-4">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                    <input
-                                        value={globalFilter ?? ''}
-                                        onChange={(e) => setGlobalFilter(e.target.value)}
-                                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Search vendor rates..."
-                                        disabled={submitting}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <TableHeader
+                    title="Vendor Rate List"
+                    searchValue={globalFilter}
+                    onSearchChange={setGlobalFilter}
+                    searchPlaceholder="Search vendor rates..."
+                    />
 
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                {table.getHeaderGroups().map(headerGroup => (
-                                    <tr key={headerGroup.id}>
-                                        {headerGroup.headers.map(header => (
-                                            <th
-                                                key={header.id}
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                onClick={header.column.getToggleSortingHandler()}
-                                            >
-                                                <div className="flex items-center space-x-1">
-                                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                                    {{
-                                                        asc: ' 🔼',
-                                                        desc: ' 🔽',
-                                                    }[header.column.getIsSorted()] ?? null}
-                                                </div>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {data.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={columns.length} className="px-6 py-12 text-center">
-                                            <div className="text-gray-500">
-                                                <CreditCard className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                                <p className="text-lg font-medium">No vendor rates found</p>
-                                                <p className="text-sm">Get started by adding a new vendor rate.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    table.getRowModel().rows.map(row => (
-                                        <tr key={row.id} className="hover:bg-gray-50">
-                                            {row.getVisibleCells().map(cell => (
-                                                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table
+                    table={table}
+                    columns={columns}
+                    emptyState={{
+                        icon: <CreditCard />,
+                        message: "No vendor rates found",
+                        action: <p className="text-sm text-gray-500">Get started by adding a new vendor rate.</p>
+                    }}
+                    />
 
-                    {/* Pagination */}
-                    {data.length > 0 && (
-                        <div className="px-6 py-4 border-t border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                    <span className="text-sm text-gray-700">
-                                        Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
-                                        {Math.min(
-                                            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                                            table.getFilteredRowModel().rows.length
-                                        )}{' '}
-                                        of {table.getFilteredRowModel().rows.length} results
-                                    </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        onClick={() => table.previousPage()}
-                                        disabled={!table.getCanPreviousPage() || submitting}
-                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </button>
-                                    <span className="text-sm text-gray-700">
-                                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                                    </span>
-                                    <button
-                                        onClick={() => table.nextPage()}
-                                        disabled={!table.getCanNextPage() || submitting}
-                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <Pagination table={table} />
                 </div>
             </div>
             {/* Form Modal */}
