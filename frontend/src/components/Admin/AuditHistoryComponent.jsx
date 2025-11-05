@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, User, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, User, X, ChevronDown, ChevronRight, Shield, History } from 'lucide-react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -7,6 +7,7 @@ import {
     flexRender,
 } from '@tanstack/react-table';
 import api from '../../constants/API/axiosInstance';
+import PageHeader from '../UI/PageHeader';
 
 const AuditHistoryComponent = () => {
     const [historyData, setHistoryData] = useState([]);
@@ -212,12 +213,19 @@ const AuditHistoryComponent = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className="min-h-screen bg-gray-50 p-2">
             <div className="max-w-8xl mx-auto">
+
+                 <PageHeader
+                icon={History}
+                iconColor="text-purple-600"
+                title="Audit History"
+                description="Audit edit and update History for channel rates"
+                />
+
                 {/* Header */}
-                <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+                <div className=" rounded-lg shadow-sm p-4 mb-4">
                     <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-xl font-bold text-gray-900">Audit History</h1>
                         <span className="text-sm text-gray-500">{totalElements} records</span>
                     </div>
 
@@ -229,7 +237,7 @@ const AuditHistoryComponent = () => {
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full px-3 py-2 text-sm shadow-xl rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 text-sm shadow-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <div className="flex-1">
@@ -238,7 +246,7 @@ const AuditHistoryComponent = () => {
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="w-full px-3 py-2 text-sm shadow-xl rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 text-sm shadow-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <button

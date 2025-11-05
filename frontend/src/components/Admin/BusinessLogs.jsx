@@ -7,6 +7,8 @@ import {
     flexRender,
 } from '@tanstack/react-table';
 import api from '../../constants/API/axiosInstance';
+import PageHeader from '../UI/PageHeader';
+import { FileText } from 'lucide-react';
 
 const BusinessLogs = () => {
     const [logs, setLogs] = useState([]);
@@ -183,11 +185,14 @@ const BusinessLogs = () => {
     });
 
     return (
-        <div className="p-6 bg-white">
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">System Activity Logs</h1>
-                <p className="text-gray-600">Monitor user activities and system changes</p>
-            </div>
+        <div className="p-3 ">
+
+            <PageHeader
+            icon={FileText}
+            iconColor="text-indigo-600"
+            title="System Activity Logs"
+            description="Monitor user activities and system changes"
+            />
 
             <div className="mb-6 bg-gray-50 p-4 rounded-lg">
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">

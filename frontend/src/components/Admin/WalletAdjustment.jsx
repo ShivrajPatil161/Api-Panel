@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from '../../constants/API/axiosInstance';
+import PageHeader from '../UI/PageHeader';
+import { Wallet } from 'lucide-react';
 
 const WalletAdjustment = () => {
     const [partners, setPartners] = useState([]);
@@ -104,10 +106,15 @@ const WalletAdjustment = () => {
     };
 
     return (
-        <div className="max-w-9xl mx-auto">
+        <div className="max-w-9xl mx-auto p-3">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">Wallet Adjustment</h1>
-                <p className="text-gray-600 mt-1">Manage and adjust partner wallet balances</p>
+                <PageHeader
+                    icon={Wallet}
+                    iconColor="text-indigo-600"
+                    title="Wallet Adjustment"
+                    description="Manage and adjust Partner wallet balances"
+                />
+
             </div>
 
             <div className="    ">
