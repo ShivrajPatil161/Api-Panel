@@ -7,12 +7,13 @@ import {
     getFilteredRowModel,
     flexRender,
 } from "@tanstack/react-table";
-import { Plus, ChevronLeft, ChevronRight, Search, Eye, Wallet, GitPullRequest, LucideGitPullRequestArrow, IndianRupee } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Search, Eye,  IndianRupee } from "lucide-react";
 import { usePrefundQueries } from "../Hooks/usePrefundQueries";
 import PrefundRequestForm from "../Forms/PrefundRequestForm";
 import PrefundRequestModal from "../View/PrefundRequestModal";
 import TableShimmer from "../Shimmer/TableShimmer";
 import PageHeader from "../UI/PageHeader";
+import ErrorState from "../UI/ErrorState";
 
 const PrefundRequestsTable = () => {
     const userType = localStorage.getItem("userType");
@@ -95,11 +96,7 @@ const PrefundRequestsTable = () => {
             <TableShimmer rows={4} columns={8}/>
         );
     if (isError)
-        return (
-            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
-                {error.message || "Error fetching data"}
-            </div>
-        );
+        return <ErrorState />
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
