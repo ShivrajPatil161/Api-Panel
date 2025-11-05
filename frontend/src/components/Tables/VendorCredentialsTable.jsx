@@ -104,7 +104,7 @@ const VendorCredentialTable = () => {
                     </div>
                 ),
             }),
-            
+
             columnHelper.accessor('clientId', {
                 header: 'Client ID',
                 cell: info => (
@@ -140,8 +140,8 @@ const VendorCredentialTable = () => {
                 cell: info => (
                     <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${info.getValue()
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}
                     >
                         {info.getValue() ? 'Active' : 'Inactive'}
@@ -193,14 +193,14 @@ const VendorCredentialTable = () => {
     const table = useReactTable({
         data: credentials,
         columns,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
+        manualPagination: true,  // ✅ Server handles pagination
+        pageCount: totalPages,   // Total pages from API
         state: {
             globalFilter,
+            pagination,  // External pagination state
         },
         onGlobalFilterChange: setGlobalFilter,
-        manualPagination: false,
+        onPaginationChange: setPagination,  // Sync state changes
     });
 
     const handleAddCredential = () => {
@@ -300,41 +300,41 @@ const VendorCredentialTable = () => {
 
                 {/* Header */}
                 <PageHeader
-                icon={Key}
-                iconColor="text-blue-600"
-                title="Vendor Credentials"
-                description="Manage vendor API credentials and authentication"
-                buttonText="Add Credential"
-                buttonIcon={Plus}
-                onButtonClick={handleAddCredential}
-                buttonColor="bg-blue-600 hover:bg-blue-700"
+                    icon={Key}
+                    iconColor="text-blue-600"
+                    title="Vendor Credentials"
+                    description="Manage vendor API credentials and authentication"
+                    buttonText="Add Credential"
+                    buttonIcon={Plus}
+                    onButtonClick={handleAddCredential}
+                    buttonColor="bg-blue-600 hover:bg-blue-700"
                 />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <StatsCard
-                    icon={Key}
-                    iconColor="text-blue-600"
-                    bgColor="bg-blue-100"
-                    label="Total Credentials"
-                    value={totalCredentials}
-                />
-                
-                <StatsCard
-                    icon={Shield}
-                    iconColor="text-green-600"
-                    bgColor="bg-green-100"
-                    label="Active"
-                    value={activeCredentials}
-                />
-                
-                <StatsCard
-                    icon={Shield}
-                    iconColor="text-red-600"
-                    bgColor="bg-red-100"
-                    label="Inactive"
-                    value={inactiveCredentials}
-                />
+                    <StatsCard
+                        icon={Key}
+                        iconColor="text-blue-600"
+                        bgColor="bg-blue-100"
+                        label="Total Credentials"
+                        value={totalCredentials}
+                    />
+
+                    <StatsCard
+                        icon={Shield}
+                        iconColor="text-green-600"
+                        bgColor="bg-green-100"
+                        label="Active"
+                        value={activeCredentials}
+                    />
+
+                    <StatsCard
+                        icon={Shield}
+                        iconColor="text-red-600"
+                        bgColor="bg-red-100"
+                        label="Inactive"
+                        value={inactiveCredentials}
+                    />
                 </div>
 
                 {/* Table Card */}
