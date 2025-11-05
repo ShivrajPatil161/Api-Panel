@@ -104,6 +104,7 @@ const VendorCredentialTable = () => {
                     </div>
                 ),
             }),
+            
             columnHelper.accessor('clientId', {
                 header: 'Client ID',
                 cell: info => (
