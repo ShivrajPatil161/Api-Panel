@@ -37,7 +37,6 @@ const PartnerOnboarding = ({
     3: 'bank',
     4: 'documents'
   }
-console.log(partnerData)
   // Form with default values for edit mode
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     defaultValues: isEditMode ? {
