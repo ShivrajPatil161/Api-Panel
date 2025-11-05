@@ -25,6 +25,7 @@ import {
 import { toast } from 'react-toastify'
 import PartnerCredentialForm from '../Forms/PartnerCredentialForm'
 import PartnerCredentialView from '../View/PartnerCredentialView'
+import PageHeader from '../UI/PageHeader'
 
 // Mock data - Replace with API call later
 const mockCredentials = [
@@ -309,18 +310,22 @@ const PartnerCredentialTable = () => {
     })
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 p-2 pr-5">
             <div className="mx-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className='flex items-center'>
-                        <Key className='text-blue-600 mr-3' size={32} />
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900">Partner Credentials</h2>
-                            <p className="text-gray-600 mt-1">{credentials.length} total credentials</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
+                <div className="mb-4">
+                    <PageHeader
+                        icon={Key}
+                        iconColor="text-blue-600"
+                        title="Partner Credentials"
+                        description={`${credentials.length} total credentials`}
+                        buttonText="Add Credential"
+                        buttonIcon={Plus}
+                        onButtonClick={() => setAddModal(true)}
+                        buttonColor="bg-blue-600 hover:bg-blue-700"
+                    />
+                    
+                    {/* Search Bar */}
+                    <div className="flex justify-end mt-4">
                         <div className="relative">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
@@ -331,13 +336,6 @@ const PartnerCredentialTable = () => {
                                 className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
-                        <button
-                            onClick={() => setAddModal(true)}
-                            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>Add Credential</span>
-                        </button>
                     </div>
                 </div>
 
