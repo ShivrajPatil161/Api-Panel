@@ -397,7 +397,7 @@ const VendorRateList = () => {
                     table={table}
                     columns={columns}
                     emptyState={{
-                        icon: <CreditCard />,
+                        icon: <CreditCard size={50} />,
                         message: "No vendor rates found",
                         action: <p className="text-sm text-gray-500">Get started by adding a new vendor rate.</p>
                     }}

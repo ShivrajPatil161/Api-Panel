@@ -352,7 +352,7 @@ const VendorListPage = () => {
             table={table}
             columns={columns}
             emptyState={{
-              icon: <Users />,
+              icon: <Users size={50} />,
               message: "No vendors found",
               action: (
                 <button

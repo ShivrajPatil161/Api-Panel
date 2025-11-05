@@ -8,7 +8,7 @@ import {
     flexRender
 } from '@tanstack/react-table'
 
-import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X, Copy ,DollarSign, IndianRupee, Search, Package, Users, CreditCard, Building2} from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X, Copy ,DollarSign, IndianRupee, Search, Package, Users, CreditCard, Building2, IndianRupeeIcon} from 'lucide-react'
 
 import { toast } from 'react-toastify'
 
@@ -17,6 +17,9 @@ import schemeApi from '../../constants/API/schemeApi'
 import { set } from 'react-hook-form'
 import StatsCard from '../UI/StatsCard'
 import PageHeader from '../UI/PageHeader'
+import TableHeader from '../UI/TableHeader'
+import Table from '../UI/Table'
+import Pagination from '../UI/Pagination'
 
 const SchemeList = () => {
     const [schemes, setSchemes] = useState([])
@@ -331,116 +334,32 @@ const SchemeList = () => {
 
                 {/* Table Channel */}
                 <div className="bg-white rounded-lg shadow-sm">
-                    {/* Table Header */}
-                    <div className="p-6 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-900">Pricing Schemes List</h2>
-                            <div className="flex items-center space-x-4">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                    <input
-                                        value={globalFilter ?? ''}
-                                        onChange={(e) => setGlobalFilter(e.target.value)}
-                                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Search schemes..."
-                                        disabled={loading}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <TableHeader
+                        title="Pricing Schemes List"
+                        searchValue={globalFilter}
+                        onSearchChange={setGlobalFilter}
+                        searchPlaceholder="Search schemes..."
+                        disabled={loading}
+                    />
 
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                {table.getHeaderGroups().map(headerGroup => (
-                                    <tr key={headerGroup.id}>
-                                        {headerGroup.headers.map(header => (
-                                            <th
-                                                key={header.id}
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                                                onClick={header.column.getToggleSortingHandler()}
-                                            >
-                                                <div className="flex items-center space-x-1">
-                                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                                    {{
-                                                        asc: ' 🔼',
-                                                        desc: ' 🔽',
-                                                    }[header.column.getIsSorted()] ?? null}
-                                                </div>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {table.getRowModel().rows.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={columns.length} className="px-6 py-12 text-center">
-                                            <div className="flex flex-col items-center space-y-2">
-                                                <Package className="h-12 w-12 text-gray-400" />
-                                                <p className="text-gray-500">No pricing schemes found</p>
-                                                <button
-                                                    onClick={handleCreate}
-                                                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                                >
-                                                    Add First Scheme
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    table.getRowModel().rows.map(row => (
-                                        <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                                            {row.getVisibleCells().map(cell => (
-                                                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table
+                        table={table}
+                        columns={columns}
+                        emptyState={{
+                            icon: <IndianRupeeIcon size={50} />,
+                            message: "No pricing schemes found",
+                            action: (
+                            <button
+                                onClick={handleCreate}
+                                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                Add First Scheme
+                            </button>
+                            )
+                        }}
+                    />
 
-                    {/* Pagination */}
-                    {table.getRowModel().rows.length > 0 && (
-                        <div className="px-6 py-4 border-t border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                    <span className="text-sm text-gray-700">
-                                        Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
-                                        {Math.min(
-                                            (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                                            table.getFilteredRowModel().rows.length
-                                        )}{' '}
-                                        of {table.getFilteredRowModel().rows.length} results
-                                    </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        onClick={() => table.previousPage()}
-                                        disabled={!table.getCanPreviousPage() || loading}
-                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </button>
-                                    <span className="text-sm text-gray-700">
-                                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                                    </span>
-                                    <button
-                                        onClick={() => table.nextPage()}
-                                        disabled={!table.getCanNextPage() || loading}
-                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <Pagination table={table} disabled={loading} />
                 </div>
             </div>
 
