@@ -20,6 +20,7 @@ import TableShimmer from '../Shimmer/TableShimmer';
 import { createVendorCredential, deleteVendorCredential, getVendorCredentials, updateVendorCredential } from '../../constants/API/vendorCredentials';
 import PageHeader from '../UI/PageHeader';
 import StatsCard from '../UI/StatsCard';
+import ErrorState from '../UI/ErrorState';
 const VendorCredentialTable = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingCredential, setEditingCredential] = useState(null);
@@ -284,6 +285,10 @@ const VendorCredentialTable = () => {
     const totalCredentials = totalElements;
     const activeCredentials = credentials.filter(c => c.isActive === true).length;
     const inactiveCredentials = credentials.filter(c => c.isActive === false).length;
+
+    if (isError) {
+        return <ErrorState />;
+    }
 
     if (isLoading) {
         return <TableShimmer rows={3} columns={8} />;
