@@ -18,9 +18,6 @@
 //
 //    private static final int MAX_BANKS_PER_CUSTOMER = 3;
 //
-//    public List<PayoutBanks> getBanksByCustomer(String customerType, Long customerId) {
-//        return payoutBankRepository.findByCustomerTypeAndCustomerId(customerType, customerId);
-//    }
 //
 //    public void deleteBank(Long bankId) throws Exception {
 //        Optional<PayoutBanks> bankOpt = payoutBankRepository.findById(bankId);
@@ -55,7 +52,7 @@
 //        validateBankDetails(request);
 //
 //        // Step 2: Check if customer already has 3 banks
-//        long bankCount = payoutBankRepository.countByCustomerTypeAndCustomerId(
+//        long bankCount = payoutBankRepository.countByApiPartner(
 //                request.getCustomerType(), customerId);
 //
 //        if (bankCount >= MAX_BANKS_PER_CUSTOMER) {
@@ -63,7 +60,7 @@
 //        }
 //
 //        // Step 3: Check if account number already exists for this customer
-//        boolean accountExists = payoutBankRepository.existsByCustomerTypeAndCustomerIdAndAccountNumber(
+//        boolean accountExists = payoutBankRepository.existsByApiPartnerAndAccountNumber(
 //                request.getCustomerType(), customerId, request.getAccountNumber());
 //
 //        if (accountExists) {
@@ -132,7 +129,7 @@
 //
 //            // Step 7: If verification successful, save bank details to database
 //            PayoutBanks payoutBank = new PayoutBanks(
-//                    request.getCustomerType(),
+//
 //                    customerId,
 //                    request.getBankHolderName(),
 //                    request.getBankName(),
