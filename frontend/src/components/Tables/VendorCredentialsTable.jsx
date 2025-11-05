@@ -354,7 +354,7 @@ const VendorCredentialTable = () => {
                         table={table}
                         columns={columns}
                         emptyState={{
-                            icon: <Key />,
+                            icon: <Key size={50} />,
                             message: "No credentials found",
                             action: (
                             <button

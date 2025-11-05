@@ -15,7 +15,7 @@ const Pagination = ({
 
   // Don't render if no rows
   if (table.getRowModel().rows.length === 0) {
-    return null;
+    return  ;
   }
 
   return (
