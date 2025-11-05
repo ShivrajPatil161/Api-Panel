@@ -5,7 +5,6 @@ import {
     getFilteredRowModel,
     getSortedRowModel,
     getPaginationRowModel,
-    getExpandedRowModel,
     flexRender,
     createColumnHelper,
 } from '@tanstack/react-table'
@@ -14,25 +13,18 @@ import {
     Eye,
     Edit,
     Trash2,
-    Store,
     Wallet,
     Package,
     MapPin,
-    TrendingUp,
     AlertCircle,
     X,
-    Download,
-    FileText,
-    Image as ImageIcon,
     Handshake,
-    Calendar
 } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 // Import API functions
 import { 
     apiPartnerApi, 
-    fileApi, 
     handleApiError 
 } from '../../constants/API/customerApi'
 import CustomerOnboarding from '../Forms/CustomerOnboarding/CustomerOnborading'
@@ -56,7 +48,7 @@ const StatusBadge = ({ status }) => {
     )
 }
 
-const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', size = 'sm', className = '' }) => {
+const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', className = '' }) => {
     const variants = {
         ghost: 'hover:bg-green-100 text-green-600 hover:text-green-900',
         primary: 'text-blue-700 hover:bg-blue-100',
@@ -67,6 +59,7 @@ const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', size = 'sm', cla
         <button
             onClick={onClick}
             className={`p-2 rounded-lg transition-colors ${variants[variant]} ${className}`}
+            aria-label={Icon.name}
         >
             <Icon className="w-4 h-4" />
         </button>
@@ -79,72 +72,86 @@ const LoadingSpinner = () => (
     </div>
 )
 
+const ErrorDisplay = ({ error, onRetry }) => (
+    <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+            <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+                onClick={onRetry}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+                Try Again
+            </button>
+        </div>
+    </div>
+)
+
 // Main API Partner List Component
-const ApiPartnerListComponent = () => {
+const ApiPartnerList = () => {
     const [globalFilter, setGlobalFilter] = useState('')
-    const [expanded, setExpanded] = useState({})
-    const [apiPartners, setApiPartners] = useState([])
+    const [partners, setPartners] = useState([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [viewModal, setViewModal] = useState(null)
     const [editModal, setEditModal] = useState(null)
-    const [documentPreview, setDocumentPreview] = useState(null)
 
     const columnHelper = createColumnHelper()
 
-    // Replace the fetchApiPartners function with this:
-
-const fetchApiPartners = async () => {
-    try {
-        setLoading(true)
-        setError(null)
-        const response = await apiPartnerApi.getAll() // Changed from getAllDirect()
-        setApiPartners(response.data)
-    } catch (err) {
-        const errorInfo = handleApiError(err, 'Failed to load API partners')
-        setError(errorInfo.message)
-        toast.error(errorInfo.message)
-    } finally {
-        setLoading(false)
-    }
-}
-
-    const fetchApiPartnerDetails = async (id) => {
-        try {
-            const response = await apiPartnerApi.getById(id)
-            setViewModal({ apiPartner: response.data })
-        } catch (err) {
-            const errorInfo = handleApiError(err, 'Failed to load API partner details')
-            toast.error(errorInfo.message)
-        }
-    }
-
-    const handleEditApiPartner = async (id) => {
+    // Fetch all API partners
+    const fetchPartners = async () => {
         try {
             setLoading(true)
-            const response = await apiPartnerApi.getById(id)
-            console.log(response)
-            const apiPartnerData = response.data.apiPartner || response.data
-
-            console.log(apiPartnerData)
-            setEditModal({
-                apiPartner: apiPartnerData,
-                apiPartnerId: id
-            })
+            setError(null)
+            const response = await apiPartnerApi.getAll()
+            setPartners(response.data)
         } catch (err) {
-            const errorInfo = handleApiError(err, 'Failed to load API partner data for editing')
+            const errorInfo = handleApiError(err, 'Failed to load API partners')
+            setError(errorInfo.message)
             toast.error(errorInfo.message)
         } finally {
             setLoading(false)
         }
     }
 
-    const handleDeleteApiPartner = async (id) => {
+    // Fetch single partner details for viewing
+    const handleViewPartner = async (id) => {
+        try {
+            const response = await apiPartnerApi.getById(id)
+            setViewModal({ apiPartner: response.data })
+        } catch (err) {
+            const errorInfo = handleApiError(err, 'Failed to load partner details')
+            toast.error(errorInfo.message)
+        }
+    }
+
+    // Fetch single partner data for editing
+    const handleEditPartner = async (id) => {
+        try {
+            setLoading(true)
+            const response = await apiPartnerApi.getById(id)
+            const partnerData = response.data.apiPartner || response.data
+
+            setEditModal({
+                apiPartner: partnerData,
+                apiPartnerId: id
+            })
+        } catch (err) {
+            const errorInfo = handleApiError(err, 'Failed to load partner data for editing')
+            toast.error(errorInfo.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Delete partner
+    const handleDeletePartner = async (id) => {
         if (window.confirm('Are you sure you want to delete this API partner?')) {
             try {
                 await apiPartnerApi.delete(id)
                 toast.success('API Partner deleted successfully')
-                fetchApiPartners()
+                fetchPartners()
             } catch (err) {
                 const errorInfo = handleApiError(err, 'Failed to delete API partner')
                 toast.error(errorInfo.message)
@@ -152,21 +159,19 @@ const fetchApiPartners = async () => {
         }
     }
 
+    // Handle edit success - close modal and refresh list
     const handleEditSuccess = () => {
         setEditModal(null)
-        fetchApiPartners()
+        fetchPartners()
     }
 
-    const handleDocumentPreview = (filePath, documentName) => {
-        setDocumentPreview({ documentPath: filePath, documentName })
-    }
-
+    // Initial data load
     useEffect(() => {
-        fetchApiPartners()
+        fetchPartners()
     }, [])
 
-    // API Partner Columns
-    const apiPartnerColumns = useMemo(() => [
+    // Table columns definition
+    const columns = useMemo(() => [
         columnHelper.accessor('id', {
             header: 'ID',
             cell: (info) => (
@@ -217,7 +222,6 @@ const fetchApiPartners = async () => {
                 </div>
             ),
         }),
-      
         columnHelper.accessor('status', {
             header: 'Status',
             cell: (info) => <StatusBadge status={info.getValue() || 'active'} />,
@@ -230,17 +234,17 @@ const fetchApiPartners = async () => {
                 <div className="flex items-center space-x-1">
                     <ActionButton
                         icon={Eye}
-                        onClick={() => fetchApiPartnerDetails(row.original.id)}
+                        onClick={() => handleViewPartner(row.original.id)}
                         variant="primary"
                     />
                     <ActionButton
                         icon={Edit}
-                        onClick={() => handleEditApiPartner(row.original.id)}
+                        onClick={() => handleEditPartner(row.original.id)}
                         variant="ghost"
                     />
                     <ActionButton
                         icon={Trash2}
-                        onClick={() => handleDeleteApiPartner(row.original.id)}
+                        onClick={() => handleDeletePartner(row.original.id)}
                         variant="danger"
                     />
                 </div>
@@ -251,19 +255,16 @@ const fetchApiPartners = async () => {
 
     // Table instance
     const table = useReactTable({
-        data: apiPartners,
-        columns: apiPartnerColumns,
+        data: partners,
+        columns,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
-        getExpandedRowModel: getExpandedRowModel(),
         state: {
             globalFilter,
-            expanded,
         },
         onGlobalFilterChange: setGlobalFilter,
-        onExpandedChange: setExpanded,
         initialState: {
             pagination: {
                 pageSize: 10,
@@ -271,56 +272,36 @@ const fetchApiPartners = async () => {
         },
     })
 
-    const TableHeader = ({ title, count }) => (
-        <div className="flex items-center justify-between mb-4">
-            <div className='flex items-center'>
-                <Handshake className='text-blue-600 mr-3' size={32} />
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-                    <p className="text-gray-600 mt-1">{count} total API partners</p>
-                </div>
-            </div>
-            <div className="flex items-center space-x-4">
-                <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search API partners..."
-                        value={globalFilter}
-                        onChange={(e) => setGlobalFilter(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                </div>
-            </div>
-        </div>
-    )
-
+    // Error state
     if (error) {
-        return (
-            <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-                <div className="text-center">
-                    <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
-                    <p className="text-gray-600 mb-4">{error}</p>
-                    <button
-                        onClick={fetchApiPartners}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        )
+        return <ErrorDisplay error={error} onRetry={fetchPartners} />
     }
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="mx-auto">
                 {/* Header */}
-                <TableHeader
-                    title="API Partner Management"
-                    count={apiPartners.length}
-                />
+                <div className="flex items-center justify-between mb-4">
+                    <div className='flex items-center'>
+                        <Handshake className='text-blue-600 mr-3' size={32} />
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">API Partner Management</h2>
+                            <p className="text-gray-600 mt-1">{partners.length} total API partners</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        <div className="relative">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search API partners..."
+                                value={globalFilter}
+                                onChange={(e) => setGlobalFilter(e.target.value)}
+                                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+                </div>
 
                 {/* Table */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -350,7 +331,7 @@ const fetchApiPartners = async () => {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {table.getRowModel().rows.map((row) => (
-                                            <tr key={row.id} className="hover:bg-gray-50">
+                                            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                                                 {row.getVisibleCells().map((cell) => (
                                                     <td
                                                         key={cell.id}
@@ -406,14 +387,14 @@ const fetchApiPartners = async () => {
                                         <button
                                             onClick={() => table.setPageIndex(0)}
                                             disabled={!table.getCanPreviousPage()}
-                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             {'<<'}
                                         </button>
                                         <button
                                             onClick={() => table.previousPage()}
                                             disabled={!table.getCanPreviousPage()}
-                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             {'<'}
                                         </button>
@@ -426,14 +407,14 @@ const fetchApiPartners = async () => {
                                         <button
                                             onClick={() => table.nextPage()}
                                             disabled={!table.getCanNextPage()}
-                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             {'>'}
                                         </button>
                                         <button
                                             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                                             disabled={!table.getCanNextPage()}
-                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             {'>>'}
                                         </button>
@@ -453,7 +434,7 @@ const fetchApiPartners = async () => {
                                     <h2 className="text-xl font-bold">Edit API Partner</h2>
                                     <button
                                         onClick={() => setEditModal(null)}
-                                        className="p-2 hover:bg-gray-100 rounded-lg"
+                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
@@ -466,20 +447,11 @@ const fetchApiPartners = async () => {
                                     partnerId={editModal.apiPartnerId}
                                     onClose={() => setEditModal(null)}
                                     onSuccess={handleEditSuccess}
-                                    customerType="apiPartner"
+                                    
                                 />
                             </div>
                         </div>
                     </div>
-                )}
-
-                {/* Document Preview Modal */}
-                {documentPreview && (
-                    <DocumentPreview
-                        documentPath={documentPreview.documentPath}
-                        documentName={documentPreview.documentName}
-                        onClose={() => setDocumentPreview(null)}
-                    />
                 )}
 
                 {/* View Modal */}
@@ -494,4 +466,4 @@ const fetchApiPartners = async () => {
     )
 }
 
-export default ApiPartnerListComponent
+export default ApiPartnerList
