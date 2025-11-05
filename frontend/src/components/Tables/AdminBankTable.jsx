@@ -13,13 +13,13 @@ import {
     ChevronRight, Plus, CreditCard
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import api from '../../constants/API/axiosInstance';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AdminBankForm from '../Forms/AdminBankForm';
 import { createAdminBank, deleteAdminBank, getAdminBanks, updateAdminBank } from '../../constants/API/adminBanks';
 import StatsCard from '../UI/StatsCard';
 import TableShimmer from '../Shimmer/TableShimmer';
 import PageHeader from '../UI/PageHeader';
+import ErrorState from '../UI/ErrorState';
 
 const AdminBankTable = () => {
     
@@ -276,6 +276,10 @@ const AdminBankTable = () => {
     const totalBanks = totalElements;
     const chargesEnabled = adminBanks.filter(b => b.charges === true).length;
     const chargesDisabled = adminBanks.filter(b => b.charges === false).length;
+
+    if (isError) {
+        return <ErrorState />
+    }
 
 
     if (isLoading) {
