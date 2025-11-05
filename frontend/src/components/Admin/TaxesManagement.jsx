@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import api from "../../constants/API/axiosInstance";
-import { Loader2, Edit2, X, Check } from "lucide-react";
+import { Loader2, Edit2, X, Check, FileText, Currency, CurrencyIcon, LucideCurrency, IndianRupee } from "lucide-react";
 import { toast } from "react-toastify"; 
+import PageHeader from "../UI/PageHeader";
 
 const TaxesManagement = () => {
     const [taxes, setTaxes] = useState({ gst: "", tds: "" });
@@ -73,8 +74,16 @@ const TaxesManagement = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto mt-8 p-6">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className=" p-3 mx-auto  ">
+
+            <PageHeader
+            icon={IndianRupee}
+            iconColor="text-indigo-600"
+            title="Taxes Management"
+            description="Manage GST and TDS rates"
+            />
+
+            <div className=" bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h1 className="text-xl font-semibold text-gray-800">Tax Configuration</h1>
                     {!editing && (

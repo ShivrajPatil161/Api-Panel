@@ -32,6 +32,9 @@ import EditPermissionsModal from './EditPermissionsModal';
 import UserPermissionsPage from './UserPermissionsPage';
 import PermissionsManagement from './PermissionsManagement';
 import api from '../../constants/API/axiosInstance';
+import PageHeader from '../UI/PageHeader';
+import StatsCard from '../UI/StatsCard';
+
 
 const AdminRolesDashboard = () => {
     const [activeTab, setActiveTab] = useState('admins');
@@ -290,27 +293,6 @@ const AdminRolesDashboard = () => {
         </button>
     );
 
-    const StatCard = ({ title, value, subtitle, icon: Icon, color = 'blue' }) => (
-        <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-medium text-gray-600">{title}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-                    {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
-                </div>
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg ${color === 'blue' ? 'bg-blue-100' :
-                    color === 'green' ? 'bg-green-100' :
-                        color === 'purple' ? 'bg-purple-100' : 'bg-gray-100'
-                    }`}>
-                    <Icon className={`w-6 h-6 ${color === 'blue' ? 'text-blue-600' :
-                        color === 'green' ? 'text-green-600' :
-                            color === 'purple' ? 'text-purple-600' : 'text-gray-600'
-                        }`} />
-                </div>
-            </div>
-        </div>
-    );
-
     // For non-super admin users, show only UserPermissionsPage
     if (!isSuperAdmin) {
         return (
@@ -322,12 +304,14 @@ const AdminRolesDashboard = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto p-4 md:p-6">
-                {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Manage administrators and permissions</p>
-                </div>
+            <div className=" mx-auto">
+
+                <PageHeader
+                icon={Shield}
+                iconColor="text-purple-600"
+                title="Admin Dashboard"
+                description="Manage administrators and permissions"
+                />
 
                 {/* Navigation Tabs */}
                 <div className="mb-6">
@@ -354,28 +338,29 @@ const AdminRolesDashboard = () => {
                 {/* Administrator Management Tab */}
                 {activeTab === 'admins' && (
                     <div className="space-y-6">
+
                         {/* Stats Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <StatCard
-                                title="Total Administrators"
-                                value={loading ? '...' : data.length}
-                                subtitle=""
+                            <StatsCard
                                 icon={Users}
-                                color="blue"
+                                iconColor="text-blue-600"
+                                bgColor="bg-blue-100"
+                                label="Total Administrators"
+                                value={loading ? '...' : data.length}
                             />
-                            <StatCard
-                                title="Active Administrators"
-                                value={loading ? '...' : data.filter(admin => admin.enabled !== false).length}
-                                subtitle="Currently enabled"
+                            <StatsCard
                                 icon={UserPlus}
-                                color="green"
+                                iconColor="text-green-600"
+                                bgColor="bg-green-100"
+                                label="Active Administrators"
+                                value={loading ? '...' : data.filter(admin => admin.enabled !== false).length}
                             />
-                            <StatCard
-                                title="Total Permissions"
-                                value={loading ? '...' : totalPermissions}
-                                subtitle="Available permissions"
+                            <StatsCard
                                 icon={Shield}
-                                color="purple"
+                                iconColor="text-purple-600"
+                                bgColor="bg-purple-100"
+                                label="Total Permissions"
+                                value={loading ? '...' : totalPermissions}
                             />
                         </div>
 
