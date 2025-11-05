@@ -1,65 +1,66 @@
-//package com.project2.ism.Repository;
-//
+package com.project2.ism.Repository;
+
 //import com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO;
-//import com.project2.ism.Model.MerchantTransactionDetails;
-//import org.springframework.data.domain.Page;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.jpa.repository.JpaRepository;
-//import org.springframework.data.jpa.repository.Query;
-//import org.springframework.data.repository.query.Param;
-//import org.springframework.stereotype.Repository;
-//
-//import java.math.BigDecimal;
-//import java.time.LocalDateTime;
-//import java.util.List;
-//import java.util.Map;
-//import java.util.Optional;
-//import java.util.stream.Stream;
-//
-//@Repository
-//public interface MerchantTransDetRepository extends JpaRepository<MerchantTransactionDetails,Long> {
-//    Optional<MerchantTransactionDetails> findByTransactionId(Long transactionId);
-//
-//    boolean existsByVendorTransactionId(String vendorTransactionId);
-//
-//    Long countByTransactionDateBetween(LocalDateTime localDateTime, LocalDateTime localDateTime1);
-//
-//    @Query("SELECT COALESCE(SUM(m.amount), 0) FROM MerchantTransactionDetails m WHERE m.transactionDate BETWEEN :startDate AND :endDate")
-//    BigDecimal sumAmountByTransactionDateBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
-//
-//
-//    Long countByTranStatusAndTransactionDateBetween(String success, LocalDateTime localDateTime, LocalDateTime localDateTime1);
-//
-//
-//
-////new for reports lets see if they work
-////    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
-////            "mtd.transactionDate BETWEEN :startDate AND :endDate " +
-////            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
-////            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
-////            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
-////            "ORDER BY mtd.transactionDate DESC")
-////    Page<MerchantTransactionDetails> findMerchantTransactionsByFilters(
-////            @Param("startDate") LocalDateTime startDate,
-////            @Param("endDate") LocalDateTime endDate,
-////            @Param("merchantId") Long merchantId,
-////            @Param("status") String status,
-////            @Param("transactionType") String transactionType,
-////            Pageable pageable);
-////    // Query based on settlement date instead of transaction date
-////    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
-////            "mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
-////            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
-////            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
-////            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
-////            "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
-////    Page<MerchantTransactionDetails> findMerchantTransactionsBySettlementDateFilters(
-////            @Param("startDate") LocalDateTime startDate,
-////            @Param("endDate") LocalDateTime endDate,
-////            @Param("merchantId") Long merchantId,
-////            @Param("status") String status,
-////            @Param("transactionType") String transactionType,
-////            Pageable pageable);
+
+import com.project2.ism.Model.ApiPartnerTransactionDetails;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+@Repository
+public interface ApiPartnerTransDetRepository extends JpaRepository<ApiPartnerTransactionDetails,Long> {
+    Optional<ApiPartnerTransactionDetails> findByTransactionId(Long transactionId);
+
+    boolean existsByVendorTransactionId(String vendorTransactionId);
+
+    Long countByTransactionDateBetween(LocalDateTime localDateTime, LocalDateTime localDateTime1);
+
+    @Query("SELECT COALESCE(SUM(m.amount), 0) FROM ApiPartnerTransactionDetails m WHERE m.transactionDate BETWEEN :startDate AND :endDate")
+    BigDecimal sumAmountByTransactionDateBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+
+    Long countByTranStatusAndTransactionDateBetween(String success, LocalDateTime localDateTime, LocalDateTime localDateTime1);
+
+
+
+//new for reports lets see if they work
+//    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
+//            "mtd.transactionDate BETWEEN :startDate AND :endDate " +
+//            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+//            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+//            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
+//            "ORDER BY mtd.transactionDate DESC")
+//    Page<MerchantTransactionDetails> findMerchantTransactionsByFilters(
+//            @Param("startDate") LocalDateTime startDate,
+//            @Param("endDate") LocalDateTime endDate,
+//            @Param("merchantId") Long merchantId,
+//            @Param("status") String status,
+//            @Param("transactionType") String transactionType,
+//            Pageable pageable);
+//    // Query based on settlement date instead of transaction date
+//    @Query("SELECT mtd FROM MerchantTransactionDetails mtd WHERE " +
+//            "mtd.updatedDateAndTimeOfTransaction BETWEEN :startDate AND :endDate " +
+//            "AND (:merchantId IS NULL OR mtd.merchant.id = :merchantId) " +
+//            "AND (:status IS NULL OR mtd.tranStatus = :status) " +
+//            "AND (:transactionType IS NULL OR mtd.transactionType = :transactionType) " +
+//            "ORDER BY mtd.updatedDateAndTimeOfTransaction DESC")
+//    Page<MerchantTransactionDetails> findMerchantTransactionsBySettlementDateFilters(
+//            @Param("startDate") LocalDateTime startDate,
+//            @Param("endDate") LocalDateTime endDate,
+//            @Param("merchantId") Long merchantId,
+//            @Param("status") String status,
+//            @Param("transactionType") String transactionType,
+//            Pageable pageable);
 //
 //    @Query("SELECT new com.project2.ism.DTO.ReportDTO.MerchantTransactionReportDTO(" +
 //            "mtd.transactionId ,mtd.vendorTransactionId, mtd.actionOnBalance,mtd.transactionDate, mtd.amount, " +
@@ -422,7 +423,7 @@
 //            @Param("startDate") LocalDateTime startDate,
 //            @Param("endDate") LocalDateTime endDate,
 //            @Param("merchantId") Long merchantId);
-//
-//
-//
-//}
+
+
+
+}

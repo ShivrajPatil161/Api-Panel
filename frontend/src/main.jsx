@@ -6,7 +6,13 @@ import { router } from './routes/index.jsx'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import './index.css'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry:1
+    }
+  }
+})
 
 
 createRoot(document.getElementById('root')).render(

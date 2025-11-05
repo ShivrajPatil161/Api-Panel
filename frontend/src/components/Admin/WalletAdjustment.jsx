@@ -30,7 +30,7 @@ const WalletAdjustment = () => {
     // Fetch wallet balance for a specific partner
     const fetchWalletBalance = async (partnerId) => {
         try {
-            const res = await api.get(`/wallet-adjustment/partner/${partnerId}`);
+            const res = await api.get(`/wallet-adjustment/apiPartner/${partnerId}`);
             return res.data.availableBalance;
         } catch (err) {
             console.error('Error fetching wallet balance:', err);
@@ -74,13 +74,13 @@ const WalletAdjustment = () => {
 
         try {
             const payload = {
-                customerId: walletInfo.id,
+                apiPartnerId: walletInfo.id,
                 actionOnBalance: formData.type,
                 amount: parseFloat(formData.amount),
                 remark: formData.remark
             };
 
-            await api.post('/wallet-adjustment/partner', payload);
+            await api.post('/wallet-adjustment/apiPartner', payload);
 
             toast.success('Wallet adjustment successful');
             setFormData({ type: 'CREDIT', amount: '', remark: '' });
@@ -110,53 +110,58 @@ const WalletAdjustment = () => {
                 <p className="text-gray-600 mt-1">Manage and adjust partner wallet balances</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="    ">
                 {/* Partner Selection */}
-                <div className="p-6 border-b border-gray-200">
+                <div className="p-6 rounded-xl shadow-sm mb-8 ">
                     <h2 className="text-lg font-semibold text-gray-800 mb-4">Select Partner</h2>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Partner <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={selectedPartner}
-                            onChange={(e) => setSelectedPartner(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        >
-                            <option value="">Choose partner...</option>
-                            {partners.map(p => (
-                                <option key={p.id} value={p.id}>
-                                    {p.partnerName || p.businessName}
-                                </option>
-                            ))}
-                        </select>
+                    <div className='grid grid-cols-2 gap-4'>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Partner <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={selectedPartner}
+                                onChange={(e) => setSelectedPartner(e.target.value)}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            >
+                                <option value="">Choose partner...</option>
+                                {partners.map(p => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.partnerName || p.businessName}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {walletInfo && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-white rounded-lg p-4 shadow-sm">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                                    Partner Name
+                                </p>
+                                <p className="text-xl font-bold text-gray-800">{walletInfo.name}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-4 shadow-sm">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                                    Available Balance
+                                </p>
+                                <p className="text-xl font-bold text-green-600">
+                                    ₹{walletInfo.balance?.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                        )}
                     </div>
                 </div>
+
 
                 {/* Wallet Info + Form */}
                 {walletInfo && (
                     <div className="animate-fadeIn">
-                        <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-white rounded-lg p-4 shadow-sm">
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                        Partner Name
-                                    </p>
-                                    <p className="text-xl font-bold text-gray-800">{walletInfo.name}</p>
-                                </div>
-                                <div className="bg-white rounded-lg p-4 shadow-sm">
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                        Available Balance
-                                    </p>
-                                    <p className="text-xl font-bold text-green-600">
-                                        ₹{walletInfo.balance?.toFixed(2)}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                       
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6 rounded-xl shadow-sm">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Adjustment Details</h3>
 
                             {/* Type buttons */}
