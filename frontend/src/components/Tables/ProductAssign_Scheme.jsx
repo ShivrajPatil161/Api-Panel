@@ -13,6 +13,7 @@ import { Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, X, ChevronDown, Che
 import ProductAssignmentFormModal from '../Forms/ProductSchemeAssignmen'
 import api from '../../constants/API/axiosInstance'
 import { toast } from 'react-toastify'
+import PageHeader from '../UI/PageHeader'
 
 const ProductAssignment = () => {
     const [schemeGroups, setSchemeGroups] = useState([])
@@ -401,51 +402,48 @@ const ProductAssignment = () => {
     return (
         <div className="min-h-screen bg-gray-50 pr-4">
             <div className=" rounded-lg ">
-                {/* Header */}
-                <div className=" text-black  rounded-t-lg">
-                    <div className="flex justify-between items-center">
-                        <div className='flex'>
-                            <Merge className='text-blue-600 mr-3 mt-3'/>
-                            <div>
-                            <h1 className="text-2xl font-bold">Customer Scheme Assignments</h1>
-                            <p className="text-black ">Manage pricing scheme assignments for franchises and merchants</p>
-                            <p className="text-sm text-gray-600 mt-1">
-                                {schemeGroups.length} schemes • {totalAssignments} total assignments
-                            </p>
-                            </div>
-
-                        </div>
-                        
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => {
-                                    const allExpanded = {}
-                                    schemeGroups.forEach((_, index) => {
-                                        allExpanded[index] = true
-                                    })
-                                    setExpanded(allExpanded)
-                                }}
-                                className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
-                            >
-                                Expand All
-                            </button>
-                            <button
-                                onClick={() => setExpanded({})}
-                                className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
-                            >
-                                Collapse All
-                            </button>
-                            <button
-                                onClick={handleCreate}
-                                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
-                            >
-                                <Plus size={20} />
-                                New Assignment
-                            </button>
-                        </div>
+                <div className="mb-4">
+                    <PageHeader
+                        icon={Merge}
+                        iconColor="text-blue-600"
+                        title="Customer Scheme Assignments"
+                        description={
+                            <>
+                                Manage pricing scheme assignments for franchises and merchants
+                                <br />
+                                <span className="text-sm text-gray-600">
+                                    {schemeGroups.length} schemes • {totalAssignments} total assignments
+                                </span>
+                            </>
+                        }
+                        buttonText="New Assignment"
+                        buttonIcon={Plus}
+                        onButtonClick={handleCreate}
+                        buttonColor="bg-blue-600 hover:bg-blue-700"
+                    />
+                    
+                    {/* Expand/Collapse Buttons */}
+                    <div className="flex justify-end gap-3 ">
+                        <button
+                            onClick={() => {
+                                const allExpanded = {}
+                                schemeGroups.forEach((_, index) => {
+                                    allExpanded[index] = true
+                                })
+                                setExpanded(allExpanded)
+                            }}
+                            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                            Expand All
+                        </button>
+                        <button
+                            onClick={() => setExpanded({})}
+                            className="bg-gray-600 text-white px-4 py-2 rounded-lg  hover:bg-gray-700 transition-colors"
+                        >
+                            Collapse All
+                        </button>
                     </div>
                 </div>
-
                 {/* Table Controls */}
                 <div className="p-6 ">
                     <div className="flex justify-between items-center">

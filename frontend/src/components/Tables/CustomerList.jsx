@@ -29,6 +29,7 @@ import {
 } from '../../constants/API/customerApi'
 import CustomerOnboarding from '../Forms/CustomerOnboarding/CustomerOnborading'
 import PartnerView from '../View/PartnerView'
+import PageHeader from '../UI/PageHeader'
 
 // Utility Components
 const StatusBadge = ({ status }) => {
@@ -278,18 +279,18 @@ const ApiPartnerList = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 p-3">
             <div className="mx-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className='flex items-center'>
-                        <Handshake className='text-blue-600 mr-3' size={32} />
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900">API Partner Management</h2>
-                            <p className="text-gray-600 mt-1">{partners.length} total API partners</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
+                <div className="mb-4">
+                    <PageHeader
+                        icon={Handshake}
+                        iconColor="text-blue-600"
+                        title="API Partner Management"
+                        description={`${partners.length} total API partners`}
+                    />
+                    
+                    {/* Search Bar */}
+                    <div className="flex justify-end mt-4">
                         <div className="relative">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input

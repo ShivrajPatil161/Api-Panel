@@ -7,11 +7,12 @@ import {
     getFilteredRowModel,
     flexRender,
 } from "@tanstack/react-table";
-import { Plus, ChevronLeft, ChevronRight, Search, Eye } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Search, Eye, Wallet, GitPullRequest, LucideGitPullRequestArrow, IndianRupee } from "lucide-react";
 import { usePrefundQueries } from "../Hooks/usePrefundQueries";
 import PrefundRequestForm from "../Forms/PrefundRequestForm";
 import PrefundRequestModal from "../View/PrefundRequestModal";
 import TableShimmer from "../Shimmer/TableShimmer";
+import PageHeader from "../UI/PageHeader";
 
 const PrefundRequestsTable = () => {
     const userType = localStorage.getItem("userType");
@@ -103,29 +104,20 @@ const PrefundRequestsTable = () => {
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className=" mx-auto">
-                {/* Header */}
-                <div className="mb-8 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">
-                            Prefund Requests
-                        </h1>
-                        <p className="text-gray-600 text-sm">
-                            {userType === "admin" || userType === "super_admin"
-                                ? "Manage and review all prefund requests"
-                                : "View and manage your prefund submissions"}
-                        </p>
-                    </div>
-
-                    {userType !== "admin" && userType !== "super_admin" && (
-                        <button
-                            onClick={() => setIsFormOpen(true)}
-                            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            <Plus className="h-5 w-5" />
-                            <span>New Request</span>
-                        </button>
-                    )}
-                </div>
+                <PageHeader
+                    icon={IndianRupee}
+                    iconColor="text-blue-600"
+                    title="Prefund Requests"
+                    description={
+                        userType === "admin" || userType === "super_admin"
+                            ? "Manage and review all prefund requests"
+                            : "View and manage your prefund submissions"
+                    }
+                    buttonText={userType !== "admin" && userType !== "super_admin" ? "New Request" : undefined}
+                    buttonIcon={userType !== "admin" && userType !== "super_admin" ? Plus : undefined}
+                    onButtonClick={userType !== "admin" && userType !== "super_admin" ? () => setIsFormOpen(true) : undefined}
+                    buttonColor="bg-blue-600 hover:bg-blue-700"
+                />
 
                 {/* Table Card */}
                 <div className="bg-white rounded-lg shadow-sm">
