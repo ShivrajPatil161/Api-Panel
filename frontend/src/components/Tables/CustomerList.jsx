@@ -36,6 +36,7 @@ import {
     handleApiError 
 } from '../../constants/API/customerApi'
 import CustomerOnboarding from '../Forms/CustomerOnboarding/CustomerOnborading'
+import PartnerView from '../View/PartnerView'
 
 // Utility Components
 const StatusBadge = ({ status }) => {
@@ -78,325 +79,6 @@ const LoadingSpinner = () => (
     </div>
 )
 
-// Document Preview Component
-const DocumentPreview = ({ documentPath, documentName, onClose }) => {
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-    const [blobUrl, setBlobUrl] = useState(null)
-
-    const cleanPath = documentPath
-        ?.replace(/\\\\/g, '/')
-        ?.replace(/\\/g, '/')
-        ?.replace(/^\/+/, '')
-
-    const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(cleanPath || '')
-    const isPdf = /\.pdf$/i.test(cleanPath || '')
-    const filename = cleanPath?.split('/').pop()
-
-    useEffect(() => {
-        if (!cleanPath) return
-
-        const fetchFile = async () => {
-            try {
-                setLoading(true)
-                const response = await fileApi.getFile(cleanPath)
-                const blob = response.data
-                const url = window.URL.createObjectURL(blob)
-                setBlobUrl(url)
-                setLoading(false)
-            } catch (error) {
-                console.error('File fetch error:', error)
-                const errorInfo = handleApiError(error, 'Failed to load document')
-                setError(errorInfo.message)
-                setLoading(false)
-            }
-        }
-
-        fetchFile()
-
-        return () => {
-            if (blobUrl) {
-                window.URL.revokeObjectURL(blobUrl)
-            }
-        }
-    }, [cleanPath])
-
-    const handleDownload = async () => {
-        try {
-            const response = await fileApi.downloadFile(cleanPath)
-            const blob = response.data
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = filename || 'download'
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            window.URL.revokeObjectURL(url)
-        } catch (error) {
-            const errorInfo = handleApiError(error, 'Download failed')
-            toast.error(errorInfo.message)
-        }
-    }
-
-    if (!cleanPath) {
-        return (
-            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg max-w-md w-full p-6 text-center">
-                    <h3 className="text-lg font-semibold mb-2">Document Not Found</h3>
-                    <p className="text-gray-600 mb-4">The document path is invalid or missing.</p>
-                    <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Close
-                    </button>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b">
-                    <div>
-                        <h3 className="text-lg font-semibold">{documentName}</h3>
-                        <p className="text-sm text-gray-500">{filename}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <button onClick={handleDownload} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100" title="Download">
-                            <Download className="w-5 h-5" />
-                        </button>
-                        <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100" title="Close">
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-auto p-4">
-                    {loading && (
-                        <div className="flex items-center justify-center h-64">
-                            <span className="text-gray-600">Loading document...</span>
-                        </div>
-                    )}
-
-                    {error && (
-                        <div className="text-center py-8">
-                            <h4 className="text-lg font-semibold mb-2">Error Loading Document</h4>
-                            <p className="text-gray-600 mb-4">{error}</p>
-                            <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                                Try Download
-                            </button>
-                        </div>
-                    )}
-
-                    {isImage && !error && blobUrl && (
-                        <div className="flex justify-center">
-                            <img
-                                src={blobUrl}
-                                alt={documentName}
-                                className="max-w-full h-auto rounded-lg shadow-lg"
-                            />
-                        </div>
-                    )}
-
-                    {isPdf && !error && blobUrl && (
-                        <iframe
-                            src={`${blobUrl}#toolbar=1`}
-                            className="w-full h-[600px] border-0 rounded-lg shadow-lg"
-                            title={documentName}
-                        />
-                    )}
-
-                    {!isImage && !isPdf && !error && !loading && (
-                        <div className="text-center py-8">
-                            <h4 className="text-lg font-semibold mb-2">Preview Not Available</h4>
-                            <p className="text-gray-600 mb-4">This document type cannot be previewed. You can download it to view.</p>
-                            <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                                Download Document
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    )
-}
-
-// View Modal Component
-const ViewModal = ({ apiPartner, onClose }) => {
-    const [documents, setDocuments] = useState({})
-
-    useEffect(() => {
-        if (apiPartner?.uploadDocuments) {
-            setDocuments(apiPartner.uploadDocuments)
-        }
-    }, [apiPartner])
-
-    const DocumentItem = ({ docKey, docPath, docName }) => {
-        const [previewDoc, setPreviewDoc] = useState(null)
-
-        if (!docPath) return null
-
-        const getDocumentIcon = () => {
-            if (docPath.includes('.pdf')) return <FileText className="w-5 h-5 text-red-500" />
-            if (docPath.includes('.jpg') || docPath.includes('.jpeg') || docPath.includes('.png')) {
-                return <ImageIcon className="w-5 h-5 text-blue-500" />
-            }
-            return <FileText className="w-5 h-5 text-gray-500" />
-        }
-
-        return (
-            <>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                        {getDocumentIcon()}
-                        <span className="text-sm font-medium">{docName}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <button
-                            onClick={() => setPreviewDoc({ path: docPath, name: docName })}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                            Preview
-                        </button>
-                        <button
-                            onClick={async () => {
-                                try {
-                                    const cleanPath = docPath?.replace(/\\\\/g, '/')?.replace(/\\/g, '/')?.replace(/^\/+/, '')
-                                    const response = await fileApi.downloadFile(cleanPath)
-                                    const blob = response.data
-                                    const url = window.URL.createObjectURL(blob)
-                                    const link = document.createElement('a')
-                                    link.href = url
-                                    link.download = cleanPath?.split('/').pop() || 'download'
-                                    document.body.appendChild(link)
-                                    link.click()
-                                    document.body.removeChild(link)
-                                    window.URL.revokeObjectURL(url)
-                                } catch (error) {
-                                    const errorInfo = handleApiError(error, 'Download failed')
-                                    toast.error(errorInfo.message)
-                                }
-                            }}
-                            className="text-green-600 hover:text-green-800 text-sm"
-                        >
-                            Download
-                        </button>
-                    </div>
-                </div>
-
-                {previewDoc && (
-                    <DocumentPreview
-                        documentPath={previewDoc.path}
-                        documentName={previewDoc.name}
-                        onClose={() => setPreviewDoc(null)}
-                    />
-                )}
-            </>
-        )
-    }
-
-    if (!apiPartner) return null
-
-    return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 p-4">
-            <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] w-full overflow-auto">
-                {/* Header */}
-                <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-semibold">API Partner Details</h2>
-                        <p className="text-gray-600">{apiPartner?.businessName || 'N/A'}</p>
-                    </div>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-                        <X className="w-6 h-6" />
-                    </button>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 space-y-6">
-                    {/* Basic Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 className="font-semibold mb-3">Basic Information</h3>
-                            <div className="space-y-2">
-                                <div><strong>Business Name:</strong> {apiPartner?.businessName || 'N/A'}</div>
-                                <div><strong>Legal Name:</strong> {apiPartner?.legalName || 'N/A'}</div>
-                                <div><strong>Business Type:</strong> {apiPartner?.businessType || 'N/A'}</div>
-                                <div><strong>GST Number:</strong> {apiPartner?.gstNumber || 'N/A'}</div>
-                                <div><strong>PAN Number:</strong> {apiPartner?.panNumber || 'N/A'}</div>
-                                <div><strong>Registration Number:</strong> {apiPartner?.registrationNumber || 'N/A'}</div>
-                                <div><strong>Status:</strong> <StatusBadge status={apiPartner?.status || 'active'} /></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 className="font-semibold mb-3">Contact Information</h3>
-                            <div className="space-y-2">
-                                <div><strong>Contact Person:</strong> {apiPartner?.contactPerson?.name || apiPartner?.contactPersonName || 'N/A'}</div>
-                                <div><strong>Mobile:</strong> {apiPartner?.contactPerson?.phoneNumber || apiPartner?.contactPersonPhone || 'N/A'}</div>
-                                <div><strong>Email:</strong> {apiPartner?.contactPerson?.email || apiPartner?.contactPersonEmail || 'N/A'}</div>
-                                <div><strong>Alternate Mobile:</strong> {apiPartner?.contactPerson?.alternatePhoneNum || apiPartner?.alternatePhoneNum || 'N/A'}</div>
-                                <div><strong>Landline:</strong> {apiPartner?.contactPerson?.landlineNumber || apiPartner?.landlineNumber || 'N/A'}</div>
-                                <div><strong>Address:</strong> {apiPartner?.address || 'N/A'}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bank Information */}
-                    <div>
-                        <h3 className="font-semibold mb-3">Bank Information</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><strong>Bank Name:</strong> {apiPartner?.bankDetails?.bankName || 'N/A'}</div>
-                            <div><strong>Account Holder:</strong> {apiPartner?.bankDetails?.accountHolderName || 'N/A'}</div>
-                            <div><strong>Account Number:</strong> {apiPartner?.bankDetails?.accountNumber || 'N/A'}</div>
-                            <div><strong>IFSC Code:</strong> {apiPartner?.bankDetails?.ifsc || 'N/A'}</div>
-                            <div><strong>Branch:</strong> {apiPartner?.bankDetails?.branchName || 'N/A'}</div>
-                            <div><strong>Account Type:</strong> {apiPartner?.bankDetails?.accountType || 'N/A'}</div>
-                        </div>
-                    </div>
-
-                    {/* Documents */}
-                    <div>
-                        <h3 className="font-semibold mb-3">Documents</h3>
-                        <div className="space-y-3">
-                            <DocumentItem docKey="panProof" docPath={documents.panProof} docName="PAN Card" />
-                            <DocumentItem docKey="gstCertificateProof" docPath={documents.gstCertificateProof} docName="GST Certificate" />
-                            <DocumentItem docKey="addressProof" docPath={documents.addressProof} docName="Address Proof" />
-                            <DocumentItem docKey="bankAccountProof" docPath={documents.bankAccountProof} docName="Bank Account Proof" />
-                            <DocumentItem docKey="adharProof" docPath={documents.adharProof} docName="Aadhar Proof" />
-                            <DocumentItem docKey="other1" docPath={documents.other1} docName="Other Document 1" />
-                            <DocumentItem docKey="other2" docPath={documents.other2} docName="Other Document 2" />
-                            <DocumentItem docKey="other3" docPath={documents.other3} docName="Other Document 3" />
-                        </div>
-                    </div>
-
-                    {/* Additional Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
-                        <div className="text-center">
-                            <Wallet className="w-8 h-8 mx-auto text-green-600 mb-2" />
-                            <div className="text-sm text-gray-600">Wallet Balance</div>
-                            <div className="font-semibold">₹{(apiPartner?.walletBalance || 0).toLocaleString()}</div>
-                        </div>
-                        <div className="text-center">
-                            <TrendingUp className="w-8 h-8 mx-auto text-blue-600 mb-2" />
-                            <div className="text-sm text-gray-600">Monthly Revenue</div>
-                            <div className="font-semibold">₹{(apiPartner?.monthlyRevenue || 0).toLocaleString()}</div>
-                        </div>
-                        <div className="text-center">
-                            <Calendar className="w-8 h-8 mx-auto text-purple-600 mb-2" />
-                            <div className="text-sm text-gray-600">Created On</div>
-                            <div className="font-semibold">
-                                {apiPartner?.createdAt ? new Date(apiPartner.createdAt).toLocaleDateString() : 'N/A'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
-
 // Main API Partner List Component
 const ApiPartnerListComponent = () => {
     const [globalFilter, setGlobalFilter] = useState('')
@@ -429,7 +111,7 @@ const fetchApiPartners = async () => {
 
     const fetchApiPartnerDetails = async (id) => {
         try {
-            const response = await apiPartnerApi.getDetails(id)
+            const response = await apiPartnerApi.getById(id)
             setViewModal({ apiPartner: response.data })
         } catch (err) {
             const errorInfo = handleApiError(err, 'Failed to load API partner details')
@@ -440,9 +122,11 @@ const fetchApiPartners = async () => {
     const handleEditApiPartner = async (id) => {
         try {
             setLoading(true)
-            const response = await apiPartnerApi.getDetails(id)
+            const response = await apiPartnerApi.getById(id)
+            console.log(response)
             const apiPartnerData = response.data.apiPartner || response.data
 
+            console.log(apiPartnerData)
             setEditModal({
                 apiPartner: apiPartnerData,
                 apiPartnerId: id
@@ -533,15 +217,7 @@ const fetchApiPartners = async () => {
                 </div>
             ),
         }),
-        columnHelper.accessor('monthlyRevenue', {
-            header: 'Monthly Revenue',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">₹{(info.getValue() || 0).toLocaleString()}</span>
-                </div>
-            ),
-        }),
+      
         columnHelper.accessor('status', {
             header: 'Status',
             cell: (info) => <StatusBadge status={info.getValue() || 'active'} />,
@@ -786,8 +462,8 @@ const fetchApiPartners = async () => {
                                 <CustomerOnboarding
                                     isModal={true}
                                     isEditMode={true}
-                                    customerData={editModal.apiPartner}
-                                    customerId={editModal.apiPartnerId}
+                                    partnerData={editModal.apiPartner}
+                                    partnerId={editModal.apiPartnerId}
                                     onClose={() => setEditModal(null)}
                                     onSuccess={handleEditSuccess}
                                     customerType="apiPartner"
@@ -808,7 +484,7 @@ const fetchApiPartners = async () => {
 
                 {/* View Modal */}
                 {viewModal && (
-                    <ViewModal
+                    <PartnerView
                         apiPartner={viewModal.apiPartner}
                         onClose={() => setViewModal(null)}
                     />
@@ -819,4 +495,3 @@ const fetchApiPartners = async () => {
 }
 
 export default ApiPartnerListComponent
-export { DocumentPreview }

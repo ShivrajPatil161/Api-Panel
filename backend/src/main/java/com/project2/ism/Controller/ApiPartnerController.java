@@ -5,6 +5,7 @@ package com.project2.ism.Controller;
 import com.project2.ism.DTO.ApiPartnerFormDTO;
 import com.project2.ism.DTO.ApiPartnerListDTO;
 
+import com.project2.ism.DTO.ApiPartnerViewDTO;
 import com.project2.ism.Model.Users.ApiPartner;
 import com.project2.ism.Service.FileStorageService;
 import com.project2.ism.Service.ApiPartnerService;
@@ -79,9 +80,9 @@ public class ApiPartnerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiPartner> getApiPartnerById(@PathVariable Long id) {
+    public ResponseEntity<ApiPartnerViewDTO> getApiPartnerById(@PathVariable Long id) {
         try {
-            ApiPartner merchant = apiPartnerService.getApiPartnerById(id);
+            ApiPartnerViewDTO merchant = apiPartnerService.getApiPartnerView(id);
             return ResponseEntity.ok(merchant);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();

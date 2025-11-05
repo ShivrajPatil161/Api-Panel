@@ -37,7 +37,7 @@ const PartnerOnboarding = ({
     3: 'bank',
     4: 'documents'
   }
-
+console.log(partnerData)
   // Form with default values for edit mode
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     defaultValues: isEditMode ? {
@@ -48,17 +48,17 @@ const PartnerOnboarding = ({
       panNumber: partnerData?.panNumber || '',
       registrationNumber: partnerData?.registrationNumber || '',
       businessAddress: partnerData?.businessAddress || partnerData?.address || '',
-      primaryContactName: partnerData?.contactPerson?.name || partnerData?.primaryContactName || '',
-      primaryContactMobile: partnerData?.contactPerson?.phoneNumber || partnerData?.primaryContactMobile || '',
-      primaryContactEmail: partnerData?.contactPerson?.email || partnerData?.primaryContactEmail || '',
-      alternateContactMobile: partnerData?.alternatePhoneNum || '',
+      primaryContactName: partnerData?.primaryContactName || '',
+      primaryContactMobile: partnerData?.primaryContactMobile || '',
+      primaryContactEmail: partnerData?.primaryContactEmail || '',
+      alternateContactMobile: partnerData?.alternateContactMobile || '',
       landlineNumber: partnerData?.landlineNumber || '',
-      bankName: partnerData?.bankDetails?.bankName || '',
-      accountHolderName: partnerData?.bankDetails?.accountHolderName || '',
-      accountNumber: partnerData?.bankDetails?.accountNumber || '',
-      ifscCode: partnerData?.bankDetails?.ifsc || '',
-      branchName: partnerData?.bankDetails?.branchName || '',
-      accountType: partnerData?.bankDetails?.accountType || ''
+      bankName: partnerData?.bankName || '',
+      accountHolderName: partnerData?.accountHolderName || '',
+      accountNumber: partnerData?.accountNumber || '',
+      ifscCode: partnerData?.ifscCode || '',
+      branchName: partnerData?.branchName || '',
+      accountType: partnerData?.accountType || ''
     } : {}
   })
 
@@ -192,7 +192,7 @@ const PartnerOnboarding = ({
           <DocumentsForm
             register={register}
             errors={errors}
-            existingFiles={isEditMode ? partnerData?.uploadDocuments : null}
+            existingFiles={isEditMode ? partnerData : null}
             onDocumentPreview={handleDocumentPreview}
             onDocumentDelete={isEditMode ? handleDocumentDelete : null}
           />

@@ -3,6 +3,7 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.ApiPartnerListDTO;
 import com.project2.ism.DTO.ApiPartnerFormDTO;
+import com.project2.ism.DTO.ApiPartnerViewDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
 import com.project2.ism.Model.ApiPartnerWallet;
@@ -145,6 +146,11 @@ public class ApiPartnerService {
     public ApiPartner getApiPartnerById(Long id) {
         return apiPartnerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with ID: " + id));
+    }
+
+    public ApiPartnerViewDTO getApiPartnerView(Long id) {
+        return mapToViewDTO(getApiPartnerById(id));
+
     }
 
     public ApiPartner updateApiPartner(Long id, ApiPartnerFormDTO dto) throws IOException {
@@ -301,6 +307,38 @@ public class ApiPartnerService {
         );
 
     }
+
+    private ApiPartnerViewDTO mapToViewDTO(ApiPartner apiPartner) {
+        return new ApiPartnerViewDTO(
+                apiPartner.getId(),
+                apiPartner.getBusinessName(),
+                apiPartner.getLegalName(),
+                apiPartner.getBusinessType(),
+                apiPartner.getGstNumber(),
+                apiPartner.getPanNumber(),
+                apiPartner.getRegistrationNumber(),
+                apiPartner.getAddress(),
+                apiPartner.getContactPerson() != null ? apiPartner.getContactPerson().getName() : null,
+                apiPartner.getContactPerson() != null ? apiPartner.getContactPerson().getPhoneNumber() : null,
+                apiPartner.getContactPerson() != null ? apiPartner.getContactPerson().getAlternatePhoneNum() : null,
+                apiPartner.getContactPerson() != null ? apiPartner.getContactPerson().getEmail() : null,
+                apiPartner.getContactPerson() != null ? apiPartner.getContactPerson().getLandlineNumber() : null,
+                apiPartner.getBankDetails() != null? apiPartner.getBankDetails().getBankName() : null,
+                apiPartner.getBankDetails() != null? apiPartner.getBankDetails().getAccountHolderName() : null,
+                apiPartner.getBankDetails() != null? apiPartner.getBankDetails().getAccountNumber() : null,
+                apiPartner.getBankDetails() != null? apiPartner.getBankDetails().getIfsc() : null,
+                apiPartner.getBankDetails() != null? apiPartner.getBankDetails().getBranchName() : null,
+                apiPartner.getBankDetails() != null? apiPartner.getBankDetails().getAccountType() : null,
+                apiPartner.getUploadDocuments() != null ? apiPartner.getUploadDocuments().getPanProof() : null,
+                apiPartner.getUploadDocuments() != null ? apiPartner.getUploadDocuments().getGstCertificateProof() : null,
+                apiPartner.getUploadDocuments() != null ? apiPartner.getUploadDocuments().getAddressProof() : null,
+                apiPartner.getUploadDocuments() != null ? apiPartner.getUploadDocuments().getBankAccountProof() : null,
+                getWalletBalance(apiPartner.getId()),
+                apiPartner.getCreatedAt()
+        );
+
+    }
+
     // 1. Get all unapproved apiPartner
     public List<ApiPartner> getUnapprovedApiPartners() {
         return apiPartnerRepository.findByIsApprovedFalse();

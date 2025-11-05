@@ -8,7 +8,6 @@ import CustomerListComponent from '../../components/Tables/CustomerList.jsx'
 import SchemeList from '../../components/Tables/SchemeList.jsx'
 import ProductAssignment from '../../components/Tables/ProductAssign_Scheme.jsx'
 import MerchantListComponent from '../../components/Tables/MerchantList.jsx'
-import AdminApproval from '../../components/Admin/AdminApproval.jsx'
 import InventoryManagement from '../../components/Inventory/Inventory.jsx'
 import CustomerProductsList from '../../components/Tables/CustomerProducts/CustomerProductsList.jsx'
 import TransactionUpload from '../../components/Forms/FileUpload.jsx'
@@ -35,7 +34,6 @@ import AdminSupportTickets from '../../components/Admin/AdminSupportTickets.jsx'
 import VendorCredentialsTable from '../../components/Tables/VendorCredentialsTable.jsx'
 import VendorRoutingTable from '../../components/Tables/VendorRoutingTable.jsx'
 import AdminBankTable from '../../components/Tables/AdminBankTable.jsx'
-import PreFundAuthTable from '../../components/Tables/PreFundAuthTable.jsx'
 import PartnerCredentialTable from '../../components/Tables/PartnerCredentialTable.jsx'
 import PrefundRequestsTable from '../../components/Tables/PrefundRequestsTable.jsx'
 
@@ -145,10 +143,7 @@ export const adminRoutes = [
         path: "onboard",
         element: <CustomerOnboarding />
       },
-      {
-        path: "admin-approval",
-        element: <AdminApproval />
-      },
+    
       {
         path: "products-distribution",
         element: <ProductDistributionList />
