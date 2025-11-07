@@ -10,7 +10,7 @@ import java.util.List;
 public interface PayoutBankRepository extends JpaRepository<PayoutBanks, Long> {
 
 
-    long countByApiPartner(String customerType, Long customerId);
-
-    boolean existsByApiPartnerAndAccountNumber(String customerType, Long customerId, String accountNumber);
+//    long countByApiPartner(String customerType, Long customerId);
+//
+//    boolean existsByApiPartnerAndAccountNumber(String customerType, Long customerId, String accountNumber);
 }
