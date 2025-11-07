@@ -26,6 +26,9 @@ import { toast } from 'react-toastify'
 import PartnerCredentialForm from '../Forms/PartnerCredentialForm'
 import PartnerCredentialView from '../View/PartnerCredentialView'
 import PageHeader from '../UI/PageHeader'
+import TableHeader from '../UI/TableHeader'
+import Table from '../UI/Table'
+import Pagination from '../UI/Pagination'
 
 // Mock data - Replace with API call later
 const mockCredentials = [
@@ -312,7 +315,7 @@ const PartnerCredentialTable = () => {
     return (
         <div className="min-h-screen bg-gray-50 p-2 pr-5">
             <div className="mx-auto">
-                <div className="mb-4">
+                <div className="">
                     <PageHeader
                         icon={Key}
                         iconColor="text-blue-600"
@@ -324,19 +327,11 @@ const PartnerCredentialTable = () => {
                         buttonColor="bg-blue-600 hover:bg-blue-700"
                     />
                     
-                    {/* Search Bar */}
-                    <div className="flex justify-end mt-4">
-                        <div className="relative">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search credentials..."
-                                value={globalFilter}
-                                onChange={(e) => setGlobalFilter(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
+                    <TableHeader
+                        searchValue={globalFilter}
+                        onSearchChange={setGlobalFilter}
+                        searchPlaceholder="Search credentials..."
+                    />
                 </div>
 
                 {/* Table */}
@@ -345,118 +340,18 @@ const PartnerCredentialTable = () => {
                         <LoadingSpinner />
                     ) : (
                         <>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        {table.getHeaderGroups().map((headerGroup) => (
-                                            <tr key={headerGroup.id}>
-                                                {headerGroup.headers.map((header) => (
-                                                    <th
-                                                        key={header.id}
-                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                                        onClick={header.column.getToggleSortingHandler()}
-                                                        style={{ width: header.getSize() }}
-                                                    >
-                                                        {header.isPlaceholder
-                                                            ? null
-                                                            : flexRender(header.column.columnDef.header, header.getContext())}
-                                                    </th>
-                                                ))}
-                                            </tr>
-                                        ))}
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {table.getRowModel().rows.map((row) => (
-                                            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                                                {row.getVisibleCells().map((cell) => (
-                                                    <td
-                                                        key={cell.id}
-                                                        className="px-6 py-4 whitespace-nowrap"
-                                                        style={{ width: cell.column.getSize() }}
-                                                    >
-                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                    </td>
-                                                ))}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Pagination */}
-                            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                                <div className="flex-1 flex justify-between sm:hidden">
-                                    <button
-                                        onClick={() => table.previousPage()}
-                                        disabled={!table.getCanPreviousPage()}
-                                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Previous
-                                    </button>
-                                    <button
-                                        onClick={() => table.nextPage()}
-                                        disabled={!table.getCanNextPage()}
-                                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-700">
-                                            Showing{' '}
-                                            <span className="font-medium">
-                                                {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
-                                            </span>{' '}
-                                            to{' '}
-                                            <span className="font-medium">
-                                                {Math.min(
-                                                    (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                                                    table.getFilteredRowModel().rows.length
-                                                )}
-                                            </span>{' '}
-                                            of{' '}
-                                            <span className="font-medium">{table.getFilteredRowModel().rows.length}</span> results
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <button
-                                            onClick={() => table.setPageIndex(0)}
-                                            disabled={!table.getCanPreviousPage()}
-                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            {'<<'}
-                                        </button>
-                                        <button
-                                            onClick={() => table.previousPage()}
-                                            disabled={!table.getCanPreviousPage()}
-                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            {'<'}
-                                        </button>
-                                        <span className="flex items-center space-x-1">
-                                            <span>Page</span>
-                                            <strong>
-                                                {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                                            </strong>
-                                        </span>
-                                        <button
-                                            onClick={() => table.nextPage()}
-                                            disabled={!table.getCanNextPage()}
-                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            {'>'}
-                                        </button>
-                                        <button
-                                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                            disabled={!table.getCanNextPage()}
-                                            className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            {'>>'}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                            <Table
+                                table={table}
+                                columns={columns}
+                                emptyState={{
+                                    icon: <Key className="h-12 w-12" />,
+                                    message: "No credentials found",
+                                    action: null
+                                }}
+                                sortable={true}
+                                hoverable={true}
+                            />
+                            <Pagination table={table} />
                         </>
                     )}
                 </div>

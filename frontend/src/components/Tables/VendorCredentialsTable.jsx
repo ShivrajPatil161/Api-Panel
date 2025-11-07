@@ -21,6 +21,7 @@ import { createVendorCredential, deleteVendorCredential, getVendorCredentials, u
 import PageHeader from '../UI/PageHeader';
 import StatsCard from '../UI/StatsCard';
 import ErrorState from '../UI/ErrorState';
+import Table from '../UI/Table';
 const VendorCredentialTable = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingCredential, setEditingCredential] = useState(null);
@@ -358,60 +359,22 @@ const VendorCredentialTable = () => {
                         </div>
                     </div>
 
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                {table.getHeaderGroups().map(headerGroup => (
-                                    <tr key={headerGroup.id}>
-                                        {headerGroup.headers.map(header => (
-                                            <th
-                                                key={header.id}
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                                                onClick={header.column.getToggleSortingHandler()}
-                                            >
-                                                <div className="flex items-center space-x-1">
-                                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                                    {{
-                                                        asc: ' 🔼',
-                                                        desc: ' 🔽',
-                                                    }[header.column.getIsSorted()] ?? null}
-                                                </div>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {table.getRowModel().rows.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={columns.length} className="px-6 py-12 text-center">
-                                            <div className="flex flex-col items-center space-y-2">
-                                                <Key className="h-12 w-12 text-gray-400" />
-                                                <p className="text-gray-500">No credentials found</p>
-                                                <button
-                                                    onClick={handleAddCredential}
-                                                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                                >
-                                                    Add First Credential
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    table.getRowModel().rows.map(row => (
-                                        <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                                            {row.getVisibleCells().map(cell => (
-                                                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table
+                        table={table}
+                        columns={columns}
+                        emptyState={{
+                            icon: <Key size={50} />,
+                            message: "No credentials found",
+                            action: (
+                            <button
+                                onClick={handleAddCredential}
+                                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                Add First Credential
+                            </button>
+                            )
+                        }}
+                    />
 
                     {/* Pagination */}
                     {!isLoading && table.getRowModel().rows.length > 0 && (

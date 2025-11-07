@@ -7,13 +7,15 @@ import {
     getFilteredRowModel,
     flexRender,
 } from "@tanstack/react-table";
-import { Plus, ChevronLeft, ChevronRight, Search, Eye,  IndianRupee } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Search, Eye,  IndianRupee, FileText } from "lucide-react";
 import { usePrefundQueries } from "../Hooks/usePrefundQueries";
 import PrefundRequestForm from "../Forms/PrefundRequestForm";
 import PrefundRequestModal from "../View/PrefundRequestModal";
 import TableShimmer from "../Shimmer/TableShimmer";
 import PageHeader from "../UI/PageHeader";
 import ErrorState from "../UI/ErrorState";
+import Table from "../UI/Table";
+import TableHeader from "../UI/TableHeader";
 
 const PrefundRequestsTable = () => {
     const userType = localStorage.getItem("userType");
@@ -118,94 +120,31 @@ const PrefundRequestsTable = () => {
         
                 {/* Table Card */}
                 <div className="bg-white rounded-lg shadow-sm">
-                    {/* Table Header */}
-                    <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                        <h2 className="text-lg font-semibold text-gray-900">Requests List</h2>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                            <input
-                                value={filtering}
-                                onChange={(e) => setFiltering(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Search requests..."
-                            />
-                        </div>
-                    </div>
+                    <TableHeader
+                        title="Requests List"
+                        searchValue={filtering}
+                        onSearchChange={setFiltering}
+                        searchPlaceholder="Search requests..."
+                    />
 
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                    <tr key={headerGroup.id}>
-                                        {headerGroup.headers.map((header) => (
-                                            <th
-                                                key={header.id}
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                                                onClick={header.column.getToggleSortingHandler()}
-                                            >
-                                                <div className="flex items-center space-x-1">
-                                                    {flexRender(
-                                                        header.column.columnDef.header,
-                                                        header.getContext()
-                                                    )}
-                                                    {header.column.getIsSorted() === "asc"
-                                                        ? " 🔼"
-                                                        : header.column.getIsSorted() === "desc"
-                                                            ? " 🔽"
-                                                            : null}
-                                                </div>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </thead>
-
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {table.getRowModel().rows.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={columns.length}
-                                            className="px-6 py-12 text-center"
-                                        >
-                                            <div className="flex flex-col items-center space-y-2">
-                                                <p className="text-gray-500">
-                                                    No prefund requests found
-                                                </p>
-                                                {userType !== "admin" && (
-                                                    <button
-                                                        onClick={() => setIsFormOpen(true)}
-                                                        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                                    >
-                                                        Create First Request
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    table.getRowModel().rows.map((row) => (
-                                        <tr
-                                            key={row.id}
-                                            className="hover:bg-gray-50 transition-colors"
-                                        >
-                                            {row.getVisibleCells().map((cell) => (
-                                                <td
-                                                    key={cell.id}
-                                                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                                                >
-                                                    {flexRender(
-                                                        cell.column.columnDef.cell,
-                                                        cell.getContext()
-                                                    )}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table 
+                        table={table}
+                        columns={columns}
+                        emptyState={{
+                            icon: <FileText className="h-12 w-12" />,
+                            message: "No prefund requests found",
+                            action: userType !== "admin" ? (
+                                <button
+                                    onClick={() => setIsFormOpen(true)}
+                                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    Create First Request
+                                </button>
+                            ) : null
+                        }}
+                        sortable={true}
+                        hoverable={true}
+                    />
 
                     {/* Pagination */}
                     {data?.content?.length > 0 && (
