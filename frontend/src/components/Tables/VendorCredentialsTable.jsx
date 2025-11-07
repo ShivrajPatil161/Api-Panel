@@ -21,8 +21,6 @@ import { createVendorCredential, deleteVendorCredential, getVendorCredentials, u
 import PageHeader from '../UI/PageHeader';
 import StatsCard from '../UI/StatsCard';
 import ErrorState from '../UI/ErrorState';
-import Pagination from '../UI/Pagination';
-import TableHeader from '../UI/TableHeader';
 import Table from '../UI/Table';
 const VendorCredentialTable = () => {
     const [showForm, setShowForm] = useState(false);
@@ -196,14 +194,17 @@ const VendorCredentialTable = () => {
     const table = useReactTable({
         data: credentials,
         columns,
-        manualPagination: true,  // ✅ Server handles pagination
-        pageCount: totalPages,   // Total pages from API
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        manualPagination: true,        // ✅ Server handles pagination
+        pageCount: totalPages,         // ✅ TanStack knows total pages
         state: {
             globalFilter,
-            pagination,  // External pagination state
+            pagination,                // ✅ TanStack tracks current page
         },
         onGlobalFilterChange: setGlobalFilter,
-        onPaginationChange: setPagination,  // Sync state changes
+        onPaginationChange: setPagination,  // ✅ TanStack updates state
     });
 
     const handleAddCredential = () => {
@@ -343,12 +344,20 @@ const VendorCredentialTable = () => {
                 {/* Table Card */}
                 <div className="bg-white rounded-lg shadow-sm">
                     {/* Table Header */}
-                    <TableHeader
-                        title="Credentials List"
-                        searchValue={globalFilter}
-                        onSearchChange={setGlobalFilter}
-                        searchPlaceholder="Search credentials..."
-                    />
+                    <div className="p-6 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900">Credentials List</h2>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <input
+                                    value={globalFilter ?? ''}
+                                    onChange={(e) => setGlobalFilter(e.target.value)}
+                                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Search credentials..."
+                                />
+                            </div>
+                        </div>
+                    </div>
 
                     <Table
                         table={table}
@@ -368,8 +377,40 @@ const VendorCredentialTable = () => {
                     />
 
                     {/* Pagination */}
-                    {!isLoading && (
-                        <Pagination table={table} />
+                    {!isLoading && table.getRowModel().rows.length > 0 && (
+                        <div className="px-6 py-4 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-700">
+                                        Showing {pagination.pageIndex * pagination.pageSize + 1} to{' '}
+                                        {Math.min(
+                                            (pagination.pageIndex + 1) * pagination.pageSize,
+                                            totalElements
+                                        )}{' '}
+                                        of {totalElements} results
+                                    </span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() => setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex - 1 }))}
+                                        disabled={pagination.pageIndex === 0}
+                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </button>
+                                    <span className="text-sm text-gray-700">
+                                        Page {pagination.pageIndex + 1} of {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
+                                        disabled={pagination.pageIndex >= totalPages - 1}
+                                        className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
