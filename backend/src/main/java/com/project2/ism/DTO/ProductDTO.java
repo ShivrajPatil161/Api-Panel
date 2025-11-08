@@ -9,8 +9,6 @@ public class ProductDTO {
     private String productName;
     private String productCode;
 
-    private VendorIDNameDTO vendor;
-
     @JsonProperty("productCategory") // Maps "productCategory" from JSON to "category" field
     private ProductCategoryDTO category;
 
@@ -24,11 +22,10 @@ public class ProductDTO {
     public ProductDTO() {
     }
 
-    public ProductDTO(Long id, String productName, String productCode, VendorIDNameDTO vendor, ProductCategoryDTO category, String description, boolean status, String remarks) {
+    public ProductDTO(Long id, String productName, String productCode, ProductCategoryDTO category, String description, boolean status, String remarks) {
         this.id = id;
         this.productName = productName;
         this.productCode = productCode;
-        this.vendor = vendor;
         this.category = category;
         this.description = description;
         this.status = status;
@@ -67,14 +64,6 @@ public class ProductDTO {
         this.productCode = productCode;
     }
 
-    public VendorIDNameDTO getVendor() {
-        return vendor;
-    }
-
-    public void setVendor(VendorIDNameDTO vendor) {
-        this.vendor = vendor;
-    }
-
     public ProductCategoryDTO getCategory() {
         return category;
     }
@@ -82,8 +71,6 @@ public class ProductDTO {
     public void setCategory(ProductCategoryDTO category) {
         this.category = category;
     }
-
-
 
     public String getDescription() {
         return description;
@@ -93,7 +80,6 @@ public class ProductDTO {
         this.description = description;
     }
 
-
     public boolean isStatus() {
         return status;
     }
@@ -101,7 +87,6 @@ public class ProductDTO {
     public void setStatus(boolean status) {
         this.status = status;
     }
-
 
     public String getRemarks() {
         return remarks;

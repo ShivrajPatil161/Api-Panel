@@ -25,11 +25,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsByProductCode(String productCode);
 
     /**
-     * Find products by vendor ID
-     */
-    List<Product> findByVendorId(Long vendorId);
-
-    /**
      * Find products by category ID
      */
     List<Product> findByProductCategoryId(Long categoryId);
@@ -50,17 +45,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Product> searchProducts(@Param("searchTerm") String searchTerm, Pageable pageable);
 
-    /**
-     * Find products by multiple criteria
-     */
-    @Query("SELECT p FROM Product p WHERE " +
-            "(:vendorId IS NULL OR p.vendor.id = :vendorId) AND " +
-            "(:categoryId IS NULL OR p.productCategory.id = :categoryId)")
-    Page<Product> findProductsByCriteria(@Param("vendorId") Long vendorId,
-
-                                         @Param("categoryId") Long categoryId,
-                                         Pageable pageable);
-
 
     /**
      * Count products by category
@@ -68,11 +52,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT COUNT(p) FROM Product p WHERE p.productCategory.id = :categoryId")
     Long countByProductCategoryId(@Param("categoryId") Long categoryId);
 
-    /**
-     * Count products by vendor
-     */
-    @Query("SELECT COUNT(p) FROM Product p WHERE p.vendor.id = :vendorId")
-    Long countByVendorId(@Param("vendorId") Long vendorId);
 
     /**
      * Count active products
