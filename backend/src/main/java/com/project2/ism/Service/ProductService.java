@@ -32,15 +32,12 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductCategoryRepository productCategoryRepository;
-    private final VendorRepository vendorRepository;
 
     @Autowired
     public ProductService(ProductRepository productRepository,
-                          ProductCategoryRepository productCategoryRepository,
-                          VendorRepository vendorRepository) {
+                          ProductCategoryRepository productCategoryRepository) {
         this.productRepository = productRepository;
         this.productCategoryRepository = productCategoryRepository;
-        this.vendorRepository = vendorRepository;
     }
 
     public ProductDTO createProduct(ProductDTO productDTO) {
@@ -114,13 +111,6 @@ public class ProductService {
         return productRepository.searchProducts(searchTerm, pageable).map(this::mapToDTO);
     }
 
-    @Transactional(readOnly = true)
-    public List<ProductDTO> getProductsByVendor(Long vendorId) {
-        return productRepository.findByVendorId(vendorId)
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
 
     @Transactional(readOnly = true)
     public List<ProductDTO> getProductsByCategory(Long categoryId) {
@@ -128,13 +118,6 @@ public class ProductService {
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ProductDTO> getProductsByCriteria(Long vendorId, String brand,
-                                                  Long categoryId, Pageable pageable) {
-        return productRepository.findProductsByCriteria(vendorId, categoryId, pageable)
-                .map(this::mapToDTO);
     }
 
     @Transactional(readOnly = true)
@@ -169,13 +152,6 @@ public class ProductService {
         Product product = new Product();
         product.setProductName(dto.getProductName());
 
-        // Handle vendor
-        if (dto.getVendor() != null && dto.getVendor().getId() != null) {
-            Vendor vendor = vendorRepository.findById(dto.getVendor().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Vendor", dto.getVendor().getId()));
-            product.setVendor(vendor);
-        }
-
         // Handle category
         if (dto.getCategory() != null) {
             if (dto.getCategory().getProductCategoryId() != null) {
@@ -206,9 +182,6 @@ public class ProductService {
 
     private ProductDTO mapToDTO(Product product) {
         VendorIDNameDTO vendorDTO = null;
-        if (product.getVendor() != null) {
-            vendorDTO = new VendorIDNameDTO(product.getVendor().getId(), product.getVendor().getName());
-        }
 
         ProductCategoryDTO categoryDTO = null;
         if (product.getProductCategory() != null) {
@@ -222,7 +195,6 @@ public class ProductService {
                 product.getId(),
                 product.getProductName(),
                 product.getProductCode(),
-                vendorDTO,
                 categoryDTO,
 
                 product.getDescription(),
@@ -238,18 +210,9 @@ public class ProductService {
             product.setProductName(dto.getProductName());
         }
 
-        if (dto.getVendor() != null && dto.getVendor().getId() != null) {
-            Vendor vendor = vendorRepository.findById(dto.getVendor().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Vendor", dto.getVendor().getId()));
-            product.setVendor(vendor);
-        }
-
-
         if (StringUtils.hasText(dto.getDescription())) {
             product.setDescription(dto.getDescription());
         }
-
-
 
         product.setStatus(dto.isStatus());
 

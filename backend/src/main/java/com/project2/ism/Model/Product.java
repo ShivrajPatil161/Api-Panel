@@ -27,11 +27,6 @@ public class Product {
     @Column(name = "product_code", nullable = false, unique = true, length = 50)
     private String productCode;
 
-    @NotNull(message = "Please select a vendor")
-    @ManyToOne( optional = false)
-    @JoinColumn(name = "vendor_id", nullable = false)
-    private Vendor vendor;
-
     @NotNull(message = "Please select a category")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_category_id", nullable = false)
@@ -61,11 +56,10 @@ public class Product {
     // Default constructor
     public Product() {}
 
-    public Product(Long id, String productName, String productCode, Vendor vendor, ProductCategory productCategory, String description, Boolean status, String remarks, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Product(Long id, String productName, String productCode, ProductCategory productCategory, String description, Boolean status, String remarks, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.productName = productName;
         this.productCode = productCode;
-        this.vendor = vendor;
         this.productCategory = productCategory;
         this.description = description;
         this.status = status;
@@ -117,17 +111,6 @@ public class Product {
         this.productCode = productCode;
     }
 
-    public Vendor getVendor() {
-        return vendor;
-    }
-
-    public void setVendor(Vendor vendor) {
-        this.vendor = vendor;
-    }
-
-
-
-
     public String getDescription() {
         return description;
     }
@@ -135,7 +118,6 @@ public class Product {
     public void setDescription(String description) {
         this.description = description;
     }
-
 
     public String getRemarks() {
         return remarks;
@@ -160,9 +142,5 @@ public class Product {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-
-    // Custom validation method
-
-
 
 }
