@@ -29,8 +29,9 @@ import PageHeader from '../UI/PageHeader';
 import TableHeader from '../UI/TableHeader';
 import Table from '../UI/Table';
 import Pagination from '../UI/Pagination';
-
-
+import { useProductQueries } from '../Hooks/useProductsQueries';
+import TableShimmer from '../Shimmer/TableShimmer';
+import ErrorState from '../UI/ErrorState';
 
 // Modular Components
 const SearchBar = ({ searchInput, setSearchInput, onSearch, onClear, loading }) => (
@@ -72,16 +73,12 @@ const LoadingSpinner = () => (
   </div>
 );
 
-
-
 const StatusBadge = ({ status }) => (
   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
     }`}>
     {status ? 'Active' : 'Inactive'}
   </span>
 );
-
-
 
 const ActionButtons = ({ product, onView, onEdit, onDelete }) => (
   <div className="flex space-x-1">
@@ -171,86 +168,60 @@ const ProductViewModal = ({ product, onClose }) => {
   );
 };
 
-
-
-// Main Component
 const ProductList = () => {
-  const [data, setData] = useState([]);
+  // Local state
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [viewingProduct, setViewingProduct] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-      const [globalFilter, setGlobalFilter] = useState('');
-  
-  const [searchInput, setSearchInput] = useState('');
+
+  const [globalFilter, setGlobalFilter] = useState('');
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
   const [sorting, setSorting] = useState([]);
 
-  const userType = localStorage.getItem('userType').toLowerCase();
+  const userType = localStorage.getItem('userType')?.toLowerCase() || '';
   const columnHelper = createColumnHelper();
 
-  // Fetch products from backend
-  const fetchProducts = async () => {
-    setLoading(true);
-   
-    try {
-      const data = await getProducts(pagination.pageIndex, pagination.pageSize, sorting[0]?.id || 'productName', sorting[0]?.desc ? 'desc' : 'asc', searchQuery);
+  // TanStack Query hooks
+  const {
+    useAllProducts,
+    useCreateProduct,
+    useUpdateProduct,
+    useDeleteProduct
+  } = useProductQueries();
 
-      setData(data.content || []);
-      setTotalPages(data.totalPages || 0);
-      setTotalElements(data.totalElements || 0);
+  // Fetch products with current pagination, sorting, and search
+  const {
+    data: productsData,
+    isLoading,
+    isError,
+    error
+  } = useAllProducts(
+    pagination.pageIndex,
+    pagination.pageSize,
+    sorting[0]?.id || 'productName',
+    sorting[0]?.desc ? 'desc' : 'asc',
+  
+  );
 
-      toast.dismiss('fetch-products');
-    } catch (error) {
-      setData([]);
-      setTotalPages(0);
-      setTotalElements(0);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Mutations
+  const createMutation = useCreateProduct();
+  const updateMutation = useUpdateProduct();
+  const deleteMutation = useDeleteProduct();
 
-  // Load products on component mount and when dependencies change
-  useEffect(() => {
-    const sortField = sorting[0]?.id || 'productName';
-    const sortDirection = sorting[0]?.desc ? 'desc' : 'asc';
+  // Extract data from query response
+  const data = productsData?.content || [];
+  const totalPages = productsData?.totalPages || 0;
+  const totalElements = productsData?.totalElements || 0;
 
-    fetchProducts(
-      pagination.pageIndex,
-      pagination.pageSize,
-      sortField,
-      sortDirection,
-      searchQuery
-    );
-  }, [pagination.pageIndex, pagination.pageSize, sorting, searchQuery]);
 
-  // Search handlers
-  const handleSearch = () => {
-    toast.info(`Searching for: ${searchInput}`);
-    setSearchQuery(searchInput);
-    setPagination(prev => ({ ...prev, pageIndex: 0 }));
-  };
 
-  const clearSearch = () => {
-    setSearchInput('');
-    setSearchQuery('');
-    setPagination(prev => ({ ...prev, pageIndex: 0 }));
-    toast.info('Search cleared');
-  };
 
   // Calculate stats
-  const totalProducts = data.length;
   const activeProducts = data.filter(p => p.status === true).length;
   const inactiveProducts = data.filter(p => p.status === false).length;
-  const avgWarranty = totalProducts > 0
-    ? Math.round(data.reduce((acc, p) => acc + (p.warrantyPeriod || 0), 0) / totalProducts)
-    : 0;
 
   // Table columns configuration
   const columns = useMemo(
@@ -272,18 +243,14 @@ const ProductList = () => {
           </div>
         ),
       }),
-     
       columnHelper.accessor('productCategory.categoryName', {
         header: 'Category',
         cell: info => (info.getValue() || '—'),
-
       }),
-     
       columnHelper.accessor('status', {
         header: 'Status',
         cell: info => <StatusBadge status={info.getValue()} />,
       }),
-      
       columnHelper.display({
         id: 'actions',
         header: 'Actions',
@@ -324,10 +291,7 @@ const ProductList = () => {
   };
 
   const handleEdit = (product) => {
-    const editData = {
-      ...product,
-    };
-    setEditingProduct(editData);
+    setEditingProduct(product);
     setShowForm(true);
   };
 
@@ -338,7 +302,7 @@ const ProductList = () => {
   const handleDelete = (productId, productName) => {
     const confirmDelete = () => {
       toast.dismiss();
-      performDelete(productId, productName);
+      performDelete(productId);
     };
 
     const cancelDelete = () => {
@@ -373,28 +337,28 @@ const ProductList = () => {
     );
   };
 
-  const performDelete = async (productId, productName) => {
-    try {
-      await deleteProduct(productId);
-      fetchProducts();
-    } catch (error) {
-      const errorMessage = error?.response?.data?.message || 'Failed to delete product';
-      toast.error(errorMessage);
-    }
+  const performDelete = async (productId) => {
+    deleteMutation.mutate(productId);
   };
 
   const handleFormSubmit = async (formData) => {
     const isEdit = !!editingProduct;
-    try {
-      if (isEdit) {
-        await updateProduct(editingProduct.id, formData);
-      } else {
-        await createProduct(formData);
-      }
-      fetchProducts();
-      handleCloseForm();
-    } catch (error) {
-      console.error('Form submission failed:', error);
+
+    if (isEdit) {
+      updateMutation.mutate(
+        { id: editingProduct.id, data: formData },
+        {
+          onSuccess: () => {
+            handleCloseForm();
+          }
+        }
+      );
+    } else {
+      createMutation.mutate(formData, {
+        onSuccess: () => {
+          handleCloseForm();
+        }
+      });
     }
   };
 
@@ -403,10 +367,15 @@ const ProductList = () => {
     setEditingProduct(null);
   };
 
+
+
+  if (isError) return <ErrorState />
+
+  if(isLoading) return <TableShimmer />
+
   return (
     <div className="min-h-screen bg-gray-50 pr-4">
-      <div className=" mx-auto">
-
+      <div className="mx-auto">
         {/* Header */}
         <PageHeader
           icon={Package}
@@ -420,7 +389,6 @@ const ProductList = () => {
           })}
         />
 
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatsCard
@@ -430,7 +398,7 @@ const ProductList = () => {
             label="Total Products"
             value={totalElements}
           />
-          
+
           <StatsCard
             icon={CheckCircle}
             iconColor="text-green-600"
@@ -438,7 +406,7 @@ const ProductList = () => {
             label="Active Products"
             value={activeProducts}
           />
-          
+
           <StatsCard
             icon={XCircle}
             iconColor="text-red-600"
@@ -448,22 +416,7 @@ const ProductList = () => {
           />
         </div>
 
-        {/* Search Bar */}
-        <SearchBar
-          searchInput={searchInput}
-          setSearchInput={setSearchInput}
-          onSearch={handleSearch}
-          onClear={clearSearch}
-          loading={loading}
-        />
-
-        {searchQuery && (
-          <p className="mt-2 mb-4 text-sm text-gray-600">
-            Searching for: "<strong>{searchQuery}</strong>"
-          </p>
-        )}
-
-        {loading && <LoadingSpinner />}
+    
 
         {showForm && (
           <ProductMasterForm
@@ -471,6 +424,7 @@ const ProductList = () => {
             initialData={editingProduct}
             isEdit={!!editingProduct}
             onCancel={handleCloseForm}
+            isSubmitting={createMutation.isPending || updateMutation.isPending}
           />
         )}
 
@@ -482,30 +436,25 @@ const ProductList = () => {
         {/* Table Card */}
         <div className="bg-white rounded-lg shadow-sm">
           {/* Table Header */}
-          {/* Table Card */}
-          <div className="bg-white rounded-lg shadow-sm">
-            {/* Table Header */}
-            <TableHeader
-              title="Product List"
-              searchValue={globalFilter}
-              onSearchChange={setGlobalFilter}
-              searchPlaceholder="Search products..."
-            />
+          <TableHeader
+            title="Product List"
+            searchValue={globalFilter}
+            onSearchChange={setGlobalFilter}
+            searchPlaceholder="Search products..."
+          />
 
-            {/* Table */}
-            <Table
-              table={table}
-              columns={columns}
-              emptyState={{
-                icon: <Package size={50}/>, // or whatever icon you want
-                message: "No products found",
-                
-              }}
-            />
+          {/* Table */}
+          <Table
+            table={table}
+            columns={columns}
+            emptyState={{
+              icon: <Package size={50} />,
+              message: "No products found",
+            }}
+          />
 
-            {/* Pagination */}
-            <Pagination table={table} />
-          </div>
+          {/* Pagination */}
+          <Pagination table={table} />
         </div>
       </div>
     </div>
@@ -513,3 +462,7 @@ const ProductList = () => {
 };
 
 export default ProductList;
+
+
+
+

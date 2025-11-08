@@ -3,21 +3,34 @@ import { toast } from 'react-toastify';
 
 const endpoint = '/products';
 
-
-
+/**
+ * Fetch products with pagination, sorting, and search
+ * Compatible with TanStack Query's queryFn signature
+ */
 export const getProducts = async ({ queryKey }) => {
   const [_key, { page = 0, size = 10, sortBy = 'productName', sortDir = 'asc', search = '' }] = queryKey;
 
-  let url = `/products?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
-  if (search.trim()) {
-    url = `/products/search?q=${encodeURIComponent(search)}&page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
-  }
+  try {
+    let url = `${endpoint}?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
+    
+    if (search.trim()) {
+      url = `${endpoint}/search?q=${encodeURIComponent(search)}&page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
+    }
 
-  const res = await api.get(url);
-  return res.data;
+    const res = await api.get(url);
+    return res.data;
+  } catch (err) {
+    // Only show toast for unexpected errors, not for empty results
+    if (err.response?.status !== 404) {
+      toast.error(err.response?.data?.message || 'Failed to fetch products');
+    }
+    throw err;
+  }
 };
 
-
+/**
+ * Fetch a single product by ID
+ */
 export const getProductById = async (id) => {
   try {
     const res = await api.get(`${endpoint}/${id}`);
@@ -28,34 +41,47 @@ export const getProductById = async (id) => {
   }
 };
 
+/**
+ * Create a new product
+ */
 export const createProduct = async (productData) => {
   try {
     const res = await api.post(endpoint, productData);
     toast.success('Product created successfully!');
     return res.data;
   } catch (err) {
-    toast.error(err.response?.data?.message || 'Failed to create product');
+    const errorMessage = err.response?.data?.message || 'Failed to create product';
+    toast.error(errorMessage);
     throw err;
   }
 };
 
+/**
+ * Update an existing product
+ */
 export const updateProduct = async (id, productData) => {
   try {
     const res = await api.patch(`${endpoint}/${id}`, productData);
     toast.success('Product updated successfully!');
     return res.data;
   } catch (err) {
-    toast.error(err.response?.data?.message || 'Failed to update product');
+    const errorMessage = err.response?.data?.message || 'Failed to update product';
+    toast.error(errorMessage);
     throw err;
   }
 };
 
+/**
+ * Delete a product
+ */
 export const deleteProduct = async (id) => {
   try {
     await api.delete(`${endpoint}/${id}`);
     toast.success('Product deleted successfully!');
   } catch (err) {
-    toast.error(err.response?.data?.message || 'Failed to delete product');
+    const errorMessage = err.response?.data?.message || 'Failed to delete product';
+    toast.error(errorMessage);
     throw err;
   }
 };
+
