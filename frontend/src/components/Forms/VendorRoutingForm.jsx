@@ -1,115 +1,392 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { X } from 'lucide-react';
+// import React from 'react';
+// import { useForm } from 'react-hook-form';
+// import { X } from 'lucide-react';
+
+// const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) => {
+//     const { register, handleSubmit, formState: { errors } } = useForm({
+//         defaultValues: defaultValues || {
+//             subProduct: '',
+//             routingPriority1: '',
+//             routingPriority2: '',
+//             routingPriority3: ''
+//         }
+//     });
+
+//     if (!isOpen) return null;
+
+//     const handleFormSubmit = (data) => {
+//         onSubmit(data);
+//     };
+
+//     return (
+//         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+//             <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+//                 <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
+//                     <h2 className="text-xl font-semibold text-gray-800">
+//                         {defaultValues ? 'Edit Vendor Routing' : 'Add Vendor Routing'}
+//                     </h2>
+//                     <button
+//                         onClick={onClose}
+//                         className="text-gray-400 hover:text-gray-600 transition-colors"
+//                     >
+//                         <X size={24} />
+//                     </button>
+//                 </div>
+
+//                 <div className="p-6">
+//                     <div className="space-y-4">
+//                         <div>
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Sub Product <span className="text-red-500">*</span>
+//                             </label>
+//                             <select
+//                                 {...register('subProduct', { required: 'Sub product is required' })}
+//                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                             >
+//                                 <option value="">Select Sub Product</option>
+//                             </select>
+//                             {errors.subProduct && (
+//                                 <p className="text-red-500 text-sm mt-1">{errors.subProduct.message}</p>
+//                             )}
+//                         </div>
+
+//                         <div>
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Routing Priority 1 <span className="text-red-500">*</span>
+//                             </label>
+//                             <select
+//                                 {...register('routingPriority1', { required: 'Routing priority 1 is required' })}
+//                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                             >
+//                                 <option value="">Select</option>
+//                             </select>
+//                             {errors.routingPriority1 && (
+//                                 <p className="text-red-500 text-sm mt-1">{errors.routingPriority1.message}</p>
+//                             )}
+//                         </div>
+
+//                         <div>
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Routing Priority 2
+//                             </label>
+//                             <select
+//                                 {...register('routingPriority2')}
+//                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                             >
+//                                 <option value="">Select</option>
+//                             </select>
+//                         </div>
+
+//                         <div>
+//                             <label className="block text-sm font-medium text-gray-700 mb-1">
+//                                 Routing Priority 3
+//                             </label>
+//                             <select
+//                                 {...register('routingPriority3')}
+//                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                             >
+//                                 <option value="">Select</option>
+//                             </select>
+//                         </div>
+//                     </div>
+
+//                     <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+//                         <button
+//                             type="button"
+//                             onClick={onClose}
+//                             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+//                         >
+//                             Cancel
+//                         </button>
+//                         <button
+//                             type="button"
+//                             onClick={handleSubmit(handleFormSubmit)}
+//                             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+//                         >
+//                             {defaultValues ? 'Update Routing' : 'Add Routing'}
+//                         </button>
+//                     </div>
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// };
+
+// export default VendorRoutingForm;
+
+import React, { useState } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { X, Plus, Trash2 } from 'lucide-react';
+
+// Placeholder data
+const products = [
+    { id: 'p1', name: 'UPI QR Code Scanner' },
+    { id: 'p2', name: 'POS Machine' },
+    { id: 'p3', name: 'Payment Gateway' },
+    { id: 'p4', name: 'Credit Card Reader' },
+];
+
+const vendors = [
+    { id: 'v1', name: 'RazorPay' },
+    { id: 'v2', name: 'PayU' },
+    { id: 'v3', name: 'CashFree' },
+    { id: 'v4', name: 'BillDesk' },
+    { id: 'v5', name: 'PhonePe Business' },
+];
+
+// Zod schema
+const vendorRuleSchema = z.object({
+    vendorId: z.string().min(1, 'Vendor is required'),
+    vendorName: z.string(),
+    minAmount: z.string().min(1, 'Min amount required').refine(val => !isNaN(Number(val)) && Number(val) >= 0, 'Must be a valid number'),
+    maxAmount: z.string().min(1, 'Max amount required').refine(val => !isNaN(Number(val)) && Number(val) >= 0, 'Must be a valid number'),
+    dailyTransactionLimit: z.string().min(1, 'Transaction limit required').refine(val => !isNaN(Number(val)) && Number(val) > 0, 'Must be a valid number'),
+    dailyAmountLimit: z.string().min(1, 'Amount limit required').refine(val => !isNaN(Number(val)) && Number(val) >= 0, 'Must be a valid number'),
+});
+
+const formSchema = z.object({
+    productId: z.string().min(1, 'Product is required'),
+    vendorRules: z.array(vendorRuleSchema).min(1, 'At least one vendor required'),
+});
 
 const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) => {
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const [selectedVendor, setSelectedVendor] = useState('');
+
+    const { register, handleSubmit, control, watch, formState: { errors } } = useForm({
+        resolver: zodResolver(formSchema),
         defaultValues: defaultValues || {
-            subProduct: '',
-            routingPriority1: '',
-            routingPriority2: '',
-            routingPriority3: ''
-        }
+            productId: '',
+            vendorRules: [],
+        },
     });
+
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'vendorRules',
+    });
+
+    const vendorRules = watch('vendorRules');
 
     if (!isOpen) return null;
 
-    const handleFormSubmit = (data) => {
+    const handleAddVendor = () => {
+        if (!selectedVendor) return;
+
+        const vendorExists = fields.find(field => field.vendorId === selectedVendor);
+        if (vendorExists) {
+            alert('Vendor already added!');
+            return;
+        }
+
+        const vendor = vendors.find(v => v.id === selectedVendor);
+        append({
+            vendorId: selectedVendor,
+            vendorName: vendor?.name || '',
+            minAmount: '',
+            maxAmount: '',
+            dailyTransactionLimit: '',
+            dailyAmountLimit: '',
+        });
+        setSelectedVendor('');
+    };
+
+    const availableVendors = vendors.filter(v =>
+        !fields.find(field => field.vendorId === v.id)
+    );
+
+    const onFormSubmit = (data) => {
         onSubmit(data);
+        onClose();
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
-                <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
-                    <h2 className="text-xl font-semibold text-gray-800">
-                        {defaultValues ? 'Edit Vendor Routing' : 'Add Vendor Routing'}
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                    >
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+                <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white px-6 py-4 flex items-center justify-between rounded-t-xl">
+                    <div>
+                        <h2 className="text-xl font-semibold text-white">
+                            {defaultValues ? 'Edit Vendor Routing' : 'Add Vendor Routing'}
+                        </h2>
+                        <p className="text-blue-100 text-sm mt-0.5">
+                            {defaultValues ? 'Update vendor routing configuration' : 'Configure vendor routing rules for product'}
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
                         <X size={24} />
                     </button>
                 </div>
 
-                <div className="p-6">
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Sub Product <span className="text-red-500">*</span>
+                <div className="flex-1 overflow-y-auto p-6">
+                    <div className="space-y-6">
+                        {/* Product Selection */}
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Product <span className="text-red-500">*</span>
                             </label>
                             <select
-                                {...register('subProduct', { required: 'Sub product is required' })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                {...register('productId')}
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all"
                             >
-                                <option value="">Select Sub Product</option>
+                                <option value="">Select Product</option>
+                                {products.map(product => (
+                                    <option key={product.id} value={product.id}>{product.name}</option>
+                                ))}
                             </select>
-                            {errors.subProduct && (
-                                <p className="text-red-500 text-sm mt-1">{errors.subProduct.message}</p>
+                            {errors.productId && (
+                                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                                    <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
+                                    {errors.productId.message}
+                                </p>
                             )}
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Routing Priority 1 <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                {...register('routingPriority1', { required: 'Routing priority 1 is required' })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">Select</option>
-                            </select>
-                            {errors.routingPriority1 && (
-                                <p className="text-red-500 text-sm mt-1">{errors.routingPriority1.message}</p>
+                        {/* Add Vendor Section */}
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center justify-between mb-3">
+                                <label className="text-sm font-semibold text-gray-700">Vendor Rules</label>
+                                <div className="flex gap-2 items-center">
+                                    <select
+                                        value={selectedVendor}
+                                        onChange={(e) => setSelectedVendor(e.target.value)}
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm   bg-white transition-all min-w-[200px]"
+                                    >
+                                        <option value="">Select Vendor</option>
+                                        {availableVendors.map(vendor => (
+                                            <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddVendor}
+                                        disabled={!selectedVendor}
+                                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed flex items-center gap-2 transition-all shadow-sm"
+                                    >
+                                        <Plus size={16} />
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Vendor Rules List */}
+                            {fields.length > 0 ? (
+                                <div className="space-y-3 mt-4">
+                                    {fields.map((field, index) => (
+                                        <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                                                    <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                                                    {field.vendorName}
+                                                </h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => remove(index)}
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-all"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+
+                                            <div className="grid grid-cols-4 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                        Min Amount *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        {...register(`vendorRules.${index}.minAmount`)}
+                                                        placeholder="0"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                    />
+                                                    {errors.vendorRules?.[index]?.minAmount && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.vendorRules[index].minAmount.message}</p>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                        Max Amount *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        {...register(`vendorRules.${index}.maxAmount`)}
+                                                        placeholder="10000"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                    />
+                                                    {errors.vendorRules?.[index]?.maxAmount && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.vendorRules[index].maxAmount.message}</p>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                        Daily Txn Count *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        {...register(`vendorRules.${index}.dailyTransactionLimit`)}
+                                                        placeholder="100"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                    />
+                                                    {errors.vendorRules?.[index]?.dailyTransactionLimit && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.vendorRules[index].dailyTransactionLimit.message}</p>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                        Daily Amt Limit *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        {...register(`vendorRules.${index}.dailyAmountLimit`)}
+                                                        placeholder="50000"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                    />
+                                                    {errors.vendorRules?.[index]?.dailyAmountLimit && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.vendorRules[index].dailyAmountLimit.message}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg bg-white/50 mt-4">
+                                    <Plus size={24} className="mx-auto mb-2 text-gray-300" />
+                                    No vendors added. Select a vendor and click Add.
+                                </div>
+                            )}
+                            {errors.vendorRules && typeof errors.vendorRules.message === 'string' && (
+                                <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                                    <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
+                                    {errors.vendorRules.message}
+                                </p>
                             )}
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Routing Priority 2
-                            </label>
-                            <select
-                                {...register('routingPriority2')}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">Select</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Routing Priority 3
-                            </label>
-                            <select
-                                {...register('routingPriority3')}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">Select</option>
-                            </select>
-                        </div>
                     </div>
+                </div>
 
-                    <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleSubmit(handleFormSubmit)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                            {defaultValues ? 'Update Routing' : 'Add Routing'}
-                        </button>
-                    </div>
+                <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-white hover:shadow-sm transition-all"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleSubmit(onFormSubmit)}
+                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm"
+                    >
+                        {defaultValues ? 'Update Routing' : 'Add Routing'}
+                    </button>
                 </div>
             </div>
         </div>
     );
 };
 
-export default VendorRoutingForm;
+export default VendorRoutingForm
