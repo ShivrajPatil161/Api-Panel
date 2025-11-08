@@ -136,11 +136,7 @@ const ProductViewModal = ({ product, onClose }) => {
               <span className="font-medium">Code:</span>
               <span className="font-mono">{product.productCode}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Building className="text-green-500" size={16} />
-              <span className="font-medium">Vendor:</span>
-              <span>{product.vendor.name}</span>
-            </div>
+            
             <div className="flex items-center space-x-2">
               <span className="font-medium">Category:</span>
               {product.productCategory.categoryName}
@@ -276,18 +272,11 @@ const ProductList = () => {
           </div>
         ),
       }),
-      columnHelper.accessor('vendor.name', {
-        header: 'Vendor',
-        cell: info => (
-          <div>
-            <div className="text-sm font-medium text-gray-900">{info.getValue()}</div>
-            <div className="text-xs text-gray-500">ID: {info.row.original.vendor.id}</div>
-          </div>
-        ),
-      }),
+     
       columnHelper.accessor('productCategory.categoryName', {
         header: 'Category',
-        cell: info => {info.getValue()} ,
+        cell: info => (info.getValue() || '—'),
+
       }),
      
       columnHelper.accessor('status', {
@@ -423,7 +412,7 @@ const ProductList = () => {
           icon={Package}
           iconColor="text-blue-600"
           title="Product Management"
-          description="Manage your all vendor products"
+          description="Manage your all products"
           {...((userType === 'admin' || userType === 'super_admin') && {
             buttonText: "+ Add Product",
             onButtonClick: handleAddProduct,
