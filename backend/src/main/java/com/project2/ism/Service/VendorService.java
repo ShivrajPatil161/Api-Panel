@@ -60,24 +60,7 @@ public class VendorService {
         }
 
         updatedVendor.setId(existingVendor.getId());// ensure ID consistency
-        if(updatedVendor.getStatus()==false){
-            List<Product> vendorProducts = productRepository.findByVendorId(updatedVendor.getId());
-            if (vendorProducts != null) {
-                for (Product p : vendorProducts) {
-                    p.setStatus(false);
-                }
-                productRepository.saveAll(vendorProducts);
-            }
-        }
-        else{
-            List<Product> vendorProducts = productRepository.findByVendorId(updatedVendor.getId());
-            if (vendorProducts != null) {
-                for (Product p : vendorProducts) {
-                    p.setStatus(true);
-                }
-                productRepository.saveAll(vendorProducts);
-            }
-        }
+
         return vendorRepository.save(updatedVendor);
     }
 

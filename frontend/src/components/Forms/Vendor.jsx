@@ -1,5 +1,5 @@
 // Form Input Components
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,6 +7,7 @@ import {
   Building2, Phone, MapPin, FileText, Calendar,
   ToggleLeft, ToggleRight
 } from 'lucide-react';
+import { useProductsQueries } from '../Hooks/useProductsQueries';
 
 // Reusable Input Component
 export const FormInput = ({  label, name,  register,  error,  required = false,  type = "text", placeholder = "",  maxLength,  style, ...props}) => (
@@ -180,6 +181,7 @@ const vendorSchema = z.object({
   bankType: z.enum(['Central Bank', 'Private Sector', 'Public Sector', 'Co-operative', 'Rural Banks','Other'], {
     required_error: "Bank type is required"
   }),
+  productId: z.coerce.number().min(1, 'Please select a product'),
   // optional contactPerson
   contactPerson: z.object({
     name: z.string().min(2, 'Contact person name is required').optional().or(z.literal('')),
@@ -214,6 +216,7 @@ const BANK_TYPE_OPTIONS = [
 // Default form values
 const DEFAULT_VALUES = {
   name: '',
+  productId:'',
   bankType: '',
   contactPerson: {
     name: '',
@@ -236,6 +239,13 @@ const DEFAULT_VALUES = {
 
 // Main Vendor Form Component
 const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
+
+  const { useAllProducts } = useProductsQueries()
+
+  const { data, isLoading: productsLoading, isError: productsError } = useAllProducts();    
+  
+
+  const products = data?.content || []
   const {
     register,
     handleSubmit,
@@ -244,8 +254,15 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
     formState: { errors, isSubmitting }
   } = useForm({
     resolver: zodResolver(vendorSchema),
-    defaultValues: initialData || DEFAULT_VALUES
+    defaultValues: initialData
+      ? {
+        ...initialData,
+        productId: initialData.product?.id || '',
+      }
+      : DEFAULT_VALUES,
   });
+
+
 
   const watchStatus = watch('status');
 
@@ -270,6 +287,25 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
               error={errors.name}
               required
               placeholder="Enter vendor name"
+            />
+
+            <FormSelect
+              label="Product"
+              name="productId"
+              register={register}
+              error={errors.bankType}
+              required
+              options={
+                productsLoading
+                  ? [{ label: "Loading...", value: "" }]
+                  : productsError
+                    ? [{ label: "Error loading products", value: "" }]
+                    : products?.map((p) => ({
+                      label: p.productName,
+                      value: p.id,
+                    })) || []
+              }
+              placeholder="Select Product "
             />
 
             <FormSelect
