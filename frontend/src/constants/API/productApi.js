@@ -3,20 +3,20 @@ import { toast } from 'react-toastify';
 
 const endpoint = '/products';
 
-export const getProducts = async (page = 0, size = 10, sortBy = 'productName', sortDir = 'asc', search = '') => {
-  try {
-    let url = `${endpoint}?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
-    if (search.trim()) {
-      url = `${endpoint}/search?q=${encodeURIComponent(search)}&page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
-    }
 
-    const res = await api.get(url);
-    return res.data;
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Failed to load products from server');
-    throw err;
+
+export const getProducts = async ({ queryKey }) => {
+  const [_key, { page = 0, size = 10, sortBy = 'productName', sortDir = 'asc', search = '' }] = queryKey;
+
+  let url = `/products?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
+  if (search.trim()) {
+    url = `/products/search?q=${encodeURIComponent(search)}&page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
   }
+
+  const res = await api.get(url);
+  return res.data;
 };
+
 
 export const getProductById = async (id) => {
   try {

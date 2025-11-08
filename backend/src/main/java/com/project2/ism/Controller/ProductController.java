@@ -151,14 +151,6 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/vendor/{vendorId}")
-    public ResponseEntity<List<ProductDTO>> getProductsByVendor(@PathVariable Long vendorId) {
-        List<ProductDTO> products = productService.getProductsByVendor(vendorId);
-        List<ProductDTO> productCodes = products.stream()
-                .map(p -> new ProductDTO(p.getId(), p.getProductCode(), p.getProductName()))
-                .toList();
-        return ResponseEntity.ok(productCodes);
-    }
 
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductDTO>> getProductsByCategory(@PathVariable Long categoryId) {
@@ -166,24 +158,7 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<Page<ProductDTO>> getProductsByCriteria(
-            @RequestParam(required = false) Long vendorId,
-            @RequestParam(required = false) String brand,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "productName") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<ProductDTO> products = productService.getProductsByCriteria(vendorId, brand, categoryId, pageable);
-
-        return ResponseEntity.ok(products);
-    }
 
     @GetMapping("/exists/{productCode}")
     public ResponseEntity<Map<String, Boolean>> checkProductCodeExists(@PathVariable String productCode) {

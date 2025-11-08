@@ -96,7 +96,7 @@ const VendorListPage = () => {
         cell: info => (
           <div>
             <div className="font-medium text-gray-900">{info.getValue()}</div>
-            <div className="text-sm text-gray-500">{info.row.original.state}</div>
+            <div className="text-sm text-gray-500">{info.row.original.state || "-"}</div>
           </div>
         ),
       }),
@@ -238,13 +238,10 @@ const VendorListPage = () => {
     try {
       if (isEditing) {
         const updatedVendor = await vendorApi.updateVendor(editingVendor.id, data);
-        setVendors(vendors.map(vendor =>
-          vendor.id === editingVendor.id ? updatedVendor : vendor
-        ));
         toast.success(`${vendorName} updated successfully!`);
       } else {
         const newVendor = await vendorApi.createVendor(data);
-        setVendors([...vendors, newVendor]);
+        
         toast.success(`${vendorName} created successfully!`);
       }
       setShowForm(false);
@@ -256,7 +253,10 @@ const VendorListPage = () => {
         error.response?.data?.message ||       // backend message (like 409)
         (error.request ? "No response from server" : error.message) || // network or other errors
         "An unexpected error occurred"
-    );    }
+      );
+    } finally {
+      loadVendors()
+    }
   };
 
   const handleFormCancel = () => {
