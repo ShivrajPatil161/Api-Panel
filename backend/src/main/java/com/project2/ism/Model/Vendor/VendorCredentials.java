@@ -228,10 +228,6 @@ public class VendorCredentials {
         isActive = active;
     }
 
-
-
-
-
     public String getUserField1() {
         return userField1;
     }
@@ -295,7 +291,6 @@ public class VendorCredentials {
     public void setEditedBy(String editedBy) {
         this.editedBy = editedBy;
     }
-
 
 }
 
