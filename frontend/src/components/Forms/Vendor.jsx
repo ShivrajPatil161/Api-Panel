@@ -7,7 +7,7 @@ import {
   Building2, Phone, MapPin, FileText, Calendar,
   ToggleLeft, ToggleRight
 } from 'lucide-react';
-import { useProductsQueries } from '../Hooks/useProductsQueries';
+import { useProductQueries } from '../Hooks/useProductsQueries';
 
 // Reusable Input Component
 export const FormInput = ({  label, name,  register,  error,  required = false,  type = "text", placeholder = "",  maxLength,  style, ...props}) => (
@@ -240,7 +240,8 @@ const DEFAULT_VALUES = {
 // Main Vendor Form Component
 const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
 
-  const { useAllProducts } = useProductsQueries()
+  const { useAllProducts } = useProductQueries();
+  
 
   const { data, isLoading: productsLoading, isError: productsError } = useAllProducts();    
   

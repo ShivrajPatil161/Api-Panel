@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-import VendorForm from '../Forms/Vendor';
+const VendorForm = lazy(() => import('../Forms/Vendor')) ;
 import VendorViewModal from '../View/VendorView';
 import vendorApi from '../../constants/API/vendorApi';
 import StatsCard from '../UI/StatsCard';
