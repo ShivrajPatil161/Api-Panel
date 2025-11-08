@@ -23,47 +23,56 @@ const CategorySelectField = ({
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label} {required && '*'}
-        </label>
-        <select
-          {...register(name)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        >
-          <option value="">{placeholder}</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-          <option value="new" className="font-medium text-green-600">
-            + Add New Category
-          </option>
-        </select>
-        {error && (
-          <p className="text-red-500 text-sm mt-1">{error.message}</p>
-        )}
-      </div>
+      
 
-      {showNewCategoryInput && (
+      <div className={`grid gap-4 md:grid-cols-2`}>
+        {/* Category dropdown */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            New Category Name *
+            {label} {required && '*'}
           </label>
-          <input
-            {...register('newCategoryName')}
-            type="text"
+          <select
+            {...register(name)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            placeholder="Enter new category name"
-          />
-          {watch('newCategoryName') && (
-            <p className="text-green-600 text-sm mt-1">
-              New category "{watch('newCategoryName')}" will be created
-            </p>
+          >
+            <option value="">{placeholder}</option>
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+            <option value="new" className="font-medium text-green-600">
+              + Add New Category
+            </option>
+          </select>
+          {error && !showNewCategoryInput && (
+            <p className="text-red-500 text-sm mt-1">{error.message}</p>
           )}
         </div>
-      )}
+
+        {/* New category input appears beside it */}
+        {showNewCategoryInput && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              New Category Name *
+            </label>
+            <input
+              {...register('newCategoryName')}
+              type="text"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="Enter new category name"
+            />
+            {error && (
+              <p className="text-red-500 text-sm mt-1">{error.message}</p>
+            )}
+            {watch('newCategoryName') && !error && (
+              <p className="text-green-600 text-sm mt-1">
+                New category "{watch('newCategoryName')}" will be created
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -72,14 +81,13 @@ const CategorySelectField = ({
 // Validation Schema
 const productSchema = z.object({
   productName: z.string().min(2, 'Product name must be at least 2 characters'),
-  vendorId: z.coerce.number().min(1, 'Please select a vendor'),
   productCategoryId: z.union([
     z.coerce.number().min(1, 'Please select a category'),
     z.literal("new") // allow "new" string for add category
   ]),
   newCategoryName: z.string().optional(),
- 
   status: z.boolean(),
+  description: z.string().optional().default(""),
   remarks: z.string().nullable().optional().default("")
 }).refine((data) => {
   if (data.productCategoryId === 'new' && (!data.newCategoryName || data.newCategoryName.trim().length < 2)) {
@@ -157,37 +165,6 @@ const InputField = ({
   </div>
 );
 
-// Select Field Component
-const SelectField = ({
-  label,
-  name,
-  register,
-  error,
-  options,
-  required = false,
-  placeholder = "Select an option"
-}) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      {label} {required && '*'}
-    </label>
-    <select
-      {...register(name)}
-      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-    >
-      <option value="">{placeholder}</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-    {error && (
-      <p className="text-red-500 text-sm mt-1">{error.message}</p>
-    )}
-  </div>
-);
-
 // Textarea Field Component
 const TextareaField = ({
   label,
@@ -252,7 +229,6 @@ const SectionHeader = ({ icon, title }) => (
 
 // Main Form Component
 const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) => {
-  const [vendors, setVendors] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -268,48 +244,35 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
     resolver: zodResolver(productSchema),
     defaultValues: initialData ? {
       ...initialData,
-      vendorId: initialData.vendor?.id || '',
       productCategoryId: initialData?.productCategory?.id || ''
     } : {
       productName: '',
-      vendorId: '',
       productCategoryId: '',
       newCategoryName: '',
-  
       description: '',
-     
       status: true,
-      
       remarks: ''
     }
   });
 
   const watchStatus = watch('status');
 
-  // Load vendors and categories
+  // Load categories only
   useEffect(() => {
     const loadData = async () => {
       try {
         setDataLoading(true);
 
-        const [vendorsResponse, categoriesResponse] = await Promise.all([
-          api.get('/vendors/id_name'),
-          api.get('/product-categories')
-        ]);
-
-        setVendors(vendorsResponse.data.map(vendor => ({
-          value: vendor.id,
-          label: vendor.name
-        })));
+        const categoriesResponse = await api.get('/product-categories');
 
         setCategories(categoriesResponse.data.map(category => ({
           value: category.id,
           label: category.categoryName
         })));
-        
+
       } catch (error) {
         console.error('Error loading data:', error);
-        setError('Failed to load vendors and categories. Please refresh the page.');
+        setError('Failed to load categories. Please refresh the page.');
       } finally {
         setDataLoading(false);
       }
@@ -329,26 +292,24 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
       let categoryName, categoryId;
       if (data.productCategoryId === 'new') {
         categoryName = data.newCategoryName;
+        categoryId = null; // Backend will create new category
       } else {
         // Find the selected category name from categories array
         const selectedCategory = categories.find(cat => cat.value === data.productCategoryId);
         categoryName = selectedCategory ? selectedCategory.label : '';
-        categoryId = selectedCategory ? Number(selectedCategory.value) : "";
+        categoryId = selectedCategory ? Number(selectedCategory.value) : null;
       }
 
       // Transform data to match backend expectations
       const transformedData = {
         productName: data.productName,
-        vendor: { id: Number(data.vendorId) },
-        productCategory: { id: Number(categoryId),categoryName: categoryName },
-        
-        description: data.description,
-        
+        productCategory: categoryId
+          ? { id: categoryId, categoryName: categoryName }
+          : { categoryName: categoryName }, // For new category
+        description: data.description || null,
         status: data.status,
-        
         remarks: data.remarks || null
       };
-
 
       onSubmit(transformedData);
 
@@ -375,8 +336,6 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
   const toggleStatus = () => {
     setValue('status', !watchStatus);
   };
-
-
 
   if (dataLoading) {
     return (
@@ -406,17 +365,9 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                 icon={<Package className="h-5 w-5 mr-2 text-green-600" />}
                 title="Basic Information"
               />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SelectField
-                  label="Vendor"
-                  name="vendorId"
-                  register={register}
-                  error={errors.vendorId}
-                  options={vendors}
-                  required
-                  placeholder="Select Vendor"
-                />
 
+              {/* First Row - Category Only (with conditional new category input beside) */}
+              <div className="mb-6">
                 <CategorySelectField
                   label="Category"
                   name="productCategoryId"
@@ -428,7 +379,10 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   watch={watch}
                   setValue={setValue}
                 />
+              </div>
 
+              {/* Second Row onwards - Rest of the form */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <InputField
                   label="Product Name"
                   name="productName"
@@ -437,11 +391,11 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   required
                   placeholder="Enter product name"
                 />
+
                 <StatusToggle
                   status={watchStatus}
                   onToggle={toggleStatus}
                 />
-                
 
                 <div className="md:col-span-2">
                   <TextareaField
@@ -449,17 +403,12 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                     name="description"
                     register={register}
                     error={errors.description}
-                    
                     placeholder="Enter detailed product description"
                   />
                 </div>
-
-                
               </div>
             </div>
 
-            {/* Warranty & Legal */}
-           
             {/* Remarks */}
             <TextareaField
               label="Remarks"
