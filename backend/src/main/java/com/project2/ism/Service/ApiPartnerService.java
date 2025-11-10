@@ -3,6 +3,7 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.ApiPartnerListDTO;
 import com.project2.ism.DTO.ApiPartnerFormDTO;
+import com.project2.ism.DTO.ApiPartnerProductsDTO;
 import com.project2.ism.DTO.ApiPartnerViewDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -388,52 +390,20 @@ public class ApiPartnerService {
                 .map(ApiPartnerWallet::getAvailableBalance)
                 .orElse(BigDecimal.ZERO); // if wallet row not present yet
     }
-//    public List<MerchantProductSummaryDTO> getProductsOfMerchant(Long merchantId) {
-//
-//        List<MerchantProductSummaryDTO> result = new ArrayList<>();
-//
-//        if (!belongsToFranchise) {
-//            // ✅ Case 1: Independent Merchant → use outward transactions
-//            List<OutwardTransactions> outwardList = outwardRepo.findByMerchantId(merchantId);
-//
-//            for (OutwardTransactions o : outwardList) {
-//                int totalQty = o.getQuantity();
-//
-//                result.add(new MerchantProductSummaryDTO(
-//                        o.getId(),
-//                        o.getProduct().getId(),
-//                        o.getProduct().getProductName(),
-//                        o.getProduct().getProductCode(),
-//                        o.getProduct().getProductCategory().getCategoryName(),
-//                        totalQty
-//                ));
-//            }
-//
-//        } else {
-//            // ✅ Case 2: Merchant under a Franchise → use product serial numbers
-//            List<ProductSerialNumbers> serials = serialRepo.findByMerchant_Id(merchantId);
-//
-//            // Group by product
-//            Map<Product, Long> grouped = serials.stream()
-//                    .collect(Collectors.groupingBy(ProductSerialNumbers::getProduct, Collectors.counting()));
-//
-//            for (Map.Entry<Product, Long> entry : grouped.entrySet()) {
-//                Product p = entry.getKey();
-//                long qty = entry.getValue();
-//
-//                result.add(new MerchantProductSummaryDTO(
-//
-//                        p.getId(),
-//                        p.getProductName(),
-//                        p.getProductCode(),
-//                        p.getProductCategory().getCategoryName(),
-//                        (int) qty
-//                ));
-//            }
-//        }
-//
-//        return result;
-//    }
+
+
+
+    public List<ApiPartnerProductsDTO> getProductsOfApiPartner(Long merchantId) {
+
+        List<ApiPartnerProductsDTO> result = new ArrayList<>();
+
+
+
+
+
+
+        return result;
+    }
 
 
     public List<ApiPartnerListDTO> getAllApiPartners() {

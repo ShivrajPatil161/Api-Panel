@@ -1,9 +1,6 @@
 package com.project2.ism.Controller;
 
-import com.project2.ism.DTO.Vendor.VendorFormDTO;
-import com.project2.ism.DTO.Vendor.VendorIDNameDTO;
-import com.project2.ism.DTO.Vendor.VendorResponseDTO;
-import com.project2.ism.DTO.Vendor.VendorStatsDTO;
+import com.project2.ism.DTO.Vendor.*;
 import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Service.VendorService;
 import jakarta.validation.Valid;
@@ -74,6 +71,10 @@ public class VendorController {
     @GetMapping("/active")
     public ResponseEntity<List<Vendor>> getActiveVendors() {
         return ResponseEntity.ok(vendorService.getAllActiveVendors());
+    }
+    @GetMapping("/products/{vendorId}")
+    public ResponseEntity<List<VendorProductDTO>> getProductsOfVendor(@PathVariable Long vendorId){
+        return ResponseEntity.ok(vendorService.getProductsOfVendor(vendorId));
     }
 }
 

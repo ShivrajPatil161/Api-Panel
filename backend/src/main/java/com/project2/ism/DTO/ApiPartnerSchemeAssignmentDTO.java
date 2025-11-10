@@ -2,16 +2,15 @@ package com.project2.ism.DTO;
 
 import java.time.LocalDate;
 
-public class CustomerSchemeAssignmentDTO {
+public class ApiPartnerSchemeAssignmentDTO {
 
     private Long id;
     private Long schemeId;
     private String schemeCode;       // Optional: for API readability
     private Long productId;
     private String productName;      // Optional
-    private String customerType;     // FRANCHISE / MERCHANT
-    private Long customerId;         // Either franchiseId or merchantId
-    private String customerName;     // Optional: franchise/merchant name
+    private Long apiPartnerId;         // Either franchiseId or merchantId
+    private String apiPartnerName;     // Optional: franchise/merchant name
     private LocalDate effectiveDate;
     private LocalDate expiryDate;
     private String remarks;
@@ -32,14 +31,21 @@ public class CustomerSchemeAssignmentDTO {
     public String getProductName() { return productName; }
     public void setProductName(String productName) { this.productName = productName; }
 
-    public String getCustomerType() { return customerType; }
-    public void setCustomerType(String customerType) { this.customerType = customerType; }
+    public Long getApiPartnerId() {
+        return apiPartnerId;
+    }
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public void setApiPartnerId(Long apiPartnerId) {
+        this.apiPartnerId = apiPartnerId;
+    }
 
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
+    public String getApiPartnerName() {
+        return apiPartnerName;
+    }
+
+    public void setApiPartnerName(String apiPartnerName) {
+        this.apiPartnerName = apiPartnerName;
+    }
 
     public LocalDate getEffectiveDate() { return effectiveDate; }
     public void setEffectiveDate(LocalDate effectiveDate) { this.effectiveDate = effectiveDate; }

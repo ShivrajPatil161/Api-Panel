@@ -1,9 +1,6 @@
 package com.project2.ism.Service;
 
-import com.project2.ism.DTO.Vendor.VendorFormDTO;
-import com.project2.ism.DTO.Vendor.VendorIDNameDTO;
-import com.project2.ism.DTO.Vendor.VendorResponseDTO;
-import com.project2.ism.DTO.Vendor.VendorStatsDTO;
+import com.project2.ism.DTO.Vendor.*;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
@@ -204,7 +201,7 @@ public class VendorService {
         return vendorRepository.findByStatusTrue();
     }
 
-    public ProductRepository getProductRepository() {
-        return productRepository;
+    public List<VendorProductDTO> getProductsOfVendor(Long vendorId){
+        return vendorRepository.findProductById(vendorId);
     }
 }

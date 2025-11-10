@@ -5,9 +5,9 @@ import java.util.List;
 public class SchemeGroupedResponseDTO {
     private String schemeCode;
     private String description;
-    private String customerType;
+
     private Double rentalByMonth;
-    private List<CustomerSchemeAssignmentDTO> assignments;
+    private List<ApiPartnerSchemeAssignmentDTO> assignments;
 
     public String getSchemeCode() {
         return schemeCode;
@@ -25,13 +25,7 @@ public class SchemeGroupedResponseDTO {
         this.description = description;
     }
 
-    public String getCustomerType() {
-        return customerType;
-    }
 
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
-    }
 
     public Double getRentalByMonth() {
         return rentalByMonth;
@@ -41,11 +35,11 @@ public class SchemeGroupedResponseDTO {
         this.rentalByMonth = rentalByMonth;
     }
 
-    public List<CustomerSchemeAssignmentDTO> getAssignments() {
+    public List<ApiPartnerSchemeAssignmentDTO> getAssignments() {
         return assignments;
     }
 
-    public void setAssignments(List<CustomerSchemeAssignmentDTO> assignments) {
+    public void setAssignments(List<ApiPartnerSchemeAssignmentDTO> assignments) {
         this.assignments = assignments;
     }
 }

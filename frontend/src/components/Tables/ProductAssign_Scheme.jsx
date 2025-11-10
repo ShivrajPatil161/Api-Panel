@@ -32,7 +32,7 @@ const ProductAssignment = () => {
     const fetchProductSchemeAssignment = async () => {
         try {
             setLoading(true)
-            const response = await api.get("/outward-schemes")
+            const response = await api.get("/partner-schemes")
             setSchemeGroups(response?.data || [])
 
             // Auto-expand groups that have assignments
@@ -118,7 +118,7 @@ const ProductAssignment = () => {
         },
         {
             accessorKey: 'schemeCode',
-            header: 'Scheme / Customer',
+            header: 'Scheme / Partner',
             cell: ({ row }) => {
                 if (row.original.type === 'scheme') {
                     return (
@@ -142,23 +142,7 @@ const ProductAssignment = () => {
                 )
             },
         },
-        {
-            accessorKey: 'customerType',
-            header: 'Customer Type',
-            cell: ({ row }) => {
-                if (row.original.type === 'scheme') {
-                    return <div></div>
-                }
-                return (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${row.original.customerType?.toLowerCase() === 'franchise'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-green-100 text-green-800'
-                        }`}>
-                        {row.original.customerType.toLowerCase() === 'franchise' ? 'Franchise' : 'Merchant'}
-                    </span>
-                )
-            },
-        },
+       
         {
             accessorKey: 'productName',
             header: 'Product',
@@ -406,10 +390,10 @@ const ProductAssignment = () => {
                     <PageHeader
                         icon={Merge}
                         iconColor="text-blue-600"
-                        title="Customer Scheme Assignments"
+                        title="Partner Scheme Assignments"
                         description={
                             <>
-                                Manage pricing scheme assignments for franchises and merchants
+                                Manage pricing scheme assignments for partners
                                 <br />
                                 <span className="text-sm text-gray-600">
                                     {schemeGroups.length} schemes • {totalAssignments} total assignments

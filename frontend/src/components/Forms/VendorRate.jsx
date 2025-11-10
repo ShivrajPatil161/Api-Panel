@@ -375,11 +375,11 @@ const VendorProductDetails = ({ register, errors, editData, control, setValue, w
   const fetchProductsByVendor = async (vendorId, preselectedProductId = null) => {
     try {
       setProductsLoading(true)
-      const response = await api.get(`/products/vendor/${vendorId}`)
+      const response = await api.get(`/vendors/products/${vendorId}`)
       const productOptions = response.data.map(product => ({
-        value: product.id.toString(),
+        value: product.productId.toString(),
         label: `${product.productCode} - ${product.productName}`,
-        id: product.id
+        id: product.productId
       }))
       setProducts(productOptions)
 

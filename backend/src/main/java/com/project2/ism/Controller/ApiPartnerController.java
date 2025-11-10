@@ -170,12 +170,12 @@ public class ApiPartnerController {
     }
 
 
-//    //settlement api .js uses this
-//    @GetMapping("/products/{id}")
-//    public ResponseEntity<?> merchantProducts(@PathVariable Long id){
-//        List<?> products = apiPartnerService.getProductsOfApiPartner(id);
-//        return ResponseEntity.ok(products);
-//    }
+    //settlement api .js uses this
+    @GetMapping("/products/{id}")
+    public ResponseEntity<?> merchantProducts(@PathVariable Long id){
+        List<?> products = apiPartnerService.getProductsOfApiPartner(id);
+        return ResponseEntity.ok(products);
+    }
 
 
 

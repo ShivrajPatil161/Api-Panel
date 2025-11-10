@@ -10,11 +10,11 @@ public class ApiPartnerStatsDTO {
     private Long productsAllocated;
  //   private BigDecimal walletBalance;
 
-    private List<ApiPartnerProductSummaryDTO> products;
+    private List<ApiPartnerProductsDTO> products;
 
     public ApiPartnerStatsDTO(Long merchantId, Long outwardTransactions,
                               Long productsAllocated, //BigDecimal walletBalance,
-                              List<ApiPartnerProductSummaryDTO> products) {
+                              List<ApiPartnerProductsDTO> products) {
         this.merchantId = merchantId;
         this.outwardTransactions = outwardTransactions;
         this.productsAllocated = productsAllocated;
@@ -64,11 +64,11 @@ public class ApiPartnerStatsDTO {
 //        this.walletBalance = walletBalance;
 //    }
 
-    public List<ApiPartnerProductSummaryDTO> getProducts() {
+    public List<ApiPartnerProductsDTO> getProducts() {
         return products;
     }
 
-    public void setProducts(List<ApiPartnerProductSummaryDTO> products) {
+    public void setProducts(List<ApiPartnerProductsDTO> products) {
         this.products = products;
     }
 }
