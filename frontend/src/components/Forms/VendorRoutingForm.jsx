@@ -8,18 +8,31 @@ import { useVendorQueries } from '../Hooks/useVendorQueries';
 
 // Zod schema
 const vendorRuleSchema = z.object({
-    vendorId: z.string().min(1, 'Vendor is required'),
-    vendorName: z.string(),
-    minAmount: z.string().min(1, 'Min amount required').refine(val => !isNaN(Number(val)) && Number(val) >= 0, 'Must be a valid number'),
-    maxAmount: z.string().min(1, 'Max amount required').refine(val => !isNaN(Number(val)) && Number(val) >= 0, 'Must be a valid number'),
-    dailyTransactionLimit: z.string().min(1, 'Transaction limit required').refine(val => !isNaN(Number(val)) && Number(val) > 0, 'Must be a valid number'),
-    dailyAmountLimit: z.string().min(1, 'Amount limit required').refine(val => !isNaN(Number(val)) && Number(val) >= 0, 'Must be a valid number'),
+    vendorId: z.coerce.number().min(1, 'Vendor is required'), // coerces "1" → 1
+    vendorName: z.string().optional(),
+    minAmount: z.coerce
+        .number()
+        .min(0, 'Min amount required')
+        .refine(val => !isNaN(val), 'Must be a valid number'),
+    maxAmount: z.coerce
+        .number()
+        .min(0, 'Max amount required')
+        .refine(val => !isNaN(val), 'Must be a valid number'),
+    dailyTransactionLimit: z.coerce
+        .number()
+        .min(1, 'Transaction limit required')
+        .refine(val => !isNaN(val), 'Must be a valid number'),
+    dailyAmountLimit: z.coerce
+        .number()
+        .min(0, 'Amount limit required')
+        .refine(val => !isNaN(val), 'Must be a valid number'),
 });
 
-const formSchema = z.object({
-    productId: z.string().min(1, 'Product is required'),
+export const formSchema = z.object({
+    productId: z.coerce.number().min(1, 'Product is required'),
     vendorRules: z.array(vendorRuleSchema).min(1, 'At least one vendor required'),
 });
+
 
 const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) => {
     const [selectedVendor, setSelectedVendor] = useState('');
