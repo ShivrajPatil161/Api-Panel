@@ -9,16 +9,12 @@ import api from '../../constants/API/axiosInstance';
 const vendorCredentialSchema = z.object({
   vendor: z.string().min(1, 'Vendor is required'),
   product: z.string().min(1, 'Product is required'),
-  token: z.string().optional(),
+  
   tokenUrlUat: z.string().min(1, 'Token URL UAT is required').url('Invalid URL format'),
   tokenUrlProd: z.string().min(1, 'Token URL Prod is required').url('Invalid URL format'),
   baseUrlUat: z.string().min(1, 'Base URL UAT is required').url('Invalid URL format'),
   baseUrlProd: z.string().min(1, 'Base URL Prod is required').url('Invalid URL format'),
-  clientId: z.string().optional(),
-  saltKey: z.string().optional(),
-  clientSecret: z.string().optional(),
-  username: z.string().optional(),
-  password: z.string().optional(),
+  
 
   isActive: z.boolean()
 });
@@ -191,16 +187,12 @@ const VendorCredentialForm = ({
     defaultValues: initialData || {
       vendor: '',
       product: '',
-      token: '',
+      
       tokenUrlUat: '',
       tokenUrlProd: '',
       baseUrlUat: '',
       baseUrlProd: '',
-      clientId: '',
-      saltKey: '',
-      clientSecret: '',
-      username: '',
-      password: '',
+      callbackUrl:'',
       isActive: true,
     },
   })
@@ -333,60 +325,7 @@ const VendorCredentialForm = ({
           </GridLayout>
         </FormSection>
 
-        {/* Authentication Info */}
-        <FormSection title="Authentication Information" icon={Shield}>
-          <div className="space-y-6">
-            <GridLayout columns={2}>
-              <FormInput
-                label="Token"
-                name="token"
-                control={control}
-                error={errors.token}
-                placeholder="Enter authentication token"
-              />
-              <FormInput
-                label="Salt Key"
-                name="saltKey"
-                control={control}
-                error={errors.saltKey}
-                placeholder="Enter salt key"
-              />
-            </GridLayout>
-
-            <GridLayout columns={2}>
-              <FormInput
-                label="Client ID"
-                name="clientId"
-                control={control}
-                error={errors.clientId}
-                placeholder="Enter client ID"
-              />
-              <FormInput
-                label="Client Secret"
-                name="clientSecret"
-                control={control}
-                error={errors.clientSecret}
-                type="password"
-                placeholder="Enter client secret"
-              />
-              <FormInput
-                label="Username"
-                name="username"
-                control={control}
-                error={errors.username}
-                placeholder="Enter username"
-              />
-              <FormInput
-                label="Password"
-                name="password"
-                control={control}
-                error={errors.password}
-                type="password"
-                placeholder="Enter password"
-              />
-            </GridLayout>
-          </div>
-        </FormSection>
+      
 
         {/* URLs */}
         <FormSection title="UAT Environment URLs" icon={Globe}>
@@ -441,6 +380,14 @@ const VendorCredentialForm = ({
               activeLabel="Active"
               inactiveLabel="Inactive"
               activeColor="green"
+            />
+            <FormInput
+              label="Callback url"
+              name="callbackUrl"
+              control={control}
+              error={errors.callbackUrl}
+              
+              placeholder="https://callbackUrl/"
             />
           </GridLayout>
         </FormSection>
