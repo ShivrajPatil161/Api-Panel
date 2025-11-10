@@ -7,7 +7,7 @@ const vendorApi = {
       return response.data;
     } catch (error) {
       console.error('Error', error);
-      
+      throw error; // Add this to properly propagate errors
     }
   },
 
@@ -18,7 +18,7 @@ const vendorApi = {
       return response.data;
     } catch (error) {
       console.error('Failed to create vendor:', error);
-      
+      throw error; // Add this to properly propagate errors
     }
   },
 
@@ -29,7 +29,7 @@ const vendorApi = {
       return response.data;
     } catch (error) {
       console.error('Failed to update vendor:', error);
-      
+      throw error; // Add this to properly propagate errors
     }
   },
 
@@ -40,7 +40,7 @@ const vendorApi = {
       return true;
     } catch (error) {
       console.error('Failed to delete vendor:', error);
-     
+     throw error; // Add this to properly propagate errors
     }
   },
 
@@ -51,7 +51,7 @@ const vendorApi = {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch vendor:', error);
-      
+      throw error; // Add this to properly propagate errors
     }
   }
 };

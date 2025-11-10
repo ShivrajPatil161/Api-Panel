@@ -6,22 +6,6 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import { useProductQueries } from '../Hooks/useProductsQueries';
 import { useVendorQueries } from '../Hooks/useVendorQueries';
 
-// Placeholder data
-const products = [
-    { id: 'p1', name: 'UPI QR Code Scanner' },
-    { id: 'p2', name: 'POS Machine' },
-    { id: 'p3', name: 'Payment Gateway' },
-    { id: 'p4', name: 'Credit Card Reader' },
-];
-
-const vendors = [
-    { id: 'v1', name: 'RazorPay' },
-    { id: 'v2', name: 'PayU' },
-    { id: 'v3', name: 'CashFree' },
-    { id: 'v4', name: 'BillDesk' },
-    { id: 'v5', name: 'PhonePe Business' },
-];
-
 // Zod schema
 const vendorRuleSchema = z.object({
     vendorId: z.string().min(1, 'Vendor is required'),
@@ -39,24 +23,13 @@ const formSchema = z.object({
 
 const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) => {
     const [selectedVendor, setSelectedVendor] = useState('');
-    
+
     const { useAllProducts } = useProductQueries();
     const { useAllVendors } = useVendorQueries();
     const { data: productsData, isLoading: productsLoading, isError: productsError } = useAllProducts();
-    const products = productsData?.content ?? [];
-
     const { data: vendorsData, isLoading: vendorsLoading, isError: vendorsError } = useAllVendors();
-    const vendors = vendorsData ?? [];
 
-    // Render logic
-    if (productsLoading || vendorsLoading) {
-        return <div>Loading …</div>;
-    }
-    if (productsError || vendorsError) {
-        return <div>Error loading data</div>;
-    }
-    
-
+    // Initialize form hooks BEFORE any conditional returns
     const { register, handleSubmit, control, watch, formState: { errors } } = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: defaultValues || {
@@ -72,19 +45,46 @@ const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) 
 
     const vendorRules = watch('vendorRules');
 
+    // Early returns AFTER hooks
     if (!isOpen) return null;
+
+    if (productsLoading || vendorsLoading) {
+        return (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl shadow-2xl p-8">
+                    <div className="text-center">Loading…</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (productsError || vendorsError) {
+        return (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl shadow-2xl p-8">
+                    <div className="text-center text-red-500">Error loading data</div>
+                    <button onClick={onClose} className="mt-4 px-4 py-2 bg-gray-200 rounded">Close</button>
+                </div>
+            </div>
+        );
+    }
+
+    const products = productsData?.content ?? [];
+    const vendors = vendorsData ?? [];
 
     const handleAddVendor = () => {
         if (!selectedVendor) return;
 
+        // Fix: Convert to string for comparison
         const vendorExists = fields.find(field => field.vendorId === selectedVendor);
         if (vendorExists) {
             alert('Vendor already added!');
             return;
         }
-       
-        const vendor = vendors.find(v => v.id === Number(selectedVendor));
-      
+
+        // Fix: Compare with string version of id
+        const vendor = vendors.find(v => String(v.id) === selectedVendor);
+
         append({
             vendorId: selectedVendor,
             vendorName: vendor?.name || '',
@@ -96,11 +96,13 @@ const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) 
         setSelectedVendor('');
     };
 
+    // Fix: Convert vendor id to string for comparison
     const availableVendors = vendors.filter(v =>
-        !fields.find(field => field.vendorId === v.id)
+        !fields.find(field => field.vendorId === String(v.id))
     );
 
     const onFormSubmit = (data) => {
+        console.log('Form submitted:', data); // Debug log
         onSubmit(data);
         onClose();
     };
@@ -135,7 +137,7 @@ const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) 
                             >
                                 <option value="">Select Product</option>
                                 {products.map(product => (
-                                    <option key={product.id} value={product.id}>{product.productName} | {product.productCode }</option>
+                                    <option key={product.id} value={product.id}>{product.productName} | {product.productCode}</option>
                                 ))}
                             </select>
                             {errors.productId && (
@@ -154,11 +156,11 @@ const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) 
                                     <select
                                         value={selectedVendor}
                                         onChange={(e) => setSelectedVendor(e.target.value)}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm   bg-white transition-all min-w-[200px]"
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white transition-all min-w-[200px]"
                                     >
                                         <option value="">Select Vendor</option>
                                         {availableVendors.map(vendor => (
-                                            <option key={vendor.id} value={vendor.id}>{vendor.name}</option>
+                                            <option key={vendor.id} value={String(vendor.id)}>{vendor.name}</option>
                                         ))}
                                     </select>
                                     <button
@@ -293,4 +295,4 @@ const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) 
     );
 };
 
-export default VendorRoutingForm
+export default VendorRoutingForm;

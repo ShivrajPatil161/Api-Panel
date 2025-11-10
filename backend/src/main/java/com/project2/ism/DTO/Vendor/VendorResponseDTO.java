@@ -1,42 +1,39 @@
 package com.project2.ism.DTO.Vendor;
 
+import com.project2.ism.Model.ContactPerson;
+
 import java.time.LocalDate;
 
-public class VendorFormDTO {
-    private Long productId;
+public class VendorResponseDTO {
+    private Long id;
     private String name;
     private String bankType;
-    private Boolean status;
-
-    private String contactPersonName;
-    private String contactNumber;
-    private String contactEmail;
-
+    private Long productId;        // <-- incoming productId
+    private ContactPerson contactPerson;
     private String address;
     private String city;
     private String state;
     private String pinCode;
-
     private String gstNumber;
     private String pan;
-
     private LocalDate agreementStartDate;
     private LocalDate agreementEndDate;
     private Integer creditPeriodDays;
     private String paymentTerms;
-    private String remark;
+    private Boolean status;
+    private String remarks;
 
-    public VendorFormDTO() {
+    // getters / setters ...
+
+    public VendorResponseDTO() {
     }
 
-    public VendorFormDTO(Long productId, String name, String bankType, Boolean status, String contactPersonName, String contactNumber, String contactEmail, String address, String city, String state, String pinCOde, String gstNumber, String pan, LocalDate agreementStartDate, LocalDate agreementEndDate, Integer creditPeriodDays, String paymentTerms, String remark) {
-        this.productId = productId;
+    public VendorResponseDTO(Long id,String name, String bankType, Long productId, ContactPerson contactPerson, String address, String city, String state, String pinCode, String gstNumber, String pan, LocalDate agreementStartDate, LocalDate agreementEndDate, Integer creditPeriodDays, String paymentTerms, Boolean status, String remarks) {
+        this.id = id;
         this.name = name;
         this.bankType = bankType;
-        this.status = status;
-        this.contactPersonName = contactPersonName;
-        this.contactNumber = contactNumber;
-        this.contactEmail = contactEmail;
+        this.productId = productId;
+        this.contactPerson = contactPerson;
         this.address = address;
         this.city = city;
         this.state = state;
@@ -47,15 +44,16 @@ public class VendorFormDTO {
         this.agreementEndDate = agreementEndDate;
         this.creditPeriodDays = creditPeriodDays;
         this.paymentTerms = paymentTerms;
-        this.remark = remark;
+        this.status = status;
+        this.remarks = remarks;
     }
 
-    public Long getProductId() {
-        return productId;
+    public Long getId() {
+        return id;
     }
 
-    public void setProductId(Long productId) {
-        this.productId = productId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -74,36 +72,20 @@ public class VendorFormDTO {
         this.bankType = bankType;
     }
 
-    public Boolean getStatus() {
-        return status;
+    public Long getProductId() {
+        return productId;
     }
 
-    public void setStatus(Boolean status) {
-        this.status = status;
+    public void setProductId(Long productId) {
+        this.productId = productId;
     }
 
-    public String getContactPersonName() {
-        return contactPersonName;
+    public ContactPerson getContactPerson() {
+        return contactPerson;
     }
 
-    public void setContactPersonName(String contactPersonName) {
-        this.contactPersonName = contactPersonName;
-    }
-
-    public String getContactNumber() {
-        return contactNumber;
-    }
-
-    public void setContactNumber(String contactNumber) {
-        this.contactNumber = contactNumber;
-    }
-
-    public String getContactEmail() {
-        return contactEmail;
-    }
-
-    public void setContactEmail(String contactEmail) {
-        this.contactEmail = contactEmail;
+    public void setContactPerson(ContactPerson contactPerson) {
+        this.contactPerson = contactPerson;
     }
 
     public String getAddress() {
@@ -134,8 +116,8 @@ public class VendorFormDTO {
         return pinCode;
     }
 
-    public void setPinCode(String pinCOde) {
-        this.pinCode = pinCOde;
+    public void setPinCode(String pinCode) {
+        this.pinCode = pinCode;
     }
 
     public String getGstNumber() {
@@ -186,11 +168,19 @@ public class VendorFormDTO {
         this.paymentTerms = paymentTerms;
     }
 
-    public String getRemark() {
-        return remark;
+    public Boolean getStatus() {
+        return status;
     }
 
-    public void setRemark(String remark) {
-        this.remark = remark;
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
     }
 }

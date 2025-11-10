@@ -2,6 +2,7 @@ package com.project2.ism.Service;
 
 import com.project2.ism.DTO.Vendor.VendorFormDTO;
 import com.project2.ism.DTO.Vendor.VendorIDNameDTO;
+import com.project2.ism.DTO.Vendor.VendorResponseDTO;
 import com.project2.ism.DTO.Vendor.VendorStatsDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class VendorService {
@@ -37,7 +39,7 @@ public class VendorService {
     }
 
     // Create or Save Vendor
-    public VendorFormDTO createVendor(VendorFormDTO vendorDto) {
+    public VendorResponseDTO createVendor(VendorFormDTO vendorDto) {
         Vendor vendor = convertToEntity(vendorDto);
         if (vendorRepository.existsByNameIgnoreCase(vendor.getName())) {
             throw new DuplicateResourceException("Vendor name already exists: " + vendor.getName());
@@ -51,7 +53,7 @@ public class VendorService {
         Vendor vendor = new Vendor();
 
         // Set basic info
-        vendor.setName(dto.getVendorName());
+        vendor.setName(dto.getName());
         vendor.setBankType(dto.getBankType());
         vendor.setStatus(dto.getStatus());
 
@@ -84,7 +86,7 @@ public class VendorService {
         // Agreement and terms
         vendor.setAgreementStartDate(dto.getAgreementStartDate());
         vendor.setAgreementEndDate(dto.getAgreementEndDate());
-        vendor.setCreditPeriodDays(dto.getCreditPeriod());
+        vendor.setCreditPeriodDays(dto.getCreditPeriodDays());
         vendor.setPaymentTerms(dto.getPaymentTerms());
         vendor.setRemarks(dto.getRemark());
 
@@ -92,54 +94,51 @@ public class VendorService {
     }
 
     // =============== Convert Entity -> DTO ===============
-    private VendorFormDTO mapToDTO(Vendor vendor) {
-        VendorFormDTO dto = new VendorFormDTO();
+    private VendorResponseDTO mapToDTO(Vendor vendor) {
+        VendorResponseDTO dto = new VendorResponseDTO();
 
-        dto.setVendorName(vendor.getName());
+        dto.setId(vendor.getId());
+        dto.setName(vendor.getName());
         dto.setBankType(vendor.getBankType());
         dto.setStatus(vendor.getStatus());
 
-        // Linked product
         if (vendor.getProduct() != null) {
             dto.setProductId(vendor.getProduct().getId());
         }
 
-        // Contact person
+        // ✅ Directly set ContactPerson object
         if (vendor.getContactPerson() != null) {
-            dto.setContactPersonName(vendor.getContactPerson().getName());
-            dto.setContactNumber(vendor.getContactPerson().getPhoneNumber());
-            dto.setContactEmail(vendor.getContactPerson().getEmail());
+            dto.setContactPerson(vendor.getContactPerson());
         }
 
-        // Address
         dto.setAddress(vendor.getAddress());
         dto.setCity(vendor.getCity());
         dto.setState(vendor.getState());
         dto.setPinCode(vendor.getPinCode());
-
-        // Legal info
         dto.setGstNumber(vendor.getGstNumber());
         dto.setPan(vendor.getPan());
-
-        // Agreement terms
         dto.setAgreementStartDate(vendor.getAgreementStartDate());
         dto.setAgreementEndDate(vendor.getAgreementEndDate());
-        dto.setCreditPeriod(vendor.getCreditPeriodDays());
+        dto.setCreditPeriodDays(vendor.getCreditPeriodDays());
         dto.setPaymentTerms(vendor.getPaymentTerms());
-        dto.setRemark(vendor.getRemarks());
+        dto.setRemarks(vendor.getRemarks()); // ✅ note: use correct getter name `getRemarks()`
 
         return dto;
     }
 
-    public VendorRatesRepository getVendorRatesRepository() {
-        return vendorRatesRepository;
-    }
+
 
 
 
     // Get all vendors
-    public List<Vendor> getAllVendors() {
-        return vendorRepository.findAll();
+    public List<VendorResponseDTO> getAllVendors() {
+        List<Vendor> vendors =  vendorRepository.findAll();
+
+        return vendors.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+
+
     }
 
     // Get vendor by ID with error handling
