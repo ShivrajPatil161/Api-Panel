@@ -1,5 +1,5 @@
 // Form Input Components
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import {
   ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { useProductQueries } from '../Hooks/useProductsQueries';
+import FormShimmer from '../Shimmer/FormShimmer';
 
 // Reusable Input Component
 export const FormInput = ({  label, name,  register,  error,  required = false,  type = "text", placeholder = "",  maxLength,  style, ...props}) => (
@@ -247,6 +248,16 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
   
 
   const products = data?.content || []
+
+  const defaultFormValues = useMemo(() => {
+    if (!initialData) return DEFAULT_VALUES;
+
+    return {
+      ...initialData,
+      productId: initialData.productId || '',
+    };
+  }, [initialData]);
+
   const {
     register,
     handleSubmit,
@@ -255,12 +266,7 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
     formState: { errors, isSubmitting }
   } = useForm({
     resolver: zodResolver(vendorSchema),
-    defaultValues: initialData
-      ? {
-        ...initialData,
-        productId: initialData.product?.id || '',
-      }
-      : DEFAULT_VALUES,
+    defaultValues: defaultFormValues,
   });
 
 
@@ -271,8 +277,12 @@ const VendorForm = ({ onSubmit, onCancel, initialData = null, isEdit = false }) 
     setValue('status', !watchStatus);
   };
 
+
+  if(productsLoading) return <FormShimmer />
+
   return (
     <Modal
+      key={defaultFormValues.productId || 'new'}
       title={isEdit ? 'Edit Vendor' : 'Add New Vendor'}
       subtitle={isEdit ? 'Update vendor information' : 'Register a new vendor in the system'}
       onClose={onCancel}

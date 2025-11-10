@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, lazy } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -24,6 +24,7 @@ import PageHeader from '../UI/PageHeader';
 import TableHeader from '../UI/TableHeader';
 import Table from '../UI/Table';
 import Pagination from '../UI/Pagination';
+import FormShimmer from '../Shimmer/FormShimmer';
 
 
 const VendorListPage = () => {
@@ -372,12 +373,14 @@ const VendorListPage = () => {
 
       {/* Form Modal */}
       {showForm && (
-        <VendorForm
-          onSubmit={handleFormSubmit}
-          onCancel={handleFormCancel}
-          initialData={editingVendor}
-          isEdit={!!editingVendor}
-        />
+        <Suspense fallback={<FormShimmer />}>
+          <VendorForm
+            onSubmit={handleFormSubmit}
+            onCancel={handleFormCancel}
+            initialData={editingVendor}
+            isEdit={!!editingVendor}
+          />
+        </Suspense>
       )}
 
       {/* View Modal */}
