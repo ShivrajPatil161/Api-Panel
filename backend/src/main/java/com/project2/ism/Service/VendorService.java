@@ -104,6 +104,7 @@ public class VendorService {
 
         if (vendor.getProduct() != null) {
             dto.setProductId(vendor.getProduct().getId());
+            dto.setProductCode(vendor.getProduct().getProductCode());
         }
 
         // ✅ Directly set ContactPerson object

@@ -11,10 +11,12 @@ const vendorApi = {
     }
   },
 
+  
   // Create new vendor
   async createVendor(vendorData) {
     try {
-      const response = await api.post('/vendors', vendorData);
+      const payload = transformVendorData(vendorData)
+      const response = await api.post('/vendors', payload);
       return response.data;
     } catch (error) {
       console.error('Failed to create vendor:', error);
@@ -57,3 +59,32 @@ const vendorApi = {
 };
 
 export default vendorApi;
+
+
+const transformVendorData = (formData) => {
+  return {
+    productId: formData.productId || null,
+    name: formData.name,
+    bankType: formData.bankType,
+    status: formData.status ?? true,
+
+    contactPersonName: formData.contactPersonName || formData.contactPerson?.name || '',
+    contactNumber: formData.contactNumber || formData.contactPerson?.phoneNumber || '',
+    contactEmail: formData.contactEmail || formData.contactPerson?.email || '',
+
+    address: formData.address,
+    city: formData.city,
+    state: formData.state,
+    pinCode: formData.pinCode,
+
+    gstNumber: formData.gstNumber,
+    pan: formData.pan,
+
+    agreementStartDate: formData.agreementStartDate,
+    agreementEndDate: formData.agreementEndDate,
+    creditPeriodDays: formData.creditPeriodDays,
+    paymentTerms: formData.paymentTerms,
+
+    remark: formData.remarks || formData.remark || ''
+  };
+};

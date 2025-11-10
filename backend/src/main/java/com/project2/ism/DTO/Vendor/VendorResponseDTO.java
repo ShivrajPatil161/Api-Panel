@@ -8,7 +8,8 @@ public class VendorResponseDTO {
     private Long id;
     private String name;
     private String bankType;
-    private Long productId;        // <-- incoming productId
+    private Long productId;
+    private String productCode;// <-- incoming productId
     private ContactPerson contactPerson;
     private String address;
     private String city;
@@ -28,11 +29,12 @@ public class VendorResponseDTO {
     public VendorResponseDTO() {
     }
 
-    public VendorResponseDTO(Long id,String name, String bankType, Long productId, ContactPerson contactPerson, String address, String city, String state, String pinCode, String gstNumber, String pan, LocalDate agreementStartDate, LocalDate agreementEndDate, Integer creditPeriodDays, String paymentTerms, Boolean status, String remarks) {
+    public VendorResponseDTO(Long id,String name, String bankType, Long productId,String productCode, ContactPerson contactPerson, String address, String city, String state, String pinCode, String gstNumber, String pan, LocalDate agreementStartDate, LocalDate agreementEndDate, Integer creditPeriodDays, String paymentTerms, Boolean status, String remarks) {
         this.id = id;
         this.name = name;
         this.bankType = bankType;
         this.productId = productId;
+        this.productCode = productCode;
         this.contactPerson = contactPerson;
         this.address = address;
         this.city = city;
@@ -78,6 +80,14 @@ public class VendorResponseDTO {
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
     }
 
     public ContactPerson getContactPerson() {

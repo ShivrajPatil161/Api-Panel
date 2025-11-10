@@ -83,19 +83,30 @@ const VendorViewModal = ({ vendor, isOpen, onClose }) => {
                                 label="Vendor ID"
                                 value={`#${vendor.id}`}
                             />
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
-                                <StatusBadge status={vendor.status} />
-                            </div>
+                           
+                            
+                            <InfoField
+                                label="Product ID"
+                                value={`#${vendor.productId}`}
+                            />
                             <InfoField
                                 label="Vendor Name"
                                 value={vendor.name}
-                                className="md:col-span-2"
+                                
+                            />
+                            <InfoField
+                                label="Product Code"
+                                value={vendor.productCode}
+                                
                             />
                             <InfoField
                                 label="Bank Type"
                                 value={vendor.bankType}
                             />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                                <StatusBadge status={vendor.status} />
+                            </div>
                         </div>
                     </InfoSection>
 
