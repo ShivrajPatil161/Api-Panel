@@ -1,6 +1,7 @@
 package com.project2.ism.Model.Vendor;
 
 import com.project2.ism.Model.ContactPerson;
+import com.project2.ism.Model.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +30,11 @@ public class Vendor {
     @NotNull(message = "status is required")
     @Column(nullable = false)
     private Boolean status;
+
+    @NotNull(message = "Please select a Product")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
     // ========== Contact Person Information ==========
 
@@ -214,4 +220,11 @@ public class Vendor {
         this.paymentTerms = paymentTerms;
     }
 
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
 }

@@ -1,5 +1,6 @@
 package com.project2.ism.Controller;
 
+import com.project2.ism.DTO.Vendor.VendorFormDTO;
 import com.project2.ism.DTO.Vendor.VendorIDNameDTO;
 import com.project2.ism.DTO.Vendor.VendorStatsDTO;
 import com.project2.ism.Model.Vendor.Vendor;
@@ -25,8 +26,8 @@ public class VendorController {
 
     // 🔹 Create Vendor
     @PostMapping
-    public ResponseEntity<?> createVendor(@Valid @RequestBody Vendor vendor) {
-            Vendor savedVendor = vendorService.createVendor(vendor);
+    public ResponseEntity<?> createVendor(@Valid @RequestBody VendorFormDTO vendor) {
+            VendorFormDTO savedVendor = vendorService.createVendor(vendor);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedVendor);
     }
 
