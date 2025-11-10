@@ -1,8 +1,8 @@
 import { lazy } from 'react';
+import TableShimmer from '../../components/Shimmer/TableShimmer.jsx';
 
 const Dashboard = lazy(() => import('../../components/DashBoards/Dashborad.jsx'));
 const CustomerProductsList = lazy(() => import('../../components/Tables/CustomerProducts/CustomerProductsList.jsx'));
-const ProductOutward = lazy(() => import('../../components/Tables/ProductOutward.jsx'));
 const Payout = lazy(() => import('../../components/Payout/Payout.jsx'));
 const CreditCardBillPayment = lazy(() => import('../../components/Payout/CreditCardBillPayment.jsx'));
 const MTransReportDashboard = lazy(() => import('../../components/Reports/MerchantTransReport/MTransReportDashboard.jsx'));
@@ -20,7 +20,7 @@ export const merchantRoutes = [
     children: [
       {
         path: 'inward-products',
-        element: <ProductOutward />
+        element: <TableShimmer />
       }
     ]
   },

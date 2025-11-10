@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { lazy, useState } from 'react'
 import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit, Trash2, Plus } from 'lucide-react'
-import VendorRoutingForm from '../Forms/VendorRoutingForm'
+const VendorRoutingForm = lazy(() => import('../Forms/VendorRoutingForm')) 
 
 // Dummy data
 const dummyRoutings = [
@@ -51,8 +51,7 @@ const dummyRoutings = [
 
 const VendorRoutingTable = () => {
     const [data, setData] = useState(dummyRoutings)
-    const [addModal, setAddModal] = useState(false)
-    const [editModal, setEditModal] = useState(false)
+    const [openForm, setOpenForm] = useState(false)
     const [selectedRouting, setSelectedRouting] = useState(null)
 
     const columns = [
@@ -151,12 +150,12 @@ const VendorRoutingTable = () => {
     })
 
     const handleAddVendorRouting = () => {
-        setAddModal(!addModal)
+        setOpenForm(true)
     }
 
     const handleEdit = (routing) => {
         setSelectedRouting(routing)
-        setEditModal(true)
+        setOpenForm(true)
     }
 
     const handleDelete = (id) => {
@@ -166,8 +165,7 @@ const VendorRoutingTable = () => {
     }
 
     const handleClose = () => {
-        setAddModal(false)
-        setEditModal(false)
+        setOpenForm(false)
         setSelectedRouting(null)
     }
 
@@ -214,7 +212,7 @@ const VendorRoutingTable = () => {
                             {table.getRowModel().rows.map(row => (
                                 <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                                     {row.getVisibleCells().map(cell => (
-                                        <td key={cell.id} className="px-4 py-3 text-sm">
+                                        <td key={cell.vendorName} className="px-4 py-3 text-sm">
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </td>
                                     ))}
@@ -282,15 +280,11 @@ const VendorRoutingTable = () => {
                 </div>
             </div>
 
-            <VendorRoutingForm
-                isOpen={addModal}
-                onClose={handleClose}
-                onSubmit={handleSubmit}
-            />
+            
 
-            {editModal && (
+            {openForm && (
                 <VendorRoutingForm
-                    isOpen={editModal}
+                    isOpen={openForm}
                     onClose={handleClose}
                     onSubmit={handleSubmit}
                     defaultValues={selectedRouting}
