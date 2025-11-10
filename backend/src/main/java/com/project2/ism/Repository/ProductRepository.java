@@ -14,6 +14,7 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
+//    boolean existsByNameIgnoreCase(Product product);
     /**
      * Find product by product code
      */

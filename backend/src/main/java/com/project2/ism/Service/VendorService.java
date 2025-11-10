@@ -1,8 +1,11 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.DTO.Vendor.VendorFormDTO;
 import com.project2.ism.DTO.Vendor.VendorIDNameDTO;
 import com.project2.ism.DTO.Vendor.VendorStatsDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
+import com.project2.ism.Exception.ResourceNotFoundException;
+import com.project2.ism.Model.ContactPerson;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Repository.ProductRepository;
@@ -10,6 +13,7 @@ import com.project2.ism.Repository.VendorRatesRepository;
 import com.project2.ism.Repository.VendorRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -25,6 +29,7 @@ public class VendorService {
 
     private final ProductRepository productRepository;
 
+    @Autowired
     public VendorService(VendorRepository vendorRepository, VendorRatesRepository vendorRatesRepository, ProductRepository productRepository) {
         this.vendorRepository = vendorRepository;
         this.vendorRatesRepository = vendorRatesRepository;
@@ -32,11 +37,105 @@ public class VendorService {
     }
 
     // Create or Save Vendor
-    public Vendor createVendor(@Valid Vendor vendor) {
+    public VendorFormDTO createVendor(VendorFormDTO vendorDto) {
+        Vendor vendor = convertToEntity(vendorDto);
         if (vendorRepository.existsByNameIgnoreCase(vendor.getName())) {
             throw new DuplicateResourceException("Vendor name already exists: " + vendor.getName());
-        }        return vendorRepository.save(vendor);
+        }
+        Vendor savedVendor =  vendorRepository.save(vendor);
+
+        return mapToDTO(savedVendor);
     }
+
+    private Vendor convertToEntity(VendorFormDTO dto) {
+        Vendor vendor = new Vendor();
+
+        // Set basic info
+        vendor.setName(dto.getVendorName());
+        vendor.setBankType(dto.getBankType());
+        vendor.setStatus(dto.getStatus());
+
+        // Handle product relation
+        if (dto.getProductId() != null) {
+            Product product = productRepository.findById(dto.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product", dto.getProductId()));
+            vendor.setProduct(product);
+        } else {
+            throw new IllegalArgumentException("Product ID is required for Vendor");
+        }
+
+        // Handle contact person
+        ContactPerson contactPerson = new ContactPerson();
+        contactPerson.setName(dto.getContactPersonName());
+        contactPerson.setPhoneNumber(dto.getContactNumber());
+        contactPerson.setEmail(dto.getContactEmail());
+        vendor.setContactPerson(contactPerson);
+
+        // Address
+        vendor.setAddress(dto.getAddress());
+        vendor.setCity(dto.getCity());
+        vendor.setState(dto.getState());
+        vendor.setPinCode(dto.getPinCode());
+
+        // Legal info
+        vendor.setGstNumber(dto.getGstNumber());
+        vendor.setPan(dto.getPan());
+
+        // Agreement and terms
+        vendor.setAgreementStartDate(dto.getAgreementStartDate());
+        vendor.setAgreementEndDate(dto.getAgreementEndDate());
+        vendor.setCreditPeriodDays(dto.getCreditPeriod());
+        vendor.setPaymentTerms(dto.getPaymentTerms());
+        vendor.setRemarks(dto.getRemark());
+
+        return vendor;
+    }
+
+    // =============== Convert Entity -> DTO ===============
+    private VendorFormDTO mapToDTO(Vendor vendor) {
+        VendorFormDTO dto = new VendorFormDTO();
+
+        dto.setVendorName(vendor.getName());
+        dto.setBankType(vendor.getBankType());
+        dto.setStatus(vendor.getStatus());
+
+        // Linked product
+        if (vendor.getProduct() != null) {
+            dto.setProductId(vendor.getProduct().getId());
+        }
+
+        // Contact person
+        if (vendor.getContactPerson() != null) {
+            dto.setContactPersonName(vendor.getContactPerson().getName());
+            dto.setContactNumber(vendor.getContactPerson().getPhoneNumber());
+            dto.setContactEmail(vendor.getContactPerson().getEmail());
+        }
+
+        // Address
+        dto.setAddress(vendor.getAddress());
+        dto.setCity(vendor.getCity());
+        dto.setState(vendor.getState());
+        dto.setPinCode(vendor.getPinCode());
+
+        // Legal info
+        dto.setGstNumber(vendor.getGstNumber());
+        dto.setPan(vendor.getPan());
+
+        // Agreement terms
+        dto.setAgreementStartDate(vendor.getAgreementStartDate());
+        dto.setAgreementEndDate(vendor.getAgreementEndDate());
+        dto.setCreditPeriod(vendor.getCreditPeriodDays());
+        dto.setPaymentTerms(vendor.getPaymentTerms());
+        dto.setRemark(vendor.getRemarks());
+
+        return dto;
+    }
+
+    public VendorRatesRepository getVendorRatesRepository() {
+        return vendorRatesRepository;
+    }
+
+
 
     // Get all vendors
     public List<Vendor> getAllVendors() {
@@ -60,7 +159,6 @@ public class VendorService {
         }
 
         updatedVendor.setId(existingVendor.getId());// ensure ID consistency
-
         return vendorRepository.save(updatedVendor);
     }
 
@@ -106,4 +204,7 @@ public class VendorService {
         return vendorRepository.findByStatusTrue();
     }
 
+    public ProductRepository getProductRepository() {
+        return productRepository;
+    }
 }
