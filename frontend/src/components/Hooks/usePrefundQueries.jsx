@@ -16,6 +16,7 @@ export const usePrefundQueries = () => {
         useQuery({
             queryKey: ["myPrefundRequests", { page, size }],
             queryFn: getMyRequests,
+            staleTime: 5 * 60 * 1000,
             keepPreviousData: true,
             refetchOnWindowFocus: false,
         });
@@ -25,6 +26,7 @@ export const usePrefundQueries = () => {
         useQuery({
             queryKey: ["allPrefundRequests", { page, size }],
             queryFn: getAllRequests,
+            staleTime: 5 * 60 * 1000,
             keepPreviousData: true,
             refetchOnWindowFocus: false,
         });
@@ -34,6 +36,7 @@ export const usePrefundQueries = () => {
         useQuery({
             queryKey: ["pendingPrefundRequests", { page, size }],
             queryFn: getPendingRequests,
+            staleTime: 5 * 60 * 1000,
             keepPreviousData: true,
             refetchOnWindowFocus: false,
         });

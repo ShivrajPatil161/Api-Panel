@@ -6,9 +6,8 @@ const vendorApi = {
       const response = await api.get('/vendors');
       return response.data;
     } catch (error) {
-      console.warn('Backend unavailable, using dummy data:', error);
-      // Fallback to dummy data if backend is unavailable
-      throw new Error('BACKEND_UNAVAILABLE');
+      console.error('Error', error);
+      
     }
   },
 
@@ -19,7 +18,7 @@ const vendorApi = {
       return response.data;
     } catch (error) {
       console.error('Failed to create vendor:', error);
-      throw new Error('BACKEND_UNAVAILABLE');
+      
     }
   },
 
@@ -30,7 +29,7 @@ const vendorApi = {
       return response.data;
     } catch (error) {
       console.error('Failed to update vendor:', error);
-      throw new Error('BACKEND_UNAVAILABLE');
+      
     }
   },
 
@@ -41,7 +40,7 @@ const vendorApi = {
       return true;
     } catch (error) {
       console.error('Failed to delete vendor:', error);
-      throw new Error('BACKEND_UNAVAILABLE');
+     
     }
   },
 
@@ -52,7 +51,7 @@ const vendorApi = {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch vendor:', error);
-      throw new Error('BACKEND_UNAVAILABLE');
+      
     }
   }
 };

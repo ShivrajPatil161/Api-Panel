@@ -3,6 +3,8 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Plus, Trash2 } from 'lucide-react';
+import { useProductQueries } from '../Hooks/useProductsQueries';
+import { useVendorQueries } from '../Hooks/useVendorQueries';
 
 // Placeholder data
 const products = [
@@ -38,6 +40,22 @@ const formSchema = z.object({
 const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) => {
     const [selectedVendor, setSelectedVendor] = useState('');
     
+    const { useAllProducts } = useProductQueries();
+    const { useAllVendors } = useVendorQueries();
+    const { data: productsData, isLoading: productsLoading, isError: productsError } = useAllProducts();
+    const products = productsData?.content ?? [];
+
+    const { data: vendorsData, isLoading: vendorsLoading, isError: vendorsError } = useAllVendors();
+    const vendors = vendorsData ?? [];
+
+    // Render logic
+    if (productsLoading || vendorsLoading) {
+        return <div>Loading …</div>;
+    }
+    if (productsError || vendorsError) {
+        return <div>Error loading data</div>;
+    }
+    
 
     const { register, handleSubmit, control, watch, formState: { errors } } = useForm({
         resolver: zodResolver(formSchema),
@@ -64,8 +82,9 @@ const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) 
             alert('Vendor already added!');
             return;
         }
-
-        const vendor = vendors.find(v => v.id === selectedVendor);
+       
+        const vendor = vendors.find(v => v.id === Number(selectedVendor));
+      
         append({
             vendorId: selectedVendor,
             vendorName: vendor?.name || '',
@@ -116,7 +135,7 @@ const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) 
                             >
                                 <option value="">Select Product</option>
                                 {products.map(product => (
-                                    <option key={product.id} value={product.id}>{product.name}</option>
+                                    <option key={product.id} value={product.id}>{product.productName} | {product.productCode }</option>
                                 ))}
                             </select>
                             {errors.productId && (

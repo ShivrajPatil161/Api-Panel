@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "payout_banks",
-        indexes = @Index(name = "idx_apiPartner", columnList = "apiPartner_type, apiPartner_id"))
+        indexes = @Index(name = "idx_apiPartner", columnList = "apiPartner_id"))
 public class PayoutBanks {
 
     @Id
