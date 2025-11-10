@@ -1,58 +1,35 @@
-import React, { lazy, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useState } from 'react'
 import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from '@tanstack/react-table'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Edit, Trash2, Plus } from 'lucide-react'
+import FormShimmer from '../Shimmer/FormShimmer'
+import api from '../../constants/API/axiosInstance'
+import { toast } from 'react-toastify'
 const VendorRoutingForm = lazy(() => import('../Forms/VendorRoutingForm')) 
 
-// Dummy data
-const dummyRoutings = [
-    {
-        id: 1,
-        productId: 'p1',
-        productName: 'UPI QR Code Scanner',
-        vendors: [
-            { vendorName: 'RazorPay', minAmount: 100, maxAmount: 5000, dailyTransactionLimit: 50, dailyAmountLimit: 25000 },
-            { vendorName: 'PayU', minAmount: 5001, maxAmount: 10000, dailyTransactionLimit: 30, dailyAmountLimit: 15000 }
-        ],
-        createdAt: '2024-11-05',
-        status: 'Active'
-    },
-    {
-        id: 2,
-        productId: 'p2',
-        productName: 'POS Machine',
-        vendors: [
-            { vendorName: 'CashFree', minAmount: 0, maxAmount: 50000, dailyTransactionLimit: 100, dailyAmountLimit: 100000 }
-        ],
-        createdAt: '2024-11-04',
-        status: 'Active'
-    },
-    {
-        id: 3,
-        productId: 'p3',
-        productName: 'Payment Gateway',
-        vendors: [
-            { vendorName: 'BillDesk', minAmount: 1000, maxAmount: 100000, dailyTransactionLimit: 200, dailyAmountLimit: 500000 },
-            { vendorName: 'PhonePe Business', minAmount: 100, maxAmount: 999, dailyTransactionLimit: 150, dailyAmountLimit: 75000 }
-        ],
-        createdAt: '2024-11-03',
-        status: 'Inactive'
-    },
-    {
-        id: 4,
-        productId: 'p4',
-        productName: 'Credit Card Reader',
-        vendors: [
-            { vendorName: 'RazorPay', minAmount: 500, maxAmount: 25000, dailyTransactionLimit: 75, dailyAmountLimit: 50000 }
-        ],
-        createdAt: '2024-11-02',
-        status: 'Active'
-    },
-]
+
 
 const VendorRoutingTable = () => {
-    const [data, setData] = useState(dummyRoutings)
+    const [data, setData] = useState([])
     const [openForm, setOpenForm] = useState(false)
     const [selectedRouting, setSelectedRouting] = useState(null)
+
+
+
+    const fetchRoutes = async () => {
+        try {
+            const response = await api.get("/vendor-routing")
+            console.table(response?.data?.content)
+            setData(response?.data?.content)
+        } catch (error) {
+            console.error("Error", error)
+            toast.error("Failed to fetch routes")
+        }
+    } 
+    useEffect(() => {
+                fetchRoutes()
+                
+    }, [])
+    
 
     const columns = [
         {
@@ -72,7 +49,7 @@ const VendorRoutingTable = () => {
             )
         },
         {
-            accessorKey: 'vendors',
+            accessorKey: 'vendorRules',
             header: 'Vendors',
             cell: info => (
                 <div className="flex flex-wrap gap-1">
@@ -85,7 +62,7 @@ const VendorRoutingTable = () => {
             )
         },
         {
-            accessorKey: 'vendors',
+            accessorKey: 'vendorRules',
             header: 'Amount Range',
             cell: info => {
                 const allVendors = info.getValue()
@@ -101,17 +78,23 @@ const VendorRoutingTable = () => {
         {
             accessorKey: 'createdAt',
             header: 'Created',
-            cell: info => <span className="text-sm text-gray-600">{info.getValue()}</span>
+            cell: info => {
+                const value = info.getValue();
+                const date = new Date(value);
+                const formatted = date.toLocaleString(); // e.g. "11/10/2025, 1:41:57 PM"
+                return <span className="text-sm text-gray-600">{formatted}</span>;
+            }
         },
+
         {
             accessorKey: 'status',
             header: 'Status',
             cell: info => (
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${info.getValue() === 'Active'
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${info.getValue() 
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-700'
                     }`}>
-                    {info.getValue()}
+                    {info.getValue()? "Active" :"Inactive"}
                 </span>
             )
         },
@@ -169,10 +152,20 @@ const VendorRoutingTable = () => {
         setSelectedRouting(null)
     }
 
-    const handleSubmit = (formData) => {
+    const handleSubmit = async (formData) => {
         console.log('Form submitted:', formData)
         // Add/update logic here
-        handleClose()
+
+        
+        try {
+            const response = await api.post("/vendor-routing", formData)
+            toast.success("Created!!")
+            handleClose()
+            fetchRoutes()
+        } catch (error) {
+            console.error("Error:", error)
+            toast.error(error?.message || "Error")
+        }
     }
 
     return (
@@ -283,12 +276,14 @@ const VendorRoutingTable = () => {
             
 
             {openForm && (
-                <VendorRoutingForm
-                    isOpen={openForm}
-                    onClose={handleClose}
-                    onSubmit={handleSubmit}
-                    defaultValues={selectedRouting}
-                />
+                <Suspense fallback={<FormShimmer />}>
+                    <VendorRoutingForm
+                        isOpen={openForm}
+                        onClose={handleClose}
+                        onSubmit={handleSubmit}
+                        defaultValues={selectedRouting}
+                    />
+                </Suspense>
             )}
         </div>
     )

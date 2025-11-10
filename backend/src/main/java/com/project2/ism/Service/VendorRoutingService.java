@@ -154,6 +154,7 @@ public class VendorRoutingService {
                 .map(this::convertRuleToDTO)
                 .collect(Collectors.toList());
         dto.setVendorRules(ruleDTOs);
+        dto.setCreatedAt(vendorRouting.getCreatedAt());
 
         return dto;
     }

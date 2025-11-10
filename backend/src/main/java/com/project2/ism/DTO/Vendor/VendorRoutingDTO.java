@@ -1,7 +1,6 @@
 package com.project2.ism.DTO.Vendor;
 
-
-
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class VendorRoutingDTO {
@@ -11,18 +10,20 @@ public class VendorRoutingDTO {
     private String productName;
     private List<VendorRuleDTO> vendorRules;
     private Boolean status;
+    private LocalDateTime createdAt;
 
     // Constructor, Getters and Setters needed
 
     public VendorRoutingDTO() {
     }
 
-    public VendorRoutingDTO(Long id, Long productId, String productName, List<VendorRuleDTO> vendorRules, Boolean status) {
+    public VendorRoutingDTO(Long id, Long productId, String productName, List<VendorRuleDTO> vendorRules, Boolean status, LocalDateTime createdAt) {
         this.id = id;
         this.productId = productId;
         this.productName = productName;
         this.vendorRules = vendorRules;
         this.status = status;
+        this.createdAt= createdAt;
     }
 
     public Long getId() {
@@ -63,5 +64,13 @@ public class VendorRoutingDTO {
 
     public void setStatus(Boolean status) {
         this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
