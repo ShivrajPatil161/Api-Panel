@@ -1,4 +1,4 @@
-package com.project2.ism.DTO;
+package com.project2.ism.DTO.ApiPartnerDTO;
 
 import org.springframework.web.multipart.MultipartFile;
 

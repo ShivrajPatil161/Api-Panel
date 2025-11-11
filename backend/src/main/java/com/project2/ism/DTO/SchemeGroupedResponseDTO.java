@@ -1,5 +1,7 @@
 package com.project2.ism.DTO;
 
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerSchemeAssignmentDTO;
+
 import java.util.List;
 
 public class SchemeGroupedResponseDTO {

@@ -1,8 +1,7 @@
 package com.project2.ism.Service;
 
-import com.project2.ism.DTO.ApiPartnerProductsDTO;
-import com.project2.ism.DTO.ApiPartnerSchemeAssignmentDTO;
-import com.project2.ism.DTO.ProductSchemeReportDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerProductsDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerSchemeAssignmentDTO;
 import com.project2.ism.DTO.SchemeGroupedResponseDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
@@ -321,12 +320,12 @@ public class ApiPartnerSchemeAssignmentService {
 //        dto.setCustomerType(entity.getCustomerType());
 //
 //        if ("FRANCHISE".equalsIgnoreCase(entity.getCustomerType()) && entity.getFranchise() != null) {
-//            dto.setPartnerId(entity.getFranchise().getId());
+//            dto.setApiPartnerId(entity.getFranchise().getId());
 //            dto.setCustomerName(entity.getFranchise().getFranchiseName());
 //            dto.setFranchiseAddress(entity.getFranchise().getAddress());
 //            dto.setFranchiseContact(entity.getFranchise().getContactPerson().getPhoneNumber());
 //        } else if ("MERCHANT".equalsIgnoreCase(entity.getCustomerType()) && entity.getApiPartner() != null) {
-//            dto.setPartnerId(entity.getApiPartner().getId());
+//            dto.setApiPartnerId(entity.getApiPartner().getId());
 //            dto.setCustomerName(entity.getApiPartner().getBusinessName());
 //            dto.setMerchantBusinessName(entity.getApiPartner().getBusinessName());
 //            dto.setMerchantAddress(entity.getApiPartner().getAddress());

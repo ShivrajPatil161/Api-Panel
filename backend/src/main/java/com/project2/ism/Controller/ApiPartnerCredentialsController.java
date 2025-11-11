@@ -1,7 +1,7 @@
 package com.project2.ism.Controller;
 
 
-import com.project2.ism.DTO.PartnerCredentialDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.PartnerCredentialDTO;
 import com.project2.ism.Service.ApiPartnerCredentialsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

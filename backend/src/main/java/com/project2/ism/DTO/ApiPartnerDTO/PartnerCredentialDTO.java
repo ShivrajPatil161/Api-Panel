@@ -1,12 +1,16 @@
-package com.project2.ism.DTO;
+package com.project2.ism.DTO.ApiPartnerDTO;
 
 import java.time.LocalDateTime;
 
 public class PartnerCredentialDTO {
 
     private long id;
-    private Long partnerId;
+
+    private Long apiPartnerId;
+    private String apiPartnerName;
+
     private Long productId;
+    private String productName;
 
     private String tokenUrlUat;
     private String tokenUrlProd;
@@ -24,9 +28,9 @@ public class PartnerCredentialDTO {
 
 
 
-    public PartnerCredentialDTO(long id, Long partnerId, Long productId, String tokenUrlUat, String tokenUrlProd, String baseUrlUat, String baseUrlProd, String callbackUrl, Boolean isActive, LocalDateTime createdOn, String createdBy, LocalDateTime editedOn, String editedBy) {
+    public PartnerCredentialDTO(long id, Long apiPartnerId, Long productId, String tokenUrlUat, String tokenUrlProd, String baseUrlUat, String baseUrlProd, String callbackUrl, Boolean isActive, LocalDateTime createdOn, String createdBy, LocalDateTime editedOn, String editedBy) {
         this.id = id;
-        this.partnerId = partnerId;
+        this.apiPartnerId = apiPartnerId;
         this.productId = productId;
         this.tokenUrlUat = tokenUrlUat;
         this.tokenUrlProd = tokenUrlProd;
@@ -43,16 +47,22 @@ public class PartnerCredentialDTO {
     public PartnerCredentialDTO() {
     }
 
-    public PartnerCredentialDTO(long id, Long partnerId, Long productId, String tokenUrlUat, String tokenUrlProd, String baseUrlUat, String baseUrlProd, String callbackUrl, Boolean isActive) {
+    public PartnerCredentialDTO(long id, Long apiPartnerId, String apiPartnerName, Long productId, String productName, String tokenUrlUat, String tokenUrlProd, String baseUrlUat, String baseUrlProd, String callbackUrl, Boolean isActive, LocalDateTime createdOn, String createdBy, LocalDateTime editedOn, String editedBy) {
         this.id = id;
-        this.partnerId = partnerId;
+        this.apiPartnerId = apiPartnerId;
+        this.apiPartnerName = apiPartnerName;
         this.productId = productId;
+        this.productName = productName;
         this.tokenUrlUat = tokenUrlUat;
         this.tokenUrlProd = tokenUrlProd;
         this.baseUrlUat = baseUrlUat;
         this.baseUrlProd = baseUrlProd;
         this.callbackUrl = callbackUrl;
         this.isActive = isActive;
+        this.createdOn = createdOn;
+        this.createdBy = createdBy;
+        this.editedOn = editedOn;
+        this.editedBy = editedBy;
     }
 
     public long getId() {
@@ -63,12 +73,12 @@ public class PartnerCredentialDTO {
         this.id = id;
     }
 
-    public Long getPartnerId() {
-        return partnerId;
+    public Long getApiPartnerId() {
+        return apiPartnerId;
     }
 
-    public void setPartnerId(Long partnerId) {
-        this.partnerId = partnerId;
+    public void setApiPartnerId(Long apiPartnerId) {
+        this.apiPartnerId = apiPartnerId;
     }
 
     public Long getProductId() {
@@ -157,5 +167,21 @@ public class PartnerCredentialDTO {
 
     public void setEditedOn(LocalDateTime editedOn) {
         this.editedOn = editedOn;
+    }
+
+    public String getApiPartnerName() {
+        return apiPartnerName;
+    }
+
+    public void setApiPartnerName(String apiPartnerName) {
+        this.apiPartnerName = apiPartnerName;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 }

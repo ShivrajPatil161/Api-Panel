@@ -1,6 +1,6 @@
 package com.project2.ism.Service;
 
-import com.project2.ism.DTO.PartnerCredentialDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.PartnerCredentialDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ApiPartnerCredentials;
 import com.project2.ism.Model.Product;
@@ -35,8 +35,10 @@ public class ApiPartnerCredentialsService {
 
         PartnerCredentialDTO dto = new PartnerCredentialDTO();
         dto.setId(entity.getId());
-        dto.setPartnerId(entity.getApiPartner() != null ? entity.getApiPartner().getId() : null);
+        dto.setApiPartnerId(entity.getApiPartner() != null ? entity.getApiPartner().getId() : null);
+        dto.setApiPartnerName(entity.getApiPartner().getBusinessName());
         dto.setProductId(entity.getProduct() != null ? entity.getProduct().getId() : null);
+        dto.setProductName(entity.getProduct().getProductName());
         dto.setTokenUrlUat(entity.getTokenUrlUat());
         dto.setTokenUrlProd(entity.getTokenUrlProd());
         dto.setBaseUrlUat(entity.getBaseUrlUat());
@@ -71,8 +73,8 @@ public class ApiPartnerCredentialsService {
 
     // 🔹 CREATE
     public PartnerCredentialDTO create(PartnerCredentialDTO dto) {
-        ApiPartner apiPartner = apiPartnerRepository.findById(dto.getPartnerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Partner", dto.getPartnerId()));
+        ApiPartner apiPartner = apiPartnerRepository.findById(dto.getApiPartnerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Partner", dto.getApiPartnerId()));
 
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product", dto.getProductId()));
@@ -102,8 +104,8 @@ public class ApiPartnerCredentialsService {
         ApiPartnerCredentials existing = credentialsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("PartnerCredential", id));
 
-        ApiPartner apiPartner = apiPartnerRepository.findById(dto.getPartnerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Partner", dto.getPartnerId()));
+        ApiPartner apiPartner = apiPartnerRepository.findById(dto.getApiPartnerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Partner", dto.getApiPartnerId()));
 
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product", dto.getProductId()));

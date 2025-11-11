@@ -1,5 +1,5 @@
 // DTO for Merchant Stats
-package com.project2.ism.DTO;
+package com.project2.ism.DTO.ApiPartnerDTO;
 
 import java.util.List;
 

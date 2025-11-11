@@ -2,10 +2,10 @@
 package com.project2.ism.Controller;
 
 
-import com.project2.ism.DTO.ApiPartnerFormDTO;
-import com.project2.ism.DTO.ApiPartnerListDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerFormDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerListDTO;
 
-import com.project2.ism.DTO.ApiPartnerViewDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerViewDTO;
 import com.project2.ism.Model.Users.ApiPartner;
 import com.project2.ism.Service.FileStorageService;
 import com.project2.ism.Service.ApiPartnerService;

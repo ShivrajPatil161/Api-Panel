@@ -1,7 +1,6 @@
 package com.project2.ism.Controller;
 
-import com.project2.ism.DTO.ApiPartnerSchemeAssignmentDTO;
-import com.project2.ism.DTO.ProductSchemeReportDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerSchemeAssignmentDTO;
 import com.project2.ism.DTO.SchemeGroupedResponseDTO;
 import com.project2.ism.Service.ApiPartnerSchemeAssignmentService;
 import org.springframework.http.ResponseEntity;

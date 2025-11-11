@@ -1,4 +1,4 @@
-package com.project2.ism.DTO;
+package com.project2.ism.DTO.ApiPartnerDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

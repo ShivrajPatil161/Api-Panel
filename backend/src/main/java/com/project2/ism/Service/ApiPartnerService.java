@@ -1,10 +1,10 @@
 
 package com.project2.ism.Service;
 
-import com.project2.ism.DTO.ApiPartnerListDTO;
-import com.project2.ism.DTO.ApiPartnerFormDTO;
-import com.project2.ism.DTO.ApiPartnerProductsDTO;
-import com.project2.ism.DTO.ApiPartnerViewDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerListDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerFormDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerProductsDTO;
+import com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerViewDTO;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ContactPerson;
 import com.project2.ism.Model.ApiPartnerWallet;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
