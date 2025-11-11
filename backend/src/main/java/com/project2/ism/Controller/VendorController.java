@@ -72,6 +72,8 @@ public class VendorController {
     public ResponseEntity<List<Vendor>> getActiveVendors() {
         return ResponseEntity.ok(vendorService.getAllActiveVendors());
     }
+
+
     @GetMapping("/products/{vendorId}")
     public ResponseEntity<List<VendorProductDTO>> getProductsOfVendor(@PathVariable Long vendorId){
         return ResponseEntity.ok(vendorService.getProductsOfVendor(vendorId));

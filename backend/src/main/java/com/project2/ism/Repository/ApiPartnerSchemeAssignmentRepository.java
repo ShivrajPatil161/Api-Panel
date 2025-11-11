@@ -53,7 +53,7 @@ public interface ApiPartnerSchemeAssignmentRepository extends JpaRepository<ApiP
     @Query("""
         SELECT c FROM ApiPartnerSchemeAssignment c
         WHERE c.product.id = :productId
-          AND c.apiPartner.id = :ApiPartnerId
+          AND c.apiPartner.id = :apiPartnerId
           AND (
               (c.effectiveDate <= :expiryDate OR :expiryDate IS NULL)
               AND (c.expiryDate IS NULL OR c.expiryDate >= :effectiveDate)
