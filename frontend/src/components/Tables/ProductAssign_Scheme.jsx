@@ -136,8 +136,8 @@ const ProductAssignment = () => {
                 }
                 return (
                     <div className="ml-4 font-medium text-gray-900">
-                        <div>{row.original.customerName || 'Unknown Customer'}</div>
-                        <div className="text-xs text-gray-500">ID: {row.original.customerId}</div>
+                        <div>{row.original.apiPartnerName || 'Unknown Customer'}</div>
+                        <div className="text-xs text-gray-500">ID: {row.original.apiPartnerId}</div>
                     </div>
                 )
             },
@@ -549,8 +549,8 @@ const ProductAssignment = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
                                     <p className="text-gray-900">
-                                        {viewingAssignment.customerName || 'Unknown Customer'}
-                                        <span className="text-gray-500 text-sm"> (ID: {viewingAssignment.customerId})</span>
+                                        {viewingAssignment.apiPartnerName || 'Unknown Customer'}
+                                        <span className="text-gray-500 text-sm"> (ID: {viewingAssignment.apiPartnerId})</span>
                                     </p>
                                 </div>
                                 <div>
