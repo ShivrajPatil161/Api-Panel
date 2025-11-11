@@ -1,5 +1,6 @@
 package com.project2.ism.Repository;
 
+import com.project2.ism.DTO.ApiPartnerProductsDTO;
 import com.project2.ism.Model.ApiPartnerSchemeAssignment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -68,6 +69,20 @@ public interface ApiPartnerSchemeAssignmentRepository extends JpaRepository<ApiP
 
 
     List<ApiPartnerSchemeAssignment> findTop5ByExpiryDateGreaterThanEqualOrderByExpiryDateAsc(LocalDate currentDate);
+
+    @Query("""
+        SELECT new com.project2.ism.DTO.ApiPartnerProductsDTO(
+            p.id,
+            p.productName,
+            p.productCode,
+            p.productCategory.categoryName
+        )
+        FROM ApiPartnerSchemeAssignment a
+        JOIN a.product p
+        WHERE a.apiPartner.id = :apiPartnerId
+    """)
+    List<ApiPartnerProductsDTO> findAllProductByApiPartnerId(@Param("apiPartnerId") Long apiPartnerId);
+
 
 //----------------------------------For ProductScheme Reports------------------------------------------------
 

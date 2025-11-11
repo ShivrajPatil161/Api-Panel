@@ -1,5 +1,6 @@
 package com.project2.ism.Service;
 
+import com.project2.ism.DTO.ApiPartnerProductsDTO;
 import com.project2.ism.DTO.ApiPartnerSchemeAssignmentDTO;
 import com.project2.ism.DTO.ProductSchemeReportDTO;
 import com.project2.ism.DTO.SchemeGroupedResponseDTO;
@@ -156,6 +157,12 @@ public class ApiPartnerSchemeAssignmentService {
                 .toList();
 
     }
+
+    public List<ApiPartnerProductsDTO> getAllProductsOfApiPartner(Long apiPartnerId){
+        return assignmentRepo.findAllProductByApiPartnerId(apiPartnerId);
+    }
+
+
     private ApiPartnerSchemeAssignmentDTO toDTO(ApiPartnerSchemeAssignment entity) {
         ApiPartnerSchemeAssignmentDTO dto = new ApiPartnerSchemeAssignmentDTO();
         dto.setId(entity.getId());
