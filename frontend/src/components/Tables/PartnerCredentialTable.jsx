@@ -29,6 +29,8 @@ import TableHeader from '../UI/TableHeader';
 import Table from '../UI/Table';
 import Pagination from '../UI/Pagination';
 import { usePartnerCredentials, useDeletePartnerCredential } from '../Hooks/usePartnerCredentials';
+import TableShimmer from '../Shimmer/TableShimmer';
+import ErrorState from '../UI/ErrorState';
 
 // Utility Components
 const StatusBadge = ({ isActive }) => (
@@ -68,26 +70,7 @@ const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', className = '' }
     );
 };
 
-const LoadingSpinner = () => (
-    <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>
-);
 
-const ErrorDisplay = ({ message, onRetry }) => (
-    <div className="flex flex-col items-center justify-center py-8 space-y-4">
-        <AlertCircle className="h-12 w-12 text-red-500" />
-        <p className="text-gray-600">{message}</p>
-        {onRetry && (
-            <button
-                onClick={onRetry}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-                Retry
-            </button>
-        )}
-    </div>
-);
 
 // Main Table Component
 const PartnerCredentialTable = () => {
@@ -234,6 +217,8 @@ const PartnerCredentialTable = () => {
         },
     });
 
+    if (isLoading) return <TableShimmer />
+    if(isError) return <ErrorState />
     return (
         <div className="min-h-screen bg-gray-50 p-2 pr-5">
             <div className="mx-auto">
@@ -258,15 +243,6 @@ const PartnerCredentialTable = () => {
 
                 {/* Table */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    {isLoading ? (
-                        <LoadingSpinner />
-                    ) : isError ? (
-                        <ErrorDisplay 
-                            message={error?.message || 'Failed to load credentials'} 
-                            onRetry={refetch}
-                        />
-                    ) : (
-                        <>
                             <Table
                                 table={table}
                                 columns={columns}
@@ -279,8 +255,7 @@ const PartnerCredentialTable = () => {
                                 hoverable={true}
                             />
                             <Pagination table={table} />
-                        </>
-                    )}
+                        
                 </div>
 
                 {/* Add Modal */}

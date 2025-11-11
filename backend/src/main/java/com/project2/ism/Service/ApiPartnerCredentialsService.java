@@ -44,7 +44,7 @@ public class ApiPartnerCredentialsService {
         dto.setBaseUrlUat(entity.getBaseUrlUat());
         dto.setBaseUrlProd(entity.getBaseUrlProd());
         dto.setCallbackUrl(entity.getCallbackUrl());
-        dto.setActive(entity.getActive());
+        dto.setIsActive(entity.getActive());
         dto.setCreatedOn(entity.getCreatedOn());
         dto.setCreatedBy(entity.getCreatedBy());
         dto.setEditedOn(entity.getEditedOn());
@@ -57,7 +57,6 @@ public class ApiPartnerCredentialsService {
         if (dto == null) return null;
 
         ApiPartnerCredentials entity = new ApiPartnerCredentials();
-        entity.setId(dto.getId());
         entity.setApiPartner(apiPartner);
         entity.setProduct(product);
         entity.setTokenUrlUat(dto.getTokenUrlUat());
@@ -65,7 +64,7 @@ public class ApiPartnerCredentialsService {
         entity.setBaseUrlUat(dto.getBaseUrlUat());
         entity.setBaseUrlProd(dto.getBaseUrlProd());
         entity.setCallbackUrl(dto.getCallbackUrl());
-        entity.setActive(dto.getActive());
+        entity.setActive(dto.getIsActive());
         entity.setCreatedBy(dto.getCreatedBy());
         entity.setEditedBy(dto.getEditedBy());
         return entity;
@@ -118,7 +117,7 @@ public class ApiPartnerCredentialsService {
         existing.setBaseUrlUat(dto.getBaseUrlUat());
         existing.setBaseUrlProd(dto.getBaseUrlProd());
         existing.setCallbackUrl(dto.getCallbackUrl());
-        existing.setActive(dto.getActive());
+        existing.setActive(dto.getIsActive());
         existing.setEditedBy(dto.getEditedBy());
 
         ApiPartnerCredentials updated = credentialsRepository.save(existing);
