@@ -187,7 +187,7 @@ const PartnerCredentialForm = ({
     } = useForm({
         resolver: zodResolver(partnerCredentialSchema),
         defaultValues: initialData ? {
-            partner: initialData.partnerId?.toString() || '',
+            partner: initialData.apiPartnerId?.toString() || '',
             product: initialData.productId?.toString() || '',
             tokenUrlUat: initialData.tokenUrlUat || '',
             tokenUrlProd: initialData.tokenUrlProd || '',
@@ -213,7 +213,7 @@ const PartnerCredentialForm = ({
     useEffect(() => {
         if (initialData) {
             reset({
-                partner: initialData.partnerId?.toString() || '',
+                partner: initialData.apiPartnerId?.toString() || '',
                 product: initialData.productId?.toString() || '',
                 tokenUrlUat: initialData.tokenUrlUat || '',
                 tokenUrlProd: initialData.tokenUrlProd || '',
