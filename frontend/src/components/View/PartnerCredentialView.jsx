@@ -53,7 +53,7 @@ const PartnerCredentialView = ({ credential, onClose }) => {
                             <Key className="h-8 w-8" />
                             <div>
                                 <h2 className="text-2xl font-bold">Credential Details</h2>
-                                <p className="text-blue-100">{credential.partnerName} - {credential.productName}</p>
+                                <p className="text-blue-100">{credential.apiPartnerName} - {credential.productName}</p>
                             </div>
                         </div>
                         <button
@@ -68,7 +68,7 @@ const PartnerCredentialView = ({ credential, onClose }) => {
                 <div className="p-6 space-y-6">
                     {/* Basic Information */}
                     <Section title="Basic Information" icon={Key}>
-                        <InfoRow label="Partner" value={credential.partnerName} />
+                        <InfoRow label="Partner" value={credential.apiPartnerName} />
                         <InfoRow label="Product" value={credential.productName} />
                         <InfoRow label="Client ID" value={credential.clientId} />
                         <InfoRow

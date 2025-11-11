@@ -71,7 +71,7 @@ public interface ApiPartnerSchemeAssignmentRepository extends JpaRepository<ApiP
     List<ApiPartnerSchemeAssignment> findTop5ByExpiryDateGreaterThanEqualOrderByExpiryDateAsc(LocalDate currentDate);
 
     @Query("""
-        SELECT new com.project2.ism.DTO.ApiPartnerProductsDTO(
+        SELECT new com.project2.ism.DTO.ApiPartnerDTO.ApiPartnerProductsDTO(
             p.id,
             p.productName,
             p.productCode,

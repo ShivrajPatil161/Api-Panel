@@ -143,10 +143,10 @@ const PartnerCredentialTable = () => {
                         </div>
                         <div>
                             <div className="font-medium text-gray-900">
-                                Partner ID: {row.partnerId}
+                                Partner: {row.apiPartnerName}
                             </div>
                             <div className="text-sm text-gray-500">
-                                Product ID: {row.productId}
+                                Product : {row.productName}
                             </div>
                         </div>
                     </div>
