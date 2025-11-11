@@ -18,7 +18,7 @@ export const partnerCredentialsApi = {
   // Create new partner credential
   create: async (data) => {
     const payload = {
-      partnerId: parseInt(data.partner),
+      apiPartnerId: parseInt(data.partner),
       productId: parseInt(data.product),
       tokenUrlUat: data.tokenUrlUat,
       tokenUrlProd: data.tokenUrlProd,
@@ -33,8 +33,9 @@ export const partnerCredentialsApi = {
 
   // Update partner credential
   update: async (id, data) => {
+    console.log(data)
     const payload = {
-      partnerId: parseInt(data.partner),
+      apiPartnerId: parseInt(data.partner),
       productId: parseInt(data.product),
       tokenUrlUat: data.tokenUrlUat,
       tokenUrlProd: data.tokenUrlProd,

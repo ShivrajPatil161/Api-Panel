@@ -126,7 +126,7 @@ const PartnerCredentialTable = () => {
                         </div>
                         <div>
                             <div className="font-medium text-gray-900">
-                                Partner: {row.apiPartnerName}
+                                 {row.apiPartnerName}
                             </div>
                             <div className="text-sm text-gray-500">
                                 Product : {row.productName}
@@ -142,19 +142,11 @@ const PartnerCredentialTable = () => {
             cell: (info) => (
                 <div className="flex items-center space-x-2">
                     <Globe className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600 truncate max-w-xs">{info.getValue()}</span>
+                    <span className="text-sm text-gray-600 truncate max-w-3xs">{info.getValue()}</span>
                 </div>
             ),
         }),
-        columnHelper.accessor('baseUrlProd', {
-            header: 'Production URL',
-            cell: (info) => (
-                <div className="flex items-center space-x-2">
-                    <Globe className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600 truncate max-w-xs">{info.getValue()}</span>
-                </div>
-            ),
-        }),
+       
         columnHelper.accessor('isActive', {
             header: 'Status',
             cell: (info) => <StatusBadge isActive={info.getValue()} />,

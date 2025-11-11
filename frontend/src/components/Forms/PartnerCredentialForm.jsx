@@ -10,11 +10,11 @@ import { useEffect } from 'react';
 const partnerCredentialSchema = z.object({
     partner: z.string().min(1, 'Partner is required'),
     product: z.string().min(1, 'Product is required'),
-    tokenUrlUat: z.string().min(1, 'Token URL UAT is required').url('Invalid URL format'),
-    tokenUrlProd: z.string().min(1, 'Token URL Prod is required').url('Invalid URL format'),
-    baseUrlUat: z.string().min(1, 'Base URL UAT is required').url('Invalid URL format'),
-    baseUrlProd: z.string().min(1, 'Base URL Prod is required').url('Invalid URL format'),
-    
+    tokenUrlUat: z.string().url('Invalid URL format').optional().or(z.literal('')),
+  tokenUrlProd: z.string().url('Invalid URL format').optional().or(z.literal('')),
+  baseUrlUat: z.string().url('Invalid URL format').optional().or(z.literal('')),
+  baseUrlProd: z.string().url('Invalid URL format').optional().or(z.literal('')),
+  callbackUrl: z.string().url('Invalid URL format').optional().or(z.literal('')),
     isActive: z.boolean()
 });
 
@@ -244,6 +244,7 @@ const PartnerCredentialForm = ({
 
     const handleFormSubmit = async (data) => {
         try {
+            console.log(data)
             if (mode === 'edit' && initialData) {
                 await updateMutation.mutateAsync({ id: initialData.id, data });
             } else {
@@ -307,7 +308,7 @@ const PartnerCredentialForm = ({
                             name="tokenUrlUat"
                             control={control}
                             error={errors.tokenUrlUat}
-                            required
+                            // required
                             placeholder="https://uat.example.com/token"
                         />
 
@@ -316,7 +317,7 @@ const PartnerCredentialForm = ({
                             name="baseUrlUat"
                             control={control}
                             error={errors.baseUrlUat}
-                            required
+                            // required
                             placeholder="https://uat.example.com/api"
                         />
                     </GridLayout>
@@ -330,7 +331,7 @@ const PartnerCredentialForm = ({
                             name="tokenUrlProd"
                             control={control}
                             error={errors.tokenUrlProd}
-                            required
+                            // required
                             placeholder="https://prod.example.com/token"
                         />
 
@@ -339,7 +340,7 @@ const PartnerCredentialForm = ({
                             name="baseUrlProd"
                             control={control}
                             error={errors.baseUrlProd}
-                            required
+                            // required
                             placeholder="https://prod.example.com/api"
                         />
                     </GridLayout>
