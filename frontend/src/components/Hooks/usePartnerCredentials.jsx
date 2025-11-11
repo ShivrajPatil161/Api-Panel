@@ -34,7 +34,7 @@ export const useCreatePartnerCredential = () => {
   return useMutation({
     mutationFn: partnerCredentialsApi.create,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QUERY_KEY]);
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], exact: true });
       toast.success('Partner credential created successfully');
       return data;
     },
@@ -51,8 +51,8 @@ export const useUpdatePartnerCredential = () => {
   return useMutation({
     mutationFn: ({ id, data }) => partnerCredentialsApi.update(id, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries([QUERY_KEY]);
-      queryClient.invalidateQueries([QUERY_KEY, variables.id]);
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], exact: true });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.id], exact: true });
       toast.success('Partner credential updated successfully');
       return data;
     },
@@ -69,7 +69,7 @@ export const useDeletePartnerCredential = () => {
   return useMutation({
     mutationFn: partnerCredentialsApi.delete,
     onSuccess: (data, id) => {
-      queryClient.invalidateQueries([QUERY_KEY]);
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], exact: true });
       toast.success('Partner credential deleted successfully');
       return data;
     },

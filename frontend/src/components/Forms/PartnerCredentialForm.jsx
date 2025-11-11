@@ -14,7 +14,7 @@ const partnerCredentialSchema = z.object({
     tokenUrlProd: z.string().min(1, 'Token URL Prod is required').url('Invalid URL format'),
     baseUrlUat: z.string().min(1, 'Base URL UAT is required').url('Invalid URL format'),
     baseUrlProd: z.string().min(1, 'Base URL Prod is required').url('Invalid URL format'),
-    callbackUrl: z.string().min(1, 'Callback url is required').url('Invalid URL format'),
+    
     isActive: z.boolean()
 });
 
@@ -361,7 +361,6 @@ const PartnerCredentialForm = ({
                             name="callbackUrl"
                             control={control}
                             error={errors.callbackUrl}
-                            required
                             placeholder="https://callbackUrl/"
                         />
                     </GridLayout>
