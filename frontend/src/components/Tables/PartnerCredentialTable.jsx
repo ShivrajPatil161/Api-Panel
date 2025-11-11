@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react';
 import {
     useReactTable,
     getCoreRowModel,
@@ -7,7 +7,7 @@ import {
     getPaginationRowModel,
     flexRender,
     createColumnHelper,
-} from '@tanstack/react-table'
+} from '@tanstack/react-table';
 import {
     Search,
     Eye,
@@ -21,63 +21,14 @@ import {
     Globe,
     CheckCircle,
     XCircle
-} from 'lucide-react'
-import { toast } from 'react-toastify'
-import PartnerCredentialForm from '../Forms/PartnerCredentialForm'
-import PartnerCredentialView from '../View/PartnerCredentialView'
-import PageHeader from '../UI/PageHeader'
-import TableHeader from '../UI/TableHeader'
-import Table from '../UI/Table'
-import Pagination from '../UI/Pagination'
-
-// Mock data - Replace with API call later
-const mockCredentials = [
-    {
-        id: 1,
-        partner: 'partner1',
-        partnerName: 'Partner 1',
-        product: 'recharge',
-        productName: 'Recharge',
-        tokenUrlUat: 'https://uat.partner1.com/token',
-        tokenUrlProd: 'https://prod.partner1.com/token',
-        baseUrlUat: 'https://uat.partner1.com/api',
-        baseUrlProd: 'https://prod.partner1.com/api',
-        clientId: 'CLIENT_123',
-        isActive: true,
-        createdAt: '2024-01-15',
-        updatedAt: '2024-01-20'
-    },
-    {
-        id: 2,
-        partner: 'partner2',
-        partnerName: 'Partner 2',
-        product: 'bill_payment',
-        productName: 'Bill Payment',
-        tokenUrlUat: 'https://uat.partner2.com/token',
-        tokenUrlProd: 'https://prod.partner2.com/token',
-        baseUrlUat: 'https://uat.partner2.com/api',
-        baseUrlProd: 'https://prod.partner2.com/api',
-        clientId: 'CLIENT_456',
-        isActive: false,
-        createdAt: '2024-01-10',
-        updatedAt: '2024-01-18'
-    },
-    {
-        id: 3,
-        partner: 'partner3',
-        partnerName: 'Partner 3',
-        product: 'dth',
-        productName: 'DTH',
-        tokenUrlUat: 'https://uat.partner3.com/token',
-        tokenUrlProd: 'https://prod.partner3.com/token',
-        baseUrlUat: 'https://uat.partner3.com/api',
-        baseUrlProd: 'https://prod.partner3.com/api',
-        clientId: 'CLIENT_789',
-        isActive: true,
-        createdAt: '2024-01-12',
-        updatedAt: '2024-01-22'
-    }
-]
+} from 'lucide-react';
+import PartnerCredentialForm from '../Forms/PartnerCredentialForm';
+import PartnerCredentialView from '../View/PartnerCredentialView';
+import PageHeader from '../UI/PageHeader';
+import TableHeader from '../UI/TableHeader';
+import Table from '../UI/Table';
+import Pagination from '../UI/Pagination';
+import { usePartnerCredentials, useDeletePartnerCredential } from '../Hooks/usePartnerCredentials';
 
 // Utility Components
 const StatusBadge = ({ isActive }) => (
@@ -97,14 +48,14 @@ const StatusBadge = ({ isActive }) => (
             </>
         )}
     </span>
-)
+);
 
 const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', className = '' }) => {
     const variants = {
         ghost: 'hover:bg-green-100 text-green-600 hover:text-green-900',
         primary: 'text-blue-700 hover:bg-blue-100',
         danger: 'hover:bg-red-50 text-red-600 hover:text-red-700'
-    }
+    };
 
     return (
         <button
@@ -114,104 +65,62 @@ const ActionButton = ({ icon: Icon, onClick, variant = 'ghost', className = '' }
         >
             <Icon className="w-4 h-4" />
         </button>
-    )
-}
+    );
+};
 
 const LoadingSpinner = () => (
     <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
     </div>
-)
+);
 
-
+const ErrorDisplay = ({ message, onRetry }) => (
+    <div className="flex flex-col items-center justify-center py-8 space-y-4">
+        <AlertCircle className="h-12 w-12 text-red-500" />
+        <p className="text-gray-600">{message}</p>
+        {onRetry && (
+            <button
+                onClick={onRetry}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+                Retry
+            </button>
+        )}
+    </div>
+);
 
 // Main Table Component
 const PartnerCredentialTable = () => {
-    const [globalFilter, setGlobalFilter] = useState('')
-    const [credentials, setCredentials] = useState(mockCredentials)
-    const [loading, setLoading] = useState(false)
-    const [viewModal, setViewModal] = useState(null)
-    const [editModal, setEditModal] = useState(null)
-    const [addModal, setAddModal] = useState(false)
+    const [globalFilter, setGlobalFilter] = useState('');
+    const [viewModal, setViewModal] = useState(null);
+    const [editModal, setEditModal] = useState(null);
+    const [addModal, setAddModal] = useState(false);
 
-    const columnHelper = createColumnHelper()
+    const columnHelper = createColumnHelper();
 
-    // API Functions - Ready for backend integration
-    const fetchCredentials = async () => {
-        try {
-            setLoading(true)
-            // TODO: Replace with actual API call
-            // const response = await api.get('/partner-credentials')
-            // setCredentials(response.data)
-
-            // Simulating API delay
-            await new Promise(resolve => setTimeout(resolve, 500))
-            setCredentials(mockCredentials)
-        } catch (err) {
-            toast.error('Failed to load credentials')
-            console.error(err)
-        } finally {
-            setLoading(false)
-        }
-    }
+    // Fetch credentials using React Query
+    const { data: credentials = [], isLoading, isError, error, refetch } = usePartnerCredentials();
+    
+    // Delete mutation
+    const deleteMutation = useDeletePartnerCredential();
 
     const handleView = (credential) => {
-        setViewModal(credential)
-    }
+        setViewModal(credential);
+    };
 
     const handleEdit = (credential) => {
-        setEditModal(credential)
-    }
+        setEditModal(credential);
+    };
 
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this credential?')) {
             try {
-                // TODO: Replace with actual API call
-                // await api.delete(`/partner-credentials/${id}`)
-
-                setCredentials(credentials.filter(c => c.id !== id))
-                toast.success('Credential deleted successfully')
+                await deleteMutation.mutateAsync(id);
             } catch (err) {
-                toast.error('Failed to delete credential')
-                console.error(err)
+                console.error('Delete error:', err);
             }
         }
-    }
-
-    const handleSubmit = async (data) => {
-        try {
-            if (editModal) {
-                // TODO: Replace with actual API call
-                // await api.put(`/partner-credentials/${editModal.id}`, data)
-
-                setCredentials(credentials.map(c =>
-                    c.id === editModal.id
-                        ? { ...c, ...data, updatedAt: new Date().toISOString().split('T')[0] }
-                        : c
-                ))
-                toast.success('Credential updated successfully')
-                setEditModal(null)
-            } else {
-                // TODO: Replace with actual API call
-                // const response = await api.post('/partner-credentials', data)
-
-                const newCredential = {
-                    id: credentials.length + 1,
-                    ...data,
-                    partnerName: `Partner ${data.partner}`,
-                    productName: data.product.replace('_', ' ').toUpperCase(),
-                    createdAt: new Date().toISOString().split('T')[0],
-                    updatedAt: new Date().toISOString().split('T')[0]
-                }
-                setCredentials([...credentials, newCredential])
-                toast.success('Credential created successfully')
-                setAddModal(false)
-            }
-        } catch (err) {
-            toast.error('Failed to save credential')
-            console.error(err)
-        }
-    }
+    };
 
     // Table columns
     const columns = useMemo(() => [
@@ -222,27 +131,35 @@ const PartnerCredentialTable = () => {
             ),
             size: 80,
         }),
-        columnHelper.accessor('partnerName', {
+        columnHelper.accessor(row => row, {
+            id: 'partner',
             header: 'Partner',
-            cell: (info) => (
-                <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-50 rounded-lg">
-                        <Key className="w-4 h-4 text-blue-600" />
+            cell: (info) => {
+                const row = info.getValue();
+                return (
+                    <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-blue-50 rounded-lg">
+                            <Key className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                            <div className="font-medium text-gray-900">
+                                Partner ID: {row.partnerId}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                                Product ID: {row.productId}
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <div className="font-medium text-gray-900">{info.getValue()}</div>
-                        <div className="text-sm text-gray-500">{info.row.original.productName}</div>
-                    </div>
-                </div>
-            ),
+                );
+            },
             size: 200,
         }),
-        columnHelper.accessor('clientId', {
-            header: 'Client ID',
+        columnHelper.accessor('callbackUrl', {
+            header: 'Callback URL',
             cell: (info) => (
                 <div className="flex items-center space-x-2">
-                    <Shield className="w-4 h-4 text-gray-400" />
-                    <span className="font-mono text-sm text-gray-600">{info.getValue()}</span>
+                    <Globe className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600 truncate max-w-xs">{info.getValue()}</span>
                 </div>
             ),
         }),
@@ -260,11 +177,16 @@ const PartnerCredentialTable = () => {
             cell: (info) => <StatusBadge isActive={info.getValue()} />,
             size: 100,
         }),
-        columnHelper.accessor('updatedAt', {
+        columnHelper.accessor('editedOn', {
             header: 'Last Updated',
-            cell: (info) => (
-                <span className="text-sm text-gray-600">{info.getValue()}</span>
-            ),
+            cell: (info) => {
+                const date = info.getValue();
+                return (
+                    <span className="text-sm text-gray-600">
+                        {date ? new Date(date).toLocaleDateString() : 'N/A'}
+                    </span>
+                );
+            },
             size: 120,
         }),
         columnHelper.display({
@@ -291,7 +213,7 @@ const PartnerCredentialTable = () => {
             ),
             size: 120,
         }),
-    ], [columnHelper, credentials])
+    ], [columnHelper]);
 
     // Table instance
     const table = useReactTable({
@@ -310,7 +232,7 @@ const PartnerCredentialTable = () => {
                 pageSize: 10,
             },
         },
-    })
+    });
 
     return (
         <div className="min-h-screen bg-gray-50 p-2 pr-5">
@@ -336,8 +258,13 @@ const PartnerCredentialTable = () => {
 
                 {/* Table */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    {loading ? (
+                    {isLoading ? (
                         <LoadingSpinner />
+                    ) : isError ? (
+                        <ErrorDisplay 
+                            message={error?.message || 'Failed to load credentials'} 
+                            onRetry={refetch}
+                        />
                     ) : (
                         <>
                             <Table
@@ -361,7 +288,6 @@ const PartnerCredentialTable = () => {
                     <PartnerCredentialForm
                         isOpen={addModal}
                         onClose={() => setAddModal(false)}
-                        onSubmit={handleSubmit}
                         mode="create"
                     />
                 )}
@@ -371,7 +297,6 @@ const PartnerCredentialTable = () => {
                     <PartnerCredentialForm
                         isOpen={!!editModal}
                         onClose={() => setEditModal(null)}
-                        onSubmit={handleSubmit}
                         initialData={editModal}
                         mode="edit"
                     />
@@ -386,7 +311,7 @@ const PartnerCredentialTable = () => {
                 )}
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default PartnerCredentialTable
+export default PartnerCredentialTable;

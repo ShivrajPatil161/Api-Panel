@@ -1,8 +1,10 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, Key, Globe, Shield, User, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Building2, Key, Globe, User, ToggleLeft, ToggleRight } from 'lucide-react';
 import { usePartners, usePartnersProduct } from '../Hooks/usePartnerSchemes';
+import { useCreatePartnerCredential, useUpdatePartnerCredential } from '../Hooks/usePartnerCredentials';
+import { useEffect } from 'react';
 
 // Validation Schema
 const partnerCredentialSchema = z.object({
@@ -40,7 +42,7 @@ const FormInput = ({ label, name, control, error, required = false, type = "text
     </div>
 );
 
-const FormSelect = ({ label, name, control, error, required = false, options = [], placeholder = "Select an option" }) => (
+const FormSelect = ({ label, name, control, error, required = false, options = [], placeholder = "Select an option", disabled = false }) => (
     <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
             {label} {required && <span className="text-red-500">*</span>}
@@ -51,7 +53,8 @@ const FormSelect = ({ label, name, control, error, required = false, options = [
             render={({ field }) => (
                 <select
                     {...field}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={disabled}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                     <option value="">{placeholder}</option>
                     {options.map((option) => (
@@ -169,10 +172,11 @@ const FormActions = ({ onCancel, isSubmitting, isEdit }) => (
 const PartnerCredentialForm = ({
     isOpen,
     onClose,
-    onSubmit,
     initialData = null,
     mode = 'create'
 }) => {
+    const createMutation = useCreatePartnerCredential();
+    const updateMutation = useUpdatePartnerCredential();
 
     const {
         control,
@@ -182,7 +186,16 @@ const PartnerCredentialForm = ({
         watch
     } = useForm({
         resolver: zodResolver(partnerCredentialSchema),
-        defaultValues: initialData || {
+        defaultValues: initialData ? {
+            partner: initialData.partnerId?.toString() || '',
+            product: initialData.productId?.toString() || '',
+            tokenUrlUat: initialData.tokenUrlUat || '',
+            tokenUrlProd: initialData.tokenUrlProd || '',
+            baseUrlUat: initialData.baseUrlUat || '',
+            baseUrlProd: initialData.baseUrlProd || '',
+            callbackUrl: initialData.callbackUrl || '',
+            isActive: initialData.isActive ?? true
+        } : {
             partner: '',
             product: '',
             tokenUrlUat: '',
@@ -194,29 +207,53 @@ const PartnerCredentialForm = ({
         }
     });
 
-    const selectedPartnerId = watch('partner')
+    const selectedPartnerId = watch('partner');
+
+    // Reset form when initialData changes
+    useEffect(() => {
+        if (initialData) {
+            reset({
+                partner: initialData.partnerId?.toString() || '',
+                product: initialData.productId?.toString() || '',
+                tokenUrlUat: initialData.tokenUrlUat || '',
+                tokenUrlProd: initialData.tokenUrlProd || '',
+                baseUrlUat: initialData.baseUrlUat || '',
+                baseUrlProd: initialData.baseUrlProd || '',
+                callbackUrl: initialData.callbackUrl || '',
+                isActive: initialData.isActive ?? true
+            });
+        }
+    }, [initialData, reset]);
 
     // Fetch partners
-    const { data: partners = [], isLoading: loadingPartners } = usePartners()
+    const { data: partners = [], isLoading: loadingPartners } = usePartners();
 
-    
     // Transform data for select options
     const partnerOptions = partners.map(partner => ({
         value: partner.id.toString(),
         label: `${partner.businessName} (ID: ${partner.id})`
-    }))
+    }));
 
     // Fetch products for selected partner
-    const { data: products = [], isLoading: loadingProducts } = usePartnersProduct(selectedPartnerId, !!selectedPartnerId)
+    const { data: products = [], isLoading: loadingProducts } = usePartnersProduct(selectedPartnerId, !!selectedPartnerId);
 
     const productOptions = products.map(product => ({
         value: product.productId.toString(),
         label: `${product.productName} (${product.productCode})`
-    }))
+    }));
 
-    const handleFormSubmit = (data) => {
-        onSubmit(data);
-        reset();
+    const handleFormSubmit = async (data) => {
+        try {
+            if (mode === 'edit' && initialData) {
+                await updateMutation.mutateAsync({ id: initialData.id, data });
+            } else {
+                await createMutation.mutateAsync(data);
+            }
+            reset();
+            onClose();
+        } catch (error) {
+            console.error('Form submission error:', error);
+        }
     };
 
     const handleClose = () => {
@@ -225,6 +262,8 @@ const PartnerCredentialForm = ({
     };
 
     if (!isOpen) return null;
+
+    const isMutating = createMutation.isPending || updateMutation.isPending;
 
     return (
         <Modal
@@ -322,6 +361,7 @@ const PartnerCredentialForm = ({
                             name="callbackUrl"
                             control={control}
                             error={errors.callbackUrl}
+                            required
                             placeholder="https://callbackUrl/"
                         />
                     </GridLayout>
@@ -330,7 +370,7 @@ const PartnerCredentialForm = ({
                 {/* Form Actions */}
                 <FormActions
                     onCancel={handleClose}
-                    isSubmitting={isSubmitting}
+                    isSubmitting={isMutating}
                     isEdit={mode === 'edit'}
                 />
             </form>
