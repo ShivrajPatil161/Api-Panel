@@ -18,7 +18,7 @@ import Table from "../UI/Table";
 import TableHeader from "../UI/TableHeader";
 
 const PrefundRequestsTable = () => {
-    const userType = localStorage.getItem("userType");
+    const userType = localStorage.getItem("userType").toLowerCase();
 
     const [pagination, setPagination] = useState({ page: 0, size: 10 });
     const [filtering, setFiltering] = useState("");
@@ -133,7 +133,7 @@ const PrefundRequestsTable = () => {
                         emptyState={{
                             icon: <FileText className="h-12 w-12" />,
                             message: "No prefund requests found",
-                            action: userType !== "admin" ? (
+                            action: (userType !== "admin" || userType !== "super_admin") ? (
                                 <button
                                     onClick={() => setIsFormOpen(true)}
                                     className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

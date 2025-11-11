@@ -400,11 +400,6 @@ public class ApiPartnerService {
 
         return apiPartnerSchemeAssignmentService.getAllProductsOfApiPartner(apiPartnerId);
 
-
-
-
-
-
     }
 
 
