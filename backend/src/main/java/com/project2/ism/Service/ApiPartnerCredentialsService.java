@@ -1,0 +1,132 @@
+package com.project2.ism.Service;
+
+import com.project2.ism.DTO.PartnerCredentialDTO;
+import com.project2.ism.Exception.ResourceNotFoundException;
+import com.project2.ism.Model.ApiPartnerCredentials;
+import com.project2.ism.Model.Product;
+import com.project2.ism.Model.Users.ApiPartner;
+import com.project2.ism.Repository.ApiPartnerCredentialsRepository;
+import com.project2.ism.Repository.ApiPartnerRepository;
+import com.project2.ism.Repository.ProductRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class ApiPartnerCredentialsService {
+
+    private final ApiPartnerCredentialsRepository credentialsRepository;
+    private final ApiPartnerRepository apiPartnerRepository;
+    private final ProductRepository productRepository;
+
+    // ✅ Constructor-based Dependency Injection
+    public ApiPartnerCredentialsService(ApiPartnerCredentialsRepository credentialsRepository,
+                                        ApiPartnerRepository apiPartnerRepository,
+                                        ProductRepository productRepository) {
+        this.credentialsRepository = credentialsRepository;
+        this.apiPartnerRepository = apiPartnerRepository;
+        this.productRepository = productRepository;
+    }
+
+    // 🔹 Helper: Convert Entity → DTO
+    private PartnerCredentialDTO toDTO(ApiPartnerCredentials entity) {
+        if (entity == null) return null;
+
+        PartnerCredentialDTO dto = new PartnerCredentialDTO();
+        dto.setId(entity.getId());
+        dto.setPartnerId(entity.getApiPartner() != null ? entity.getApiPartner().getId() : null);
+        dto.setProductId(entity.getProduct() != null ? entity.getProduct().getId() : null);
+        dto.setTokenUrlUat(entity.getTokenUrlUat());
+        dto.setTokenUrlProd(entity.getTokenUrlProd());
+        dto.setBaseUrlUat(entity.getBaseUrlUat());
+        dto.setBaseUrlProd(entity.getBaseUrlProd());
+        dto.setCallbackUrl(entity.getCallbackUrl());
+        dto.setActive(entity.getActive());
+        dto.setCreatedOn(entity.getCreatedOn());
+        dto.setCreatedBy(entity.getCreatedBy());
+        dto.setEditedOn(entity.getEditedOn());
+        dto.setEditedBy(entity.getEditedBy());
+        return dto;
+    }
+
+    // 🔹 Helper: Convert DTO → Entity
+    private ApiPartnerCredentials toEntity(PartnerCredentialDTO dto, ApiPartner apiPartner, Product product) {
+        if (dto == null) return null;
+
+        ApiPartnerCredentials entity = new ApiPartnerCredentials();
+        entity.setId(dto.getId());
+        entity.setApiPartner(apiPartner);
+        entity.setProduct(product);
+        entity.setTokenUrlUat(dto.getTokenUrlUat());
+        entity.setTokenUrlProd(dto.getTokenUrlProd());
+        entity.setBaseUrlUat(dto.getBaseUrlUat());
+        entity.setBaseUrlProd(dto.getBaseUrlProd());
+        entity.setCallbackUrl(dto.getCallbackUrl());
+        entity.setActive(dto.getActive());
+        entity.setCreatedBy(dto.getCreatedBy());
+        entity.setEditedBy(dto.getEditedBy());
+        return entity;
+    }
+
+    // 🔹 CREATE
+    public PartnerCredentialDTO create(PartnerCredentialDTO dto) {
+        ApiPartner apiPartner = apiPartnerRepository.findById(dto.getPartnerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Partner", dto.getPartnerId()));
+
+        Product product = productRepository.findById(dto.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product", dto.getProductId()));
+
+        ApiPartnerCredentials entity = toEntity(dto, apiPartner, product);
+        ApiPartnerCredentials saved = credentialsRepository.save(entity);
+        return toDTO(saved);
+    }
+
+    // 🔹 GET ALL
+    public List<PartnerCredentialDTO> getAll() {
+        return credentialsRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    // 🔹 GET BY ID
+    public PartnerCredentialDTO getById(Long id) {
+        ApiPartnerCredentials entity = credentialsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("PartnerCredential", id));
+        return toDTO(entity);
+    }
+
+    // 🔹 UPDATE
+    public PartnerCredentialDTO update(Long id, PartnerCredentialDTO dto) {
+        ApiPartnerCredentials existing = credentialsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("PartnerCredential", id));
+
+        ApiPartner apiPartner = apiPartnerRepository.findById(dto.getPartnerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Partner", dto.getPartnerId()));
+
+        Product product = productRepository.findById(dto.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product", dto.getProductId()));
+
+        // update fields
+        existing.setApiPartner(apiPartner);
+        existing.setProduct(product);
+        existing.setTokenUrlUat(dto.getTokenUrlUat());
+        existing.setTokenUrlProd(dto.getTokenUrlProd());
+        existing.setBaseUrlUat(dto.getBaseUrlUat());
+        existing.setBaseUrlProd(dto.getBaseUrlProd());
+        existing.setCallbackUrl(dto.getCallbackUrl());
+        existing.setActive(dto.getActive());
+        existing.setEditedBy(dto.getEditedBy());
+
+        ApiPartnerCredentials updated = credentialsRepository.save(existing);
+        return toDTO(updated);
+    }
+
+    // 🔹 DELETE
+    public void delete(Long id) {
+        ApiPartnerCredentials entity = credentialsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("PartnerCredential", id));
+        credentialsRepository.delete(entity);
+    }
+}
