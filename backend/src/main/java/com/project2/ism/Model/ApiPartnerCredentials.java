@@ -90,5 +90,227 @@ public class ApiPartnerCredentials {
 
     @Column(name = "edited_by")
     private String editedBy;
+
+    public ApiPartnerCredentials() {
+    }
+
+    public ApiPartnerCredentials(Long id, ApiPartner apiPartner, Product product, String callbackUrl, String tokenUrlUat, String token, String tokenUrlProd, String baseUrlUat, String baseUrlProd, String clientId, String clientSecret, String saltKey, String username, String password, Boolean isActive, Boolean isWhiteLabelAdmin, String whiteLabelAdminId, String userField1, String userField2, String userField3, LocalDateTime createdOn, String createdBy, LocalDateTime editedOn, String editedBy) {
+        this.id = id;
+        this.apiPartner = apiPartner;
+        this.product = product;
+        this.callbackUrl = callbackUrl;
+        this.tokenUrlUat = tokenUrlUat;
+        this.token = token;
+        this.tokenUrlProd = tokenUrlProd;
+        this.baseUrlUat = baseUrlUat;
+        this.baseUrlProd = baseUrlProd;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.saltKey = saltKey;
+        this.username = username;
+        this.password = password;
+        this.isActive = isActive;
+        this.isWhiteLabelAdmin = isWhiteLabelAdmin;
+        this.whiteLabelAdminId = whiteLabelAdminId;
+        this.userField1 = userField1;
+        this.userField2 = userField2;
+        this.userField3 = userField3;
+        this.createdOn = createdOn;
+        this.createdBy = createdBy;
+        this.editedOn = editedOn;
+        this.editedBy = editedBy;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public ApiPartner getApiPartner() {
+        return apiPartner;
+    }
+
+    public void setApiPartner(ApiPartner apiPartner) {
+        this.apiPartner = apiPartner;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public String getCallbackUrl() {
+        return callbackUrl;
+    }
+
+    public void setCallbackUrl(String callbackUrl) {
+        this.callbackUrl = callbackUrl;
+    }
+
+    public String getTokenUrlUat() {
+        return tokenUrlUat;
+    }
+
+    public void setTokenUrlUat(String tokenUrlUat) {
+        this.tokenUrlUat = tokenUrlUat;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getTokenUrlProd() {
+        return tokenUrlProd;
+    }
+
+    public void setTokenUrlProd(String tokenUrlProd) {
+        this.tokenUrlProd = tokenUrlProd;
+    }
+
+    public String getBaseUrlUat() {
+        return baseUrlUat;
+    }
+
+    public void setBaseUrlUat(String baseUrlUat) {
+        this.baseUrlUat = baseUrlUat;
+    }
+
+    public String getBaseUrlProd() {
+        return baseUrlProd;
+    }
+
+    public void setBaseUrlProd(String baseUrlProd) {
+        this.baseUrlProd = baseUrlProd;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+    }
+
+    public String getSaltKey() {
+        return saltKey;
+    }
+
+    public void setSaltKey(String saltKey) {
+        this.saltKey = saltKey;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Boolean getActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
+    }
+
+    public Boolean getWhiteLabelAdmin() {
+        return isWhiteLabelAdmin;
+    }
+
+    public void setWhiteLabelAdmin(Boolean whiteLabelAdmin) {
+        isWhiteLabelAdmin = whiteLabelAdmin;
+    }
+
+    public String getWhiteLabelAdminId() {
+        return whiteLabelAdminId;
+    }
+
+    public void setWhiteLabelAdminId(String whiteLabelAdminId) {
+        this.whiteLabelAdminId = whiteLabelAdminId;
+    }
+
+    public String getUserField1() {
+        return userField1;
+    }
+
+    public void setUserField1(String userField1) {
+        this.userField1 = userField1;
+    }
+
+    public String getUserField2() {
+        return userField2;
+    }
+
+    public void setUserField2(String userField2) {
+        this.userField2 = userField2;
+    }
+
+    public String getUserField3() {
+        return userField3;
+    }
+
+    public void setUserField3(String userField3) {
+        this.userField3 = userField3;
+    }
+
+    public LocalDateTime getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(LocalDateTime createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public LocalDateTime getEditedOn() {
+        return editedOn;
+    }
+
+    public void setEditedOn(LocalDateTime editedOn) {
+        this.editedOn = editedOn;
+    }
+
+    public String getEditedBy() {
+        return editedBy;
+    }
+
+    public void setEditedBy(String editedBy) {
+        this.editedBy = editedBy;
+    }
 }
 
