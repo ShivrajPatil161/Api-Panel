@@ -2,6 +2,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Building2, Key, Globe, Shield, User, ToggleLeft, ToggleRight } from 'lucide-react';
+import { usePartners, usePartnersProduct } from '../Hooks/usePartnerSchemes';
 
 // Validation Schema
 const partnerCredentialSchema = z.object({
@@ -172,17 +173,18 @@ const PartnerCredentialForm = ({
     initialData = null,
     mode = 'create'
 }) => {
+
     const {
         control,
         handleSubmit,
         formState: { errors, isSubmitting },
-        reset
+        reset,
+        watch
     } = useForm({
         resolver: zodResolver(partnerCredentialSchema),
         defaultValues: initialData || {
             partner: '',
             product: '',
-            
             tokenUrlUat: '',
             tokenUrlProd: '',
             baseUrlUat: '',
@@ -192,21 +194,25 @@ const PartnerCredentialForm = ({
         }
     });
 
-    // Mock data
-    const partnerOptions = [
-        { value: 'partner1', label: 'Partner 1' },
-        { value: 'partner2', label: 'Partner 2' },
-        { value: 'partner3', label: 'Partner 3' },
-        { value: 'partner4', label: 'Partner 4' }
-    ];
+    const selectedPartnerId = watch('partner')
 
-    const productOptions = [
-        { value: 'recharge', label: 'Recharge' },
-        { value: 'bill_payment', label: 'Bill Payment' },
-        { value: 'dth', label: 'DTH' },
-        { value: 'electricity', label: 'Electricity' },
-        { value: 'water', label: 'Water' }
-    ];
+    // Fetch partners
+    const { data: partners = [], isLoading: loadingPartners } = usePartners()
+
+    
+    // Transform data for select options
+    const partnerOptions = partners.map(partner => ({
+        value: partner.id.toString(),
+        label: `${partner.businessName} (ID: ${partner.id})`
+    }))
+
+    // Fetch products for selected partner
+    const { data: products = [], isLoading: loadingProducts } = usePartnersProduct(selectedPartnerId, !!selectedPartnerId)
+
+    const productOptions = products.map(product => ({
+        value: product.productId.toString(),
+        label: `${product.productName} (${product.productCode})`
+    }))
 
     const handleFormSubmit = (data) => {
         onSubmit(data);
@@ -238,6 +244,7 @@ const PartnerCredentialForm = ({
                             required
                             options={partnerOptions}
                             placeholder="Select Partner"
+                            disabled={loadingPartners}
                         />
 
                         <FormSelect
@@ -248,12 +255,10 @@ const PartnerCredentialForm = ({
                             required
                             options={productOptions}
                             placeholder="Select Product"
+                            disabled={!selectedPartnerId || loadingProducts}
                         />
                     </GridLayout>
                 </FormSection>
-
-                
-                
 
                 {/* API URLs - UAT Environment */}
                 <FormSection title="UAT Environment URLs" icon={Globe}>
@@ -317,11 +322,9 @@ const PartnerCredentialForm = ({
                             name="callbackUrl"
                             control={control}
                             error={errors.callbackUrl}
-
                             placeholder="https://callbackUrl/"
                         />
                     </GridLayout>
-                    
                 </FormSection>
 
                 {/* Form Actions */}

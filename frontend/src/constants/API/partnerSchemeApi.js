@@ -5,6 +5,9 @@ export const partnerSchemeApi = {
   
   getProducts: () => api.get('/products').then(res => res.data?.content),
   
+  getPartnersProduct: (apiPartnerId) => api.get(`/partners/products/${apiPartnerId}`).then(res => res.data),
+  
+
   getValidSchemes: (productId, categoryName) => 
     api.get('/pricing-schemes/valid-pricing-scheme', {
       params: { productId, productCategory: categoryName, customerType: 'api_partner' }

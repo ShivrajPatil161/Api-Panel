@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { partnerSchemeApi } from '../../constants/API/partnerSchemeApi' 
+import { toast } from 'react-toastify'
 
 export const usePartners = () => {
     return useQuery({
@@ -17,6 +18,15 @@ export const useProducts = (enabled = true) => {
         
     })
 }
+
+export const usePartnersProduct = (apiPartnerId,enabled = false) => {
+    return useQuery({
+        queryKey: ['partnersProduct', apiPartnerId],
+        queryFn: () => partnerSchemeApi.getPartnersProduct(apiPartnerId),
+        enabled: enabled && !!apiPartnerId
+    })
+}
+
 
 export const useValidSchemes = (productId, categoryName, enabled = false) => {
     return useQuery({

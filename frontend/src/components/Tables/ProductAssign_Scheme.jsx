@@ -326,7 +326,7 @@ const ProductAssignment = () => {
                         <button
                             onClick={async () => {
                                 try {
-                                    await api.delete(`/outward-schemes/${id}`)
+                                    await api.delete(`/partner-schemes/${id}`)
                                     await fetchProductSchemeAssignment()
                                     toast.success("Product assignment deleted successfully")
                                 } catch (error) {
@@ -355,9 +355,9 @@ const ProductAssignment = () => {
 
     const handleSubmit = async (data) => {
         try {
+            await fetchProductSchemeAssignment()
             setIsModalOpen(false)
             setEditingAssignment(null)
-            await fetchProductSchemeAssignment()
         } catch (error) {
             console.error('Error saving assignment:', error)
         }

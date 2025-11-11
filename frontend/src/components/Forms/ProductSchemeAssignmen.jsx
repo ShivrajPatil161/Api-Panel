@@ -1,10 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { X } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import api from "../../constants/API/axiosInstance"
+import {  useEffect } from 'react'
+import { usePartners, useProducts, useValidSchemes, useCreateAssignment, useUpdateAssignment } from '../Hooks/usePartnerSchemes'
 import { toast } from 'react-toastify'
-import { usePartners, useProducts, useValidSchemes, useCreateAssignment, useUpdateAssignment } from '../hooks/usePartnerSchemes'
-import { partnerSchemeApi } from '../../constants/API/partnerSchemeApi' 
 
 
 // ==================== FORM COMPONENTS ====================
@@ -61,6 +59,7 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
         register,
         handleSubmit,
         formState: { errors },
+        reset,
         watch,
         setValue
     } = useForm({
@@ -125,23 +124,37 @@ const ProductAssignmentFormModal = ({ onCancel, onSubmit, initialData = null, is
 
     // Form submission
     const onFormSubmit = async (data) => {
-        const assignmentData = {
-            apiPartnerId: parseInt(data.customerId),
-            productId: parseInt(data.productId),
-            schemeId: parseInt(data.schemeId),
-            effectiveDate: data.effectiveDate,
-            expiryDate: data.expiryDate || null,
-            remarks: data.remarks || null
+        try {
+            const assignmentData = {
+                apiPartnerId: parseInt(data.customerId),
+                productId: parseInt(data.productId),
+                schemeId: parseInt(data.schemeId),
+                effectiveDate: data.effectiveDate,
+                expiryDate: data.expiryDate || null,
+                remarks: data.remarks || null
+            }
+            let response
+            if (isEdit && initialData?.id) {
+                response = await updateMutation.mutateAsync({ id: initialData.id, data: assignmentData })
+                
+            } else {
+                response = await createMutation.mutateAsync(assignmentData)
+               
+            }
+            
+                
+            
+            
+            
+            await onSubmit(response.data)
+            onCancel()  // This closes the modal
+            reset()
+        } catch (error) {
+            // Error is already handled in mutation hooks, but you can add additional handling here if needed
+            console.error('Form submission error:', error)
+            
+            reset()
         }
-
-        if (isEdit && initialData?.id) {
-            await updateMutation.mutateAsync({ id: initialData.id, data: assignmentData })
-        } else {
-            await createMutation.mutateAsync(assignmentData)
-        }
-
-        onSubmit()
-        onCancel()
     }
 
     const isSubmitting = createMutation.isPending || updateMutation.isPending
