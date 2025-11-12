@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "products",
@@ -36,6 +38,8 @@ public class Product {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PartnerProductAssignment> partnerAssignments = new HashSet<>();
 
     @NotNull(message = "Status is required")
     @Column(name = "status", nullable = false)
@@ -78,6 +82,13 @@ public class Product {
         this.productCategory = productCategory;
     }
 
+    public Set<PartnerProductAssignment> getPartnerAssignments() {
+        return partnerAssignments;
+    }
+
+    public void setPartnerAssignments(Set<PartnerProductAssignment> partnerAssignments) {
+        this.partnerAssignments = partnerAssignments;
+    }
 
     public Boolean getStatus() {
         return status;
