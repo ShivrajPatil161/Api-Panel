@@ -1,12 +1,15 @@
 package com.project2.ism.Model.Users;
 
 
+import com.project2.ism.Model.PartnerProductAssignment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class ApiPartner extends CustomerBase {
@@ -21,7 +24,8 @@ public class ApiPartner extends CustomerBase {
     @Column(name = "status")
     private String status = "ACTIVE";
 
-
+    @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PartnerProductAssignment> products = new HashSet<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -37,6 +41,14 @@ public class ApiPartner extends CustomerBase {
 
     public void setApproved(boolean approved) {
         isApproved = approved;
+    }
+
+    public Set<PartnerProductAssignment> getProducts() {
+        return products;
+    }
+
+    public void setProducts(Set<PartnerProductAssignment> products) {
+        this.products = products;
     }
 
     // Add getters and setters for these fields

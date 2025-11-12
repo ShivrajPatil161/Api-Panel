@@ -6,13 +6,21 @@ import com.project2.ism.DTO.SchemeGroupedResponseDTO;
 import com.project2.ism.Exception.DuplicateResourceException;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ApiPartnerSchemeAssignment;
+import com.project2.ism.Model.PartnerProductAssignment;
 import com.project2.ism.Model.PricingScheme.PricingScheme;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Users.ApiPartner;
 import com.project2.ism.Repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,22 +29,65 @@ import java.util.stream.Collectors;
 @Service
 public class ApiPartnerSchemeAssignmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(ApiPartnerSchemeAssignmentService.class);
     private final ApiPartnerSchemeAssignmentRepository assignmentRepo;
     private final PricingSchemeRepository schemeRepo;
     private final ProductRepository productRepository;
     private final ApiPartnerRepository apiPartnerRepository;
+    private final PartnerProductAssignmentRepository partnerProductAssignmentRepository;
 
     public ApiPartnerSchemeAssignmentService(
             ApiPartnerSchemeAssignmentRepository assignmentRepo,
             PricingSchemeRepository schemeRepo,
-            ProductRepository productRepository, ApiPartnerRepository apiPartnerRepository) {
+            ProductRepository productRepository, ApiPartnerRepository apiPartnerRepository, PartnerProductAssignmentRepository partnerProductAssignmentRepository) {
         this.assignmentRepo = assignmentRepo;
         this.schemeRepo = schemeRepo;
         this.productRepository = productRepository;
         this.apiPartnerRepository = apiPartnerRepository;
-
+        this.partnerProductAssignmentRepository = partnerProductAssignmentRepository;
     }
 
+//    public ApiPartnerSchemeAssignmentDTO createAssignment(ApiPartnerSchemeAssignmentDTO dto) {
+//        PricingScheme scheme = schemeRepo.findById(dto.getSchemeId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Scheme not found"));
+//
+//        Product product = productRepository.findById(dto.getProductId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+//
+//        Long apiPartnerId = dto.getApiPartnerId();
+//
+//
+//        // 🔍 Check for overlaps before assigning
+//        List<ApiPartnerSchemeAssignment> overlaps = assignmentRepo.findOverlappingAssignments(
+//                apiPartnerId,
+//                product.getId(),
+//                dto.getEffectiveDate(),
+//                dto.getExpiryDate()
+//        );
+//
+//        if (!overlaps.isEmpty()) {
+//            throw new DuplicateResourceException("Customer already has a scheme assigned for this product during the given period.");
+//        }
+//
+//
+//        ApiPartnerSchemeAssignment entity = new ApiPartnerSchemeAssignment();
+//        entity.setScheme(scheme);
+//        entity.setProduct(product);
+//        entity.setEffectiveDate(dto.getEffectiveDate());
+//        entity.setExpiryDate(dto.getExpiryDate());
+//        entity.setRemarks(dto.getRemarks());
+//
+//            ApiPartner apiPartner = apiPartnerRepository.findById(dto.getApiPartnerId())
+//                    .orElseThrow(() -> new ResourceNotFoundException("Api Partner not found"));
+//            entity.setApiPartner(apiPartner);
+//
+//
+//        ApiPartnerSchemeAssignment saved = assignmentRepo.save(entity);
+//        return toDTO(saved);
+//    }
+
+
+    @Transactional
     public ApiPartnerSchemeAssignmentDTO createAssignment(ApiPartnerSchemeAssignmentDTO dto) {
         PricingScheme scheme = schemeRepo.findById(dto.getSchemeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Scheme not found"));
@@ -44,12 +95,12 @@ public class ApiPartnerSchemeAssignmentService {
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        Long apiPartnerId = dto.getApiPartnerId();
+        ApiPartner apiPartner = apiPartnerRepository.findById(dto.getApiPartnerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Api Partner not found"));
 
-
-        // 🔍 Check for overlaps before assigning
+        // 1) overlap check
         List<ApiPartnerSchemeAssignment> overlaps = assignmentRepo.findOverlappingAssignments(
-                apiPartnerId,
+                apiPartner.getId(),
                 product.getId(),
                 dto.getEffectiveDate(),
                 dto.getExpiryDate()
@@ -59,22 +110,49 @@ public class ApiPartnerSchemeAssignmentService {
             throw new DuplicateResourceException("Customer already has a scheme assigned for this product during the given period.");
         }
 
-
+        // 2) create scheme assignment entity
         ApiPartnerSchemeAssignment entity = new ApiPartnerSchemeAssignment();
         entity.setScheme(scheme);
         entity.setProduct(product);
         entity.setEffectiveDate(dto.getEffectiveDate());
         entity.setExpiryDate(dto.getExpiryDate());
         entity.setRemarks(dto.getRemarks());
+        entity.setApiPartner(apiPartner);
 
-            ApiPartner apiPartner = apiPartnerRepository.findById(dto.getApiPartnerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Api Partner not found"));
-            entity.setApiPartner(apiPartner);
+        ApiPartnerSchemeAssignment saved;
+        try {
+            saved = assignmentRepo.save(entity);
+        } catch (DataIntegrityViolationException e) {
+            // Defensive: in case unique constraint kicks in concurrently
+            throw new DuplicateResourceException("Conflicting assignment exists (concurrent request).");
+        }
 
+        // 3) ensure partner-product relationship exists
+        try {
+            boolean exists = partnerProductAssignmentRepository.existsByPartnerIdAndProductId(apiPartner.getId(), product.getId());
+            if (!exists) {
+                PartnerProductAssignment productAssignment = new PartnerProductAssignment();
+                productAssignment.setPartner(apiPartner);
+                productAssignment.setProduct(product);
+                productAssignment.setAssignedOn(LocalDateTime.now());
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                productAssignment.setAssignedBy(auth.getName());
+                productAssignment.setRemarks("Assigned when scheme: "+scheme.getSchemeCode()+"was assigned");
+                // set other fields if necessary
+                partnerProductAssignmentRepository.save(productAssignment);
+            }
+        } catch (DataIntegrityViolationException e) {
+            // If two threads tried to insert at same time, unique constraint will prevent duplication.
+            // This exception can be safely ignored or logged as it's an expected race resolution.
+            // Log at debug to investigate rare race conditions:
+            log.debug("Partner-product assignment already created concurrently: partner={}, product={}",
+                    apiPartner.getId(), product.getId());
+        }
 
-        ApiPartnerSchemeAssignment saved = assignmentRepo.save(entity);
         return toDTO(saved);
     }
+
+
 
 
     public List<ApiPartnerSchemeAssignmentDTO> getAssignmentsByApiPartner(Long apiPartnerId) {

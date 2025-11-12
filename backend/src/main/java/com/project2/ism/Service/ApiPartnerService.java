@@ -30,7 +30,7 @@ public class ApiPartnerService {
     private final ApiPartnerRepository apiPartnerRepository;
     private final FileStorageService fileStorageService;
     private final UserService userService;
-    private final ApiPartnerSchemeAssignmentService apiPartnerSchemeAssignmentService;
+    private final PartnerProductAssignmentRepository partnerProductAssignmentRepository;
 
 
 
@@ -38,11 +38,11 @@ public class ApiPartnerService {
 
     public ApiPartnerService(ApiPartnerRepository apiPartnerRepository,
                              FileStorageService fileStorageService,
-                             UserService userService, ApiPartnerSchemeAssignmentService apiPartnerSchemeAssignmentService, ApiPartnerWalletRepository apiPartnerWalletRepository) {
+                             UserService userService, PartnerProductAssignmentRepository partnerProductAssignmentRepository, ApiPartnerWalletRepository apiPartnerWalletRepository) {
         this.apiPartnerRepository = apiPartnerRepository;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
-        this.apiPartnerSchemeAssignmentService = apiPartnerSchemeAssignmentService;
+        this.partnerProductAssignmentRepository = partnerProductAssignmentRepository;
         this.apiPartnerWalletRepository = apiPartnerWalletRepository;
     }
 
@@ -394,9 +394,7 @@ public class ApiPartnerService {
 
 
     public List<ApiPartnerProductsDTO> getProductsOfApiPartner(Long apiPartnerId) {
-
-
-        return apiPartnerSchemeAssignmentService.getAllProductsOfApiPartner(apiPartnerId);
+        return partnerProductAssignmentRepository.findAllProductByApiPartnerId(apiPartnerId);
 
     }
 
