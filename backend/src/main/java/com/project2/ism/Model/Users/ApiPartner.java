@@ -21,8 +21,7 @@ public class ApiPartner extends CustomerBase {
     @Column(name = "status")
     private String status = "ACTIVE";
 
-    @Column(name = "products")
-    private Integer products = 0;
+
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -43,10 +42,6 @@ public class ApiPartner extends CustomerBase {
     // Add getters and setters for these fields
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-
-
-    public Integer getProducts() { return products; }
-    public void setProducts(Integer products) { this.products = products; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

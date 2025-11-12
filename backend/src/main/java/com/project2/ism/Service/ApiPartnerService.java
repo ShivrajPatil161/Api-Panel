@@ -97,7 +97,7 @@ public class ApiPartnerService {
         // Set default values
         apiPartner.setStatus("ACTIVE");
 
-        apiPartner.setProducts(0);
+
         apiPartner.setCreatedAt(LocalDateTime.now());
         apiPartner.setUpdatedAt(LocalDateTime.now());
 
@@ -303,7 +303,6 @@ public class ApiPartnerService {
                 apiPartner.getContactPerson() != null ? apiPartner.getContactPerson().getEmail() : null,
                 apiPartner.getContactPerson() != null ? apiPartner.getContactPerson().getPhoneNumber() : null,
                 apiPartner.getAddress(),
-                apiPartner.getProducts() != null ? apiPartner.getProducts() : 0,
                 getWalletBalance(apiPartner.getId()),
                 apiPartner.getStatus() != null ? apiPartner.getStatus() : "ACTIVE",
                 apiPartner.getCreatedAt()

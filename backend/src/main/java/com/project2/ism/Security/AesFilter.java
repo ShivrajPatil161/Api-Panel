@@ -29,7 +29,9 @@ public class AesFilter extends OncePerRequestFilter {
 
     // Paths that REQUIRE AES authentication
     private static final Set<String> AES_PROTECTED_PATHS = Set.of(
-            "/external"
+            "/external",
+            "/pg/create-order"
+            //"/pg/payment/callback"
     );
 
     // Public AES endpoints (no auth needed)
