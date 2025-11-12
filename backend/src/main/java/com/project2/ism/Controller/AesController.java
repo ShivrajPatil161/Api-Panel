@@ -31,11 +31,8 @@ import java.util.Optional;
 
 
 @RestController
-@RequestMapping("/api/aes")
+@RequestMapping("/aes")
 public class AesController {
-
-
-
 
     @Value("${app.security.base-secret}")
     private String baseSecret;

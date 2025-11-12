@@ -40,8 +40,8 @@ public class SecurityConfig {
                         //.requestMatchers("/actuator/health").permitAll()
 
                         // AES-protected external API endpoints (already handled by AesFilter)
-                        .requestMatchers("/api/aes/**").permitAll() // AesFilter will handle auth
-                        .requestMatchers("/api/external/**").permitAll() // Your external APIs
+                        .requestMatchers("/aes/**").permitAll() // AesFilter will handle auth
+                        .requestMatchers("/external/**").permitAll() // Your external APIs
 
 
 

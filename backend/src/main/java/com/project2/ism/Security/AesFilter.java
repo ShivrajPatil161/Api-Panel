@@ -29,16 +29,16 @@ public class AesFilter extends OncePerRequestFilter {
 
     // Paths that REQUIRE AES authentication
     private static final Set<String> AES_PROTECTED_PATHS = Set.of(
-            "/api/external"
+            "/external"
     );
 
     // Public AES endpoints (no auth needed)
     private static final Set<String> AES_PUBLIC_PATHS = Set.of(
-            "/api/aes/generate-token",
-            "/api/aes/encrypt-credentials",
-            "/api/aes/decrypt-credentials",
-            "/api/pg/payment/callback",
-            "/api/payout/callback"
+            "/aes/generate-token",
+            "/aes/encrypt-credentials",
+            "/aes/decrypt-credentials",
+            "/pg/payment/callback",
+            "/payout/callback"
     );
 
     private static final Logger log = LoggerFactory.getLogger(AesFilter.class);
