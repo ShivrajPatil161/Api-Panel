@@ -5,7 +5,6 @@ import com.project2.ism.Model.Users.User;
 import com.project2.ism.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,10 +24,11 @@ public class UserService {
     @Value("${security.password.expiry-days:90}")  // ✅ Inject here in the service
     private int passwordExpiryDays;
 
-    public UserService(UserRepository userRepository, MailService mailService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, MailService mailService) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.mailService = mailService;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+
     }
 
     // ✅ Add new enum for login status
