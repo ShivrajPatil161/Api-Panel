@@ -1,7 +1,7 @@
 package com.project2.ism.Security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project2.ism.Controller.AesController;
+
 import com.project2.ism.DTO.ReportDTO.ApiResponse;
 import com.project2.ism.Service.AesService;
 import jakarta.servlet.FilterChain;
@@ -10,38 +10,29 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.UrlPathHelper;
+
 
 import javax.crypto.spec.IvParameterSpec;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Base64;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
+
+import static com.project2.ism.Security.AesPathConstants.AES_PROTECTED_PATHS;
+import static com.project2.ism.Security.AesPathConstants.AES_PUBLIC_PATHS;
 
 @Component
 public class AesFilter extends OncePerRequestFilter {
 
-    // Paths that REQUIRE AES authentication
-    private static final Set<String> AES_PROTECTED_PATHS = Set.of(
-            "/external",
-            "/pg/create-order"
-            //"/pg/payment/callback"
-    );
-
-    // Public AES endpoints (no auth needed)
-    private static final Set<String> AES_PUBLIC_PATHS = Set.of(
-            "/aes/generate-token",
-            "/aes/encrypt-credentials",
-            "/aes/decrypt-credentials",
-            "/pg/payment/callback",
-            "/payout/callback"
-    );
 
     private static final Logger log = LoggerFactory.getLogger(AesFilter.class);
 
@@ -116,8 +107,25 @@ public class AesFilter extends OncePerRequestFilter {
                 return;
             }
 
-            log.info("AES authentication successful for user: {}", parts[2]);
-            request.setAttribute("aesUsername", parts[2]);
+            String username = parts[2];
+            log.info("AES authentication successful for user: {}", username);
+
+            // ⭐ CRITICAL: Set Spring Security authentication
+            // This tells Spring Security the user is authenticated
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            username,
+                            null,
+                            List.of(new SimpleGrantedAuthority("ROLE_API_USER")) // Generic role for AES users
+                    );
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            log.info("Spring Security context set for AES user: {}", username);
+
+            // Also set as request attribute for backward compatibility
+            request.setAttribute("aesUsername", username);
+
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {

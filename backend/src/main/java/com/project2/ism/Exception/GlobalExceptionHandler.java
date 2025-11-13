@@ -47,6 +47,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getDescription(false)), HttpStatus.NOT_FOUND);
     }
 
+    // Resource Not Found
+    @ExceptionHandler(NoAvailableVendorException.class)
+    public ResponseEntity<ErrorResponse> handleNoAvailableVendorException(NoAvailableVendorException ex, WebRequest request) {
+        logger.error("NoAvailableVendor : {}", ex.getMessage());
+        return new ResponseEntity<>(buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getDescription(false)), HttpStatus.NOT_FOUND);
+    }
+
     // Duplicate Product Code
     @ExceptionHandler(DuplicateProductCodeException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateProductCodeException(DuplicateProductCodeException ex, WebRequest request) {

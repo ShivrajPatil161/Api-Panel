@@ -2,18 +2,23 @@ package com.project2.ism.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.project2.ism.DTO.PaymentGateway.CreateOrderRequest;
+import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ApiPartnerCredentials;
+import com.project2.ism.Model.PgTransactionMapping;
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Model.Vendor.VendorCredentials;
 import com.project2.ism.Model.Vendor.VendorRouting;
 import com.project2.ism.Repository.ApiPartnerCredentialsRepository;
+import com.project2.ism.Repository.PgTransactionMappingRepository;
 import com.project2.ism.Repository.VendorCredentialRepository;
 import com.project2.ism.Repository.VendorRoutingRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
@@ -33,12 +38,15 @@ public class PaymentGatewayService {
     private final ApiPartnerCredentialsRepository apiPartnerCredentialsRepository;
     private final VendorRoutingRepository vendorRoutingRepository;
     private final VendorCredentialRepository vendorCredentialRepository;
+    private final PgTransactionMappingRepository pgTransactionMappingRepository;
+    private final VendorRoutingService vendorRoutingService;
 
-
-    public PaymentGatewayService(ApiPartnerCredentialsRepository apiPartnerCredentialsRepository, VendorRoutingRepository vendorRoutingRepository, VendorCredentialRepository vendorCredentialRepository) {
+    public PaymentGatewayService(ApiPartnerCredentialsRepository apiPartnerCredentialsRepository, VendorRoutingRepository vendorRoutingRepository, VendorCredentialRepository vendorCredentialRepository, PgTransactionMappingRepository pgTransactionMappingRepository, VendorRoutingService vendorRoutingService) {
         this.apiPartnerCredentialsRepository = apiPartnerCredentialsRepository;
         this.vendorRoutingRepository = vendorRoutingRepository;
         this.vendorCredentialRepository = vendorCredentialRepository;
+        this.pgTransactionMappingRepository = pgTransactionMappingRepository;
+        this.vendorRoutingService = vendorRoutingService;
     }
 
 
@@ -51,25 +59,25 @@ public class PaymentGatewayService {
         try {
 
             String orderId = req.getOrderId();
-
-            String username = "";//req.getUsername();
-            Optional<ApiPartnerCredentials> optionalApiPartnerCredentials =
-                    apiPartnerCredentialsRepository.findByUsername(username);
-
-            ApiPartnerCredentials apiPartnerCredentials = optionalApiPartnerCredentials.get();
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String username = auth.getName();
+            ApiPartnerCredentials apiPartnerCredentials =
+                    apiPartnerCredentialsRepository.findByUsername(username)
+                            .orElseThrow(() -> new RuntimeException("Invalid dummy username"));
 
             // Get partner's product (PG / Payout)
             Product partnerProduct = new Product();//apiPartnerCredentials.getApiPartner().getProducts();
             if (partnerProduct == null) {
                 throw new IllegalArgumentException("No product assigned to partner " + partnerId);
             }
-
+            //dummy code
+            partnerProduct.setId(Long.valueOf(req.getProductId()));
             // 3. Find VendorRouting for requested product
             VendorRouting routing = vendorRoutingRepository.findByProductId(partnerProduct.getId())
-                    .orElseThrow(() -> new RuntimeException("No vendor routing found for product " + req.getProductId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("No vendor routing found for product " + partnerProduct.getId()));
 
             // 4. Determine the vendor from routing (your own logic)
-            Vendor vendor = new Vendor();// CommonMethods.getVendors(routing);
+            Vendor vendor = vendorRoutingService.getVendorForToken(routing, req.getAmount());
             if (vendor == null) {
                 throw new RuntimeException("No vendor determined from routing");
             }
@@ -78,17 +86,17 @@ public class PaymentGatewayService {
 //            VendorCredentials credentials = vendorCredentialRepository
 //                    .findByVendor_IdAndProduct_Id(vendor.getId(), vendor.getProduct().getId())
 //                    .orElseThrow(() -> new RuntimeException("No credentials found for vendor " + vendor.getId()));
-//
+
 
             // ====== Save Transaction Mapping (Retailer Context) ======
-//            PgTransactionMapping txnMap = new PgTransactionMapping();
-//            txnMap.setOrderId(orderId);
-//            txnMap.setInitiatedBy(req.getInitiatedBy());  // <-- must come from logged-in user or request
-//            txnMap.setAmount(req.getAmount());
-//            txnMap.setStatus("INITIATED");
-//            txnMap.setVendorName(vendor.getVendorName());
-//
-//            pgTransactionMappingRepository.save(txnMap);
+            PgTransactionMapping txnMap = new PgTransactionMapping();
+            txnMap.setOrderId(orderId);
+            txnMap.setInitiatedBy(username);  // <-- must come from logged-in user or request
+            txnMap.setAmount(req.getAmount());
+            txnMap.setStatus("INITIATED");
+            //txnMap.setVendorName(vendor.getName());
+
+            pgTransactionMappingRepository.save(txnMap);
 
             // headers with token
 //            HttpHeaders headers = new HttpHeaders();
@@ -115,8 +123,8 @@ public class PaymentGatewayService {
 //
 //            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 //
-//            txnMap.setStatus("REQUEST_SENT");
-//            pgTransactionMappingRepository.save(txnMap);
+            txnMap.setStatus("REQUEST_SENT");
+            pgTransactionMappingRepository.save(txnMap);
 
 //            LocalDateTime vendorResponseTime = LocalDateTime.now();
 //            String vendorResponseLog = response.getBody();
@@ -128,7 +136,7 @@ public class PaymentGatewayService {
 //            commonFunctions.saveImLogs(req.toString(), imRequestTime, null,
 //                    vendorResponseLog, LocalDateTime.now());
 
-            return ResponseEntity.status(200).body("hi implement this");
+            return ResponseEntity.status(200).body("hi implement this"+ vendor.getName());
 
         } catch (Exception e) {
             log.error("Error creating order {}", req, e);

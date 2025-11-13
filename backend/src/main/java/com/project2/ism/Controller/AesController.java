@@ -25,6 +25,9 @@ import javax.crypto.spec.PBEKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
@@ -161,9 +164,15 @@ public class AesController {
                     Base64.getEncoder().encodeToString(tokenIv.getIV()) + "|" +
                     encryptedToken;
 
+
+            LocalDateTime expiresAt = Instant.ofEpochMilli(expirationTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+
+
             return ResponseEntity.ok(Map.of(
                     "token", fullToken,
-                    "expiresAt", expirationTime
+                    "expiresAt", expiresAt
             ));
         } catch (Exception e) {
             log.error("Error generating token", e);

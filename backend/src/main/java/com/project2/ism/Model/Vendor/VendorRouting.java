@@ -22,6 +22,18 @@ public class VendorRouting {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor1_id", nullable = false)
+    private Vendor vendor1;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor2_id", nullable = false)
+    private Vendor vendor2;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor3_id", nullable = false)
+    private Vendor vendor3;
+
     @OneToMany(mappedBy = "vendorRouting", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VendorRule> vendorRules = new ArrayList<>();
 
@@ -50,6 +62,30 @@ public class VendorRouting {
     }
 
     // Constructor, Getters and Setters needed
+
+    public Vendor getVendor1() {
+        return vendor1;
+    }
+
+    public void setVendor1(Vendor vendor1) {
+        this.vendor1 = vendor1;
+    }
+
+    public Vendor getVendor2() {
+        return vendor2;
+    }
+
+    public void setVendor2(Vendor vendor2) {
+        this.vendor2 = vendor2;
+    }
+
+    public Vendor getVendor3() {
+        return vendor3;
+    }
+
+    public void setVendor3(Vendor vendor3) {
+        this.vendor3 = vendor3;
+    }
 
     public VendorRouting() {
     }

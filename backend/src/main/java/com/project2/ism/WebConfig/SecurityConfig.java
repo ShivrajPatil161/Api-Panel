@@ -41,7 +41,7 @@ public class SecurityConfig {
 
                         // AES-protected external API endpoints (already handled by AesFilter)
                         .requestMatchers("/aes/**").permitAll() // AesFilter will handle auth
-                        .requestMatchers("/external/**").permitAll() // Your external APIs
+                        .requestMatchers("/pg/**").permitAll() // Your external APIs
 
 
 

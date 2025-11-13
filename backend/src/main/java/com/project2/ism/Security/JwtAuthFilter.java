@@ -146,11 +146,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String relativePath = path.substring(contextPath.length());
 
-        // Skip JWT validation for public endpoints
-        return path.equals("/users/login") ||
-                path.equals("/users/signup") ||
-                path.startsWith("/actuator/health") ||
+        boolean isPublicEndpoint = relativePath.equals("/users/login") ||
+                relativePath.equals("/users/signup") ||
+                relativePath.startsWith("/actuator/health") ||
                 request.getMethod().equals("OPTIONS");
+
+        boolean isAesPath = AesPathConstants.AES_PROTECTED_PATHS.stream().anyMatch(relativePath::startsWith) ||
+                AesPathConstants.AES_PUBLIC_PATHS.stream().anyMatch(relativePath::startsWith);
+
+        return isPublicEndpoint || isAesPath;
     }
 }

@@ -166,7 +166,6 @@ const AdminDashboard = () => {
                         value={pricingSchemeStats?.totalSchemes || 0}
                         icon={CreditCard}
                         color="orange"
-                        subtitle={`${pricingSchemeStats?.totalDirectMerchantSchemes || 0} direct, ${pricingSchemeStats?.totalFranchiseSchemes || 0} franchise`}
                     />
                     {/* Product Categories */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
