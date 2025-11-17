@@ -45,6 +45,54 @@ const VendorRoutingView = ({ selectedRouting, onClose }) => {
                             </p>
                         </div>
                     </div>
+                    {/* Vendor Priority */}
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                            Vendor Priority (V1 → V2 → V3)
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
+                            {/* Vendor 1 */}
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                                <p className="font-medium text-gray-800 mb-1">Priority 1</p>
+                                {selectedRouting.vendor1 ? (
+                                    <>
+                                        <p><span className="font-medium">Vendor ID:</span> {selectedRouting.vendor1.id}</p>
+                                        <p><span className="font-medium">Name:</span> {selectedRouting.vendor1.name}</p>
+                                    </>
+                                ) : (
+                                    <p className="text-gray-500">Not Assigned</p>
+                                )}
+                            </div>
+
+                            {/* Vendor 2 */}
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                                <p className="font-medium text-gray-800 mb-1">Priority 2</p>
+                                {selectedRouting.vendor2 ? (
+                                    <>
+                                        <p><span className="font-medium">Vendor ID:</span> {selectedRouting.vendor2.id}</p>
+                                        <p><span className="font-medium">Name:</span> {selectedRouting.vendor2.name}</p>
+                                    </>
+                                ) : (
+                                    <p className="text-gray-500">Not Assigned</p>
+                                )}
+                            </div>
+
+                            {/* Vendor 3 */}
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                                <p className="font-medium text-gray-800 mb-1">Priority 3</p>
+                                {selectedRouting.vendor3 ? (
+                                    <>
+                                        <p><span className="font-medium">Vendor ID:</span> {selectedRouting.vendor3.id}</p>
+                                        <p><span className="font-medium">Name:</span> {selectedRouting.vendor3.name}</p>
+                                    </>
+                                ) : (
+                                    <p className="text-gray-500">Not Assigned</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
 
                     {/* Vendor Rules */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">

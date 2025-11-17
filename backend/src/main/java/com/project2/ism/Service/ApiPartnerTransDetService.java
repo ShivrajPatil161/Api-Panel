@@ -26,7 +26,7 @@ public class ApiPartnerTransDetService {
         return apiPartnerTransDetRepository.findById(id);
     }
 
-    public Optional<ApiPartnerTransactionDetails> getFranchiseTransactionDetailsByTransactionDetailsId(Long transactionId) {
+    public Optional<ApiPartnerTransactionDetails> getFranchiseTransactionDetailsByTransactionDetailsId(String transactionId) {
         return apiPartnerTransDetRepository.findByTransactionId(transactionId);
     }
 

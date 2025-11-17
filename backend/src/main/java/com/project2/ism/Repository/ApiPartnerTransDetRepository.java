@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 
 @Repository
 public interface ApiPartnerTransDetRepository extends JpaRepository<ApiPartnerTransactionDetails,Long> {
-    Optional<ApiPartnerTransactionDetails> findByTransactionId(Long transactionId);
+    Optional<ApiPartnerTransactionDetails> findByTransactionId(String transactionId);
 
     boolean existsByVendorTransactionId(String vendorTransactionId);
 

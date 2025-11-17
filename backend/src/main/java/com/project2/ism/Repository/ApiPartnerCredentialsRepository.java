@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface ApiPartnerCredentialsRepository extends JpaRepository<ApiPartnerCredentials, Long> {
 
     Optional<ApiPartnerCredentials> findByUsername(String decryptedUsername);
+
+    Optional<ApiPartnerCredentials> findByApiPartnerId(Long id);
 }

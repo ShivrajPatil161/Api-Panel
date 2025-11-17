@@ -2,6 +2,9 @@ package com.project2.ism.DTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project2.ism.DTO.Vendor.VendorIDNameDTO;
+import com.project2.ism.Enum.TransactionType;
+
+import java.math.BigDecimal;
 
 public class ProductDTO {
 
@@ -12,6 +15,11 @@ public class ProductDTO {
     @JsonProperty("productCategory") // Maps "productCategory" from JSON to "category" field
     private ProductCategoryDTO category;
 
+    private Boolean hasCharges;
+    private Boolean isCommission;
+    private BigDecimal gstValue;
+    private BigDecimal tdsValue;
+    private TransactionType transactionType;
 
     private String description;
 
@@ -27,6 +35,21 @@ public class ProductDTO {
         this.productName = productName;
         this.productCode = productCode;
         this.category = category;
+        this.description = description;
+        this.status = status;
+        this.remarks = remarks;
+    }
+
+    public ProductDTO(Long id, String productName, String productCode, ProductCategoryDTO category, Boolean hasCharges, Boolean isCommission, BigDecimal gstValue, BigDecimal tdsValue, TransactionType transactionType, String description, boolean status, String remarks) {
+        this.id = id;
+        this.productName = productName;
+        this.productCode = productCode;
+        this.category = category;
+        this.hasCharges = hasCharges;
+        this.isCommission = isCommission;
+        this.gstValue = gstValue;
+        this.tdsValue = tdsValue;
+        this.transactionType = transactionType;
         this.description = description;
         this.status = status;
         this.remarks = remarks;
@@ -70,6 +93,46 @@ public class ProductDTO {
 
     public void setCategory(ProductCategoryDTO category) {
         this.category = category;
+    }
+
+    public Boolean getHasCharges() {
+        return hasCharges;
+    }
+
+    public void setHasCharges(Boolean hasCharges) {
+        this.hasCharges = hasCharges;
+    }
+
+    public Boolean getIsCommission() {
+        return isCommission;
+    }
+
+    public void setIsCommission(Boolean commission) {
+        isCommission = commission;
+    }
+
+    public BigDecimal getGstValue() {
+        return gstValue;
+    }
+
+    public void setGstValue(BigDecimal gstValue) {
+        this.gstValue = gstValue;
+    }
+
+    public BigDecimal getTdsValue() {
+        return tdsValue;
+    }
+
+    public void setTdsValue(BigDecimal tdsValue) {
+        this.tdsValue = tdsValue;
+    }
+
+    public TransactionType getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
     }
 
     public String getDescription() {

@@ -2,10 +2,8 @@ package com.project2.ism.Service;
 
 import com.project2.ism.Model.Product;
 import com.project2.ism.Model.ProductCategory;
-import com.project2.ism.Model.Vendor.Vendor;
 import com.project2.ism.Repository.ProductRepository;
 import com.project2.ism.Repository.ProductCategoryRepository;
-import com.project2.ism.Repository.VendorRepository;
 import com.project2.ism.DTO.ProductDTO;
 import com.project2.ism.DTO.Vendor.VendorIDNameDTO;
 import com.project2.ism.DTO.ProductCategoryDTO;
@@ -173,6 +171,12 @@ public class ProductService {
 
         product.setDescription(dto.getDescription());
 
+        product.setIsCommission(dto.getIsCommission());
+        product.setHasCharges(dto.getHasCharges());
+        product.setGstValue(dto.getGstValue());
+        product.setTdsValue(dto.getTdsValue());
+        product.setTransactionType(dto.getTransactionType());
+
         product.setStatus(dto.isStatus());
 
         product.setRemarks(dto.getRemarks());
@@ -196,7 +200,11 @@ public class ProductService {
                 product.getProductName(),
                 product.getProductCode(),
                 categoryDTO,
-
+                product.getHasCharges(),
+                product.getIsCommission(),
+                product.getGstValue(),
+                product.getTdsValue(),
+                product.getTransactionType(),
                 product.getDescription(),
 
                 product.getStatus(),
@@ -208,6 +216,26 @@ public class ProductService {
     private void updateProductFields(Product product, ProductDTO dto) {
         if (StringUtils.hasText(dto.getProductName())) {
             product.setProductName(dto.getProductName());
+        }
+
+        if (dto.getHasCharges() != null) {
+            product.setHasCharges(dto.getHasCharges());
+        }
+
+        if (dto.getIsCommission() != null) {
+            product.setIsCommission(dto.getIsCommission());
+        }
+
+        if (dto.getGstValue() != null) {
+            product.setGstValue(dto.getGstValue());
+        }
+
+        if (dto.getTdsValue() != null) {
+            product.setTdsValue(dto.getTdsValue());
+        }
+
+        if (dto.getTransactionType() != null) {
+            product.setTransactionType(dto.getTransactionType());
         }
 
         if (StringUtils.hasText(dto.getDescription())) {

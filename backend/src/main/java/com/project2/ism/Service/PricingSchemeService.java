@@ -42,15 +42,18 @@
             this.vendorRatesService = vendorRatesService;
         }
 
+        @Transactional
         public PricingScheme createPricingScheme(PricingScheme pricingScheme) {
             // Check for duplicate scheme
-            if (pricingSchemeRepository.existsDuplicateSchemeForNew(
-                    pricingScheme.getSchemeCode(),
-                    pricingScheme.getRentalByMonth()
-                    )) {
-                throw new RuntimeException("Pricing scheme with same code, rental amount and customer type already exists");
-            }
+//            if (pricingSchemeRepository.existsDuplicateSchemeForNew(
+//                    pricingScheme.getSchemeCode(),
+//                    pricingScheme.getRentalByMonth()
+//                    )) {
+//                throw new RuntimeException("Pricing scheme with same code, rental amount  already exists");
+//            }
 
+            String code = generateNextSchemeCode();
+            pricingScheme.setSchemeCode(code);
             // Set bidirectional relationship for channel rates
             if (pricingScheme.getChannelRates() != null) {
                 pricingScheme.getChannelRates().forEach(channelRate -> channelRate.setPricingScheme(pricingScheme));
@@ -91,7 +94,7 @@
             // Update basic fields
             existingScheme.setSchemeCode(pricingSchemeDetails.getSchemeCode());
             existingScheme.setRentalByMonth(pricingSchemeDetails.getRentalByMonth());
-
+            existingScheme.setOneTimeRent(pricingSchemeDetails.getOneTimeRent());
             existingScheme.setDescription(pricingSchemeDetails.getDescription());
 
             // Clear existing channel rates and add new ones

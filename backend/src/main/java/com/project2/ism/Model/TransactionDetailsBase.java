@@ -15,11 +15,11 @@ import java.time.LocalTime;
 public abstract class TransactionDetailsBase {
 
     @Id
-    @GeneratedValue(generator = "transaction-id-generator")
-    @GenericGenerator(name = "transaction-id-generator",
-            type = TransactionIdGenerator.class)
+//    @GeneratedValue(generator = "transaction-id-generator")
+//    @GenericGenerator(name = "transaction-id-generator",
+//            type = TransactionIdGenerator.class)
     @Column(name = "transaction_id", unique = true, nullable = false)
-    private Long transactionId;
+    private String transactionId;
 
     @Column(name = "action_on_balance")
     private String actionOnBalance;
@@ -323,11 +323,11 @@ public abstract class TransactionDetailsBase {
         this.tranStatus = tranStatus;
     }
 
-    public Long getTransactionId() {
+    public String getTransactionId() {
         return transactionId;
     }
 
-    public void setTransactionId(Long transactionId) {
+    public void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
     }
 

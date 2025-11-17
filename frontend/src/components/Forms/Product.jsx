@@ -87,6 +87,11 @@ const productSchema = z.object({
   ]),
   newCategoryName: z.string().optional(),
   status: z.boolean(),
+  hasCharges: z.boolean(),
+  isCommission: z.boolean(),
+  gstValue: z.coerce.number().min(0, 'GST is required'),
+  tdsValue: z.coerce.number().min(0, 'TDS is required'),
+  transactionType: z.enum(['CREDIT', 'DEBIT']),
   description: z.string().optional().default(""),
   remarks: z.string().nullable().optional().default("")
 }).refine((data) => {
@@ -98,6 +103,31 @@ const productSchema = z.object({
   message: "New category name must be at least 2 characters",
   path: ["newCategoryName"],
 });
+
+
+const ToggleField = ({ label, name, value, onToggle, displayValue }) => (
+  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <label className="font-medium text-gray-700">{label}</label>
+    <div className="flex items-center space-x-3">
+      {displayValue && (
+        <span className="text-sm font-semibold text-gray-600">
+          {displayValue}
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`relative w-12 h-6 rounded-full transition-colors ${value ? 'bg-green-600' : 'bg-gray-300'
+          }`}
+      >
+        <div
+          className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow-md transform transition-transform ${value ? 'translate-x-6' : 'translate-x-0'
+            }`}
+        ></div>
+      </button>
+    </div>
+  </div>
+);
 
 // Form Header Component
 const FormHeader = ({ isEdit, onCancel }) => (
@@ -248,7 +278,12 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
     } : {
       productName: '',
       productCategoryId: '',
-      newCategoryName: '',
+        newCategoryName: '',
+        hasCharges: false,
+        isCommission: false,
+        gstValue: 0,
+        tdsValue: 0,
+        transactionType: 'CREDIT',
       description: '',
       status: true,
       remarks: ''
@@ -307,6 +342,11 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
           ? { id: categoryId, categoryName: categoryName }
           : { categoryName: categoryName }, // For new category
         description: data.description || null,
+        hasCharges: data.hasCharges,
+        isCommission: data.isCommission,
+        gstValue: data.gstValue,
+        tdsValue: data.tdsValue,
+        transactionType: data.transactionType,
         status: data.status,
         remarks: data.remarks || null
       };
@@ -397,7 +437,60 @@ const ProductMasterForm = ({ onSubmit, onCancel, initialData = null, isEdit = fa
                   onToggle={toggleStatus}
                 />
 
+                <ToggleField
+                  label="Has Charges"
+                  name="hasCharges"
+                  value={watch('hasCharges')}
+                  onToggle={() => setValue('hasCharges', !watch('hasCharges'))}
+                />
+
+                <ToggleField
+                  label="Is Commission"
+                  name="isCommission"
+                  value={watch('isCommission')}
+                  onToggle={() => setValue('isCommission', !watch('isCommission'))}
+                />
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Transaction Type
+                  </label>
+                  <ToggleField
+                    label={watch('transactionType') === 'CREDIT' ? 'Credit' : 'Debit'}
+                    name="transactionType"
+                    value={watch('transactionType') === 'CREDIT'}
+                    // displayValue={watch('transactionType')}
+                    onToggle={() =>
+                      setValue(
+                        'transactionType',
+                        watch('transactionType') === 'CREDIT' ? 'DEBIT' : 'CREDIT'
+                      )
+                    }
+                  />
+                </div>
+
                 <div className="md:col-span-2">
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-2'>
+                    <InputField
+                      label="GST Value"
+                      name="gstValue"
+                      type="number"
+                      register={register}
+                      error={errors.gstValue}
+                      required
+                      placeholder="Enter GST amount"
+                    />
+
+                    <InputField
+                      label="TDS Value"
+                      name="tdsValue"
+                      type="number"
+                      register={register}
+                      error={errors.tdsValue}
+                      required
+                      placeholder="Enter TDS amount"
+                    /></div>
+
                   <TextareaField
                     label="Description"
                     name="description"

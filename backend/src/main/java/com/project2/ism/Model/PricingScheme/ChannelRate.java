@@ -15,8 +15,14 @@ public class ChannelRate {
     private String channelName;
 
     @Column(name = "rate")
-    private Double rate;//-for direct merchant
+    private Double rate;//-for partner
 
+///  commission for partner and admin will implement later
+//    @Column(name = "admin_commission")
+//    private Double adminCommission;
+//
+//    @Column(name = "api_partner_commission")
+//    private Double apiPartnerCommission;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pricing_scheme_id")

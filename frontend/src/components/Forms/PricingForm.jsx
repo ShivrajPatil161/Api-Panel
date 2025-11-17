@@ -103,80 +103,6 @@ const DirectMerchantChannelRateItem = ({ index, register, errors, onRemove }) =>
   )
 }
 
-// Channel Rate Item Component for Franchises
-const FranchiseChannelRateItem = ({ index, register, errors, onRemove }) => {
-  return (
-    <div className="flex items-end gap-3 p-3 bg-white border border-gray-200 rounded-lg">
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Channel Name <span className="text-red-500">*</span>
-        </label>
-        <input
-          {...register(`channelRates.${index}.channelName`, { required: 'Channel name is required' })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter channel name"
-        />
-        {errors.channelRates?.[index]?.channelName && (
-          <p className="mt-1 text-sm text-red-500">{errors.channelRates[index].channelName.message}</p>
-        )}
-      </div>
-
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Franchise Rate (%) <span className="text-red-500">*</span>
-        </label>
-        <input
-          {...register(`channelRates.${index}.franchiseRate`, {
-            required: 'Franchise rate is required',
-            min: { value: 0, message: 'Rate must be positive' },
-            max: { value: 100, message: 'Rate cannot exceed 100%' }
-          })}
-          type="number"
-          step="0.01"
-          min="0"
-          max="100"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g., 2.5"
-        />
-        {errors.channelRates?.[index]?.franchiseRate && (
-          <p className="mt-1 text-sm text-red-500">{errors.channelRates[index].franchiseRate.message}</p>
-        )}
-      </div>
-
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Merchant Rate (%) <span className="text-red-500">*</span>
-        </label>
-        <input
-          {...register(`channelRates.${index}.merchantRate`, {
-            required: 'Merchant rate is required',
-            min: { value: 0, message: 'Rate must be positive' },
-            max: { value: 100, message: 'Rate cannot exceed 100%' }
-          })}
-          type="number"
-          step="0.01"
-          min="0"
-          max="100"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g., 3.0"
-        />
-        {errors.channelRates?.[index]?.merchantRate && (
-          <p className="mt-1 text-sm text-red-500">{errors.channelRates[index].merchantRate.message}</p>
-        )}
-      </div>
-
-      <button
-        type="button"
-        onClick={onRemove}
-        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-        title="Remove channel type"
-      >
-        <X size={20} />
-      </button>
-    </div>
-  )
-}
-
 
 // Channel Rates Component - pricing form 
 const ChannelRates = ({ control, register, errors, watch }) => {
@@ -509,7 +435,7 @@ const PricingSchemeFormModal = ({
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Scheme Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="Scheme Code"
+                  label="Scheme Code will be in this format - auto generated"
                   name="schemeCode"
                   register={register}
                   errors={errors}

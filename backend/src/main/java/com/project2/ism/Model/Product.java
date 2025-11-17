@@ -1,11 +1,12 @@
 package com.project2.ism.Model;
 
-import com.project2.ism.Model.Vendor.Vendor;
+import com.project2.ism.Enum.TransactionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,6 +35,22 @@ public class Product {
     @JoinColumn(name = "product_category_id", nullable = false)
     private ProductCategory productCategory;
 
+    private Boolean hasCharges = false;
+    private Boolean isCommission = false;
+
+
+    @NotNull(message = "GST is required")
+    @Column(name = "gst_value", nullable = false)
+    private BigDecimal gstValue;
+
+
+    @NotNull(message = "TDS is required")
+    @Column(name = "tds_value", nullable = false)
+    private BigDecimal tdsValue;
+
+    @Column(name = "transaction_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TransactionType transactionType;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -120,6 +137,46 @@ public class Product {
 
     public void setProductCode(String productCode) {
         this.productCode = productCode;
+    }
+
+    public Boolean getHasCharges() {
+        return hasCharges;
+    }
+
+    public void setHasCharges(Boolean hasCharges) {
+        this.hasCharges = hasCharges;
+    }
+
+    public Boolean getIsCommission() {
+        return isCommission;
+    }
+
+    public void setIsCommission(Boolean commission) {
+        isCommission = commission;
+    }
+
+    public BigDecimal getGstValue() {
+        return gstValue;
+    }
+
+    public void setGstValue(BigDecimal gstValue) {
+        this.gstValue = gstValue;
+    }
+
+    public BigDecimal getTdsValue() {
+        return tdsValue;
+    }
+
+    public void setTdsValue(BigDecimal tdsValue) {
+        this.tdsValue = tdsValue;
+    }
+
+    public TransactionType getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
     }
 
     public String getDescription() {

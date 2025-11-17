@@ -495,7 +495,7 @@ const VendorRoutingForm = ({ isOpen, onClose, defaultValues = null, onSubmit }) 
                         {productId && (
                             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                    Vendor Priority Selection <span className="text-red-500">*</span>
+                                    Vendor Priority Selection -(yet to implement to fetch only products vendors ) <span className="text-red-500">*</span>
                                 </label>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>

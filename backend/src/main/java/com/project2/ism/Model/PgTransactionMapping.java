@@ -1,5 +1,7 @@
 package com.project2.ism.Model;
 
+import com.project2.ism.Model.Users.ApiPartner;
+import com.project2.ism.Model.Vendor.Vendor;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -16,6 +18,20 @@ public class PgTransactionMapping {
     private String initiatedBy;  // retailer_id
     private Double amount;
     private String status;       // INITIATED, SUCCESS, FAILED
+
+    // FK references
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "partner_id", nullable = false)
+    private ApiPartner partner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor_id", nullable = false)
+    private Vendor vendor;
+
     private String vendorName;
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -76,5 +92,29 @@ public class PgTransactionMapping {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public ApiPartner getPartner() {
+        return partner;
+    }
+
+    public void setPartner(ApiPartner partner) {
+        this.partner = partner;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public Vendor getVendor() {
+        return vendor;
+    }
+
+    public void setVendor(Vendor vendor) {
+        this.vendor = vendor;
     }
 }

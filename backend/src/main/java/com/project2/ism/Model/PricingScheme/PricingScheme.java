@@ -28,6 +28,8 @@ public class PricingScheme {
     @Column(name = "rental_by_month", nullable = false)
     private Double rentalByMonth;
 
+    @Column(name = "one_time_rent", nullable = false)
+    private Double oneTimeRent;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -115,6 +117,14 @@ public class PricingScheme {
         if (channelRates != null) {
             channelRates.forEach(cardRate -> cardRate.setPricingScheme(this));
         }
+    }
+
+    public Double getOneTimeRent() {
+        return oneTimeRent;
+    }
+
+    public void setOneTimeRent(Double oneTimeRent) {
+        this.oneTimeRent = oneTimeRent;
     }
 
     public LocalDateTime getCreatedAt() {

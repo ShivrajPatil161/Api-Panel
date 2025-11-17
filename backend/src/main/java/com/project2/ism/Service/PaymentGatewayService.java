@@ -1,18 +1,20 @@
 package com.project2.ism.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.project2.ism.DTO.CallbackDTO.RunPaisaCallback;
+import com.project2.ism.DTO.CallbackDTO.TransactionSchemeDetailsRequestDTO;
 import com.project2.ism.DTO.PaymentGateway.CreateOrderRequest;
 import com.project2.ism.Exception.ResourceNotFoundException;
 import com.project2.ism.Model.ApiPartnerCredentials;
+import com.project2.ism.Model.ApiPartnerSchemeAssignment;
 import com.project2.ism.Model.PgTransactionMapping;
+import com.project2.ism.Model.PricingScheme.ChannelRate;
+import com.project2.ism.Model.PricingScheme.PricingScheme;
 import com.project2.ism.Model.Product;
+import com.project2.ism.Model.Users.ApiPartner;
 import com.project2.ism.Model.Vendor.Vendor;
-import com.project2.ism.Model.Vendor.VendorCredentials;
 import com.project2.ism.Model.Vendor.VendorRouting;
-import com.project2.ism.Repository.ApiPartnerCredentialsRepository;
-import com.project2.ism.Repository.PgTransactionMappingRepository;
-import com.project2.ism.Repository.VendorCredentialRepository;
-import com.project2.ism.Repository.VendorRoutingRepository;
+import com.project2.ism.Repository.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +23,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,17 +37,23 @@ public class PaymentGatewayService {
     private static final Logger log = LoggerFactory.getLogger(PaymentGatewayService.class);
 
     private final ApiPartnerCredentialsRepository apiPartnerCredentialsRepository;
+    private final ApiPartnerRepository apiPartnerRepository;
     private final VendorRoutingRepository vendorRoutingRepository;
     private final VendorCredentialRepository vendorCredentialRepository;
     private final PgTransactionMappingRepository pgTransactionMappingRepository;
     private final VendorRoutingService vendorRoutingService;
+    private final TransactionService transactionService;
+    private final ApiPartnerSchemeAssignmentRepository apiPartnerSchemeAssignmentRepository;
 
-    public PaymentGatewayService(ApiPartnerCredentialsRepository apiPartnerCredentialsRepository, VendorRoutingRepository vendorRoutingRepository, VendorCredentialRepository vendorCredentialRepository, PgTransactionMappingRepository pgTransactionMappingRepository, VendorRoutingService vendorRoutingService) {
+    public PaymentGatewayService(ApiPartnerCredentialsRepository apiPartnerCredentialsRepository, ApiPartnerRepository apiPartnerRepository, VendorRoutingRepository vendorRoutingRepository, VendorCredentialRepository vendorCredentialRepository, PgTransactionMappingRepository pgTransactionMappingRepository, VendorRoutingService vendorRoutingService, TransactionService transactionService, ApiPartnerSchemeAssignmentRepository apiPartnerSchemeAssignmentRepository) {
         this.apiPartnerCredentialsRepository = apiPartnerCredentialsRepository;
+        this.apiPartnerRepository = apiPartnerRepository;
         this.vendorRoutingRepository = vendorRoutingRepository;
         this.vendorCredentialRepository = vendorCredentialRepository;
         this.pgTransactionMappingRepository = pgTransactionMappingRepository;
         this.vendorRoutingService = vendorRoutingService;
+        this.transactionService = transactionService;
+        this.apiPartnerSchemeAssignmentRepository = apiPartnerSchemeAssignmentRepository;
     }
 
 
@@ -66,12 +73,12 @@ public class PaymentGatewayService {
                             .orElseThrow(() -> new RuntimeException("Invalid dummy username"));
 
             // Get partner's product (PG / Payout)
-            Product partnerProduct = new Product();//apiPartnerCredentials.getApiPartner().getProducts();
+            Product partnerProduct = apiPartnerCredentials.getProduct();
             if (partnerProduct == null) {
                 throw new IllegalArgumentException("No product assigned to partner " + partnerId);
             }
             //dummy code
-            partnerProduct.setId(Long.valueOf(req.getProductId()));
+//            partnerProduct.setId(Long.valueOf(req.getProductId()));
             // 3. Find VendorRouting for requested product
             VendorRouting routing = vendorRoutingRepository.findByProductId(partnerProduct.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("No vendor routing found for product " + partnerProduct.getId()));
@@ -94,7 +101,10 @@ public class PaymentGatewayService {
             txnMap.setInitiatedBy(username);  // <-- must come from logged-in user or request
             txnMap.setAmount(req.getAmount());
             txnMap.setStatus("INITIATED");
-            //txnMap.setVendorName(vendor.getName());
+            txnMap.setPartner(apiPartnerCredentials.getApiPartner());
+            txnMap.setProduct(partnerProduct);
+            txnMap.setVendor(vendor);
+            txnMap.setVendorName(vendor.getName());
 
             pgTransactionMappingRepository.save(txnMap);
 
@@ -157,14 +167,14 @@ public class PaymentGatewayService {
         String rawCallbackData = extractCallbackData(originalPayload);
 
         try {
-//            if (rawCallbackData != null) {
+            if (rawCallbackData != null) {
 //                VendorCallbackParser parser = callbackParserFactory.getParser(originalPayload);
 //                RunPaisaCallback processedCallback = parser.parse(originalPayload);
 //                processCallback(processedCallback, originalPayload);
-//            } else {
-//                RunPaisaCallback processedCallback = convertToCallback(originalPayload);
-//                processCallback(processedCallback, originalPayload);
-//            }
+            } else {
+                RunPaisaCallback processedCallback = convertToCallback(originalPayload);
+                processCallback(processedCallback, originalPayload);
+            }
 //
 //            commonFunctions.saveCallbackEventLog(originalPayload.toString(), requestTime, clientIp, "Callback processed successfully", LocalDateTime.now());
 //            log.info("---- [Callback] Successfully logged callback event");
@@ -180,40 +190,54 @@ public class PaymentGatewayService {
         }
     }
 
-//    public void processCallback(RunPaisaCallback processedCallback, Map<String, String> originalPayload) throws JsonProcessingException {
-//        log.info("---- [Callback] Processing for Order ID: {}, Status: {}", processedCallback.getOrderId(), processedCallback.getStatus());
-//
-//        TransactionSchemeDetailsRequestDto dto = null;
-//
-//        // Fetch base transaction mapping
-//        log.info("---- [Callback] Fetching transaction mapping for Order ID: {}", processedCallback.getOrderId());
-//        PgTransactionMapping pgTransactionMapping = pgTransactionMappingRepository.findByOrderId(processedCallback.getOrderId())
-//                .orElseThrow(() -> new RuntimeException("Transaction not found for Order ID: " + processedCallback.getOrderId()));
-//
-//        // Prepare base data
-//        Double txnAmt = Double.valueOf(processedCallback.getTxnAmount());
-//        log.info("---- [Callback] Parsed transaction amount: {}", txnAmt);
-//
-//        String callbackOperatorName = toDbOperatorName(
-//                processedCallback.getTxnMode(),
-//                processedCallback.getCardCategory(),
-//                processedCallback.getPgPartner()
-//        );
-//        log.info("---- [Callback] Using operatorName for DB lookup: {}", callbackOperatorName);
-//
-//        // always resolve partner once
-//        ApiPartner apiPartner = apiPartnerRepository
-//                .findByMobileNumber(processedCallback.getCustomerPhone())
-//                .orElseThrow(() -> new RuntimeException("No User Found"));
-//
-//        ApiPartnerCredentials apiPartnerCredentials = apiPartnerCredentialsRepository
-//                .findByApiPartner_PartnerId(apiPartner.getPartnerId()) // or getId() depending on your entity
-//                .orElseThrow(() -> new RuntimeException("No credentials found for partner: " + apiPartner.getPartnerId()));
-//
-//
-//        log.info("---- [Callback] Status is SUCCESS. Fetching saved transaction data...");
-//
-//        // Fetch all matching schemes for operator name
+    @Transactional
+    public void processCallback(RunPaisaCallback processedCallback, Map<String, String> originalPayload) throws JsonProcessingException {
+        log.info("---- [Callback] Processing for Order ID: {}, Status: {}", processedCallback.getOrderId(), processedCallback.getStatus());
+
+        TransactionSchemeDetailsRequestDTO dto = null;
+
+        // Fetch base transaction mapping
+        log.info("---- [Callback] Fetching transaction mapping for Order ID: {}", processedCallback.getOrderId());
+        PgTransactionMapping pgTransactionMapping = pgTransactionMappingRepository.findByOrderId(processedCallback.getOrderId())
+                .orElseThrow(() -> new RuntimeException("Transaction not found for Order ID: " + processedCallback.getOrderId()));
+
+        // Prepare base data
+        Double txnAmt = Double.valueOf(processedCallback.getTxnAmount());
+        log.info("---- [Callback] Parsed transaction amount: {}", txnAmt);
+
+        String channelName = toDbOperatorName(
+                processedCallback.getTxnMode(),
+                processedCallback.getCardCategory(),
+                processedCallback.getPgPartner()
+        ); /// earlier it was named callbackOperatorName
+        log.info("---- [Callback] Using operatorName for DB lookup: {}", channelName);
+
+        // always resolve partner once
+        ApiPartner apiPartner = apiPartnerRepository
+                .findByContactPerson_Email(processedCallback.getCustomerEmail())
+                .orElseThrow(() -> new RuntimeException("No User Found"));
+        /// can check to cross-check partner from callback and from pg transaction mapping order same or not
+
+        ApiPartnerCredentials apiPartnerCredentials = apiPartnerCredentialsRepository
+                .findByApiPartnerId(apiPartner.getId()) // or getId() depending on your entity
+                .orElseThrow(() -> new RuntimeException("No credentials found for partner: " + apiPartner.getId()));
+
+
+        log.info("---- [Callback] Status is SUCCESS. Fetching saved transaction data...");
+
+        // Fetch all matching schemes for operator name
+        PricingScheme pricingScheme  = apiPartnerSchemeAssignmentRepository.findActiveSchemeForPartnerAndProduct(apiPartner.getId(), pgTransactionMapping.getProduct().getId(), LocalDate.now())
+                .map(ApiPartnerSchemeAssignment::getScheme)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No active pricing scheme found for partner " + apiPartner.getId() + ", product " + pgTransactionMapping.getProduct().getId() + " on " + LocalDate.now()));
+
+        ChannelRate channelRate = pricingScheme.getChannelRates().stream()
+                .filter(rate -> rate.getChannelName().equalsIgnoreCase(channelName))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(
+                        "No channel rate found for channel: " + channelName +
+                                " in pricing scheme ID " + pricingScheme.getId()));
+
 //        List<SchemeRate> matchingSchemes = schemeRateRepository.findSchemeByOperatorName(callbackOperatorName);
 //        if (matchingSchemes == null || matchingSchemes.isEmpty()) {
 //            log.error("---- [Callback] No matching scheme found for operatorName: {}", callbackOperatorName);
@@ -239,41 +263,40 @@ public class PaymentGatewayService {
 //
 //        // 2. Parse schemeCombinationHashCode (e.g., 10-02-001-00001)
 //        String[] hashParts = scheme.getSchemeCombinationHashCode().split("-");
-//
+
 //        short productId = Short.parseShort(hashParts[0]);
 //
 //        // 3. Fetch Product and SubProduct
-//        Products product = productsRepository.findById(productId)
-//                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
-//
-//        String orderId = processedCallback.getOrderId();
-//        String baseTranxId = orderId.startsWith("ORD") ? orderId.substring(3) : orderId;
-//
-//        // Fill DTO completely
-//        dto = new TransactionSchemeDetailsRequestDto();
-//        dto.setAmount(txnAmt);
-//        dto.setConfirmAmount(txnAmt);
-//        dto.setOperatorName(callbackOperatorName);
+        Product product = pgTransactionMapping.getProduct();
+
+//        Long orderId = processedCallback.getOrderId();
+        String baseTranxId = "1";//orderId; -------------hardcoded
+
+        // Fill DTO completely
+        dto = new TransactionSchemeDetailsRequestDTO();
+        dto.setAmount(txnAmt);
+        dto.setConfirmAmount(txnAmt);
+        dto.setOperatorName(channelName);
 //        dto.setOperatorCode(selectedScheme.getOperatorCode());
-//        dto.setSchemeRate(selectedScheme);
-//        dto.setTransactionType(product.getTransactionType());
-//        dto.setGstValue(String.valueOf(product.getSgst()));
-//        dto.setTdsRate(String.valueOf(product.getTds()));
-//        dto.setBaseTranxId(baseTranxId);
-//        dto.setMobileNumber(processedCallback.getCustomerPhone());
-//
-//        dto.setHierarchyId(apiPartner.getPartnerId());
-//
-//        dto.setProductCode(product.getProductCode());
-//        dto.setIsCommission(product.getIsCommissions());
-//        dto.setHasCharge(product.getHasCharges());
-//
-//        log.info("---- [Callback] Deserialized Transaction DTO: {}", dto);
-//        transactionServiceImpl.processTransaction(dto, processedCallback.getStatus());
-//
-//        notifyPartner(apiPartnerCredentials, originalPayload); // or payload, depending on what you want to send
-//
-//    }
+        dto.setChannelRate(channelRate);
+        dto.setTransactionType(product.getTransactionType());
+        dto.setGstValue(String.valueOf(product.getGstValue()));
+        dto.setTdsRate(String.valueOf(product.getTdsValue()));
+        dto.setBaseTranxId(baseTranxId);
+        dto.setMobileNumber(processedCallback.getCustomerPhone());
+
+        dto.setApiPartnerId(apiPartner.getId());
+
+        dto.setProductCode(product.getProductCode());
+        dto.setIsCommission(product.getIsCommission());
+        dto.setHasCharge(product.getHasCharges());
+
+        log.info("---- [Callback] Deserialized Transaction DTO: {}", dto);
+        transactionService.processTransaction(dto, processedCallback.getStatus());
+
+        notifyPartner(apiPartnerCredentials, originalPayload); // or payload, depending on what you want to send
+
+    }
 
     private String toDbOperatorName(String txnMode, String cardCategory, String pgPartner) {
         log.info("<-----------------------Txn Mode: {}, Card Category: {}, PG Partner: {}", txnMode, cardCategory, pgPartner);
@@ -304,57 +327,57 @@ public class PaymentGatewayService {
         log.warn("---- [Callback] No recognized callback data found in payload.");
         return null;
     }
-//
-//    private RunPaisaCallback convertToCallback(Map<String, String> payload) {
-//        log.info("---- [Callback] Converting raw payload to RunPaisaCallback object...");
-//
-//        RunPaisaCallback callback = new RunPaisaCallback();
-//        callback.setStatus(payload.get("STATUS"));
-//        callback.setStatusCode(payload.get("STATUS_CODE"));
-//        callback.setOrderId(payload.get("ORDER_ID"));
-//        callback.setTxnMode(payload.get("TXN_MODE"));
-//        callback.setTxnAmount(payload.get("TXN_AMOUNT"));
-//        callback.setCardCategory(payload.get("CARD_CATEGORY"));
-//        callback.setTxnDate(payload.get("TXN_DATE"));
-//        callback.setTxnInfo(payload.get("TXN_INFO"));
-//        callback.setCustomerName(payload.get("CUSTOMER_NAME"));
-//        callback.setCustomerEmail(payload.get("CUSTOMER_EMAIL"));
-//        callback.setCustomerPhone(payload.get("CUSTOMER_PHONE"));
-//        callback.setBankTxnId(payload.get("BANK_TXNID"));
-//        callback.setBankCode(payload.get("BANK_CODE"));
-//        callback.setErrorId(payload.get("ERROR_ID"));
-//        callback.setErrorDesc(payload.get("ERROR_DESC"));
-//        callback.setCardNumber(payload.get("CARD_NUMBER"));
-//        callback.setCardType(payload.get("CARD_TYPE"));
-//        callback.setUnmappedStatus(payload.get("UNMAPPED_STATUS"));
-//        callback.setPgPartner(payload.get("PG_PARTNER"));
-//        callback.setMercUnqRef(payload.get("MERC_UNQ_REF"));
-//
-//        log.info("---- [Callback] Callback object created: {}", callback);
-//        return callback;
-//    }
-//
-//
-//    public void notifyPartner(ApiPartnerCredentials apiPartner, Map<String, String> originalPayload) {
-//        if (apiPartner.getCallbackUrl() == null || apiPartner.getCallbackUrl().isBlank()) {
-//            log.warn("No callback URL configured for partner {}", apiPartner.getApiPartner().getPartnerId());
-//            return;
-//        }
-//
-//        String url = apiPartner.getCallbackUrl();
-//        try {
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//
-//            HttpEntity<Object> entity = new HttpEntity<>(originalPayload, headers);
+
+    private RunPaisaCallback convertToCallback(Map<String, String> payload) {
+        log.info("---- [Callback] Converting raw payload to RunPaisaCallback object...");
+
+        RunPaisaCallback callback = new RunPaisaCallback();
+        callback.setStatus(payload.get("STATUS"));
+        callback.setStatusCode(payload.get("STATUS_CODE"));
+        callback.setOrderId(payload.get("ORDER_ID"));
+        callback.setTxnMode(payload.get("TXN_MODE"));
+        callback.setTxnAmount(payload.get("TXN_AMOUNT"));
+        callback.setCardCategory(payload.get("CARD_CATEGORY"));
+        callback.setTxnDate(payload.get("TXN_DATE"));
+        callback.setTxnInfo(payload.get("TXN_INFO"));
+        callback.setCustomerName(payload.get("CUSTOMER_NAME"));
+        callback.setCustomerEmail(payload.get("CUSTOMER_EMAIL"));
+        callback.setCustomerPhone(payload.get("CUSTOMER_PHONE"));
+        callback.setBankTxnId(payload.get("BANK_TXNID"));
+        callback.setBankCode(payload.get("BANK_CODE"));
+        callback.setErrorId(payload.get("ERROR_ID"));
+        callback.setErrorDesc(payload.get("ERROR_DESC"));
+        callback.setCardNumber(payload.get("CARD_NUMBER"));
+        callback.setCardType(payload.get("CARD_TYPE"));
+        callback.setUnmappedStatus(payload.get("UNMAPPED_STATUS"));
+        callback.setPgPartner(payload.get("PG_PARTNER"));
+        callback.setMercUnqRef(payload.get("MERC_UNQ_REF"));
+
+        log.info("---- [Callback] Callback object created: {}", callback);
+        return callback;
+    }
+
+
+    public void notifyPartner(ApiPartnerCredentials apiPartner, Map<String, String> originalPayload) {
+        if (apiPartner.getCallbackUrl() == null || apiPartner.getCallbackUrl().isBlank()) {
+            log.warn("No callback URL configured for partner {}", apiPartner.getApiPartner().getId());
+            return;
+        }
+
+        String url = apiPartner.getCallbackUrl();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Object> entity = new HttpEntity<>(originalPayload, headers);
 //            ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
-//
+
 //            log.info("Sent callback to partner {} at {}. Status: {} Body: {}",
-//                    apiPartner.getApiPartner().getPartnerId(), url, resp.getStatusCode(), resp.getBody());
-//        } catch (Exception e) {
-//            log.error("Error sending callback to partner {} at {}: {}", apiPartner.getApiPartner().getPartnerId(), url, e.getMessage(), e);
-//        }
-//    }
+//                    apiPartner.getApiPartner().getId(), url, resp.getStatusCode(), resp.getBody());
+        } catch (Exception e) {
+            log.error("Error sending callback to partner {} at {}: {}", apiPartner.getApiPartner().getId(), url, e.getMessage(), e);
+        }
+    }
 
 
 

@@ -15,7 +15,7 @@ public interface ApiPartnerSchemeAssignmentRepository extends JpaRepository<ApiP
     // Find assignments by merchant
     List<ApiPartnerSchemeAssignment> findByApiPartnerId(Long apiPartnerId);
 
-    // Active scheme for Merchant, specific product, on given date
+    // Active scheme for Partner, specific product, on given date
     @Query("""
         SELECT a FROM ApiPartnerSchemeAssignment a
         WHERE a.apiPartner.id = :apiPartnerId
@@ -24,7 +24,7 @@ public interface ApiPartnerSchemeAssignmentRepository extends JpaRepository<ApiP
           AND (a.expiryDate IS NULL OR a.expiryDate >= :onDate)
         ORDER BY a.effectiveDate DESC
     """)
-    Optional<ApiPartnerSchemeAssignment> findActiveSchemeForMerchantAndProduct(
+    Optional<ApiPartnerSchemeAssignment> findActiveSchemeForPartnerAndProduct(
             @Param("apiPartnerId") Long apiPartnerId,
             @Param("productId") Long productId,
             @Param("onDate") LocalDate onDate);

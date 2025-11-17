@@ -32,6 +32,7 @@ import Pagination from '../UI/Pagination';
 import { useProductQueries } from '../Hooks/useProductsQueries';
 import TableShimmer from '../Shimmer/TableShimmer';
 import ErrorState from '../UI/ErrorState';
+import ProductView from '../View/ProductView';
 
 // Modular Components
 const SearchBar = ({ searchInput, setSearchInput, onSearch, onClear, loading }) => (
@@ -73,7 +74,7 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const StatusBadge = ({ status }) => (
+export const StatusBadge = ({ status }) => (
   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
     }`}>
     {status ? 'Active' : 'Inactive'}
@@ -106,67 +107,7 @@ const ActionButtons = ({ product, onView, onEdit, onDelete }) => (
   </div>
 );
 
-const ProductViewModal = ({ product, onClose }) => {
-  if (!product) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">Product Details</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              <Package className="text-blue-500" size={16} />
-              <span className="font-medium">Product Name:</span>
-              <span>{product.productName}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Code:</span>
-              <span className="font-mono">{product.productCode}</span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Category:</span>
-              {product.productCategory.categoryName}
-            </div>
-           
-            <div className="flex items-center space-x-2">
-              <span className="font-medium">Status:</span>
-              <StatusBadge status={product.status} />
-            </div>
-            
-          </div>
-
-         
-          {product.description && (
-            <div>
-              <span className="font-medium">Description:</span>
-              <p className="mt-1 text-gray-700">{product.description}</p>
-            </div>
-          )}
-
-      
-
-          {product.remarks && (
-            <div>
-              <span className="font-medium">Remarks:</span>
-              <p className="mt-1 text-gray-700">{product.remarks}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ProductList = () => {
   // Local state
@@ -428,7 +369,7 @@ const ProductList = () => {
           />
         )}
 
-        <ProductViewModal
+        <ProductView
           product={viewingProduct}
           onClose={() => setViewingProduct(null)}
         />
